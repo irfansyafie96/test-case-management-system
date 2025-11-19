@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Case Management System - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Test Case Management System</h1>
+        
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-700">Projects</h2>
+            
+            <!-- Create Project Form -->
+            <div class="mb-8 p-4 bg-blue-50 rounded-lg">
+                <h3 class="text-lg font-medium mb-3 text-gray-700">Create New Project</h3>
+                <form id="createProjectForm">
+                    <div class="mb-4">
+                        <label for="projectName" class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                        <input 
+                            type="text" 
+                            id="projectName" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        >
+                    </div>
+                    <div class="mb-4">
+                        <label for="projectDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea 
+                            id="projectDescription" 
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        ></textarea>
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        Create Project
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Projects List -->
+            <div id="projectsList" class="space-y-4">
+                <!-- Projects will be loaded here dynamically -->
+                <p class="text-gray-500 text-center py-4">Loading projects...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '/api';
+
+        // DOM elements
+        const projectsList = document.getElementById('projectsList');
+        const createProjectForm = document.getElementById('createProjectForm');
+
+        // Load projects when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProjects();
+        });
+
+        // Event listener for form submission
+        createProjectForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('projectName').value;
+            const description = document.getElementById('projectDescription').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, description })
+                });
+                
+                if (response.ok) {
+                    // Clear the form
+                    createProjectForm.reset();
+                    // Reload the projects list
+                    loadProjects();
+                } else {
+                    alert('Failed to create project');
+                }
+            } catch (error) {
+                console.error('Error creating project:', error);
+                alert('Error creating project');
+            }
+        });
+
+        // Function to load and display projects
+        async function loadProjects() {
+            try {
+                const response = await fetch(`${API_BASE}/projects`);
+                const projects = await response.json();
+                
+                if (projects.length === 0) {
+                    projectsList.innerHTML = '<p class="text-gray-500 text-center py-4">No projects found. Create one above.</p>';
+                    return;
+                }
+                
+                let html = '';
+                projects.forEach(project => {
+                    html += `
+                        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">${project.name}</h3>
+                                    ${project.description ? `<p class="text-gray-600 text-sm mt-1">${project.description}</p>` : ''}
+                                </div>
+                                <a 
+                                    href="project.html?projectId=${project.id}" 
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                                >
+                                    View Project
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                projectsList.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                projectsList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading projects</p>';
+            }
+        }
+    </script>
+</body>
+</html>

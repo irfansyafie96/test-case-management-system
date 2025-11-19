@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Case Form - TCM System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Test Case Management System</h1>
+        
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <div id="formTitle" class="mb-6">
+                <h2 class="text-2xl font-semibold text-gray-700">Create New Test Case</h2>
+            </div>
+            
+            <form id="testCaseForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="testCaseId" class="block text-sm font-medium text-gray-700 mb-1">Test Case ID</label>
+                        <input 
+                            type="text" 
+                            id="testCaseId" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        >
+                        <p class="mt-1 text-xs text-gray-500">e.g., TRM-TS-01</p>
+                    </div>
+                    
+                    <div>
+                        <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select 
+                            id="priority" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input 
+                        type="text" 
+                        id="title" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    >
+                </div>
+                
+                <!-- Test Steps Section -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-sm font-medium text-gray-700">Test Steps</label>
+                        <button 
+                            type="button" 
+                            id="addStepBtn" 
+                            class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                        >
+                            + Add Step
+                        </button>
+                    </div>
+                    
+                    <div id="testStepsContainer">
+                        <!-- Test steps will be added here dynamically -->
+                        <div class="step-item mb-4 p-4 border border-gray-200 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Action</label>
+                                    <textarea 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 step-action"
+                                        rows="3"
+                                        required
+                                    ></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Expected Result</label>
+                                    <textarea 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 step-expected"
+                                        rows="3"
+                                        required
+                                    ></textarea>
+                                    <button 
+                                        type="button" 
+                                        class="remove-step-btn mt-2 px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <a 
+                        href="javascript:history.back()" 
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                    >
+                        Cancel
+                    </a>
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        Save Test Case
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '/api';
+
+        // DOM elements
+        const formTitle = document.getElementById('formTitle');
+        const testCaseForm = document.getElementById('testCaseForm');
+        const testStepsContainer = document.getElementById('testStepsContainer');
+        const addStepBtn = document.getElementById('addStepBtn');
+
+        // Get suite ID and testCase ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const suiteId = urlParams.get('suiteId');
+        const testCaseId = urlParams.get('testCaseId');
+
+        // Initialize step counter
+        let stepCounter = 1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (testCaseId) {
+                // Edit mode - load existing test case
+                loadTestCase();
+                formTitle.innerHTML = '<h2 class="text-2xl font-semibold text-gray-700">Edit Test Case</h2>';
+            } else if (suiteId) {
+                // Create mode - set up for new test case
+                setupCreateMode();
+            } else {
+                // Error case
+                formTitle.innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error: Suite ID not provided</h2>';
+            }
+        });
+
+        // Event listener for Add Step button
+        addStepBtn.addEventListener('click', addStep);
+
+        // Event delegation for remove step buttons
+        testStepsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-step-btn')) {
+                const stepItem = e.target.closest('.step-item');
+                if (testStepsContainer.children.length > 1) {
+                    stepItem.remove();
+                } else {
+                    alert('At least one test step is required.');
+                }
+            }
+        });
+
+        // Event listener for form submission
+        testCaseForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Collect form data
+            const testCaseData = {
+                testCaseId: document.getElementById('testCaseId').value,
+                title: document.getElementById('title').value,
+                priority: document.getElementById('priority').value
+            };
+            
+            // Collect test steps
+            const steps = [];
+            const stepItems = document.querySelectorAll('.step-item');
+            
+            stepItems.forEach((item, index) => {
+                const action = item.querySelector('.step-action').value;
+                const expected = item.querySelector('.step-expected').value;
+                
+                if (action && expected) {
+                    steps.push({
+                        stepNumber: index + 1,
+                        action: action,
+                        expectedResult: expected
+                    });
+                }
+            });
+            
+            testCaseData.testSteps = steps;
+            
+            try {
+                let response;
+                if (testCaseId) {
+                    // Update existing test case
+                    response = await fetch(`${API_BASE}/testcases/${testCaseId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(testCaseData)
+                    });
+                } else {
+                    // Create new test case
+                    response = await fetch(`${API_BASE}/testsuites/${suiteId}/testcases`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(testCaseData)
+                    });
+                }
+                
+                if (response.ok) {
+                    alert(testCaseId ? 'Test case updated successfully!' : 'Test case created successfully!');
+
+                    // Get the created/updated test case data to add to parent UI
+                    let testCaseData;
+                    if (testCaseId) {
+                        // For updates, we already have the ID, just fetch the updated data
+                        testCaseData = await response.json();
+                    } else {
+                        // For creation, parse the response to get the new test case data
+                        testCaseData = await response.json();
+                    }
+
+                    // Redirect back to the module page
+                    if (suiteId) {
+                        // Get the module ID by fetching the suite information
+                        // Add cache busting to ensure we get fresh data
+                        const timestamp = new Date().getTime();
+                        const suiteResponse = await fetch(`${API_BASE}/testsuites/${suiteId}?_=${timestamp}`);
+
+                        if (!suiteResponse.ok) {
+                            throw new Error(`HTTP error! status: ${suiteResponse.status}`);
+                        }
+
+                        const suiteData = await suiteResponse.json();
+
+                        // Check if suiteData and its testModule exist before accessing properties
+                        if (suiteData && suiteData.testModule && suiteData.testModule.id) {
+                            // Add refresh parameter to force the module page to load fresh data
+                            window.location.href = `module.html?moduleId=${suiteData.testModule.id}&refresh=1`;
+                        } else {
+                            // Fallback: redirect back to the referring page or home page
+                            console.error('Could not retrieve module ID from suite data');
+                            window.history.back(); // Go back to previous page
+                        }
+                    } else if (testCaseId) {
+                        // Get the module ID by fetching the test case information
+                        // Add cache busting to ensure we get fresh data
+                        const timestamp = new Date().getTime();
+                        const testCaseResponse = await fetch(`${API_BASE}/testcases/${testCaseId}?_=${timestamp}`);
+
+                        if (!testCaseResponse.ok) {
+                            throw new Error(`HTTP error! status: ${testCaseResponse.status}`);
+                        }
+
+                        const testCaseData = await testCaseResponse.json();
+
+                        // Check if testCaseData, its testSuite and testSuite's testModule exist before accessing properties
+                        if (testCaseData && testCaseData.testSuite && testCaseData.testSuite.testModule && testCaseData.testSuite.testModule.id) {
+                            // Try to add the test case to the parent window UI if it's available
+                            if (window.opener && !window.opener.closed) {
+                                // Call parent window's function to add the updated test case to UI
+                                try {
+                                    // In edit mode, we just redirect with refresh since the test case already exists
+                                    if (window.opener && !window.opener.closed) {
+                                        // Reload the parent page after a short delay to reflect changes
+                                        setTimeout(() => {
+                                            window.opener.location.reload();
+                                        }, 500);
+                                    }
+                                } catch (e) {
+                                    console.error('Error refreshing parent UI:', e);
+                                }
+                            }
+
+                            // Add refresh parameter to force the module page to load fresh data
+                            window.location.href = `module.html?moduleId=${testCaseData.testSuite.testModule.id}&refresh=1`;
+                        } else {
+                            // Fallback: redirect back to the referring page or home page
+                            console.error('Could not retrieve module ID from test case data');
+                            window.history.back(); // Go back to previous page
+                        }
+                    }
+                } else {
+                    alert(testCaseId ? 'Failed to update test case' : 'Failed to create test case');
+                }
+            } catch (error) {
+                console.error(testCaseId ? 'Error updating test case:' : 'Error creating test case:', error);
+                alert(testCaseId ? 'Error updating test case' : 'Error creating test case');
+            }
+        });
+
+        // Function to add a new step
+        function addStep() {
+            stepCounter++;
+            const stepHtml = `
+                <div class="step-item mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Action (Step ${stepCounter})</label>
+                            <textarea 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 step-action"
+                                rows="3"
+                                required
+                            ></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Expected Result (Step ${stepCounter})</label>
+                            <textarea 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 step-expected"
+                                rows="3"
+                                required
+                            ></textarea>
+                            <button 
+                                type="button" 
+                                class="remove-step-btn mt-2 px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            testStepsContainer.insertAdjacentHTML('beforeend', stepHtml);
+        }
+
+        // Function to set up form for creating a new test case
+        function setupCreateMode() {
+            // Add an empty step to start with
+            addStep();
+        }
+
+        // Function to load an existing test case for editing
+        async function loadTestCase() {
+            try {
+                const response = await fetch(`${API_BASE}/testcases/${testCaseId}`);
+                const testCase = await response.json();
+                
+                // Populate form fields
+                document.getElementById('testCaseId').value = testCase.testCaseId;
+                document.getElementById('title').value = testCase.title;
+                document.getElementById('priority').value = testCase.priority || 'Medium';
+                
+                // Clear existing steps and add loaded steps
+                testStepsContainer.innerHTML = '';
+                testCase.testSteps.sort((a, b) => a.stepNumber - b.stepNumber).forEach((step, index) => {
+                    if (index === 0) {
+                        // For the first step, just update the existing container
+                        const firstStep = testStepsContainer.querySelector('.step-item');
+                        if (firstStep) {
+                            firstStep.querySelector('.step-action').value = step.action;
+                            firstStep.querySelector('.step-expected').value = step.expectedResult;
+                        }
+                    } else {
+                        addStep();
+                        const newStep = testStepsContainer.querySelectorAll('.step-item')[index];
+                        if (newStep) {
+                            newStep.querySelector('.step-action').value = step.action;
+                            newStep.querySelector('.step-expected').value = step.expectedResult;
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading test case:', error);
+                formTitle.innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error loading test case</h2>';
+            }
+        }
+    </script>
+</body>
+</html>

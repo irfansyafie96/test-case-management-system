@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Details - TCM System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Test Case Management System</h1>
+        
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <!-- Module details will be loaded here -->
+            <div id="moduleDetails" class="mb-6">
+                <h2 class="text-2xl font-semibold mb-2 text-gray-700">Loading module...</h2>
+            </div>
+            
+            <!-- Create Test Suite Form -->
+            <div class="mb-8 p-4 bg-blue-50 rounded-lg">
+                <h3 class="text-lg font-medium mb-3 text-gray-700">Create New Test Suite</h3>
+                <form id="createTestSuiteForm">
+                    <div class="mb-4">
+                        <label for="testSuiteName" class="block text-sm font-medium text-gray-700 mb-1">Test Suite Name</label>
+                        <input 
+                            type="text" 
+                            id="testSuiteName" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        >
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                        Create Test Suite
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Test Suites and Test Cases List -->
+            <div id="testSuitesList" class="space-y-4">
+                <!-- Test Suites and Test Cases will be loaded here dynamically -->
+                <p class="text-gray-500 text-center py-4">Loading test suites and test cases...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '/api';
+
+        // DOM elements
+        const moduleDetails = document.getElementById('moduleDetails');
+        const testSuitesList = document.getElementById('testSuitesList');
+        const createTestSuiteForm = document.getElementById('createTestSuiteForm');
+
+        // Get module ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const moduleId = urlParams.get('moduleId');
+
+        if (!moduleId) {
+            moduleDetails.innerHTML = '<h2 class="text-2xl font-semibold mb-2 text-red-500">Error: Module ID not provided</h2>';
+        } else {
+            // Load module details and test suites when page loads
+            document.addEventListener('DOMContentLoaded', () => {
+                loadModuleDetails();
+                loadTestSuites();
+            });
+
+            // Check if refresh parameter is present in URL and reload data if it is
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('refresh') === '1') {
+                // Small delay to ensure page is fully loaded before reloading
+                setTimeout(() => {
+                    loadModuleDetails();
+                    loadTestSuites();
+                }, 500);
+            }
+
+            // Also reload data when the page becomes visible again (e.g. when returning from creating a test case)
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    // Small delay to ensure page is fully loaded before reloading
+                    setTimeout(() => {
+                        loadTestSuites();
+                    }, 100);
+                }
+            });
+        }
+
+        // Event listener for form submission
+        createTestSuiteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('testSuiteName').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/testmodules/${moduleId}/testsuites`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name })
+                });
+                
+                if (response.ok) {
+                    // Clear the form
+                    createTestSuiteForm.reset();
+                    // Reload the test suites list
+                    loadTestSuites();
+                } else {
+                    alert('Failed to create test suite');
+                }
+            } catch (error) {
+                console.error('Error creating test suite:', error);
+                alert('Error creating test suite');
+            }
+        });
+
+        // Function to generate cache-busting parameter
+        function getCacheBustParam() {
+            return `_=${new Date().getTime()}`;
+        }
+
+        // Function to load and display module details
+        async function loadModuleDetails() {
+            try {
+                const response = await fetch(`${API_BASE}/testmodules/${moduleId}?${getCacheBustParam()}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const module = await response.json();
+
+                // Check if module exists
+                if (!module) {
+                    throw new Error('Invalid module data: module is null or undefined');
+                }
+
+                // Check if module has the required properties
+                if (!module.id) {
+                    throw new Error('Invalid module data: module id is missing');
+                }
+
+                // Check if module has project information
+                if (!module.project || !module.project.id) {
+                    // If project info is missing, try to get module with project separately
+                    // For now, we'll show the module name without the project link
+                    moduleDetails.innerHTML = `
+                        <h2 class="text-2xl font-semibold mb-2 text-gray-700">${module.name || 'Unknown Module'}</h2>
+                        <div class="mt-4">
+                            <p class="text-gray-500">Project information not available</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // First, get the project name to show the project link
+                const projectResponse = await fetch(`${API_BASE}/projects/${module.project.id}?${getCacheBustParam()}`);
+
+                if (!projectResponse.ok) {
+                    throw new Error(`HTTP error! status: ${projectResponse.status}`);
+                }
+
+                const project = await projectResponse.json();
+
+                moduleDetails.innerHTML = `
+                    <h2 class="text-2xl font-semibold mb-2 text-gray-700">${module.name}</h2>
+                    <div class="mt-4">
+                        <a href="project.html?projectId=${module.project.id}" class="text-blue-600 hover:underline">&larr; Back to ${project.name}</a>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading module details:', error);
+                moduleDetails.innerHTML = '<h2 class="text-2xl font-semibold mb-2 text-red-500">Error loading module details</h2>';
+            }
+        }
+
+        // Function to run a test case
+        async function runTest(testCaseId) {
+            try {
+                const response = await fetch(`${API_BASE}/testcases/${testCaseId}/executions`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const execution = await response.json();
+                    // Redirect to test execution page
+                    window.location.href = `test-execution.html?executionId=${execution.id}`;
+                } else {
+                    alert('Failed to start test execution');
+                }
+            } catch (error) {
+                console.error('Error starting test execution:', error);
+                alert('Error starting test execution');
+            }
+        }
+
+        // Function to load and display test suites and test cases
+        async function loadTestSuites() {
+            try {
+                const response = await fetch(`${API_BASE}/testmodules/${moduleId}?${getCacheBustParam()}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const module = await response.json();
+
+                // Check if module exists before accessing its properties
+                if (!module) {
+                    throw new Error('Invalid module data: module is null or undefined');
+                }
+
+                // Check if module has testSuites property and it's an array
+                if (!module.testSuites || !Array.isArray(module.testSuites)) {
+                    // If testSuites is missing or not an array, initialize as empty
+                    module.testSuites = [];
+                }
+
+                if (module.testSuites.length === 0) {
+                    testSuitesList.innerHTML = '<p class="text-gray-500 text-center py-4">No test suites found. Create one above.</p>';
+                    return;
+                }
+
+                let html = '';
+                module.testSuites.forEach(suite => {
+                    html += `
+                        <div class="border border-gray-200 rounded-lg mb-4">
+                            <div class="p-4 bg-gray-50 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-800">${suite.name}</h3>
+                            </div>
+
+                            <div class="p-4">
+                                <h4 class="text-md font-medium text-gray-700 mb-3">Test Cases:</h4>
+                    `;
+
+                    if (suite.testCases && suite.testCases.length > 0) {
+                        suite.testCases.forEach(testCase => {
+                            html += `
+                                    <div class="p-3 border border-gray-100 rounded mb-2 flex justify-between items-center">
+                                    <div>
+                                        <span class="font-medium">${testCase.testCaseId}</span> -
+                                        <span class="text-gray-700">${testCase.title}</span>
+                                        <span class="ml-2 px-2 py-1 text-xs bg-gray-200 rounded">${testCase.priority || 'N/A'}</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button
+                                            onclick="runTest(${testCase.id})"
+                                            class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                        >
+                                            Run Test
+                                        </button>
+                                        <a
+                                            href="testcase-form.html?testCaseId=${testCase.id}"
+                                            class="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+                                        >
+                                            Edit
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p class="text-gray-500 text-sm mb-3">No test cases in this suite.</p>';
+                    }
+
+                    html += `
+                                <div class="mt-3">
+                                    <a
+                                        href="testcase-form.html?suiteId=${suite.id}"
+                                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                                    >
+                                        Create New Test Case
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                testSuitesList.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading test suites:', error);
+                testSuitesList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading test suites</p>';
+            }
+        }
+
+        // Function to add a new test case to the UI without reloading
+        function addTestCaseToUI(suiteId, testCase) {
+            // Find the test suite element
+            const suiteElements = document.querySelectorAll('.border.border-gray-200.rounded-lg.mb-4');
+            suiteElements.forEach(suiteElement => {
+                // Find the suite link to compare with suiteId
+                const createTestCaseLink = suiteElement.querySelector('a[href*="testcase-form.html"]');
+                if (createTestCaseLink) {
+                    const urlParams = new URLSearchParams(createTestCaseLink.href);
+                    const testSuiteId = urlParams.get('suiteId');
+
+                    if (testSuiteId == suiteId) {
+                        // Find the test cases container within this suite
+                        const testCasesContainer = suiteElement.querySelector('div.p-4').querySelector('h4.text-md').nextElementSibling;
+                        const testCasesList = testCasesContainer;
+
+                        // Create the HTML for the new test case
+                        const testCaseHTML = `
+                            <div class="p-3 border border-gray-100 rounded mb-2 flex justify-between items-center">
+                                <div>
+                                    <span class="font-medium">${testCase.testCaseId}</span> -
+                                    <span class="text-gray-700">${testCase.title}</span>
+                                    <span class="ml-2 px-2 py-1 text-xs bg-gray-200 rounded">${testCase.priority || 'N/A'}</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button
+                                        onclick="runTest(${testCase.id})"
+                                        class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                                    >
+                                        Run Test
+                                    </button>
+                                    <a
+                                        href="testcase-form.html?testCaseId=${testCase.id}"
+                                        class="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700"
+                                    >
+                                        Edit
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+
+                        // If the container is showing "No test cases in this suite", remove that message
+                        if (testCasesList.innerHTML.includes('No test cases in this suite.')) {
+                            testCasesList.innerHTML = '';
+                        }
+
+                        // Add the new test case to the beginning of the list
+                        testCasesList.insertAdjacentHTML('afterbegin', testCaseHTML);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

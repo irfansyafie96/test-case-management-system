@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Execution - TCM System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Test Case Execution</h1>
+
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <div id="executionHeader" class="mb-6">
+                <h2 class="text-2xl font-semibold text-gray-700">Test Case: <span id="testCaseTitle"></span></h2>
+                <p class="text-gray-600 mt-2">Execution started: <span id="executionDate"></span></p>
+            </div>
+
+            <!-- Step Results -->
+            <div id="stepResultsContainer" class="space-y-4 mb-6">
+                <!-- Steps will be dynamically loaded here -->
+            </div>
+
+            <div id="controlsContainer" class="flex justify-end space-x-3 mt-6">
+                <button id="completeBtn" class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 hidden">
+                    Complete Execution
+                </button>
+                <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                    Back to Test Cases
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completion Modal -->
+    <div id="completionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Complete Test Execution</h3>
+                <form id="completionForm">
+                    <div class="mb-4">
+                        <label for="overallResult" class="block text-sm font-medium text-gray-700 mb-1">Overall Result</label>
+                        <select id="overallResult" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="Pass">Pass</option>
+                            <option value="Fail">Fail</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="executionNotes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea id="executionNotes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" id="cancelComplete" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                            Complete Execution
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '/api';
+
+        // Get execution ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const executionId = urlParams.get('executionId');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (executionId) {
+                loadExecution();
+            } else {
+                document.getElementById('executionHeader').innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error: Execution ID not provided</h2>';
+            }
+        });
+
+        // Event listeners
+        document.getElementById('completeBtn').addEventListener('click', () => {
+            document.getElementById('completionModal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancelComplete').addEventListener('click', () => {
+            document.getElementById('completionModal').classList.add('hidden');
+        });
+
+        document.getElementById('completionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await completeExecution();
+        });
+
+        async function loadExecution() {
+            try {
+                const response = await fetch(`${API_BASE}/executions/${executionId}`);
+                if (!response.ok) throw new Error('Failed to load execution');
+
+                const execution = await response.json();
+                displayExecution(execution);
+            } catch (error) {
+                console.error('Error loading execution:', error);
+                document.getElementById('executionHeader').innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error loading execution</h2>';
+            }
+        }
+
+        function displayExecution(execution) {
+            // Header info - check if execution.testCase exists before accessing its properties
+            if (execution.testCase && execution.testCase.title) {
+                document.getElementById('testCaseTitle').textContent = execution.testCase.title;
+            } else {
+                document.getElementById('testCaseTitle').textContent = 'Unknown Test Case';
+            }
+            document.getElementById('executionDate').textContent = new Date(execution.executionDate).toLocaleString();
+
+            // Display steps
+            const container = document.getElementById('stepResultsContainer');
+            container.innerHTML = '';
+
+            if (!execution.stepResults || execution.stepResults.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No test steps found.</p>';
+                return;
+            }
+
+            execution.stepResults.forEach((stepResult, index) => {
+                const stepElement = createStepElement(stepResult, index + 1);
+                container.appendChild(stepElement);
+            });
+
+            // Show complete button if not already completed
+            if (execution.overallResult === 'Incomplete') {
+                document.getElementById('completeBtn').classList.remove('hidden');
+            } else {
+                // If already completed, show results
+                displayCompletionResults(execution);
+            }
+        }
+
+        function createStepElement(stepResult, stepNumber) {
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step-item bg-gray-50 rounded-lg p-4 border border-gray-200';
+
+            stepDiv.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <h4 class="text-lg font-medium text-gray-800">Step ${stepNumber}</h4>
+                    <div id="status-${stepResult.testStep.id}" class="status-indicator px-2 py-1 rounded text-sm font-medium ${getStatusClass(stepResult.status)}">
+                        ${stepResult.status}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <p class="font-medium text-gray-700 mb-1">Action:</p>
+                    <p class="text-gray-600">${stepResult.testStep.action}</p>
+                </div>
+
+                <div class="mb-4">
+                    <p class="font-medium text-gray-700 mb-1">Expected Result:</p>
+                    <p class="text-gray-600">${stepResult.testStep.expectedResult}</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="font-medium text-gray-700">Your Result:</label>
+                    <textarea
+                        id="actual-${stepResult.testStep.id}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
+                        rows="2"
+                        placeholder="Enter what actually happened during testing..."
+                    >${stepResult.actualResult || ''}</textarea>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button
+                        onclick="updateStepResult(${stepResult.testStep.id}, 'Pass')"
+                        class="pass-btn px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                        ${stepResult.status === 'Pass' ? 'disabled style="opacity: 0.6;"' : ''}
+                    >
+                        Pass
+                    </button>
+                    <button
+                        onclick="updateStepResult(${stepResult.testStep.id}, 'Fail')"
+                        class="fail-btn px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                        ${stepResult.status === 'Fail' ? 'disabled style="opacity: 0.6;"' : ''}
+                    >
+                        Fail
+                    </button>
+                </div>
+            `;
+
+            return stepDiv;
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Pass': return 'bg-green-100 text-green-800';
+                case 'Fail': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        async function updateStepResult(stepId, status) {
+            const actualResult = document.getElementById(`actual-${stepId}`).value;
+
+            try {
+                const response = await fetch(`${API_BASE}/executions/${executionId}/steps/${stepId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: status,
+                        actualResult: actualResult
+                    })
+                });
+
+                if (response.ok) {
+                    // Update UI
+                    const statusElement = document.getElementById(`status-${stepId}`);
+                    statusElement.textContent = status;
+                    statusElement.className = `status-indicator px-2 py-1 rounded text-sm font-medium ${getStatusClass(status)}`;
+
+                    // Disable buttons
+                    const stepDiv = statusElement.closest('.step-item');
+                    stepDiv.querySelector('.pass-btn').disabled = true;
+                    stepDiv.querySelector('.pass-btn').style.opacity = '0.6';
+                    stepDiv.querySelector('.fail-btn').disabled = true;
+                    stepDiv.querySelector('.fail-btn').style.opacity = '0.6';
+
+                    // Reload execution to check if we can complete
+                    await loadExecution();
+                } else {
+                    alert('Failed to update step result');
+                }
+            } catch (error) {
+                console.error('Error updating step result:', error);
+                alert('Error updating step result');
+            }
+        }
+
+        async function completeExecution() {
+            const overallResult = document.getElementById('overallResult').value;
+            const notes = document.getElementById('executionNotes').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/executions/${executionId}/complete`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        overallResult: overallResult,
+                        notes: notes
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Test execution completed successfully!');
+                    document.getElementById('completionModal').classList.add('hidden');
+                    // Reload to show completion
+                    await loadExecution();
+                } else {
+                    alert('Failed to complete execution');
+                }
+            } catch (error) {
+                console.error('Error completing execution:', error);
+                alert('Error completing execution');
+            }
+        }
+
+        function displayCompletionResults(execution) {
+            const header = document.getElementById('executionHeader');
+            const resultClass = execution.overallResult === 'Pass' ? 'text-green-600' : 'text-red-600';
+            header.innerHTML += `
+                <p class="text-lg font-semibold mt-2">
+                    Overall Result: <span class="${resultClass}">${execution.overallResult}</span>
+                </p>
+            `;
+
+            if (execution.notes) {
+                header.innerHTML += `
+                    <div class="mt-4">
+                        <p class="font-medium text-gray-700 mb-1">Execution Notes:</p>
+                        <p class="text-gray-600 bg-gray-50 p-3 rounded">${execution.notes}</p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('completeBtn').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
