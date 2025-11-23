@@ -86,13 +86,36 @@
                     // Reload the projects list
                     loadProjects();
                 } else {
-                    alert('Failed to create project');
+                    const errorMessage = await response.text();
+                    showNotification(`Failed to create project: ${errorMessage}`, 'error');
                 }
             } catch (error) {
                 console.error('Error creating project:', error);
-                alert('Error creating project');
+                showNotification('Error creating project', 'error');
             }
         });
+
+        // Function to show notification
+        function showNotification(message, type) {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 max-w-sm ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            notification.textContent = message;
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
 
         // Function to load and display projects
         async function loadProjects() {

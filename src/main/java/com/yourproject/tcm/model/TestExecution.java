@@ -1,6 +1,7 @@
 package com.yourproject.tcm.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "test_executions")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TestExecution {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,7 +17,7 @@ public class TestExecution {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "test_case_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnoreProperties({"testSteps"}) // Prevent circular reference back to TestSteps
     private TestCase testCase;
 
     @Column(nullable = false)
@@ -30,6 +32,7 @@ public class TestExecution {
     @OneToMany(mappedBy = "testExecution", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepNumber ASC")
     @JsonManagedReference
+    @JsonIgnoreProperties({"testExecution"}) // Prevent circular reference back to TestExecution
     private List<TestStepResult> stepResults;
 
     // Getters and Setters

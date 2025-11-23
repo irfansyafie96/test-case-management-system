@@ -1,12 +1,14 @@
 package com.yourproject.tcm.service;
 
 import com.yourproject.tcm.model.*;
+import com.yourproject.tcm.model.dto.StepResultResponse;
 import com.yourproject.tcm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -148,13 +150,55 @@ public class TcmService {
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
         if (testCaseOpt.isPresent()) {
             TestCase testCase = testCaseOpt.get();
+
+            // Update basic properties
             testCase.setTitle(testCaseDetails.getTitle());
             testCase.setTestCaseId(testCaseDetails.getTestCaseId());
             testCase.setPriority(testCaseDetails.getPriority());
-            testCase.setTestSteps(testCaseDetails.getTestSteps());
+
+            // Handle test steps - properly manage the relationship to avoid cascade issues
+            if (testCaseDetails.getTestSteps() != null) {
+                // Get or create the current test steps list to maintain the same collection instance
+                List<TestStep> currentSteps = testCase.getTestSteps();
+                if (currentSteps == null) {
+                    currentSteps = new ArrayList<>();
+                    testCase.setTestSteps(currentSteps);
+                }
+
+                // Delete related test step results for existing steps to avoid foreign key constraint violations
+                for (TestStep existingStep : currentSteps) {
+                    testStepResultRepository.deleteByTestStepId(existingStep.getId());
+                }
+
+                // Clear the existing steps - this should properly handle the cascade
+                currentSteps.clear();
+
+                // Add new test steps to the same collection instance
+                for (int i = 0; i < testCaseDetails.getTestSteps().size(); i++) {
+                    TestStep stepDetail = testCaseDetails.getTestSteps().get(i);
+                    TestStep newStep = new TestStep();
+                    newStep.setStepNumber(i + 1); // Ensure step numbers are sequential
+                    newStep.setAction(stepDetail.getAction());
+                    newStep.setExpectedResult(stepDetail.getExpectedResult());
+                    newStep.setTestCase(testCase); // Set the back-reference to testCase
+                    currentSteps.add(newStep);
+                }
+            } else {
+                // If new test steps are null, clear existing ones
+                List<TestStep> currentSteps = testCase.getTestSteps();
+                if (currentSteps != null) {
+                    // Delete related test step results first to avoid foreign key constraint violations
+                    for (TestStep existingStep : currentSteps) {
+                        testStepResultRepository.deleteByTestStepId(existingStep.getId());
+                    }
+
+                    // Clear the existing test steps
+                    currentSteps.clear();
+                }
+            }
+
             TestCase updatedTestCase = testCaseRepository.save(testCase);
             entityManager.flush(); // Ensure data is written to DB
-            entityManager.clear(); // Clear the persistence context to avoid stale data
             return updatedTestCase;
         } else {
             throw new RuntimeException("Test Case not found with id: " + testCaseId);
@@ -163,7 +207,26 @@ public class TcmService {
 
     @Transactional
     public void deleteTestCase(Long testCaseId) {
-        if (testCaseRepository.existsById(testCaseId)) {
+        Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
+        if (testCaseOpt.isPresent()) {
+            TestCase testCase = testCaseOpt.get();
+
+            // First, delete all test executions for this test case
+            // This will cascade to delete test step results associated with those executions
+            List<TestExecution> executions = testExecutionRepository.findByTestCaseId(testCaseId);
+            for (TestExecution execution : executions) {
+                testExecutionRepository.deleteById(execution.getId());
+            }
+
+            // Next, delete test step results that might still reference the test steps
+            // (in case any are orphaned)
+            if (testCase.getTestSteps() != null) {
+                for (TestStep step : testCase.getTestSteps()) {
+                    testStepResultRepository.deleteByTestStepId(step.getId());
+                }
+            }
+
+            // Now delete the test case (cascading should handle test steps)
             testCaseRepository.deleteById(testCaseId);
             entityManager.flush(); // Ensure data is written to DB
         } else {
@@ -192,38 +255,54 @@ public class TcmService {
             execution.setExecutionDate(LocalDateTime.now());
             execution.setOverallResult("Incomplete");
 
-            // Create step results for each step
+            TestExecution initialExecution = testExecutionRepository.save(execution);
+            entityManager.flush(); // Ensure execution has an ID
+
+            // Create step results for each step after saving the execution
             if (testCase.getTestSteps() != null) {
                 List<TestStepResult> stepResults = testCase.getTestSteps().stream()
                     .map(step -> {
                         TestStepResult result = new TestStepResult();
-                        result.setTestExecution(execution);
+                        result.setTestExecution(initialExecution); // Use the initial saved execution
                         result.setTestStep(step);
                         result.setStepNumber(step.getStepNumber());
                         result.setStatus("Skipped");
                         return result;
                     })
                     .collect(Collectors.toList());
-                execution.setStepResults(stepResults);
+
+                // Assign the step results to the execution and save again
+                initialExecution.setStepResults(stepResults);
+                TestExecution finalExecution = testExecutionRepository.save(initialExecution);
+                return finalExecution;
             }
 
-            TestExecution savedExecution = testExecutionRepository.save(execution);
             entityManager.flush();
-            return savedExecution;
+            return initialExecution;
         } else {
             throw new RuntimeException("Test Case not found with id: " + testCaseId);
         }
     }
 
     @Transactional
-    public TestStepResult updateStepResult(Long executionId, Long stepId, String status, String actualResult) {
+    public com.yourproject.tcm.model.dto.StepResultResponse updateStepResult(Long executionId, Long stepId, String status, String actualResult) {
         TestStepResult existingResult = testStepResultRepository.findByTestExecutionIdAndTestStepId(executionId, stepId);
         if (existingResult != null) {
             existingResult.setStatus(status);
             existingResult.setActualResult(actualResult);
             TestStepResult savedResult = testStepResultRepository.save(existingResult);
             entityManager.flush();
-            return savedResult;
+
+            // Return DTO to avoid serialization issues
+            return new com.yourproject.tcm.model.dto.StepResultResponse(
+                savedResult.getId(),
+                savedResult.getTestStep().getId(),
+                savedResult.getStepNumber(),
+                savedResult.getActualResult(),
+                savedResult.getStatus(),
+                savedResult.getTestStep().getAction(),
+                savedResult.getTestStep().getExpectedResult()
+            );
         } else {
             throw new RuntimeException("Step result not found for execution " + executionId + " and step " + stepId);
         }

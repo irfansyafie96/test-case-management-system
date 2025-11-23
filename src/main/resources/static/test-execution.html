@@ -159,13 +159,16 @@
                     <p class="text-gray-600">${stepResult.testStep.expectedResult}</p>
                 </div>
 
-                <div class="mb-3">
-                    <label class="font-medium text-gray-700">Your Result:</label>
+                <div class="mb-3" id="result-container-${stepResult.testStep.id}">
+                    <label for="actual-${stepResult.testStep.id}" class="font-medium text-gray-700" id="result-label-${stepResult.testStep.id}">
+                        ${stepResult.status === 'Fail' ? 'Remarks' : 'Your Result'}
+                    </label>
                     <textarea
                         id="actual-${stepResult.testStep.id}"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
                         rows="2"
-                        placeholder="Enter what actually happened during testing..."
+                        placeholder="${stepResult.status === 'Fail' ? 'Enter remarks for failure...' : 'Enter what actually happened during testing...'}"
+                        style="${stepResult.status === 'Pass' ? 'display: none;' : 'display: block;'}"
                     >${stepResult.actualResult || ''}</textarea>
                 </div>
 
@@ -199,6 +202,7 @@
         }
 
         async function updateStepResult(stepId, status) {
+            // Get the current actual result value
             const actualResult = document.getElementById(`actual-${stepId}`).value;
 
             try {
@@ -219,6 +223,24 @@
                     statusElement.textContent = status;
                     statusElement.className = `status-indicator px-2 py-1 rounded text-sm font-medium ${getStatusClass(status)}`;
 
+                    // Get the result container and elements
+                    const resultContainer = document.getElementById(`result-container-${stepId}`);
+                    const resultLabel = document.getElementById(`result-label-${stepId}`);
+                    const resultTextarea = document.getElementById(`actual-${stepId}`);
+
+                    // Update the label based on status
+                    resultLabel.textContent = status === 'Fail' ? 'Remarks' : 'Your Result';
+
+                    // Update placeholder
+                    resultTextarea.placeholder = status === 'Fail' ? 'Enter remarks for failure...' : 'Enter what actually happened during testing...';
+
+                    // Show/hide the textarea based on status
+                    if (status === 'Pass') {
+                        resultTextarea.style.display = 'none';
+                    } else {
+                        resultTextarea.style.display = 'block';
+                    }
+
                     // Disable buttons
                     const stepDiv = statusElement.closest('.step-item');
                     stepDiv.querySelector('.pass-btn').disabled = true;
@@ -229,12 +251,35 @@
                     // Reload execution to check if we can complete
                     await loadExecution();
                 } else {
-                    alert('Failed to update step result');
+                    const errorMessage = await response.text();
+                    showNotification(`Failed to update step result: ${errorMessage}`, 'error');
                 }
             } catch (error) {
                 console.error('Error updating step result:', error);
-                alert('Error updating step result');
+                showNotification('Error updating step result', 'error');
             }
+        }
+
+        // Function to show notification
+        function showNotification(message, type) {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => notification.remove());
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 max-w-sm ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            notification.textContent = message;
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
         async function completeExecution() {
@@ -254,16 +299,17 @@
                 });
 
                 if (response.ok) {
-                    alert('Test execution completed successfully!');
+                    showNotification('Test execution completed successfully!', 'success');
                     document.getElementById('completionModal').classList.add('hidden');
                     // Reload to show completion
                     await loadExecution();
                 } else {
-                    alert('Failed to complete execution');
+                    const errorMessage = await response.text();
+                    showNotification(`Failed to complete execution: ${errorMessage}`, 'error');
                 }
             } catch (error) {
                 console.error('Error completing execution:', error);
-                alert('Error completing execution');
+                showNotification('Error completing execution', 'error');
             }
         }
 

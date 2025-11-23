@@ -1,6 +1,7 @@
 package com.yourproject.tcm.controller;
 
 import com.yourproject.tcm.model.*;
+import com.yourproject.tcm.model.dto.StepResultResponse;
 import com.yourproject.tcm.service.TcmService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -210,7 +211,7 @@ public class ApiController {
         try {
             String status = stepData.getStatus();
             String actualResult = stepData.getActualResult();
-            TestStepResult updatedResult = tcmService.updateStepResult(executionId, stepId, status, actualResult);
+            StepResultResponse updatedResult = tcmService.updateStepResult(executionId, stepId, status, actualResult);
             return new ResponseEntity<>(updatedResult, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

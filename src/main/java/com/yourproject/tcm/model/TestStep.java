@@ -1,10 +1,12 @@
 package com.yourproject.tcm.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "test_steps")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class TestStep {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +23,8 @@ public class TestStep {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "test_case_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference // This should match with JsonManagedReference in TestCase
+    @JsonIgnoreProperties({"testSteps"}) // Prevent circular reference back to TestCase
     private TestCase testCase;
 
     // Getters and Setters
