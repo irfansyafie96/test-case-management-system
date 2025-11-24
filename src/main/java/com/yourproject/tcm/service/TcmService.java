@@ -113,6 +113,42 @@ public class TcmService {
         }
     }
 
+    @Transactional
+    public void deleteTestModule(Long testModuleId) {
+        Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
+        if (testModuleOpt.isPresent()) {
+            TestModule testModule = testModuleOpt.get();
+
+            // First, delete all test executions for test cases in this module
+            if (testModule.getTestSuites() != null) {
+                for (TestSuite suite : testModule.getTestSuites()) {
+                    if (suite.getTestCases() != null) {
+                        for (TestCase testCase : suite.getTestCases()) {
+                            // Delete executions for this test case
+                            List<TestExecution> executions = testExecutionRepository.findByTestCaseId(testCase.getId());
+                            for (TestExecution execution : executions) {
+                                testExecutionRepository.deleteById(execution.getId());
+                            }
+
+                            // Delete test step results for test steps in this test case
+                            if (testCase.getTestSteps() != null) {
+                                for (TestStep step : testCase.getTestSteps()) {
+                                    testStepResultRepository.deleteByTestStepId(step.getId());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Now delete the test module (cascading should handle test suites, test cases, and test steps)
+            testModuleRepository.deleteById(testModuleId);
+            entityManager.flush(); // Ensure data is written to DB
+        } else {
+            throw new RuntimeException("Test Module not found with id: " + testModuleId);
+        }
+    }
+
     // Test Suite methods
     @Transactional(readOnly = true)
     public Optional<TestSuite> getTestSuiteById(Long suiteId) {

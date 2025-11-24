@@ -159,12 +159,20 @@
                                 <div>
                                     <h3 class="text-lg font-semibold text-gray-800">${module.name}</h3>
                                 </div>
-                                <a 
-                                    href="module.html?moduleId=${module.id}" 
-                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                                >
-                                    View Module
-                                </a>
+                                <div class="flex gap-2">
+                                    <a
+                                        href="module.html?moduleId=${module.id}"
+                                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                                    >
+                                        View Module
+                                    </a>
+                                    <button
+                                        onclick="deleteModule(${module.id}, '${module.name}')"
+                                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -174,6 +182,33 @@
             } catch (error) {
                 console.error('Error loading modules:', error);
                 modulesList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading modules</p>';
+            }
+        }
+
+        // Function to delete a module with confirmation
+        async function deleteModule(moduleId, moduleName) {
+            const confirmed = confirm(`Are you sure you want to delete the module "${moduleName}"? This will delete all test suites, test cases, and execution data associated with this module. This action cannot be undone.`);
+
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/testmodules/${moduleId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showNotification(`Module "${moduleName}" deleted successfully`, 'success');
+                    // Reload the modules list
+                    loadModules();
+                } else {
+                    const errorMessage = await response.text();
+                    showNotification(`Failed to delete module: ${errorMessage}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting module:', error);
+                showNotification('Error deleting module', 'error');
             }
         }
     </script>

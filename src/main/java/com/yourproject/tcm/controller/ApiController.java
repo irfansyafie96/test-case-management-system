@@ -94,6 +94,19 @@ public class ApiController {
         }
     }
 
+    // DELETE /api/testmodules/{testModuleId} -> Delete a test module.
+    @DeleteMapping("/testmodules/{testModuleId}")
+    public ResponseEntity<?> deleteTestModule(@PathVariable Long testModuleId) {
+        try {
+            tcmService.deleteTestModule(testModuleId);
+            return new ResponseEntity<>("Test module deleted successfully", HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error deleting test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // POST /api/testmodules/{testModuleId}/testsuites -> Create a new test suite for a test module.
     @PostMapping("/testmodules/{testModuleId}/testsuites")
     public ResponseEntity<?> createTestSuiteForTestModule(@PathVariable Long testModuleId, @RequestBody TestSuite testSuite) {

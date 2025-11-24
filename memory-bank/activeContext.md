@@ -38,6 +38,15 @@
 - Enhanced API endpoints count to 24 with full CRUD operations for test modules
 - Updated memory bank documentation to reflect new functionality
 
+### Module Deletion Functionality (2025-11-24)
+- Added DELETE /api/testmodules/{testModuleId} endpoint in ApiController.java
+- Implemented deleteTestModule service method with manual cascade deletion handling
+- Cascade deletion manages: TestExecutions → TestStepResults → TestCases → TestSuites → TestModule
+- Added delete button with confirmation dialog on project.html module list
+- Implemented JavaScript handler for delete operations with error handling and UI refresh
+- Fixed compilation error by restoring missing updateTestModule method in service layer
+- Updated memory bank documentation to reflect completed delete functionality
+
 ### Memory Bank Initialization
 - Created comprehensive documentation structure for project continuity
 - Documented system architecture, technical stack, business context, and current implementation patterns
