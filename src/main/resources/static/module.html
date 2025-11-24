@@ -309,7 +309,16 @@
                     html += `
                         <div class="border border-gray-200 rounded-lg mb-4">
                             <div class="p-4 bg-gray-50 border-b border-gray-200">
-                                <h3 class="text-lg font-semibold text-gray-800">${suite.name}</h3>
+                                <div class="flex items-center gap-4">
+                                    <h3 class="text-lg font-semibold text-gray-800" id="suiteNameDisplay-${suite.id}">${suite.name}</h3>
+                                    <button
+                                        onclick="editTestSuite(${suite.id})"
+                                        class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                                        title="Edit suite name"
+                                    >
+                                        Edit
+                                    </button>
+                                </div>
                             </div>
 
                             <div class="p-4">
@@ -498,6 +507,86 @@
 
             // Restore the display and show the edit button
             moduleNameDisplay.innerHTML = originalName;
+            editButton.style.display = 'inline-block';
+        }
+
+        // Function to edit test suite name inline
+        function editTestSuite(suiteId) {
+            const suiteNameDisplay = document.getElementById(`suiteNameDisplay-${suiteId}`);
+            const editButton = document.querySelector(`button[onclick="editTestSuite(${suiteId})"]`);
+            const currentName = suiteNameDisplay.textContent;
+
+            // Replace the display with an input field
+            suiteNameDisplay.innerHTML = `
+                <input
+                    type="text"
+                    id="suiteNameInput-${suiteId}"
+                    value="${currentName.replace(/[']/g, '"')}"
+                    class="px-3 py-1 border border-gray-300 rounded font-semibold text-lg text-gray-800"
+                    style="min-width: 200px;"
+                >
+                <button
+                    onclick="saveTestSuiteName(${suiteId})"
+                    class="ml-2 px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                >
+                    Save
+                </button>
+                <button
+                    onclick="cancelTestSuiteEdit(${suiteId}, '${currentName.replace(/[']/g, '"')}')"
+                    class="ml-1 px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                >
+                    Cancel
+                </button>
+            `;
+
+            // Hide the edit button temporarily
+            editButton.style.display = 'none';
+
+            // Focus on the input field
+            document.getElementById(`suiteNameInput-${suiteId}`).focus();
+            document.getElementById(`suiteNameInput-${suiteId}`).select();
+        }
+
+        // Function to save the edited test suite name
+        async function saveTestSuiteName(suiteId) {
+            const inputField = document.getElementById(`suiteNameInput-${suiteId}`);
+            const newName = inputField.value.trim();
+
+            if (!newName) {
+                showNotification('Test suite name cannot be empty', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/testsuites/${suiteId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: newName })
+                });
+
+                if (response.ok) {
+                    // Reload the module data to show the updated name
+                    loadAllModuleData();
+                    showNotification('Test suite name updated successfully!', 'success');
+                } else {
+                    const errorMessage = await response.text();
+                    showNotification(`Failed to update test suite name: ${errorMessage}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating test suite name:', error);
+                showNotification('Error updating test suite name', 'error');
+            }
+        }
+
+        // Function to cancel test suite name editing
+        function cancelTestSuiteEdit(suiteId, originalName) {
+            const suiteNameDisplay = document.getElementById(`suiteNameDisplay-${suiteId}`);
+            const editButton = document.querySelector(`button[onclick="editTestSuite(${suiteId})"]`);
+
+            // Restore the display and show the edit button
+            suiteNameDisplay.innerHTML = originalName;
             editButton.style.display = 'inline-block';
         }
 

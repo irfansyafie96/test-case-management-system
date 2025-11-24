@@ -11,7 +11,7 @@
 ### Current System State
 - **Application Status**: Fixed and ready for startup verification
 - **Database**: H2 in-memory, initialized on each application restart
-- **API Endpoints**: 24 endpoints implemented across hierarchical CRUD operations
+- **API Endpoints**: 25 endpoints implemented across hierarchical CRUD operations
 - **Frontend**: Static HTML pages with basic functionality for project/test management
 
 ## Recent Changes
@@ -46,6 +46,24 @@
 - Implemented JavaScript handler for delete operations with error handling and UI refresh
 - Fixed compilation error by restoring missing updateTestModule method in service layer
 - Updated memory bank documentation to reflect completed delete functionality
+
+### Confirmation Dialog Standardization (2025-11-25)
+- Replaced browser native confirm() dialog in project.html with custom modal dialog
+- Added reusable confirmation modal HTML and JavaScript functions to project.html
+- Implemented consistent confirmation pattern matching module.html deleteTestCase functionality
+- Eliminated all usages of browser alert() and confirm() dialogs in favor of custom styled modals
+- Enhanced user experience with professional-looking confirmation dialogs throughout the system
+- Updated codebase to use consistent confirmation modal pattern across all deletion operations
+
+### Test Suite Name Editing (2025-11-24)
+- Added PUT /api/testsuites/{suiteId} endpoint in ApiController.java for updating test suite names
+- Implemented updateTestSuite service method in TcmService.java with proper validation and entity flushing
+- Updated module.html to display Edit button next to each test suite name with inline editing functionality
+- Implemented JavaScript functions: editTestSuite(), saveTestSuiteName(), cancelTestSuiteEdit()
+- Follows same pattern as module name editing with inline input field and Save/Cancel buttons
+- Added success notifications and proper error handling for the editing workflow
+- Enhanced API endpoints count to 25 with full CRUD operations now available for test suites
+- Updated memory bank documentation to reflect new functionality
 
 ### Memory Bank Initialization
 - Created comprehensive documentation structure for project continuity

@@ -135,6 +135,19 @@ public class ApiController {
         }
     }
 
+    // PUT /api/testsuites/{suiteId} -> Update a test suite (name only).
+    @PutMapping("/testsuites/{suiteId}")
+    public ResponseEntity<?> updateTestSuite(@PathVariable Long suiteId, @RequestBody TestSuite suiteDetails) {
+        try {
+            TestSuite updatedTestSuite = tcmService.updateTestSuite(suiteId, suiteDetails);
+            return new ResponseEntity<>(updatedTestSuite, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating test suite: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // POST /api/testsuites/{suiteId}/testcases -> Create a new test case. This request body should include the list of TestSteps.
     @PostMapping("/testsuites/{suiteId}/testcases")
     public ResponseEntity<?> createTestCaseForTestSuite(@PathVariable Long suiteId, @RequestBody TestCase testCase) {
