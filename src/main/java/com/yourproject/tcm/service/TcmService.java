@@ -99,6 +99,20 @@ public class TcmService {
         }
     }
 
+    @Transactional
+    public TestModule updateTestModule(Long testModuleId, TestModule testModuleDetails) {
+        Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
+        if (testModuleOpt.isPresent()) {
+            TestModule testModule = testModuleOpt.get();
+            testModule.setName(testModuleDetails.getName());
+            TestModule updatedTestModule = testModuleRepository.save(testModule);
+            entityManager.flush(); // Ensure data is written to DB
+            return updatedTestModule;
+        } else {
+            throw new RuntimeException("Test Module not found with id: " + testModuleId);
+        }
+    }
+
     // Test Suite methods
     @Transactional(readOnly = true)
     public Optional<TestSuite> getTestSuiteById(Long suiteId) {

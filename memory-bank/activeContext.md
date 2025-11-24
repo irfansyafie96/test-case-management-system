@@ -11,7 +11,7 @@
 ### Current System State
 - **Application Status**: Fixed and ready for startup verification
 - **Database**: H2 in-memory, initialized on each application restart
-- **API Endpoints**: 23 endpoints implemented across hierarchical CRUD operations
+- **API Endpoints**: 24 endpoints implemented across hierarchical CRUD operations
 - **Frontend**: Static HTML pages with basic functionality for project/test management
 
 ## Recent Changes
@@ -30,6 +30,13 @@
 - Added visibilitychange event listener in module.html for automatic test suite refresh
 - Implemented real-time UI updates when returning to module page after test case creation
 - Enhanced user experience with automatic data synchronization
+
+### Module Name Editing (2025-11-24)
+- Added PUT /api/testmodules/{testModuleId} endpoint for updating module names
+- Implemented updateTestModule service method with proper validation
+- Added inline edit UI on module.html with Edit/Save/Cancel functionality
+- Enhanced API endpoints count to 24 with full CRUD operations for test modules
+- Updated memory bank documentation to reflect new functionality
 
 ### Memory Bank Initialization
 - Created comprehensive documentation structure for project continuity

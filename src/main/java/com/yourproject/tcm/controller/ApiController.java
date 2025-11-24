@@ -81,6 +81,19 @@ public class ApiController {
         }
     }
 
+    // PUT /api/testmodules/{testModuleId} -> Update a test module (name only).
+    @PutMapping("/testmodules/{testModuleId}")
+    public ResponseEntity<?> updateTestModule(@PathVariable Long testModuleId, @RequestBody TestModule testModuleDetails) {
+        try {
+            TestModule updatedTestModule = tcmService.updateTestModule(testModuleId, testModuleDetails);
+            return new ResponseEntity<>(updatedTestModule, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // POST /api/testmodules/{testModuleId}/testsuites -> Create a new test suite for a test module.
     @PostMapping("/testmodules/{testModuleId}/testsuites")
     public ResponseEntity<?> createTestSuiteForTestModule(@PathVariable Long testModuleId, @RequestBody TestSuite testSuite) {

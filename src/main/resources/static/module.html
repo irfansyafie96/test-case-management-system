@@ -204,7 +204,17 @@
                 const project = await projectResponse.json();
 
                 moduleDetails.innerHTML = `
-                    <h2 class="text-2xl font-semibold mb-2 text-gray-700">${module.name}</h2>
+                    <div class="flex items-center gap-4 mb-2">
+                        <h2 class="text-2xl font-semibold text-gray-700" id="moduleNameDisplay">${module.name}</h2>
+                        <button
+                            id="editModuleNameBtn"
+                            onclick="editModuleName()"
+                            class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                            title="Edit module name"
+                        >
+                            Edit
+                        </button>
+                    </div>
                     <div class="mt-4">
                         <a href="project.html?projectId=${module.project.id}" class="text-blue-600 hover:underline">&larr; Back to ${project.name}</a>
                     </div>
@@ -248,7 +258,17 @@
                     const project = await projectResponse.json();
 
                     moduleDetails.innerHTML = `
-                        <h2 class="text-2xl font-semibold mb-2 text-gray-700">${module.name}</h2>
+                        <div class="flex items-center gap-4 mb-2">
+                            <h2 class="text-2xl font-semibold text-gray-700" id="moduleNameDisplay">${module.name}</h2>
+                            <button
+                                id="editModuleNameBtn"
+                                onclick="editModuleName()"
+                                class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                                title="Edit module name"
+                            >
+                                Edit
+                            </button>
+                        </div>
                         <div class="mt-4">
                             <a href="project.html?projectId=${module.project.id}" class="text-blue-600 hover:underline">&larr; Back to ${project.name}</a>
                         </div>
@@ -256,7 +276,17 @@
                 } else {
                     // If project info is missing, show the module name without the project link
                     moduleDetails.innerHTML = `
-                        <h2 class="text-2xl font-semibold mb-2 text-gray-700">${module.name || 'Unknown Module'}</h2>
+                        <div class="flex items-center gap-4 mb-2">
+                            <h2 class="text-2xl font-semibold text-gray-700" id="moduleNameDisplay">${module.name || 'Unknown Module'}</h2>
+                            <button
+                                id="editModuleNameBtn"
+                                onclick="editModuleName()"
+                                class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                                title="Edit module name"
+                            >
+                                Edit
+                            </button>
+                        </div>
                         <div class="mt-4">
                             <p class="text-gray-500">Project information not available</p>
                         </div>
@@ -389,6 +419,86 @@
                 console.error('Error deleting test case:', error);
                 showNotification('Error deleting test case', 'error');
             }
+        }
+
+        // Function to edit module name inline
+        function editModuleName() {
+            const moduleNameDisplay = document.getElementById('moduleNameDisplay');
+            const editButton = document.getElementById('editModuleNameBtn');
+            const currentName = moduleNameDisplay.textContent;
+
+            // Replace the display with an input field
+            moduleNameDisplay.innerHTML = `
+                <input
+                    type="text"
+                    id="moduleNameInput"
+                    value="${currentName.replace(/['A]/g, '"')}"
+                    class="px-3 py-1 border border-gray-300 rounded font-semibold text-2xl text-gray-700"
+                    style="min-width: 200px;"
+                >
+                <button
+                    onclick="saveModuleName()"
+                    class="ml-2 px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                >
+                    Save
+                </button>
+                <button
+                    onclick="cancelModuleNameEdit('${currentName.replace(/['A]/g, '"')}')"
+                    class="ml-1 px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                >
+                    Cancel
+                </button>
+            `;
+
+            // Hide the edit button temporarily
+            editButton.style.display = 'none';
+
+            // Focus on the input field
+            document.getElementById('moduleNameInput').focus();
+            document.getElementById('moduleNameInput').select();
+        }
+
+        // Function to save the edited module name
+        async function saveModuleName() {
+            const inputField = document.getElementById('moduleNameInput');
+            const newName = inputField.value.trim();
+
+            if (!newName) {
+                showNotification('Module name cannot be empty', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/testmodules/${moduleId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: newName })
+                });
+
+                if (response.ok) {
+                    // Reload the module data to show the updated name
+                    loadAllModuleData();
+                    showNotification('Module name updated successfully!', 'success');
+                } else {
+                    const errorMessage = await response.text();
+                    showNotification(`Failed to update module name: ${errorMessage}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error updating module name:', error);
+                showNotification('Error updating module name', 'error');
+            }
+        }
+
+        // Function to cancel module name editing
+        function cancelModuleNameEdit(originalName) {
+            const moduleNameDisplay = document.getElementById('moduleNameDisplay');
+            const editButton = document.getElementById('editModuleNameBtn');
+
+            // Restore the display and show the edit button
+            moduleNameDisplay.innerHTML = originalName;
+            editButton.style.display = 'inline-block';
         }
 
         // Function to show notification
