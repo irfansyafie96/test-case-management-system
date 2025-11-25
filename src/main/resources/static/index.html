@@ -7,42 +7,80 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Test Case Management System</h1>
-        
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-800">Test Case Management System</h1>
+                <div id="userInfo" class="flex items-center space-x-4">
+                    <span id="userDisplay" class="text-gray-700"></span>
+                    <a href="login.html" id="loginLink" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                        Login
+                    </a>
+                    <button id="logoutBtn" class="hidden px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Login Required Message -->
+    <div id="loginRequired" class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto text-center bg-white rounded-lg shadow-md p-8">
+            <div class="mb-6">
+                <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Authentication Required</h2>
+            <p class="text-gray-600 mb-6">
+                You need to be logged in to access the Test Case Management System.
+            </p>
+            <a href="login.html" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                </svg>
+                Sign In to Continue
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="container mx-auto px-4 py-8 hidden">
         <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-700">Projects</h2>
-            
+            <h2 class="text-2xl font-semibold mb-6 text-gray-700">Projects Dashboard</h2>
+
             <!-- Create Project Form -->
             <div class="mb-8 p-4 bg-blue-50 rounded-lg">
                 <h3 class="text-lg font-medium mb-3 text-gray-700">Create New Project</h3>
                 <form id="createProjectForm">
                     <div class="mb-4">
                         <label for="projectName" class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
-                        <input 
-                            type="text" 
-                            id="projectName" 
+                        <input
+                            type="text"
+                            id="projectName"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         >
                     </div>
                     <div class="mb-4">
                         <label for="projectDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea 
-                            id="projectDescription" 
+                        <textarea
+                            id="projectDescription"
                             rows="3"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         ></textarea>
                     </div>
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                         Create Project
                     </button>
                 </form>
             </div>
-            
+
             <!-- Projects List -->
             <div id="projectsList" class="space-y-4">
                 <!-- Projects will be loaded here dynamically -->
@@ -56,35 +94,150 @@
         const API_BASE = '/api';
 
         // DOM elements
+        const loginRequired = document.getElementById('loginRequired');
+        const dashboard = document.getElementById('dashboard');
+        const userInfo = document.getElementById('userInfo');
+        const userDisplay = document.getElementById('userDisplay');
+        const loginLink = document.getElementById('loginLink');
+        const logoutBtn = document.getElementById('logoutBtn');
         const projectsList = document.getElementById('projectsList');
         const createProjectForm = document.getElementById('createProjectForm');
 
-        // Load projects when page loads
+        // Authentication state
+        let jwtToken = null;
+        let currentUser = null;
+
+        // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
-            loadProjects();
+            // Check if user is already logged in
+            const storedToken = localStorage.getItem('jwtToken');
+            const storedUser = localStorage.getItem('currentUser');
+
+            if (storedToken && storedUser) {
+                jwtToken = storedToken;
+                currentUser = JSON.parse(storedUser);
+                showDashboard();
+            } else {
+                showLoginRequired();
+            }
+
+            // Event listeners
+            logoutBtn.addEventListener('click', handleLogout);
+            createProjectForm.addEventListener('submit', handleCreateProject);
         });
 
-        // Event listener for form submission
-        createProjectForm.addEventListener('submit', async (e) => {
+        // Logout
+        function handleLogout() {
+            jwtToken = null;
+            currentUser = null;
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('currentUser');
+
+            showNotification('Logged out successfully', 'success');
+            showLoginRequired();
+        }
+
+        // Show login required message, hide dashboard
+        function showLoginRequired() {
+            loginRequired.classList.remove('hidden');
+            dashboard.classList.add('hidden');
+            loginLink.classList.remove('hidden');
+            logoutBtn.classList.add('hidden');
+            userDisplay.textContent = '';
+        }
+
+        // Show dashboard, hide login required
+        function showDashboard() {
+            loginRequired.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            loginLink.classList.add('hidden');
+            logoutBtn.classList.remove('hidden');
+
+            // Update user info
+            userDisplay.textContent = `Welcome, ${currentUser.username} (${currentUser.roles.join(', ')})`;
+
+            // Load dashboard data
+            loadProjects();
+        }
+
+        // Load projects with authentication
+        async function loadProjects() {
+            try {
+                const response = await fetch(`${API_BASE}/projects`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    handleLogout();
+                    return;
+                }
+
+                const projects = await response.json();
+
+                if (projects.length === 0) {
+                    projectsList.innerHTML = '<p class="text-gray-500 text-center py-4">No projects found. Create one above.</p>';
+                    return;
+                }
+
+                let html = '';
+                projects.forEach(project => {
+                    html += `
+                        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-800">${project.name}</h3>
+                                    ${project.description ? `<p class="text-gray-600 text-sm mt-1">${project.description}</p>` : ''}
+                                </div>
+                                <a
+                                    href="project.html?projectId=${project.id}"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                                >
+                                    View Project
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                projectsList.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                projectsList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading projects</p>';
+            }
+        }
+
+        // Create project form submission
+        async function handleCreateProject(e) {
             e.preventDefault();
-            
+
             const name = document.getElementById('projectName').value;
             const description = document.getElementById('projectDescription').value;
-            
+
             try {
                 const response = await fetch(`${API_BASE}/projects`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
                     },
                     body: JSON.stringify({ name, description })
                 });
-                
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    handleLogout();
+                    return;
+                }
+
                 if (response.ok) {
                     // Clear the form
                     createProjectForm.reset();
                     // Reload the projects list
                     loadProjects();
+                    showNotification('Project created successfully!', 'success');
                 } else {
                     const errorMessage = await response.text();
                     showNotification(`Failed to create project: ${errorMessage}`, 'error');
@@ -93,7 +246,7 @@
                 console.error('Error creating project:', error);
                 showNotification('Error creating project', 'error');
             }
-        });
+        }
 
         // Function to show notification
         function showNotification(message, type) {
@@ -115,44 +268,6 @@
             setTimeout(() => {
                 notification.remove();
             }, 3000);
-        }
-
-        // Function to load and display projects
-        async function loadProjects() {
-            try {
-                const response = await fetch(`${API_BASE}/projects`);
-                const projects = await response.json();
-                
-                if (projects.length === 0) {
-                    projectsList.innerHTML = '<p class="text-gray-500 text-center py-4">No projects found. Create one above.</p>';
-                    return;
-                }
-                
-                let html = '';
-                projects.forEach(project => {
-                    html += `
-                        <div class="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-800">${project.name}</h3>
-                                    ${project.description ? `<p class="text-gray-600 text-sm mt-1">${project.description}</p>` : ''}
-                                </div>
-                                <a 
-                                    href="project.html?projectId=${project.id}" 
-                                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                                >
-                                    View Project
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                projectsList.innerHTML = html;
-            } catch (error) {
-                console.error('Error loading projects:', error);
-                projectsList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading projects</p>';
-            }
         }
     </script>
 </body>

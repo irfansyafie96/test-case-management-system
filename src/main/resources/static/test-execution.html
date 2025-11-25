@@ -66,15 +66,32 @@
         // API base URL
         const API_BASE = '/api';
 
+        // Authentication state
+        let jwtToken = null;
+        let currentUser = null;
+
         // Get execution ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const executionId = urlParams.get('executionId');
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (executionId) {
-                loadExecution();
+            // Check if user is already logged in
+            const storedToken = localStorage.getItem('jwtToken');
+            const storedUser = localStorage.getItem('currentUser');
+
+            if (storedToken && storedUser) {
+                jwtToken = storedToken;
+                currentUser = JSON.parse(storedUser);
+
+                if (executionId) {
+                    loadExecution();
+                } else {
+                    document.getElementById('executionHeader').innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error: Execution ID not provided</h2>';
+                }
             } else {
-                document.getElementById('executionHeader').innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error: Execution ID not provided</h2>';
+                // Not logged in, redirect to login
+                window.location.href = 'login.html';
+                return;
             }
         });
 
@@ -94,7 +111,20 @@
 
         async function loadExecution() {
             try {
-                const response = await fetch(`${API_BASE}/executions/${executionId}`);
+                const response = await fetch(`${API_BASE}/executions/${executionId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 if (!response.ok) throw new Error('Failed to load execution');
 
                 const execution = await response.json();
@@ -209,13 +239,22 @@
                 const response = await fetch(`${API_BASE}/executions/${executionId}/steps/${stepId}`, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
                     },
                     body: JSON.stringify({
                         status: status,
                         actualResult: actualResult
                     })
                 });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (response.ok) {
                     // Update UI
@@ -290,13 +329,22 @@
                 const response = await fetch(`${API_BASE}/executions/${executionId}/complete`, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
                     },
                     body: JSON.stringify({
                         overallResult: overallResult,
                         notes: notes
                     })
                 });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (response.ok) {
                     showNotification('Test execution completed successfully!', 'success');

@@ -118,6 +118,10 @@
         // API base URL
         const API_BASE = '/api';
 
+        // Authentication state
+        let jwtToken = null;
+        let currentUser = null;
+
         // DOM elements
         const formTitle = document.getElementById('formTitle');
         const testCaseForm = document.getElementById('testCaseForm');
@@ -133,16 +137,29 @@
         let stepCounter = 1;
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (testCaseId) {
-                // Edit mode - load existing test case
-                loadTestCase();
-                formTitle.innerHTML = '<h2 class="text-2xl font-semibold text-gray-700">Edit Test Case</h2>';
-            } else if (suiteId) {
-                // Create mode - set up for new test case
-                setupCreateMode();
+            // Check if user is already logged in
+            const storedToken = localStorage.getItem('jwtToken');
+            const storedUser = localStorage.getItem('currentUser');
+
+            if (storedToken && storedUser) {
+                jwtToken = storedToken;
+                currentUser = JSON.parse(storedUser);
+
+                if (testCaseId) {
+                    // Edit mode - load existing test case
+                    loadTestCase();
+                    formTitle.innerHTML = '<h2 class="text-2xl font-semibold text-gray-700">Edit Test Case</h2>';
+                } else if (suiteId) {
+                    // Create mode - set up for new test case
+                    setupCreateMode();
+                } else {
+                    // Error case
+                    formTitle.innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error: Suite ID not provided</h2>';
+                }
             } else {
-                // Error case
-                formTitle.innerHTML = '<h2 class="text-2xl font-semibold text-red-500">Error: Suite ID not provided</h2>';
+                // Not logged in, redirect to login
+                window.location.href = 'login.html';
+                return;
             }
         });
 
@@ -198,7 +215,8 @@
                     response = await fetch(`${API_BASE}/testcases/${testCaseId}`, {
                         method: 'PUT',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${jwtToken}`
                         },
                         body: JSON.stringify(testCaseData)
                     });
@@ -207,12 +225,21 @@
                     response = await fetch(`${API_BASE}/testsuites/${suiteId}/testcases`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${jwtToken}`
                         },
                         body: JSON.stringify(testCaseData)
                     });
                 }
-                
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 if (response.ok) {
                     showNotification(testCaseId ? 'Test case updated successfully!' : 'Test case created successfully!', 'success');
 
@@ -232,7 +259,19 @@
                             // Get the module ID by fetching the suite information
                             // Add cache busting to ensure we get fresh data
                             const timestamp = new Date().getTime();
-                            const suiteResponse = await fetch(`${API_BASE}/testsuites/${suiteId}?_=${timestamp}`);
+                            const suiteResponse = await fetch(`${API_BASE}/testsuites/${suiteId}?_=${timestamp}`, {
+                                headers: {
+                                    'Authorization': `Bearer ${jwtToken}`
+                                }
+                            });
+
+                            if (suiteResponse.status === 401) {
+                                // Token expired, redirect to login
+                                localStorage.removeItem('jwtToken');
+                                localStorage.removeItem('currentUser');
+                                window.location.href = 'login.html';
+                                return;
+                            }
 
                             if (!suiteResponse.ok) {
                                 throw new Error(`HTTP error! status: ${suiteResponse.status}`);
@@ -273,7 +312,19 @@
                             // Get the module ID by fetching the test case information
                             // Add cache busting to ensure we get fresh data
                             const timestamp = new Date().getTime();
-                            const testCaseResponse = await fetch(`${API_BASE}/testcases/${testCaseId}?_=${timestamp}`);
+                            const testCaseResponse = await fetch(`${API_BASE}/testcases/${testCaseId}?_=${timestamp}`, {
+                                headers: {
+                                    'Authorization': `Bearer ${jwtToken}`
+                                }
+                            });
+
+                            if (testCaseResponse.status === 401) {
+                                // Token expired, redirect to login
+                                localStorage.removeItem('jwtToken');
+                                localStorage.removeItem('currentUser');
+                                window.location.href = 'login.html';
+                                return;
+                            }
 
                             if (!testCaseResponse.ok) {
                                 throw new Error(`HTTP error! status: ${testCaseResponse.status}`);
@@ -413,7 +464,20 @@
         // Function to load an existing test case for editing
         async function loadTestCase() {
             try {
-                const response = await fetch(`${API_BASE}/testcases/${testCaseId}`);
+                const response = await fetch(`${API_BASE}/testcases/${testCaseId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 const testCase = await response.json();
 
                 // Populate form fields

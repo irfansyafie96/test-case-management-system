@@ -53,6 +53,10 @@
         // Store the action to execute after confirmation
         let pendingAction = null;
 
+        // Authentication state
+        let jwtToken = null;
+        let currentUser = null;
+
         // DOM elements
         const projectDetails = document.getElementById('projectDetails');
         const modulesList = document.getElementById('modulesList');
@@ -65,8 +69,22 @@
         if (!projectId) {
             projectDetails.innerHTML = '<h2 class="text-2xl font-semibold mb-2 text-red-500">Error: Project ID not provided</h2>';
         } else {
-            // Load project details and modules when page loads
+            // Initialize app
             document.addEventListener('DOMContentLoaded', () => {
+                // Check if user is already logged in
+                const storedToken = localStorage.getItem('jwtToken');
+                const storedUser = localStorage.getItem('currentUser');
+
+                if (storedToken && storedUser) {
+                    jwtToken = storedToken;
+                    currentUser = JSON.parse(storedUser);
+                } else {
+                    // Not logged in, redirect to login
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Load project details and modules when page loads
                 loadProjectDetails();
                 loadModules();
             });
@@ -82,11 +100,20 @@
                 const response = await fetch(`${API_BASE}/projects/${projectId}/testmodules`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
                     },
                     body: JSON.stringify({ name })
                 });
-                
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 if (response.ok) {
                     // Clear the form
                     createModuleForm.reset();
@@ -127,9 +154,22 @@
         // Function to load and display project details
         async function loadProjectDetails() {
             try {
-                const response = await fetch(`${API_BASE}/projects/${projectId}`);
+                const response = await fetch(`${API_BASE}/projects/${projectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 const project = await response.json();
-                
+
                 projectDetails.innerHTML = `
                     <h2 class="text-2xl font-semibold mb-2 text-gray-700">${project.name}</h2>
                     ${project.description ? `<p class="text-gray-600">${project.description}</p>` : ''}
@@ -146,14 +186,27 @@
         // Function to load and display modules
         async function loadModules() {
             try {
-                const response = await fetch(`${API_BASE}/projects/${projectId}`);
+                const response = await fetch(`${API_BASE}/projects/${projectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 const project = await response.json();
-                
+
                 if (!project.modules || project.modules.length === 0) {
                     modulesList.innerHTML = '<p class="text-gray-500 text-center py-4">No modules found. Create one above.</p>';
                     return;
                 }
-                
+
                 let html = '';
                 project.modules.forEach(module => {
                     html += `
@@ -180,7 +233,7 @@
                         </div>
                     `;
                 });
-                
+
                 modulesList.innerHTML = html;
             } catch (error) {
                 console.error('Error loading modules:', error);
@@ -197,8 +250,19 @@
         async function performDeleteModule(moduleId, moduleName) {
             try {
                 const response = await fetch(`${API_BASE}/testmodules/${moduleId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
                 });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (response.ok) {
                     showNotification(`Module "${moduleName}" deleted successfully`, 'success');

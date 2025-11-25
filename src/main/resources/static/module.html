@@ -53,6 +53,10 @@
         // Store the action to execute after confirmation
         let pendingAction = null;
 
+        // Authentication state
+        let jwtToken = null;
+        let currentUser = null;
+
         // Get module ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const moduleId = urlParams.get('moduleId');
@@ -76,31 +80,44 @@
                 return;
             }
 
-            if (!moduleId) {
-                moduleDetails.innerHTML = '<h2 class="text-2xl font-semibold mb-2 text-red-500">Error: Module ID not provided</h2>';
-            } else {
-                // Load module details and test suites when page loads
-                loadAllModuleData();
+        if (!moduleId) {
+            moduleDetails.innerHTML = '<h2 class="text-2xl font-semibold mb-2 text-red-500">Error: Module ID not provided</h2>';
+        } else {
+            // Check if user is already logged in
+            const storedToken = localStorage.getItem('jwtToken');
+            const storedUser = localStorage.getItem('currentUser');
 
-                // Check if refresh parameter is present in URL and reload data if it is
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('refresh') === '1') {
+            if (storedToken && storedUser) {
+                jwtToken = storedToken;
+                currentUser = JSON.parse(storedUser);
+            } else {
+                // Not logged in, redirect to login
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Load module details and test suites when page loads
+            loadAllModuleData();
+
+            // Check if refresh parameter is present in URL and reload data if it is
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('refresh') === '1') {
+                // Small delay to ensure page is fully loaded before reloading
+                setTimeout(() => {
+                    loadAllModuleData();
+                }, 500);
+            }
+
+            // Also reload data when the page becomes visible again (e.g. when returning from creating a test case)
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
                     // Small delay to ensure page is fully loaded before reloading
                     setTimeout(() => {
-                        loadAllModuleData();
-                    }, 500);
+                        loadTestSuitesList(); // Only reload test suites list, not project info
+                    }, 100);
                 }
-
-                // Also reload data when the page becomes visible again (e.g. when returning from creating a test case)
-                document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden) {
-                        // Small delay to ensure page is fully loaded before reloading
-                        setTimeout(() => {
-                            loadTestSuitesList(); // Only reload test suites list, not project info
-                        }, 100);
-                    }
-                });
-            }
+            });
+        }
 
             // Event listeners for modal buttons - can be set after elements exist
             cancelConfirmBtn.addEventListener('click', () => {
@@ -125,10 +142,19 @@
                     const response = await fetch(`${API_BASE}/testmodules/${moduleId}/testsuites`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${jwtToken}`
                         },
                         body: JSON.stringify({ name })
                     });
+
+                    if (response.status === 401) {
+                        // Token expired, redirect to login
+                        localStorage.removeItem('jwtToken');
+                        localStorage.removeItem('currentUser');
+                        window.location.href = 'login.html';
+                        return;
+                    }
 
                     if (response.ok) {
                         // Clear the form
@@ -228,7 +254,19 @@
         // Function to load module details and test suites in a single request
         async function loadAllModuleData() {
             try {
-                const response = await fetch(`${API_BASE}/testmodules/${moduleId}?${getCacheBustParam()}`);
+                const response = await fetch(`${API_BASE}/testmodules/${moduleId}?${getCacheBustParam()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -249,7 +287,19 @@
                 // Check if module has project information and display module details
                 if (module.project && module.project.id) {
                     // Get the project name to show the project link
-                    const projectResponse = await fetch(`${API_BASE}/projects/${module.project.id}?${getCacheBustParam()}`);
+                    const projectResponse = await fetch(`${API_BASE}/projects/${module.project.id}?${getCacheBustParam()}`, {
+                        headers: {
+                            'Authorization': `Bearer ${jwtToken}`
+                        }
+                    });
+
+                    if (projectResponse.status === 401) {
+                        // Token expired, redirect to login
+                        localStorage.removeItem('jwtToken');
+                        localStorage.removeItem('currentUser');
+                        window.location.href = 'login.html';
+                        return;
+                    }
 
                     if (!projectResponse.ok) {
                         throw new Error(`HTTP error! status: ${projectResponse.status}`);
@@ -387,8 +437,19 @@
         async function runTest(testCaseId) {
             try {
                 const response = await fetch(`${API_BASE}/testcases/${testCaseId}/executions`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
                 });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (response.ok) {
                     const execution = await response.json();
@@ -413,8 +474,19 @@
         async function performDeleteTestCase(testCaseId) {
             try {
                 const response = await fetch(`${API_BASE}/testcases/${testCaseId}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
                 });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (response.ok) {
                     showNotification('Test case deleted successfully!', 'success');
@@ -481,10 +553,19 @@
                 const response = await fetch(`${API_BASE}/testmodules/${moduleId}`, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
                     },
                     body: JSON.stringify({ name: newName })
                 });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (response.ok) {
                     // Reload the module data to show the updated name
@@ -561,10 +642,19 @@
                 const response = await fetch(`${API_BASE}/testsuites/${suiteId}`, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${jwtToken}`
                     },
                     body: JSON.stringify({ name: newName })
                 });
+
+                if (response.status === 401) {
+                    // Token expired, redirect to login
+                    localStorage.removeItem('jwtToken');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                    return;
+                }
 
                 if (response.ok) {
                     // Reload the module data to show the updated name

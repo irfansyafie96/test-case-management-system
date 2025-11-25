@@ -6,6 +6,7 @@ import com.yourproject.tcm.service.TcmService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class ApiController {
 
     // POST /api/projects -> Create a new project.
     @PostMapping("/projects")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
         Project savedProject = tcmService.createProject(project);
         return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
@@ -55,6 +57,7 @@ public class ApiController {
 
     // POST /api/projects/{projectId}/testmodules -> Create a new test module for a project.
     @PostMapping("/projects/{projectId}/testmodules")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createTestModuleForProject(@PathVariable Long projectId, @RequestBody TestModule testModule) {
         try {
             TestModule savedTestModule = tcmService.createTestModuleForProject(projectId, testModule);
@@ -83,6 +86,7 @@ public class ApiController {
 
     // PUT /api/testmodules/{testModuleId} -> Update a test module (name only).
     @PutMapping("/testmodules/{testModuleId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestModule(@PathVariable Long testModuleId, @RequestBody TestModule testModuleDetails) {
         try {
             TestModule updatedTestModule = tcmService.updateTestModule(testModuleId, testModuleDetails);
@@ -96,6 +100,7 @@ public class ApiController {
 
     // DELETE /api/testmodules/{testModuleId} -> Delete a test module.
     @DeleteMapping("/testmodules/{testModuleId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteTestModule(@PathVariable Long testModuleId) {
         try {
             tcmService.deleteTestModule(testModuleId);
@@ -109,6 +114,7 @@ public class ApiController {
 
     // POST /api/testmodules/{testModuleId}/testsuites -> Create a new test suite for a test module.
     @PostMapping("/testmodules/{testModuleId}/testsuites")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createTestSuiteForTestModule(@PathVariable Long testModuleId, @RequestBody TestSuite testSuite) {
         try {
             TestSuite savedTestSuite = tcmService.createTestSuiteForTestModule(testModuleId, testSuite);
@@ -137,6 +143,7 @@ public class ApiController {
 
     // PUT /api/testsuites/{suiteId} -> Update a test suite (name only).
     @PutMapping("/testsuites/{suiteId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestSuite(@PathVariable Long suiteId, @RequestBody TestSuite suiteDetails) {
         try {
             TestSuite updatedTestSuite = tcmService.updateTestSuite(suiteId, suiteDetails);
@@ -150,6 +157,7 @@ public class ApiController {
 
     // POST /api/testsuites/{suiteId}/testcases -> Create a new test case. This request body should include the list of TestSteps.
     @PostMapping("/testsuites/{suiteId}/testcases")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createTestCaseForTestSuite(@PathVariable Long suiteId, @RequestBody TestCase testCase) {
         try {
             TestCase savedTestCase = tcmService.createTestCaseForTestSuite(suiteId, testCase);
@@ -178,6 +186,7 @@ public class ApiController {
 
     // PUT /api/testcases/{testCaseId} -> Update a test case (and its steps).
     @PutMapping("/testcases/{testCaseId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestCase(@PathVariable Long testCaseId, @RequestBody TestCase testCaseDetails) {
         try {
             TestCase updatedTestCase = tcmService.updateTestCase(testCaseId, testCaseDetails);
@@ -191,6 +200,7 @@ public class ApiController {
 
     // DELETE /api/testcases/{testCaseId} -> Delete a test case.
     @DeleteMapping("/testcases/{testCaseId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteTestCase(@PathVariable Long testCaseId) {
         try {
             tcmService.deleteTestCase(testCaseId);
