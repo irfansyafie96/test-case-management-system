@@ -64,3 +64,6 @@ Thumbs.db
 
 # Target folder
 target/
+
+# Memory Bank (don't include documentation in git)
+memory-bank/
