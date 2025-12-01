@@ -24,7 +24,6 @@ public class TestStep {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "test_case_id", nullable = false)
     @JsonBackReference // This should match with JsonManagedReference in TestCase
-    @JsonIgnoreProperties({"testSteps"}) // Prevent circular reference back to TestCase
     private TestCase testCase;
 
     // Getters and Setters

@@ -1,0 +1,78 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">
+        <mat-icon>dashboard</mat-icon> Dashboard
+      </h1>
+      <p class="page-subtitle">Welcome back, {{ currentUser?.username || 'User' }}</p>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- KPI Cards -->
+    <div class="dashboard-card" (click)="navigateToProjects()">
+      <div class="card-icon-badge bg-blue">
+        <mat-icon>folder</mat-icon>
+      </div>
+      <div class="card-info">
+        <h3>Projects</h3>
+        <p>Manage projects</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card" (click)="navigateToModules()">
+      <div class="card-icon-badge bg-indigo">
+        <mat-icon>view_module</mat-icon>
+      </div>
+      <div class="card-info">
+        <h3>Modules</h3>
+        <p>Organize test cases</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card" (click)="navigateToTestCases()">
+      <div class="card-icon-badge bg-green">
+        <mat-icon>list_alt</mat-icon>
+      </div>
+      <div class="card-info">
+        <h3>Test Cases</h3>
+        <p>Create & manage tests</p>
+      </div>
+    </div>
+
+    <div class="dashboard-card" (click)="navigateToExecutions()">
+      <div class="card-icon-badge bg-purple">
+        <mat-icon>play_circle</mat-icon>
+      </div>
+      <div class="card-info">
+        <h3>Executions</h3>
+        <p>Track results</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-content">
+    <mat-card class="welcome-card">
+      <mat-card-header>
+        <mat-card-title>Getting Started</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Welcome to your centralized platform for test case management.</p>
+        <div class="quick-actions-list">
+          <div class="action-item">
+            Create a Project to group your tests.
+          </div>
+          <div class="action-item">
+            Add Modules to organize functionality.
+          </div>
+          <div class="action-item">
+            Define Test Cases with steps and expected results.
+          </div>
+        </div>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-raised-button color="primary" (click)="navigateToProjects()">View Projects</button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

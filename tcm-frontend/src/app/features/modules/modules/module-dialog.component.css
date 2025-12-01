@@ -1,0 +1,29 @@
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding-top: 24px;
+  padding-left: 24px;
+}
+
+.dialog-icon {
+  color: var(--ink);
+}
+
+.dialog-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.module-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.full-width {
+  width: 100%;
+}

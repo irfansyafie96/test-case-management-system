@@ -1,0 +1,40 @@
+<h1 mat-dialog-title>New Project Blueprint</h1>
+
+<div mat-dialog-content>
+  <p class="dialog-subtitle">Initialize a new project container for your test suites.</p>
+  
+  <form [formGroup]="projectForm" class="project-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Project Name</mat-label>
+      <input
+        matInput
+        formControlName="name"
+        placeholder="e.g. Core Payment System">
+      <mat-error *ngIf="projectForm.get('name')?.invalid">Name is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        placeholder="Describe the scope of this project..."
+        rows="4"></textarea>
+    </mat-form-field>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button
+    mat-button
+    (click)="onNoClick()">
+    CANCEL
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    [mat-dialog-close]="projectForm.value"
+    [disabled]="!projectForm.valid">
+    INITIALIZE
+  </button>
+</div>

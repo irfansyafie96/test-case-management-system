@@ -55,6 +55,30 @@ public class ApiController {
         }
     }
 
+    // DELETE /api/projects/{projectId} -> Delete a project.
+    @DeleteMapping("/projects/{projectId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteProject(@PathVariable Long projectId) {
+        try {
+            // First check if project exists
+            Optional<Project> projectOpt = tcmService.getProjectById(projectId);
+            if (!projectOpt.isPresent()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Project not found with id: " + projectId);
+            }
+
+            // Use tcmService to delete the project (which handles cascading deletions)
+            tcmService.deleteProject(projectId);
+            return ResponseEntity.noContent().build(); // Return 204 No Content for successful delete
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error deleting project: " + e.getMessage());
+        }
+    }
+
     // POST /api/projects/{projectId}/testmodules -> Create a new test module for a project.
     @PostMapping("/projects/{projectId}/testmodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
@@ -104,11 +128,13 @@ public class ApiController {
     public ResponseEntity<?> deleteTestModule(@PathVariable Long testModuleId) {
         try {
             tcmService.deleteTestModule(testModuleId);
-            return new ResponseEntity<>("Test module deleted successfully", HttpStatus.OK);
+            return ResponseEntity.noContent().build(); // Return 204 No Content for successful delete
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>("Error deleting test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error deleting test module: " + e.getMessage());
         }
     }
 

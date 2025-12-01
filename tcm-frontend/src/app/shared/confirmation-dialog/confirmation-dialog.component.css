@@ -1,0 +1,45 @@
+.dialog-header {
+  display: flex;
+  align-items: baseline; /* Changed from 'center' to 'baseline' */
+  gap: 12px;
+  padding: 24px;
+}
+
+.title-icon {
+  color: var(--accent-warning);
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  
+  /* OPTIONAL: Sometimes the icon sits 2-3px too high because of the font file itself. 
+     If 'baseline' isn't perfect, add this transform to push it down slightly: */
+  transform: translateY(3px); 
+}
+
+/* 
+   Override global Material Dialog Title styles.
+   We use !important to ensure we beat the specificity of .mat-mdc-dialog-title 
+   defined in styles.css 
+*/
+.confirm-title {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px !important; /* Slightly smaller than global 22px */
+  font-weight: 700;
+  color: var(--ink);
+  text-transform: uppercase;
+  line-height: 1; /* Tighten line height to align with icon */
+  
+  /* Reset global dialog title box model */
+  background-color: transparent !important;
+  border-bottom: none !important;
+  padding: 0 !important;
+}
+
+.dialog-message {
+  font-family: 'DM Sans', sans-serif;
+  color: #4b4845;
+  font-size: 16px;
+  line-height: 1.5;
+  margin-top: 8px;
+}

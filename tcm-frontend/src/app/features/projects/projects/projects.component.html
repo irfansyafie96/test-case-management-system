@@ -1,0 +1,57 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><mat-icon>folder_open</mat-icon> Projects</h1>
+      <p class="page-subtitle">Manage your test projects and repositories</p>
+    </div>
+    <button
+      mat-raised-button
+      color="primary"
+      class="create-btn"
+      (click)="openProjectDialog()">
+      <mat-icon>add</mat-icon> New Project
+    </button>
+  </div>
+
+  <div class="projects-grid" *ngIf="(projects$ | async)?.length; else noProjects">
+    <div
+      *ngFor="let project of (projects$ | async)"
+      [routerLink]="['/projects', project.id]"
+      class="project-card">
+      
+      <div class="card-header">
+        <h3 class="project-title">{{ project.name || 'Untitled Project' }}</h3>
+        <button
+          mat-icon-button
+          class="delete-btn"
+          (click)="deleteProject($event, project.id)"
+          [matTooltip]="'Delete project'">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </div>
+
+      <div class="card-body">
+        <p class="project-description">{{ project.description || 'No description provided.' }}</p>
+      </div>
+
+      <div class="card-footer">
+        <div class="meta-item">
+          <mat-icon>calendar_today</mat-icon>
+          <span>{{ (project.createdDate | date:'mediumDate') || 'Recently' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noProjects>
+    <div class="empty-state">
+      <div class="empty-content">
+        <div class="empty-icon-wrapper">
+          <mat-icon class="empty-icon">folder_open</mat-icon>
+        </div>
+        <h2>No Projects Found</h2>
+        <p>Create your first project to start managing test cases.</p>
+      </div>
+    </div>
+  </ng-template>
+</div>

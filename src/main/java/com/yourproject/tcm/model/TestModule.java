@@ -2,14 +2,11 @@ package com.yourproject.tcm.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
 @Table(name = "test_modules")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class TestModule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,5 +55,10 @@ public class TestModule {
 
     public void setTestSuites(List<TestSuite> testSuites) {
         this.testSuites = testSuites;
+    }
+
+    // Expose projectId for frontend serialization
+    public Long getProjectId() {
+        return project != null ? project.getId() : null;
     }
 }

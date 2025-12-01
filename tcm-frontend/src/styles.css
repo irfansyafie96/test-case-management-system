@@ -1,0 +1,251 @@
+/* Global Design System: The Refined Atelier (Neo-Brutalist & Blueprint) */
+:root {
+  /* Palette: Organic & Architectural */
+  --ink: #1a1918; /* Near Black - The Anchor */
+  --paper: #f4f2ee; /* Warm Alabaster - The Canvas */
+  --surface: #ffffff; /* Pure White - The Object */
+  
+  /* Accents */
+  --accent-primary: #ff4d00; /* International Orange - Creative Energy */
+  --accent-secondary: #3b82f6; /* Electric Blue - Technical Data */
+  --accent-success: #059669; /* Emerald */
+  --accent-warning: #d97706; /* Amber */
+  --accent-danger: #e31b54; /* Ruby Red */
+  
+  /* Structure */
+  --border-thin: 1px solid var(--ink);
+  --border-medium: 2px solid var(--ink);
+  --border-thick: 3px solid var(--ink); /* Strong definition */
+  --radius-sm: 4px;
+  --radius-md: 8px; /* Slightly softer than pure box */
+  --radius-lg: 16px;
+  
+  /* Spacing */
+  --space-unit: 8px;
+  --sidebar-width: 260px;
+  --header-height: 72px;
+  --container-max-width: 1600px;
+  
+  /* Elevation & Depth (Hard Shadows - The "Physical" Presence) */
+  --shadow-sm: 4px 4px 0px 0px var(--ink);
+  --shadow-md: 8px 8px 0px 0px var(--ink);
+  --shadow-lg: 12px 12px 0px 0px var(--ink);
+  --shadow-hover: 6px 6px 0px 0px var(--accent-primary); /* Pop on hover */
+  --shadow-active: 0px 0px 0px 0px var(--ink); /* Pressed state */
+  
+  /* Transitions */
+  --transition-quick: all 0.15s ease-out;
+  --transition-moderate: all 0.25s ease-out;
+}
+
+html {
+  height: 100%;
+  font-size: 14px;
+}
+
+body { 
+  height: 100%;
+  margin: 0; 
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  overflow-x: hidden;
+  
+  /* Subtle "Paper Grain" Noise Texture */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6, .page-title, .logo-text {
+  font-family: 'Space Grotesk', sans-serif; /* Modern Sans for headings */
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 0;
+  letter-spacing: -0.03em;
+}
+
+p {
+  color: var(--ink); /* Stronger body text */
+  max-width: 70ch;
+}
+
+code, .id-badge, .meta-label {
+  font-family: 'JetBrains Mono', monospace; /* Monospace for technical details */
+}
+
+/* =========================================
+   COMPONENT OVERRIDES: The "Bespoke" Feel
+   ========================================= */
+
+/* Cards: Tangible Objects */
+.mat-mdc-card {
+  box-shadow: var(--shadow-sm) !important; /* Physical presence */
+  border: var(--border-medium);
+  background-color: var(--surface) !important;
+  border-radius: var(--radius-md) !important;
+  transition: var(--transition-moderate);
+}
+
+.mat-mdc-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hover) !important;
+}
+
+.mat-mdc-card-header {
+  padding: 24px 24px 16px !important;
+  border-bottom: var(--border-thin);
+}
+
+.mat-mdc-card-content {
+  padding: 24px !important;
+}
+
+/* Buttons: Clickable Mechanisms */
+.mat-mdc-raised-button, .mat-mdc-stroked-button, .mat-mdc-flat-button {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em !important;
+  height: 44px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: var(--transition-quick) !important;
+  
+  /* The "Physical Button" Look */
+  border: var(--border-medium) !important;
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+  box-shadow: 2px 2px 0 0 var(--ink) !important;
+}
+
+.mat-mdc-raised-button:hover, .mat-mdc-stroked-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 var(--ink) !important;
+}
+
+.mat-mdc-raised-button:active, .mat-mdc-stroked-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 var(--ink) !important; /* Depress effect */
+}
+
+/* Primary Action Button Variation */
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--ink) !important;
+  color: var(--surface) !important;
+  border-color: var(--ink) !important;
+  box-shadow: 3px 3px 0 0 var(--accent-primary) !important;
+}
+
+.mat-mdc-raised-button.mat-primary:hover {
+  background-color: #000 !important;
+  box-shadow: 5px 5px 0 0 var(--accent-primary) !important;
+}
+
+/* Dialogs: Modern Modals (re-applying the original Brutalist feel but polished) */
+.mdc-dialog__surface {
+  border-radius: var(--radius-md) !important;
+  border: var(--border-medium) !important;
+  box-shadow: var(--shadow-lg) !important; /* Deep shadow */
+  overflow: visible !important; /* Allow content to breathe */
+  background-color: var(--surface) !important;
+}
+
+.mat-mdc-dialog-title {
+  font-family: 'Space Grotesk', sans-serif !important;
+  border-bottom: var(--border-thin);
+  padding: 24px 32px !important;
+  font-size: 22px !important;
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.mat-mdc-dialog-content {
+  padding: 32px !important;
+}
+
+.mat-mdc-dialog-actions {
+  border-top: var(--border-thin);
+  padding: 24px 32px !important;
+  gap: 16px;
+  background-color: var(--paper);
+}
+
+/* Inputs: Drafting Table Style */
+.mat-mdc-form-field {
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.mat-mdc-form-field-appearance-outline .mat-mdc-form-field-outline {
+  color: var(--ink) !important; /* Solid outline */
+}
+
+.mat-mdc-form-field-appearance-outline.mat-focused .mat-mdc-form-field-outline {
+  color: var(--accent-primary) !important; /* Accent on focus */
+}
+
+.mat-mdc-form-field-label {
+  color: var(--ink) !important;
+}
+
+/* Layout Utilities */
+.page-container {
+  padding: 48px 64px; /* Massive breathing room */
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 56px;
+  padding-bottom: 24px;
+}
+
+.page-title {
+  font-size: 40px; /* Editorial size */
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  color: #4b4845; /* Softer sub-text */
+  margin-top: 8px;
+  font-weight: 400;
+}
+
+/* Badges & Status Indicators */
+.badge, .priority-badge, .status-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border: var(--border-thin);
+  border-radius: 4px;
+  text-transform: uppercase;
+  background-color: var(--surface);
+  box-shadow: 2px 2px 0 0 rgba(0,0,0,0.1);
+  white-space: nowrap;
+}
+
+/* Custom Scrollbar - Integrated */
+::-webkit-scrollbar {
+  width: 14px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper);
+  border-left: 2px solid var(--ink);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink);
+  border: 3px solid var(--paper);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}

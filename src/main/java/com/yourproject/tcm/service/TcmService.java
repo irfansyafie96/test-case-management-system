@@ -57,6 +57,28 @@ public class TcmService {
         return projectRepository.findById(projectId);
     }
 
+    @Transactional
+    public void deleteProject(Long projectId) {
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
+        if (projectOpt.isPresent()) {
+            Project project = projectOpt.get();
+
+            // Delete all test modules associated with this project
+            // This will cascade to delete all related test suites, test cases, executions and step results
+            if (project.getModules() != null) {
+                for (TestModule module : project.getModules()) {
+                    deleteTestModule(module.getId());
+                }
+            }
+
+            // Now delete the project itself
+            projectRepository.deleteById(projectId);
+            entityManager.flush(); // Ensure data is written to DB
+        } else {
+            throw new RuntimeException("Project not found with id: " + projectId);
+        }
+    }
+
     // TestModule methods
     @Transactional(readOnly = true)
     public Optional<TestModule> getTestModuleById(Long testModuleId) {
@@ -196,8 +218,10 @@ public class TcmService {
             TestSuite testSuite = suiteOpt.get();
             testCase.setTestSuite(testSuite);
             if (testCase.getTestSteps() != null) {
+                int stepNum = 1;
                 for (TestStep step : testCase.getTestSteps()) {
                     step.setTestCase(testCase);
+                    step.setStepNumber(stepNum++);
                 }
             }
             TestCase savedTestCase = testCaseRepository.save(testCase);

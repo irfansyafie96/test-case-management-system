@@ -25,13 +25,11 @@ public class TestCase {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "test_suite_id", nullable = false)
     @JsonBackReference
-    @JsonIgnoreProperties({"testCases"}) // Prevent circular reference back to TestSuites
     private TestSuite testSuite;
 
     @OneToMany(mappedBy = "testCase", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepNumber ASC") // Always keep steps in order
     @JsonManagedReference
-    @JsonIgnoreProperties({"testCase"}) // Prevent circular reference back to TestCase
     private List<TestStep> testSteps;
 
     // Getters and Setters

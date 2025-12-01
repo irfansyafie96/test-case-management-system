@@ -1,0 +1,134 @@
+/* Login: The Security Pass */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--paper);
+  /* Technical grid pattern */
+  background-image: linear-gradient(var(--border-thin) 1px, transparent 1px), linear-gradient(90deg, var(--border-thin) 1px, transparent 1px);
+  background-size: 40px 40px;
+  overflow: hidden; /* Prevent scroll */
+  padding: 8px; /* Even smaller safety padding for very small screens */
+  box-sizing: border-box;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px; /* Max-width for the card */
+  /* Further reduced padding */
+  padding: 32px !important; 
+  border-radius: var(--radius-md) !important; /* Retain some softness */
+  border: var(--border-medium);
+  box-shadow: var(--shadow-md) !important; /* Stronger shadow */
+  background-color: var(--surface) !important;
+  position: relative;
+  /* Ensure card fits within viewport height */
+  max-height: calc(100vh - 32px); /* 100vh minus twice the container padding */
+  overflow-y: auto; /* Internal scroll only if absolutely necessary */
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card:hover { /* Override global mat-mdc-card hover */
+  transform: none;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Hide scrollbar in card if it appears */
+.login-card::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.login-card mat-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Changed from flex-start to center */
+  padding: 0 !important;
+  margin-bottom: 12px; /* Reduced margin */
+  border-bottom: var(--border-thin) !important;
+  width: 100%;
+  padding-bottom: 12px !important; /* Reduced padding */
+  flex-shrink: 0;
+}
+
+.logo-icon {
+  display: none;
+}
+
+.login-card mat-card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px; /* Slightly smaller for fit */
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.login-card mat-card-subtitle {
+  font-family: 'JetBrains Mono', monospace; /* Monospace for sub-text */
+  color: #666;
+  margin-top: 6px; /* Reduced margin */
+  font-size: 14px; /* Increased from 11px */
+  text-align: center; /* Explicitly centered */
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Reduced gap */
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* Input overrides */
+.mat-mdc-form-field-infix {
+  padding-top: 6px !important; /* Reduced padding */
+  padding-bottom: 6px !important; /* Reduced padding */
+  min-height: 40px !important; /* Reduced height */
+}
+
+.login-btn {
+  width: 100%;
+  height: 40px; /* Reduced height */
+  font-size: 15px; /* Slightly smaller font */
+  margin-top: 8px; /* Reduced margin */
+  background-color: var(--ink) !important;
+  color: var(--surface) !important;
+  border: var(--border-medium) !important;
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+  /* No hover transform or shadow change */
+}
+
+.login-btn:hover { /* Remove hover effect */
+  transform: none;
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important; /* Keep same shadow */
+}
+
+.login-card mat-card-actions {
+  margin-top: 8px; /* Reduced to minimal gap */
+  padding: 0 !important;
+  display: flex;
+  justify-content: center; /* Changed to center */
+  border-top: none !important;
+  flex-shrink: 0;
+}
+
+.login-card mat-card-actions p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; /* Increased from 12px */
+  margin: 0;
+  color: #666;
+}
+
+.login-card mat-card-actions a {
+  color: var(--ink);
+  text-decoration: underline;
+  font-weight: 700;
+}

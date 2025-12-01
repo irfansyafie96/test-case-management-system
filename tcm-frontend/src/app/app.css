@@ -1,0 +1,55 @@
+/* Global App Shell Layout */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* Prevent body scroll, handle in page-content */
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--paper); /* Matches global paper background */
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Sidebar is positioned by flex in main-content */
+.sidebar {
+  flex-shrink: 0;
+  height: 100%;
+  z-index: 20;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+}
+
+.header {
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+/* Utilities */
+.text-center { text-align: center; }
+.full-width { width: 100%; }

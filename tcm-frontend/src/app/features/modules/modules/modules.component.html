@@ -1,0 +1,56 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><mat-icon>view_module</mat-icon> Modules</h1>
+      <p class="page-subtitle">Directory of all test modules across projects</p>
+    </div>
+  </div>
+
+  <div *ngIf="modules$ | async as modules; else loadingOrError">
+    <div *ngIf="modules.length > 0; else noModules">
+      <div class="module-grid">
+        <div *ngFor="let module of modules" [routerLink]="['/modules', module.id]" class="module-card">
+                  <div class="module-header">
+                    <div class="module-icon">
+                      <mat-icon>extension</mat-icon>
+                    </div>
+                    <div class="module-id">MOD-{{ module.id }}</div>
+                  </div>          
+          <div class="module-content">
+            <h3 class="module-title">{{ module.name || 'Untitled Module' }}</h3>
+            <p class="module-desc">{{ module.description || 'No description available.' }}</p>
+            
+            <!-- DEBUG: Remove after fixing -->
+            <pre style="font-size: 10px; background: #eee; padding: 4px; overflow: auto; max-height: 100px;">{{ module | json }}</pre>
+            
+            <div class="module-footer">
+              <div class="project-badge">
+                <mat-icon>folder_open</mat-icon>
+                <span>{{ module.projectName || 'Unknown Project' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #loadingOrError>
+     <!-- Optional: Add a loading spinner here -->
+  </ng-template>
+
+  <ng-template #noModules>
+    <div class="empty-state">
+      <div class="empty-content">
+        <div class="empty-icon-wrapper">
+          <mat-icon class="empty-icon">view_module</mat-icon>
+        </div>
+        <h2>No Modules Found</h2>
+        <p>Modules are created within Projects. Go to a Project to add modules.</p>
+        <button mat-raised-button color="primary" routerLink="/projects">
+          <mat-icon>arrow_forward</mat-icon> Go to Projects
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</div>

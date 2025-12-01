@@ -1,0 +1,30 @@
+<mat-toolbar class="app-header">
+  <div class="header-content">
+    <div class="header-left">
+      <h1 class="page-title">
+        <ng-content select="[title]"></ng-content>
+      </h1>
+    </div>
+
+    <div class="header-right">
+      <button mat-icon-button (click)="refreshData()" title="Refresh data">
+        <mat-icon>refresh</mat-icon>
+      </button>
+
+      <ng-container *ngIf="currentUser$ | async as user; else loginButton">
+        <span class="user-greeting">Welcome, {{ user.username }}</span>
+        <button mat-raised-button color="primary" (click)="logout()" class="logout-btn">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </ng-container>
+
+      <ng-template #loginButton>
+        <a mat-raised-button color="primary" routerLink="/login" class="login-btn">
+          <mat-icon>login</mat-icon>
+          <span>Login</span>
+        </a>
+      </ng-template>
+    </div>
+  </div>
+</mat-toolbar>

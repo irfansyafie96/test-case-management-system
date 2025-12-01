@@ -1,0 +1,39 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"><mat-icon>terminal</mat-icon> Execution Logs</h1>
+      <p class="page-subtitle">Real-time test runner output and history</p>
+    </div>
+    <button mat-raised-button color="primary">
+      <mat-icon>play_arrow</mat-icon> NEW RUN
+    </button>
+  </div>
+  
+  <!-- Simulated Log Output for Empty State or Data -->
+  <div class="console-window">
+    <div class="console-header">
+      <div class="dot red"></div>
+      <div class="dot yellow"></div>
+      <div class="dot green"></div>
+      <span class="console-title">system_output.log</span>
+    </div>
+    <div class="console-body">
+      <div class="log-entry info">
+        <span class="timestamp">[10:00:01]</span> System initialized. Ready for test execution.
+      </div>
+      <div class="log-entry warning">
+         <span class="timestamp">[10:00:05]</span> No active test runs detected.
+      </div>
+      <div class="log-entry prompt">
+         <span class="user">admin@tcm:~$</span> <span class="cursor">_</span>
+      </div>
+      
+      <div class="empty-action">
+         <p>Initiate a new test cycle to generate logs.</p>
+         <button mat-stroked-button class="terminal-btn" routerLink="/projects">
+           SELECT PROJECT
+         </button>
+      </div>
+    </div>
+  </div>
+</div>

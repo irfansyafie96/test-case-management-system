@@ -1,0 +1,54 @@
+<div class="register-container">
+  <mat-card class="register-card">
+    <div class="register-header">
+      <mat-icon class="logo-icon">app_registration</mat-icon>
+      <mat-card-title>Create Account</mat-card-title>
+      <mat-card-subtitle>Join the Test Case Management System</mat-card-subtitle>
+    </div>
+
+    <mat-card-content>
+      <form [formGroup]="registerForm" class="register-form">
+        <div class="name-row">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>First Name</mat-label>
+            <input matInput formControlName="firstName" placeholder="John">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Last Name</mat-label>
+            <input matInput formControlName="lastName" placeholder="Doe">
+          </mat-form-field>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username</mat-label>
+          <input matInput formControlName="username" placeholder="jdoe">
+          <mat-icon matSuffix>person</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" placeholder="john.doe@company.com" type="email">
+          <mat-icon matSuffix>email</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input matInput formControlName="password" type="password" placeholder="Create a password">
+          <mat-icon matSuffix>lock</mat-icon>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" class="register-btn" [disabled]="true">
+          Register (Contact Admin)
+        </button>
+        
+        <p class="admin-note">
+          <mat-icon>info</mat-icon> Self-registration is currently disabled. Please contact your administrator.
+        </p>
+      </form>
+    </mat-card-content>
+    
+    <mat-card-actions class="text-center">
+      <p>Already have an account? <a routerLink="/login">Sign In</a></p>
+    </mat-card-actions>
+  </mat-card>
+</div>

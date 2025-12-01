@@ -1,0 +1,82 @@
+@use '@angular/material' as mat;
+
+// Define palettes - The Refined Atelier
+// Core colors derived from the CSS variables
+$atelier-ink: #1a1918;
+$atelier-paper: #f4f2ee;
+$atelier-surface: #ffffff;
+$atelier-primary-accent: #ff4d00; // International Orange
+
+$primary: mat.m2-define-palette((
+  50: $atelier-paper,
+  100: #e7e0d6,
+  200: #d1c7bc,
+  300: #b5ac9d,
+  400: #9e9381,
+  500: $atelier-ink, // Map 500 to ink for primary interactions
+  600: #171514,
+  700: #141211,
+  800: #100e0d,
+  900: #0d0b0a,
+  A100: $atelier-primary-accent, // Direct map
+  A200: $atelier-primary-accent, // Direct map
+  A400: $atelier-primary-accent, // Direct map
+  A700: #cc3e00,
+  contrast: (
+    50: $atelier-ink,
+    100: $atelier-ink,
+    200: $atelier-ink,
+    300: $atelier-ink,
+    400: $atelier-ink,
+    500: $atelier-surface, // White contrast for ink
+    600: $atelier-surface,
+    700: $atelier-surface,
+    800: $atelier-surface,
+    900: $atelier-surface,
+    A100: $atelier-surface,
+    A200: $atelier-surface,
+    A400: $atelier-surface,
+    A700: $atelier-surface,
+  )
+));
+
+$accent: mat.m2-define-palette(mat.$m2-blue-palette, A400, A200, A700); // Electric Blue
+
+$warn: mat.m2-define-palette(mat.$m2-red-palette, 700); // Standard red for warnings
+
+// Typography config: Serif for headlines, Monospace for code/details, Sans for body
+$typography: mat.m2-define-typography-config(
+  $font-family: "'DM Sans', sans-serif",
+  $headline-1: mat.m2-define-typography-level(60px, 60px, 700, "'Space Grotesk', sans-serif"),
+  $headline-2: mat.m2-define-typography-level(48px, 48px, 700, "'Space Grotesk', sans-serif"),
+  $headline-3: mat.m2-define-typography-level(34px, 36px, 700, "'Space Grotesk', sans-serif"),
+  $headline-4: mat.m2-define-typography-level(28px, 32px, 700, "'Space Grotesk', sans-serif"),
+  $headline-5: mat.m2-define-typography-level(24px, 28px, 700, "'Space Grotesk', sans-serif"),
+  $headline-6: mat.m2-define-typography-level(20px, 24px, 700, "'Space Grotesk', sans-serif"),
+  $subtitle-1: mat.m2-define-typography-level(16px, 24px, 500, "'DM Sans', sans-serif"),
+  $body-1: mat.m2-define-typography-level(14px, 20px, 400, "'DM Sans', sans-serif"),
+  $button: mat.m2-define-typography-level(14px, 16px, 700, "'Space Grotesk', sans-serif"), // Buttons more prominent
+  $caption: mat.m2-define-typography-level(12px, 16px, 400, "'JetBrains Mono', monospace"), // Captions/meta in monospace
+  $overline: mat.m2-define-typography-level(10px, 16px, 700, "'JetBrains Mono', monospace"), // Overlines/ids in monospace
+);
+
+$theme: mat.m2-define-light-theme((
+  color: (
+    primary: $primary,
+    accent: $accent,
+    warn: $warn,
+  ),
+  typography: $typography,
+  density: 0,
+));
+
+// Include core styles
+@include mat.core-theme($theme);
+@include mat.all-component-themes($theme);
+
+// Global background/color for consistency
+body {
+  background-color: var(--paper); 
+  color: var(--ink);
+  margin: 0;
+}
