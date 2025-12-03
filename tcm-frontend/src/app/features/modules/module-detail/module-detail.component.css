@@ -115,6 +115,7 @@
   height: 32px;
   line-height: 32px;
   padding: 0 12px;
+  border: var(--border-thick) !important; /* Added for bolder border */
 }
 
 /* Bespoke Table */
@@ -152,6 +153,19 @@
 }
 
 .title-cell { font-weight: 500; }
+
+.actions-cell {
+  text-align: right;
+  padding-right: 0 !important;
+  white-space: nowrap;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  margin-left: 4px;
+}
 
 .empty-suite-msg {
   padding: 24px;

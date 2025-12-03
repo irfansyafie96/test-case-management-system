@@ -5,26 +5,54 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.List;
 
+/**
+ * TestModule Entity - Second level in the test case hierarchy
+ *
+ * TestModule represents a functional area or module within a project.
+ * For example, if Project is "NCS", then TestModule could be "Training Market",
+ * "User Management", "Reporting", etc.
+ *
+ * Relationship Structure:
+ * - Many TestModules belong to One Project (ManyToOne)
+ * - One TestModule contains Many TestSuites (OneToMany)
+ *
+ * This creates the hierarchical structure: Project → TestModule → TestSuite → TestCase
+ */
 @Entity
-@Table(name = "test_modules")
+@Table(name = "test_modules")  // Maps to 'test_modules' table in database
 public class TestModule {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment primary key
+    private Long id;  // Unique identifier for the test module
 
-    @Column(nullable = false)
-    private String name; // e.g., "Training Market"
+    @Column(nullable = false)  // Name is required
+    private String name; // Module name (e.g., "Training Market", "User Management")
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "project_id", nullable = false)
-    @JsonBackReference
-    private Project project;
+    @Column(length = 1000)  // Description can be up to 1000 characters
+    private String description;  // Optional detailed description
 
+    /**
+     * Many-to-One relationship: Many TestModules belong to One Project
+     * fetch = FetchType.LAZY: Only load project data when explicitly accessed
+     * @JoinColumn: Foreign key 'project_id' in test_modules table points to Project
+     * @JsonBackReference: Part of bidirectional relationship, prevents JSON loops
+     */
+    @ManyToOne(fetch = FetchType.LAZY)  // Many modules can belong to one project
+    @JoinColumn(name = "project_id", nullable = false)  // Foreign key column
+    @JsonBackReference  // Completes the bidirectional relationship with Project
+    private Project project;  // The project this module belongs to
+
+    /**
+     * One-to-Many relationship: One TestModule can have Many TestSuites
+     * cascade = CascadeType.ALL: Changes to module cascade to its suites
+     * orphanRemoval = true: If a suite is removed from this list, it's deleted
+     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
+     */
     @OneToMany(mappedBy = "testModule", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<TestSuite> testSuites;
+    @JsonManagedReference  // This side manages the relationship for JSON serialization
+    private List<TestSuite> testSuites;  // List of test suites in this module
 
-    // Getters and Setters
+    // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
     }
@@ -39,6 +67,14 @@ public class TestModule {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Project getProject() {
@@ -57,7 +93,7 @@ public class TestModule {
         this.testSuites = testSuites;
     }
 
-    // Expose projectId for frontend serialization
+    // Helper method to expose project ID to frontend without exposing entire project object
     public Long getProjectId() {
         return project != null ? project.getId() : null;
     }

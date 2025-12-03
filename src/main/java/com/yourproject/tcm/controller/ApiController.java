@@ -12,8 +12,27 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * API Controller - Main REST API Endpoint for the Test Case Management System
+ *
+ * This controller handles all HTTP requests starting with "/api" and delegates
+ * business logic to TcmService. It provides endpoints for managing the entire
+ * test case hierarchy: Projects → Modules → Suites → Test Cases → Test Steps
+ * and their executions/results.
+ *
+ * Security: Uses @PreAuthorize annotations to ensure proper role-based access control
+ * - ADMIN: Full access, can delete anything
+ * - QA/BA: Can create and update, but not delete
+ * - TESTER: Read-only access for executing tests
+ *
+ * HTTP Methods Used:
+ * - GET: Retrieve data
+ * - POST: Create new entities
+ * - PUT: Update existing entities
+ * - DELETE: Remove entities
+ */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api")  // All endpoints in this controller start with /api
 public class ApiController {
 
     private final TcmService tcmService;
@@ -23,22 +42,45 @@ public class ApiController {
         this.tcmService = tcmService;
     }
 
-    // GET /api/projects -> Get all projects.
+    // ==================== PROJECT ENDPOINTS ====================
+
+    /**
+     * GET /api/projects - Get all projects
+     * @return ResponseEntity with list of all projects and HTTP 200 OK
+     */
     @GetMapping("/projects")
     public ResponseEntity<List<Project>> getAllProjects() {
         List<Project> projects = tcmService.getAllProjects();
         return new ResponseEntity<>(projects, HttpStatus.OK);
     }
 
-    // POST /api/projects -> Create a new project.
+    /**
+     * POST /api/projects - Create a new project
+     * Requires ADMIN, QA, or BA role
+     * @param project Project data from request body
+     * @return ResponseEntity with created project and HTTP 201 CREATED, or error response
+     */
     @PostMapping("/projects")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<Project> createProject(@RequestBody Project project) {
-        Project savedProject = tcmService.createProject(project);
-        return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")  // Role-based access
+    public ResponseEntity<?> createProject(@RequestBody Project project) {
+        try {
+            Project savedProject = tcmService.createProject(project);
+            return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            // Handle specific exceptions like duplicate project name
+            if (e.getMessage().contains("already exists")) {
+                return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT); // 409 Conflict
+            }
+            // For other runtime exceptions, return 400 Bad Request
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
-    // GET /api/projects/{projectId} -> Get details for one project (with its test suites).
+    /**
+     * GET /api/projects/{projectId} - Get a specific project by ID
+     * @param projectId ID of the project to retrieve
+     * @return ResponseEntity with project data or error message
+     */
     @GetMapping("/projects/{projectId}")
     public ResponseEntity<?> getProjectById(@PathVariable Long projectId) {
         try {
@@ -55,9 +97,14 @@ public class ApiController {
         }
     }
 
-    // DELETE /api/projects/{projectId} -> Delete a project.
+    /**
+     * DELETE /api/projects/{projectId} - Delete a project and all its contents
+     * Requires ADMIN role only
+     * @param projectId ID of the project to delete
+     * @return ResponseEntity with appropriate status code
+     */
     @DeleteMapping("/projects/{projectId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")  // Only ADMIN can delete projects
     public ResponseEntity<?> deleteProject(@PathVariable Long projectId) {
         try {
             // First check if project exists
@@ -79,7 +126,15 @@ public class ApiController {
         }
     }
 
-    // POST /api/projects/{projectId}/testmodules -> Create a new test module for a project.
+    // ==================== MODULE ENDPOINTS ====================
+
+    /**
+     * POST /api/projects/{projectId}/testmodules - Create a test module for a project
+     * Requires ADMIN, QA, or BA role
+     * @param projectId Parent project ID
+     * @param testModule Module data from request body
+     * @return ResponseEntity with created module or error
+     */
     @PostMapping("/projects/{projectId}/testmodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createTestModuleForProject(@PathVariable Long projectId, @RequestBody TestModule testModule) {
@@ -93,7 +148,11 @@ public class ApiController {
         }
     }
 
-    // GET /api/testmodules/{testModuleId} -> Get details for one test module (with its test suites).
+    /**
+     * GET /api/testmodules/{testModuleId} - Get a specific test module by ID with its suites and test cases
+     * @param testModuleId ID of the test module to retrieve
+     * @return ResponseEntity with module data or error
+     */
     @GetMapping("/testmodules/{testModuleId}")
     public ResponseEntity<?> getTestModuleById(@PathVariable Long testModuleId) {
         try {
@@ -108,7 +167,13 @@ public class ApiController {
         }
     }
 
-    // PUT /api/testmodules/{testModuleId} -> Update a test module (name only).
+    /**
+     * PUT /api/testmodules/{testModuleId} - Update a test module (name only)
+     * Requires ADMIN, QA, or BA role
+     * @param testModuleId ID of the module to update
+     * @param testModuleDetails Updated module data
+     * @return ResponseEntity with updated module or error
+     */
     @PutMapping("/testmodules/{testModuleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestModule(@PathVariable Long testModuleId, @RequestBody TestModule testModuleDetails) {
@@ -122,7 +187,12 @@ public class ApiController {
         }
     }
 
-    // DELETE /api/testmodules/{testModuleId} -> Delete a test module.
+    /**
+     * DELETE /api/testmodules/{testModuleId} - Delete a test module and all its contents
+     * Requires ADMIN role only
+     * @param testModuleId ID of the module to delete
+     * @return ResponseEntity with appropriate status
+     */
     @DeleteMapping("/testmodules/{testModuleId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteTestModule(@PathVariable Long testModuleId) {
@@ -138,7 +208,15 @@ public class ApiController {
         }
     }
 
-    // POST /api/testmodules/{testModuleId}/testsuites -> Create a new test suite for a test module.
+    // ==================== TEST SUITE ENDPOINTS ====================
+
+    /**
+     * POST /api/testmodules/{testModuleId}/testsuites - Create a test suite for a module
+     * Requires ADMIN, QA, or BA role
+     * @param testModuleId Parent module ID
+     * @param testSuite Suite data from request body
+     * @return ResponseEntity with created suite or error
+     */
     @PostMapping("/testmodules/{testModuleId}/testsuites")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createTestSuiteForTestModule(@PathVariable Long testModuleId, @RequestBody TestSuite testSuite) {
@@ -152,7 +230,11 @@ public class ApiController {
         }
     }
 
-    // GET /api/testsuites/{suiteId} -> Get details for one suite (with its test cases).
+    /**
+     * GET /api/testsuites/{suiteId} - Get a specific test suite by ID with its test cases
+     * @param suiteId ID of the test suite to retrieve
+     * @return ResponseEntity with suite data or error
+     */
     @GetMapping("/testsuites/{suiteId}")
     public ResponseEntity<?> getTestSuiteById(@PathVariable Long suiteId) {
         try {
@@ -167,7 +249,13 @@ public class ApiController {
         }
     }
 
-    // PUT /api/testsuites/{suiteId} -> Update a test suite (name only).
+    /**
+     * PUT /api/testsuites/{suiteId} - Update a test suite (name only)
+     * Requires ADMIN, QA, or BA role
+     * @param suiteId ID of the suite to update
+     * @param suiteDetails Updated suite data
+     * @return ResponseEntity with updated suite or error
+     */
     @PutMapping("/testsuites/{suiteId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestSuite(@PathVariable Long suiteId, @RequestBody TestSuite suiteDetails) {
@@ -181,7 +269,16 @@ public class ApiController {
         }
     }
 
-    // POST /api/testsuites/{suiteId}/testcases -> Create a new test case. This request body should include the list of TestSteps.
+    // ==================== TEST CASE ENDPOINTS ====================
+
+    /**
+     * POST /api/testsuites/{suiteId}/testcases - Create a test case for a suite
+     * Requires ADMIN, QA, or BA role
+     * Note: Request body should include the list of TestSteps
+     * @param suiteId Parent suite ID
+     * @param testCase Test case data (including steps) from request body
+     * @return ResponseEntity with created test case or error
+     */
     @PostMapping("/testsuites/{suiteId}/testcases")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createTestCaseForTestSuite(@PathVariable Long suiteId, @RequestBody TestCase testCase) {
@@ -195,7 +292,25 @@ public class ApiController {
         }
     }
 
-    // GET /api/testcases/{testCaseId} -> Get full details for one test case (with its steps).
+    /**
+     * GET /api/testcases - Get all test cases in the system
+     * @return ResponseEntity with list of all test cases or error
+     */
+    @GetMapping("/testcases")
+    public ResponseEntity<List<TestCase>> getAllTestCases() {
+        try {
+            List<TestCase> testCases = tcmService.getAllTestCases();
+            return new ResponseEntity<>(testCases, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/testcases/{testCaseId} - Get a specific test case by ID with its steps
+     * @param testCaseId ID of the test case to retrieve
+     * @return ResponseEntity with test case data or error
+     */
     @GetMapping("/testcases/{testCaseId}")
     public ResponseEntity<?> getTestCaseById(@PathVariable Long testCaseId) {
         try {
@@ -210,7 +325,13 @@ public class ApiController {
         }
     }
 
-    // PUT /api/testcases/{testCaseId} -> Update a test case (and its steps).
+    /**
+     * PUT /api/testcases/{testCaseId} - Update a test case and its steps
+     * Requires ADMIN, QA, or BA role
+     * @param testCaseId ID of the test case to update
+     * @param testCaseDetails Updated test case data (including steps)
+     * @return ResponseEntity with updated test case or error
+     */
     @PutMapping("/testcases/{testCaseId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestCase(@PathVariable Long testCaseId, @RequestBody TestCase testCaseDetails) {
@@ -224,7 +345,12 @@ public class ApiController {
         }
     }
 
-    // DELETE /api/testcases/{testCaseId} -> Delete a test case.
+    /**
+     * DELETE /api/testcases/{testCaseId} - Delete a test case and its executions
+     * Requires ADMIN role only
+     * @param testCaseId ID of the test case to delete
+     * @return ResponseEntity with success message or error
+     */
     @DeleteMapping("/testcases/{testCaseId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteTestCase(@PathVariable Long testCaseId) {
@@ -238,7 +364,14 @@ public class ApiController {
         }
     }
 
-    // POST /api/testcases/{testCaseId}/executions -> Start a new test execution for a test case.
+    // ==================== TEST EXECUTION ENDPOINTS ====================
+
+    /**
+     * POST /api/testcases/{testCaseId}/executions - Start a new test execution
+     * Creates an execution record and step result records for all steps in the test case
+     * @param testCaseId ID of the test case to execute
+     * @return ResponseEntity with created execution or error
+     */
     @PostMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> createTestExecutionForTestCase(@PathVariable Long testCaseId) {
         try {
@@ -251,7 +384,11 @@ public class ApiController {
         }
     }
 
-    // GET /api/executions/{executionId} -> Get execution details.
+    /**
+     * GET /api/executions/{executionId} - Get a specific test execution by ID with its step results
+     * @param executionId ID of the execution to retrieve
+     * @return ResponseEntity with execution data or error
+     */
     @GetMapping("/executions/{executionId}")
     public ResponseEntity<?> getTestExecutionById(@PathVariable Long executionId) {
         try {
@@ -266,7 +403,11 @@ public class ApiController {
         }
     }
 
-    // GET /api/testcases/{testCaseId}/executions -> Get all executions for a test case.
+    /**
+     * GET /api/testcases/{testCaseId}/executions - Get all executions for a specific test case
+     * @param testCaseId ID of the test case
+     * @return ResponseEntity with list of executions or error
+     */
     @GetMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> getTestExecutionsByTestCaseId(@PathVariable Long testCaseId) {
         try {
@@ -277,7 +418,13 @@ public class ApiController {
         }
     }
 
-    // PUT /api/executions/{executionId}/steps/{stepId} -> Update step result.
+    /**
+     * PUT /api/executions/{executionId}/steps/{stepId} - Update the result of a specific step in an execution
+     * @param executionId ID of the execution
+     * @param stepId ID of the step
+     * @param stepData Step result data (status and actual result) from request body
+     * @return ResponseEntity with updated step result or error
+     */
     @PutMapping("/executions/{executionId}/steps/{stepId}")
     public ResponseEntity<?> updateStepResult(
             @PathVariable Long executionId,
@@ -295,7 +442,12 @@ public class ApiController {
         }
     }
 
-    // PUT /api/executions/{executionId}/complete -> Complete a test execution.
+    /**
+     * PUT /api/executions/{executionId}/complete - Complete a test execution
+     * @param executionId ID of the execution to complete
+     * @param completeData Completion data (overall result and notes) from request body
+     * @return ResponseEntity with completed execution or error
+     */
     @PutMapping("/executions/{executionId}/complete")
     public ResponseEntity<?> completeTestExecution(
             @PathVariable Long executionId,

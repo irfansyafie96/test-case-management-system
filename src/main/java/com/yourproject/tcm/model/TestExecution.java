@@ -7,35 +7,68 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * TestExecution Entity - Represents one execution/run of a test case
+ *
+ * When a user runs a test case to verify if it works, a TestExecution record
+ * is created. This entity captures:
+ * - Which test case was executed
+ * - When it was executed
+ * - What the overall result was (Pass/Fail/Incomplete)
+ * - Notes about the execution
+ * - Results for each individual step (TestStepResult)
+ *
+ * Key Concept: One test case can be executed multiple times, each creating
+ * a separate TestExecution record. This allows tracking the history of
+ * test case execution results over time.
+ *
+ * Relationship Structure:
+ * - Many TestExecutions can belong to One TestCase (ManyToOne)
+ * - One TestExecution contains Many TestStepResults (OneToMany)
+ */
 @Entity
-@Table(name = "test_executions")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "test_executions")  // Maps to 'test_executions' table in database
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Ignore Hibernate proxy properties during JSON serialization
 public class TestExecution {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment primary key
+    private Long id;  // Unique identifier for this test execution
 
+    /**
+     * Many-to-One relationship: Many TestExecutions can belong to One TestCase
+     * fetch = FetchType.LAZY: Only load test case data when explicitly accessed
+     * @JoinColumn: Foreign key 'test_case_id' in test_executions table points to TestCase
+     * @JsonIgnoreProperties({"testSteps"}): Prevent circular reference back to TestSteps when serializing
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "test_case_id", nullable = false)
+    @JoinColumn(name = "test_case_id", nullable = false)  // Foreign key column
     @JsonIgnoreProperties({"testSteps"}) // Prevent circular reference back to TestSteps
-    private TestCase testCase;
+    private TestCase testCase;  // The test case that was executed
 
-    @Column(nullable = false)
-    private LocalDateTime executionDate;
+    @Column(nullable = false)  // Execution date is required
+    private LocalDateTime executionDate;  // When this test was executed (timestamp)
 
-    @Column(nullable = false)
-    private String overallResult; // "Pass", "Fail", "Incomplete"
+    @Column(nullable = false)  // Overall result is required
+    private String overallResult; // Overall result: "Pass", "Fail", "Incomplete", etc.
 
-    @Column(columnDefinition = "TEXT")
-    private String notes;
+    @Column(columnDefinition = "TEXT")  // TEXT allows longer notes
+    private String notes;  // Optional notes about this execution
 
+    /**
+     * One-to-Many relationship: One TestExecution can have Many TestStepResults
+     * cascade = CascadeType.ALL: Changes to execution cascade to its step results
+     * orphanRemoval = true: If a step result is removed from this list, it's deleted
+     * @OrderBy("stepNumber ASC"): Always keep step results in ascending order by step number
+     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
+     * @JsonIgnoreProperties({"testExecution"}): Prevent circular reference back to TestExecution
+     */
     @OneToMany(mappedBy = "testExecution", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("stepNumber ASC")
-    @JsonManagedReference
+    @OrderBy("stepNumber ASC")  // Keep step results in sequential order (1, 2, 3, etc.)
+    @JsonManagedReference       // This side manages the relationship for JSON serialization
     @JsonIgnoreProperties({"testExecution"}) // Prevent circular reference back to TestExecution
-    private List<TestStepResult> stepResults;
+    private List<TestStepResult> stepResults;  // Results for each step in this execution
 
-    // Getters and Setters
+    // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
     }

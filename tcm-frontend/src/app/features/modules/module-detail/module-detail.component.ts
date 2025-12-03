@@ -12,6 +12,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { TestSuiteDialogComponent } from './test-suite-dialog.component';
 import { TestCaseDialogComponent } from './test-case-dialog.component';
+import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component'; // New improved dialog
 import { Project, TestModule, TestSuite, TestCase } from '../../../core/models/project.model';
 import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
@@ -38,8 +39,8 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   private tcmService = inject(TcmService);
   private dialog = inject(MatDialog);
 
-  displayedColumns: string[] = ['id', 'title', 'priority', 'status'];
-  
+  displayedColumns: string[] = ['id', 'title', 'priority', 'status', 'actions'];
+
   private loadingSubject = new BehaviorSubject<boolean>(true);
   private errorSubject = new BehaviorSubject<boolean>(false);
   private moduleSubject = new BehaviorSubject<TestModule | null>(null);
@@ -109,8 +110,10 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
 
   createTestCase(suiteId: string | number): void {
     const idAsString = String(suiteId);
-    const dialogRef = this.dialog.open(TestCaseDialogComponent, {
-      width: '600px',
+    const dialogRef = this.dialog.open(TestCaseDialogImprovedComponent, {
+      width: '900px', // Wider for better layout
+      maxWidth: '95vw',
+      maxHeight: '90vh',
       data: { suiteId: idAsString }
     });
 
@@ -127,6 +130,35 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
             console.error('Error creating test case:', error);
             this.loadingSubject.next(false); // Hide loading indicator
             alert('Failed to create test case. Please try again.');
+          }
+        });
+      }
+    });
+  }
+
+  editTestCase(testCase: TestCase): void {
+    const dialogRef = this.dialog.open(TestCaseDialogImprovedComponent, {
+      width: '900px', // Wider for better layout
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: testCase // Pass the entire test case object for editing
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadingSubject.next(true); // Show loading indicator
+        // Use the ID from the original test case if editing, or from the result
+        const testCaseId = testCase.id as string;
+        this.tcmService.updateTestCase(testCaseId, result).subscribe({
+          next: (updatedTestCase) => {
+            console.log('Test case updated successfully:', updatedTestCase);
+            // Refresh the module data to show changes
+            this.refreshModuleData();
+          },
+          error: (error) => {
+            console.error('Error updating test case:', error);
+            this.loadingSubject.next(false); // Hide loading indicator
+            alert('Failed to update test case. Please try again.');
           }
         });
       }

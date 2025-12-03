@@ -4,14 +4,14 @@
   --ink: #1a1918; /* Near Black - The Anchor */
   --paper: #f4f2ee; /* Warm Alabaster - The Canvas */
   --surface: #ffffff; /* Pure White - The Object */
-  
+
   /* Accents */
   --accent-primary: #ff4d00; /* International Orange - Creative Energy */
   --accent-secondary: #3b82f6; /* Electric Blue - Technical Data */
   --accent-success: #059669; /* Emerald */
   --accent-warning: #d97706; /* Amber */
   --accent-danger: #e31b54; /* Ruby Red */
-  
+
   /* Structure */
   --border-thin: 1px solid var(--ink);
   --border-medium: 2px solid var(--ink);
@@ -19,20 +19,20 @@
   --radius-sm: 4px;
   --radius-md: 8px; /* Slightly softer than pure box */
   --radius-lg: 16px;
-  
+
   /* Spacing */
   --space-unit: 8px;
   --sidebar-width: 260px;
   --header-height: 72px;
   --container-max-width: 1600px;
-  
+
   /* Elevation & Depth (Hard Shadows - The "Physical" Presence) */
   --shadow-sm: 4px 4px 0px 0px var(--ink);
   --shadow-md: 8px 8px 0px 0px var(--ink);
   --shadow-lg: 12px 12px 0px 0px var(--ink);
   --shadow-hover: 6px 6px 0px 0px var(--accent-primary); /* Pop on hover */
   --shadow-active: 0px 0px 0px 0px var(--ink); /* Pressed state */
-  
+
   /* Transitions */
   --transition-quick: all 0.15s ease-out;
   --transition-moderate: all 0.25s ease-out;
@@ -43,16 +43,16 @@ html {
   font-size: 14px;
 }
 
-body { 
+body {
   height: 100%;
-  margin: 0; 
+  margin: 0;
   font-family: 'DM Sans', sans-serif;
   background-color: var(--paper);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   line-height: 1.6;
   overflow-x: hidden;
-  
+
   /* Subtle "Paper Grain" Noise Texture */
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
 }
@@ -111,7 +111,7 @@ code, .id-badge, .meta-label {
   height: 44px !important;
   border-radius: var(--radius-sm) !important;
   transition: var(--transition-quick) !important;
-  
+
   /* The "Physical Button" Look */
   border: var(--border-medium) !important;
   background-color: var(--surface) !important;
@@ -154,19 +154,19 @@ code, .id-badge, .meta-label {
 .mat-mdc-dialog-title {
   font-family: 'Space Grotesk', sans-serif !important;
   border-bottom: var(--border-thin);
-  padding: 24px 32px !important;
+  padding: 20px 24px !important; /* Reduced padding */
   font-size: 22px !important;
   background-color: var(--paper);
   color: var(--ink);
 }
 
 .mat-mdc-dialog-content {
-  padding: 32px !important;
+  padding: 24px !important; /* Reduced padding */
 }
 
 .mat-mdc-dialog-actions {
   border-top: var(--border-thin);
-  padding: 24px 32px !important;
+  padding: 16px 24px !important; /* Reduced padding */
   gap: 16px;
   background-color: var(--paper);
 }
@@ -199,7 +199,7 @@ code, .id-badge, .meta-label {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 56px;
+  margin-bottom: 0;
   padding-bottom: 24px;
 }
 
@@ -249,3 +249,50 @@ code, .id-badge, .meta-label {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-primary);
 }
+
+/* Snackbars: System Alerts */
+.mat-mdc-snack-bar-container {
+  &.error-snackbar, &.success-snackbar {
+    --mdc-snackbar-container-color: var(--surface);
+    --mdc-snackbar-supporting-text-color: var(--ink);
+    --mat-snack-bar-button-color: var(--accent-primary);
+
+    border: var(--border-medium);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm) !important; /* Simplified shadow */
+
+    .mdc-snackbar__surface {
+      padding: 12px 16px !important;
+    }
+
+    .mdc-snackbar__label {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    .mat-mdc-snack-bar-action {
+       font-family: 'Space Grotesk', sans-serif;
+       font-weight: 700;
+    }
+  }
+
+  &.error-snackbar {
+    border-color: var(--accent-danger); /* Red border for errors */
+    box-shadow: var(--shadow-sm) !important; /* Simplified shadow */
+
+    .mat-mdc-snack-bar-action {
+      color: var(--accent-danger);
+    }
+  }
+
+  &.success-snackbar {
+     border-color: var(--accent-success);
+     box-shadow: var(--shadow-sm) !important; /* Simplified shadow */
+
+     .mat-mdc-snack-bar-action {
+       color: var(--accent-success);
+     }
+  }
+}
+

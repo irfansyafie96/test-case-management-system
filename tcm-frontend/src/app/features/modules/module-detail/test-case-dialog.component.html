@@ -6,18 +6,19 @@
 <div mat-dialog-content>
   <form [formGroup]="testCaseForm" class="test-case-form">
     
-    <div class="row-2">
-      <mat-form-field appearance="outline">
+    <!-- Metadata Bar -->
+    <div class="meta-bar">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="id-field">
         <mat-label>ID</mat-label>
         <input 
           matInput 
           formControlName="testCaseId" 
-          placeholder="TC-001"
+          placeholder="TC-#"
           autocomplete="off"
           required>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="priority-field">
         <mat-label>Priority</mat-label>
         <mat-select formControlName="priority" required>
           <mat-option value="HIGH">High</mat-option>
@@ -27,60 +28,74 @@
       </mat-form-field>
     </div>
 
-    <mat-form-field appearance="outline" class="full-width">
+    <!-- Main Content -->
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width title-field">
       <mat-label>Title</mat-label>
       <input 
         matInput 
         formControlName="title" 
-        placeholder="e.g. Validate User Login"
+        placeholder="Enter test scenario title..."
         autocomplete="off"
         required>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="full-width">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="full-width">
       <mat-label>Description</mat-label>
       <textarea 
         matInput 
         formControlName="description" 
         placeholder="Brief objective..."
-        rows="2"></textarea>
+        rows="1"
+        cdkTextareaAutosize
+        cdkAutosizeMinRows="1"
+        cdkAutosizeMaxRows="3"></textarea>
     </mat-form-field>
     
-    <div class="steps-section-header">
-      <h3>Test Steps</h3>
-      <div class="step-count">{{ testSteps.length }} Steps</div>
-    </div>
+    <!-- Steps Section -->
+    <div class="steps-section">
+      <div class="steps-header">
+        <h3>Test Steps</h3>
+        <span class="step-count">{{ testSteps.length }}</span>
+      </div>
 
-    <div formArrayName="testSteps" class="test-steps-container">
-      <div *ngFor="let step of testSteps.controls; let i = index" [formGroupName]="i" class="test-step">
-        <div class="step-marker">{{ i + 1 }}</div>
-        
-        <div class="step-inputs">
-          <mat-form-field appearance="outline" class="compact-field">
-            <mat-label>Action</mat-label>
-            <input matInput formControlName="action" placeholder="Action to perform" required>
-          </mat-form-field>
+      <!-- Table Header -->
+      <div class="steps-table-header" *ngIf="testSteps.length > 0">
+        <div class="col-marker">#</div>
+        <div class="col-action">ACTION</div>
+        <div class="col-expected">EXPECTED RESULT</div>
+        <div class="col-remove"></div>
+      </div>
+
+      <div formArrayName="testSteps" class="test-steps-container">
+        <div *ngFor="let step of testSteps.controls; let i = index" [formGroupName]="i" class="test-step-row">
+          <div class="step-marker">{{ i + 1 }}</div>
           
-          <mat-form-field appearance="outline" class="compact-field">
-            <mat-label>Expected Result</mat-label>
-            <input matInput formControlName="expectedResult" placeholder="System response" required>
-          </mat-form-field>
-        </div>
+          <div class="step-inputs">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="step-field no-label">
+              <input matInput formControlName="action" placeholder="Do this..." required>
+            </mat-form-field>
+            
+            <mat-form-field appearance="outline" subscriptSizing="dynamic" class="step-field no-label">
+              <input matInput formControlName="expectedResult" placeholder="Expect this..." required>
+            </mat-form-field>
+          </div>
 
-        <button 
-          type="button" 
-          mat-icon-button 
-          class="remove-step-btn"
-          (click)="removeTestStep(i)"
-          [matTooltip]="'Remove step'">
-          <mat-icon>close</mat-icon>
+          <button 
+            type="button" 
+            mat-icon-button 
+            class="remove-step-btn"
+            (click)="removeTestStep(i)"
+            tabindex="-1">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        
+        <button type="button" mat-stroked-button (click)="addTestStep()" class="add-step-btn">
+          <mat-icon>add</mat-icon> Add Step
         </button>
       </div>
-      
-      <button type="button" mat-stroked-button (click)="addTestStep()" class="add-step-btn">
-        <mat-icon>add</mat-icon> Add Next Step
-      </button>
     </div>
+
   </form>
 </div>
 

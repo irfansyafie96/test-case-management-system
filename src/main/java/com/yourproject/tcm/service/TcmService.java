@@ -17,46 +17,88 @@ import java.util.stream.Collectors;
 import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * TCM Service - Main Business Logic Layer for the Test Case Management System
+ *
+ * This service class contains all the business logic for managing the test case hierarchy:
+ * Projects → Modules → Suites → Test Cases → Test Steps, and their executions/results.
+ *
+ * Key Responsibilities:
+ * 1. CRUD operations for all entities (Create, Read, Update, Delete)
+ * 2. Maintaining data integrity across the hierarchy
+ * 3. Managing relationships between entities
+ * 4. Handling cascading operations (e.g., deleting a project deletes all its contents)
+ * 5. Creating and managing test executions and their results
+ *
+ * Transactional: All methods are wrapped in database transactions to ensure data consistency
+ */
 @Service
-@Transactional
+@Transactional  // All methods in this service are transactional by default
 public class TcmService {
 
     @Autowired
-    private EntityManager entityManager;
+    private EntityManager entityManager;  // Direct access to JPA EntityManager for manual DB operations
 
     @Autowired
-    private ProjectRepository projectRepository;
+    private ProjectRepository projectRepository;  // Repository for Project operations
 
     @Autowired
-    private TestModuleRepository testModuleRepository;
+    private TestModuleRepository testModuleRepository;  // Repository for TestModule operations
 
     @Autowired
-    private TestSuiteRepository testSuiteRepository;
+    private TestSuiteRepository testSuiteRepository;  // Repository for TestSuite operations
 
     @Autowired
-    private TestCaseRepository testCaseRepository;
+    private TestCaseRepository testCaseRepository;  // Repository for TestCase operations
 
     @Autowired
-    private TestExecutionRepository testExecutionRepository;
+    private TestExecutionRepository testExecutionRepository;  // Repository for TestExecution operations
 
     @Autowired
-    private TestStepResultRepository testStepResultRepository;
+    private TestStepResultRepository testStepResultRepository;  // Repository for TestStepResult operations
 
-    // Project methods
+    // ==================== PROJECT METHODS ====================
+
+    /**
+     * Get all projects in the system
+     * @return List of all projects
+     */
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
     }
 
+    /**
+     * Create a new project
+     * @param project The project to create
+     * @return The created project
+     * @throws RuntimeException if a project with the same name already exists
+     */
     @Transactional
     public Project createProject(Project project) {
+        // Check if a project with the same name already exists to provide a better error message
+        Optional<Project> existingProject = projectRepository.findByName(project.getName());
+        if (existingProject.isPresent()) {
+            throw new RuntimeException("A project with name '" + project.getName() + "' already exists");
+        }
         return projectRepository.save(project);
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Get a specific project by ID
+     * @param projectId The ID of the project to retrieve
+     * @return Optional containing the project, or empty if not found
+     */
+    @Transactional(readOnly = true)  // Read-only transaction for better performance
     public Optional<Project> getProjectById(Long projectId) {
         return projectRepository.findById(projectId);
     }
 
+    /**
+     * Delete a project and all its contents (cascading delete)
+     * This will delete: Project → Modules → Suites → Test Cases → Executions → Step Results
+     * @param projectId The ID of the project to delete
+     * @throws RuntimeException if project doesn't exist
+     */
     @Transactional
     public void deleteProject(Long projectId) {
         Optional<Project> projectOpt = projectRepository.findById(projectId);
@@ -67,7 +109,7 @@ public class TcmService {
             // This will cascade to delete all related test suites, test cases, executions and step results
             if (project.getModules() != null) {
                 for (TestModule module : project.getModules()) {
-                    deleteTestModule(module.getId());
+                    deleteTestModule(module.getId());  // Recursively delete module and its contents
                 }
             }
 
@@ -79,7 +121,13 @@ public class TcmService {
         }
     }
 
-    // TestModule methods
+    // ==================== TEST MODULE METHODS ====================
+
+    /**
+     * Get a specific test module by ID with all its test suites and test cases
+     * @param testModuleId The ID of the test module to retrieve
+     * @return Optional containing the test module, or empty if not found
+     */
     @Transactional(readOnly = true)
     public Optional<TestModule> getTestModuleById(Long testModuleId) {
         Optional<TestModule> testModuleOpt = testModuleRepository.findByIdWithTestSuites(testModuleId);
@@ -107,12 +155,19 @@ public class TcmService {
         return testModuleOpt;
     }
 
+    /**
+     * Create a new test module within a specific project
+     * @param projectId The project ID to add the module to
+     * @param testModule The test module to create
+     * @return The created test module
+     * @throws RuntimeException if project doesn't exist
+     */
     @Transactional
     public TestModule createTestModuleForProject(Long projectId, TestModule testModule) {
         Optional<Project> projectOpt = projectRepository.findById(projectId);
         if (projectOpt.isPresent()) {
             Project project = projectOpt.get();
-            testModule.setProject(project);
+            testModule.setProject(project);  // Set the project relationship
             TestModule savedTestModule = testModuleRepository.save(testModule);
             entityManager.flush(); // Ensure data is written to DB
             return savedTestModule;
@@ -121,12 +176,19 @@ public class TcmService {
         }
     }
 
+    /**
+     * Update an existing test module
+     * @param testModuleId The ID of the module to update
+     * @param testModuleDetails Updated module details
+     * @return The updated test module
+     * @throws RuntimeException if module doesn't exist
+     */
     @Transactional
     public TestModule updateTestModule(Long testModuleId, TestModule testModuleDetails) {
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
-            testModule.setName(testModuleDetails.getName());
+            testModule.setName(testModuleDetails.getName());  // Only update name currently
             TestModule updatedTestModule = testModuleRepository.save(testModule);
             entityManager.flush(); // Ensure data is written to DB
             return updatedTestModule;
@@ -135,6 +197,12 @@ public class TcmService {
         }
     }
 
+    /**
+     * Delete a test module and all its contents (cascading delete)
+     * This will delete: Module → Suites → Test Cases → Executions → Step Results
+     * @param testModuleId The ID of the test module to delete
+     * @throws RuntimeException if module doesn't exist
+     */
     @Transactional
     public void deleteTestModule(Long testModuleId) {
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
@@ -142,6 +210,7 @@ public class TcmService {
             TestModule testModule = testModuleOpt.get();
 
             // First, delete all test executions for test cases in this module
+            // This is necessary to avoid foreign key constraint violations
             if (testModule.getTestSuites() != null) {
                 for (TestSuite suite : testModule.getTestSuites()) {
                     if (suite.getTestCases() != null) {
@@ -171,18 +240,31 @@ public class TcmService {
         }
     }
 
-    // Test Suite methods
+    // ==================== TEST SUITE METHODS ====================
+
+    /**
+     * Get a specific test suite by ID with its module information
+     * @param suiteId The ID of the test suite to retrieve
+     * @return Optional containing the test suite, or empty if not found
+     */
     @Transactional(readOnly = true)
     public Optional<TestSuite> getTestSuiteById(Long suiteId) {
         return testSuiteRepository.findByIdWithModule(suiteId);
     }
 
+    /**
+     * Create a new test suite within a specific test module
+     * @param testModuleId The module ID to add the suite to
+     * @param testSuite The test suite to create
+     * @return The created test suite
+     * @throws RuntimeException if module doesn't exist
+     */
     @Transactional
     public TestSuite createTestSuiteForTestModule(Long testModuleId, TestSuite testSuite) {
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
-            testSuite.setTestModule(testModule);
+            testSuite.setTestModule(testModule);  // Set the module relationship
             TestSuite savedTestSuite = testSuiteRepository.save(testSuite);
             entityManager.flush(); // Ensure data is written to DB
             return savedTestSuite;
@@ -191,12 +273,19 @@ public class TcmService {
         }
     }
 
+    /**
+     * Update an existing test suite
+     * @param suiteId The ID of the suite to update
+     * @param suiteDetails Updated suite details
+     * @return The updated test suite
+     * @throws RuntimeException if suite doesn't exist
+     */
     @Transactional
     public TestSuite updateTestSuite(Long suiteId, TestSuite suiteDetails) {
         Optional<TestSuite> suiteOpt = testSuiteRepository.findById(suiteId);
         if (suiteOpt.isPresent()) {
             TestSuite testSuite = suiteOpt.get();
-            testSuite.setName(suiteDetails.getName());
+            testSuite.setName(suiteDetails.getName());  // Only update name currently
             TestSuite updatedTestSuite = testSuiteRepository.save(testSuite);
             entityManager.flush(); // Ensure data is written to DB
             return updatedTestSuite;
@@ -205,23 +294,47 @@ public class TcmService {
         }
     }
 
-    // Test Case methods
+    // ==================== TEST CASE METHODS ====================
+
+    /**
+     * Get all test cases in the system
+     * @return List of all test cases
+     */
+    @Transactional(readOnly = true)
+    public List<TestCase> getAllTestCases() {
+        return testCaseRepository.findAll();
+    }
+
+    /**
+     * Get a specific test case by ID
+     * @param testCaseId The ID of the test case to retrieve
+     * @return Optional containing the test case, or empty if not found
+     */
     @Transactional(readOnly = true)
     public Optional<TestCase> getTestCaseById(Long testCaseId) {
         return testCaseRepository.findById(testCaseId);
     }
 
+    /**
+     * Create a new test case within a specific test suite
+     * @param suiteId The suite ID to add the test case to
+     * @param testCase The test case to create (with its test steps)
+     * @return The created test case
+     * @throws RuntimeException if suite doesn't exist
+     */
     @Transactional
     public TestCase createTestCaseForTestSuite(Long suiteId, TestCase testCase) {
         Optional<TestSuite> suiteOpt = testSuiteRepository.findById(suiteId);
         if (suiteOpt.isPresent()) {
             TestSuite testSuite = suiteOpt.get();
-            testCase.setTestSuite(testSuite);
+            testCase.setTestSuite(testSuite);  // Set the suite relationship
+
+            // If the test case has steps, set up the relationship and step numbers
             if (testCase.getTestSteps() != null) {
                 int stepNum = 1;
                 for (TestStep step : testCase.getTestSteps()) {
-                    step.setTestCase(testCase);
-                    step.setStepNumber(stepNum++);
+                    step.setTestCase(testCase);      // Set the back-reference
+                    step.setStepNumber(stepNum++);   // Assign sequential step numbers (1, 2, 3, etc.)
                 }
             }
             TestCase savedTestCase = testCaseRepository.save(testCase);
@@ -233,13 +346,20 @@ public class TcmService {
         }
     }
 
+    /**
+     * Update an existing test case and its steps
+     * @param testCaseId The ID of the test case to update
+     * @param testCaseDetails Updated test case details (including steps)
+     * @return The updated test case
+     * @throws RuntimeException if test case doesn't exist
+     */
     @Transactional
     public TestCase updateTestCase(Long testCaseId, TestCase testCaseDetails) {
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
         if (testCaseOpt.isPresent()) {
             TestCase testCase = testCaseOpt.get();
 
-            // Update basic properties
+            // Update basic properties (ID, title, testCaseId, priority)
             testCase.setTitle(testCaseDetails.getTitle());
             testCase.setTestCaseId(testCaseDetails.getTestCaseId());
             testCase.setPriority(testCaseDetails.getPriority());
@@ -265,7 +385,7 @@ public class TcmService {
                 for (int i = 0; i < testCaseDetails.getTestSteps().size(); i++) {
                     TestStep stepDetail = testCaseDetails.getTestSteps().get(i);
                     TestStep newStep = new TestStep();
-                    newStep.setStepNumber(i + 1); // Ensure step numbers are sequential
+                    newStep.setStepNumber(i + 1); // Ensure step numbers are sequential (1, 2, 3, etc.)
                     newStep.setAction(stepDetail.getAction());
                     newStep.setExpectedResult(stepDetail.getExpectedResult());
                     newStep.setTestCase(testCase); // Set the back-reference to testCase
@@ -293,6 +413,11 @@ public class TcmService {
         }
     }
 
+    /**
+     * Delete a test case and all its executions/step results
+     * @param testCaseId The ID of the test case to delete
+     * @throws RuntimeException if test case doesn't exist
+     */
     @Transactional
     public void deleteTestCase(Long testCaseId) {
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
@@ -322,39 +447,59 @@ public class TcmService {
         }
     }
 
-    // Test Execution methods
+    // ==================== TEST EXECUTION METHODS ====================
+
+    /**
+     * Get a specific test execution by ID with all its step results
+     * @param executionId The ID of the test execution to retrieve
+     * @return Optional containing the test execution, or empty if not found
+     */
     @Transactional(readOnly = true)
     public Optional<TestExecution> getTestExecutionById(Long executionId) {
         return testExecutionRepository.findByIdWithStepResults(executionId);
     }
 
+    /**
+     * Get all executions of a specific test case
+     * @param testCaseId The ID of the test case
+     * @return List of all executions for that test case
+     */
     @Transactional(readOnly = true)
     public List<TestExecution> getTestExecutionsByTestCaseId(Long testCaseId) {
         return testExecutionRepository.findByTestCaseId(testCaseId);
     }
 
+    /**
+     * Create a new test execution for a specific test case
+     * This creates an execution record and step result records for all steps in the test case
+     * @param testCaseId The ID of the test case to execute
+     * @return The created test execution with empty step results
+     * @throws RuntimeException if test case doesn't exist
+     */
     @Transactional
     public TestExecution createTestExecutionForTestCase(Long testCaseId) {
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
         if (testCaseOpt.isPresent()) {
             TestCase testCase = testCaseOpt.get();
+
+            // Create the main execution record
             TestExecution execution = new TestExecution();
-            execution.setTestCase(testCase);
-            execution.setExecutionDate(LocalDateTime.now());
-            execution.setOverallResult("Incomplete");
+            execution.setTestCase(testCase);  // Link to the test case
+            execution.setExecutionDate(LocalDateTime.now());  // Set current time
+            execution.setOverallResult("Incomplete");  // Default to incomplete until finished
 
             TestExecution initialExecution = testExecutionRepository.save(execution);
             entityManager.flush(); // Ensure execution has an ID
 
-            // Create step results for each step after saving the execution
+            // Create step results for each step in the test case
             if (testCase.getTestSteps() != null) {
                 List<TestStepResult> stepResults = testCase.getTestSteps().stream()
                     .map(step -> {
                         TestStepResult result = new TestStepResult();
-                        result.setTestExecution(initialExecution); // Use the initial saved execution
-                        result.setTestStep(step);
-                        result.setStepNumber(step.getStepNumber());
-                        result.setStatus("Skipped");
+                        result.setTestExecution(initialExecution); // Link to the execution
+                        result.setTestStep(step);  // Link to the step
+                        result.setStepNumber(step.getStepNumber());  // Copy step number
+                        result.setStatus("Skipped");  // Default to skipped until executed
                         return result;
                     })
                     .collect(Collectors.toList());
@@ -372,16 +517,25 @@ public class TcmService {
         }
     }
 
+    /**
+     * Update the result of a specific step in a test execution
+     * @param executionId The ID of the execution
+     * @param stepId The ID of the step
+     * @param status The new status ("Pass", "Fail", "Skipped")
+     * @param actualResult What actually happened when the step was executed
+     * @return StepResultResponse DTO with updated information
+     * @throws RuntimeException if step result doesn't exist for the execution/step combination
+     */
     @Transactional
     public com.yourproject.tcm.model.dto.StepResultResponse updateStepResult(Long executionId, Long stepId, String status, String actualResult) {
         TestStepResult existingResult = testStepResultRepository.findByTestExecutionIdAndTestStepId(executionId, stepId);
         if (existingResult != null) {
-            existingResult.setStatus(status);
-            existingResult.setActualResult(actualResult);
+            existingResult.setStatus(status);       // Update status
+            existingResult.setActualResult(actualResult);  // Update actual result
             TestStepResult savedResult = testStepResultRepository.save(existingResult);
             entityManager.flush();
 
-            // Return DTO to avoid serialization issues
+            // Return DTO to avoid serialization issues (circular references)
             return new com.yourproject.tcm.model.dto.StepResultResponse(
                 savedResult.getId(),
                 savedResult.getTestStep().getId(),
@@ -396,13 +550,21 @@ public class TcmService {
         }
     }
 
+    /**
+     * Complete a test execution by setting the overall result and notes
+     * @param executionId The ID of the execution to complete
+     * @param overallResult The overall result ("Pass", "Fail", etc.)
+     * @param notes Any notes about the execution
+     * @return The completed test execution
+     * @throws RuntimeException if execution doesn't exist
+     */
     @Transactional
     public TestExecution completeTestExecution(Long executionId, String overallResult, String notes) {
         Optional<TestExecution> executionOpt = testExecutionRepository.findById(executionId);
         if (executionOpt.isPresent()) {
             TestExecution execution = executionOpt.get();
-            execution.setOverallResult(overallResult);
-            execution.setNotes(notes);
+            execution.setOverallResult(overallResult);  // Set the final result
+            execution.setNotes(notes);  // Add any notes
             TestExecution savedExecution = testExecutionRepository.save(execution);
             entityManager.flush();
             return savedExecution;

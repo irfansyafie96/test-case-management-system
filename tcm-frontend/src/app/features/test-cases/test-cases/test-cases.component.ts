@@ -6,11 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { TestCase } from '../../../core/models/project.model';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
+import { map, catchError, finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-test-cases',
@@ -23,36 +24,56 @@ import { map } from 'rxjs/operators';
     MatTableModule, 
     MatChipsModule, 
     MatTooltipModule,
+    MatProgressSpinnerModule,
     RouterModule
   ],
   templateUrl: './test-cases.component.html',
   styleUrls: ['./test-cases.component.css']
 })
 export class TestCasesComponent implements OnInit {
-  testCases$: Observable<TestCase[]>;
-  displayedColumns: string[] = ['id', 'title', 'priority', 'actions'];
+  displayedColumns: string[] = ['id', 'title', 'priority', 'status', 'actions'];
+
+  private loadingSubject = new BehaviorSubject<boolean>(true);
+  private errorSubject = new BehaviorSubject<boolean>(false);
+  private testCasesSubject = new BehaviorSubject<TestCase[]>([]);
+
+  vm$: Observable<{ loading: boolean; error: boolean; testCases: TestCase[] }>;
 
   constructor(private tcmService: TcmService) {
-    // We need to aggregate test cases from projects -> modules -> suites -> cases
-    // This is inefficient but works for the prototype without a dedicated "getAllTestCases" endpoint
-    this.testCases$ = this.tcmService.projects$.pipe(
-      map(projects => {
-        const allCases: TestCase[] = [];
-        projects.forEach(p => {
-          p.modules?.forEach(m => {
-            m.testSuites?.forEach(s => {
-              s.testCases?.forEach(c => {
-                allCases.push(c);
-              });
-            });
-          });
-        });
-        return allCases;
-      })
+    this.vm$ = combineLatest({
+      loading: this.loadingSubject.asObservable(),
+      error: this.errorSubject.asObservable(),
+      testCases: this.testCasesSubject.asObservable()
+    }).pipe(
+      map(({ loading, error, testCases }) => ({ loading, error, testCases }))
     );
   }
 
   ngOnInit() {
-    this.tcmService.getProjects().subscribe();
+    this.loadTestCases();
+  }
+
+  loadTestCases() {
+    this.loadingSubject.next(true);
+    this.tcmService.getAllTestCases().pipe(
+      catchError(error => {
+        console.error('Error loading test cases:', error);
+        this.errorSubject.next(true);
+        return of([]);
+      }),
+      finalize(() => this.loadingSubject.next(false))
+    ).subscribe(testCases => {
+      this.testCasesSubject.next(testCases);
+    });
+  }
+
+  getPriorityClass(priority: string | undefined): string {
+    if (!priority) return 'low';
+    return priority.toLowerCase();
+  }
+
+  getStatusClass(status: string | undefined): string {
+    if (!status) return 'draft';
+    return status.toLowerCase();
   }
 }

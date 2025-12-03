@@ -1,75 +1,112 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-title"><mat-icon>list_alt</mat-icon> Test Cases</h1>
-      <p class="page-subtitle">All defined test specifications across projects</p>
-    </div>
-    <button mat-raised-button color="primary" routerLink="/projects">
-      <mat-icon>add</mat-icon> New Test Case
-    </button>
-  </div>
-
-  <div *ngIf="(testCases$ | async)?.length; else noData" class="table-container">
-    <table mat-table [dataSource]="(testCases$ | async)!" class="standard-table">
-      
-      <!-- ID Column -->
-      <ng-container matColumnDef="id">
-        <th mat-header-cell *matHeaderCellDef> ID </th>
-        <td mat-cell *matCellDef="let element"> 
-          <span class="id-badge">TC-{{ element.id.substring(0, 6) }}</span> 
-        </td>
-      </ng-container>
-
-      <!-- Title Column -->
-      <ng-container matColumnDef="title">
-        <th mat-header-cell *matHeaderCellDef> Title </th>
-        <td mat-cell *matCellDef="let element" class="title-cell"> 
-          <a [routerLink]="['/test-cases', element.id]" class="table-link">{{ element.title }}</a>
-        </td>
-      </ng-container>
-
-      <!-- Priority Column -->
-      <ng-container matColumnDef="priority">
-        <th mat-header-cell *matHeaderCellDef> Priority </th>
-        <td mat-cell *matCellDef="let element">
-          <span class="status-badge" 
-            [ngClass]="{
-              'warning': element.priority === 'MEDIUM', 
-              'error': element.priority === 'HIGH' || element.priority === 'CRITICAL',
-              'success': element.priority === 'LOW'
-            }">
-            {{ element.priority || 'NORMAL' }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef> Actions </th>
-        <td mat-cell *matCellDef="let element">
-          <button mat-icon-button [routerLink]="['/test-cases', element.id]" color="primary">
-            <mat-icon>edit</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
-    </table>
-  </div>
-
-  <ng-template #noData>
-    <div class="empty-state">
-      <div class="empty-content">
-        <div class="empty-icon-wrapper">
-          <mat-icon class="empty-icon">list_alt</mat-icon>
-        </div>
-        <h3>No Test Cases Found</h3>
-        <p>No test cases have been recorded yet.</p>
-        <button mat-stroked-button color="primary" routerLink="/projects">
-          <mat-icon>arrow_forward</mat-icon> Go to Projects
-        </button>
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="page-container">
+    
+    <!-- Loading State -->
+    <div *ngIf="vm.loading" class="loading-overlay">
+      <div class="loading-box">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>Retrieving Test Specifications...</p>
       </div>
     </div>
-  </ng-template>
-</div>
+
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">
+           <a routerLink="/projects" class="back-link">
+            <mat-icon>arrow_back</mat-icon> Projects
+           </a>
+        </div>
+        <h1 class="page-title"><mat-icon>list_alt</mat-icon> Global Test Cases</h1>
+        <p class="page-subtitle">Master list of all test definitions across the system.</p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!vm.loading && !vm.error">
+      
+      <div *ngIf="vm.testCases.length; else emptyState" class="content-section">
+        <div class="mat-elevation-z0 table-container-styled">
+          <table mat-table [dataSource]="vm.testCases" class="bespoke-table">
+            
+            <!-- ID Column -->
+            <ng-container matColumnDef="id">
+              <th mat-header-cell *matHeaderCellDef> ID </th>
+              <td mat-cell *matCellDef="let element"> 
+                <span class="id-badge">{{ element.testCaseId }}</span> 
+              </td>
+            </ng-container>
+
+            <!-- Title Column -->
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef> TITLE </th>
+              <td mat-cell *matCellDef="let element" class="title-cell"> 
+                <a [routerLink]="['/test-cases', element.id]" class="table-link">{{ element.title }}</a>
+              </td>
+            </ng-container>
+
+            <!-- Priority Column -->
+            <ng-container matColumnDef="priority">
+              <th mat-header-cell *matHeaderCellDef> PRIORITY </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="priority-badge" [ngClass]="getPriorityClass(element.priority)">
+                  {{ element.priority || 'NORMAL' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> STATUS </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="status-badge" [ngClass]="getStatusClass(element.status)">
+                  {{ element.status || 'DRAFT' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
+              <td mat-cell *matCellDef="let element">
+                <button mat-icon-button [routerLink]="['/test-cases', element.id]" color="primary" matTooltip="View Details">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+          </table>
+        </div>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="empty-state">
+          <div class="empty-content">
+            <div class="empty-icon-wrapper">
+              <mat-icon class="empty-icon">assignment_late</mat-icon>
+            </div>
+            <h2>No Test Cases Found</h2>
+            <p>The system currently has no test definitions. Create a project and module to start defining tests.</p>
+            <button mat-raised-button color="primary" routerLink="/projects">
+              GO TO PROJECTS
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!vm.loading && vm.error">
+      <div class="empty-state">
+         <div class="empty-content">
+           <mat-icon class="empty-icon error-icon">error_outline</mat-icon>
+           <h3>System Error</h3>
+           <p>Unable to retrieve the master test case list.</p>
+           <button mat-raised-button color="warn" (click)="loadTestCases()">RETRY</button>
+         </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
