@@ -1,29 +1,40 @@
-<div class="dialog-header">
-  <mat-icon class="dialog-icon">folder_special</mat-icon>
-  <h1 mat-dialog-title>New Test Suite</h1>
-</div>
+<h1 mat-dialog-title>New Test Suite Blueprint</h1>
 
 <div mat-dialog-content>
-  <p class="dialog-subtitle">Group related test cases into a logical suite.</p>
+  <p class="dialog-subtitle">Initialize a new test suite to organize test cases.</p>
+  
   <form [formGroup]="suiteForm" class="suite-form">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Test Suite Name</mat-label>
-      <input 
-        matInput 
-        formControlName="name" 
-        placeholder="e.g. Login Validation"
-        autocomplete="off"
-        required>
+      <input
+        matInput
+        formControlName="name"
+        placeholder="e.g. Login Validation">
       <mat-error *ngIf="suiteForm.get('name')?.invalid">Suite name is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        placeholder="Describe the purpose of this test suite..."
+        rows="4"></textarea>
     </mat-form-field>
   </form>
 </div>
 
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">CANCEL</button>
-  <button 
-    mat-raised-button 
-    color="primary" 
+  <button
+    mat-button
+    (click)="onCancel()">
+    CANCEL
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
     [mat-dialog-close]="suiteForm.value"
-    [disabled]="!suiteForm.valid">CREATE SUITE</button>
+    [disabled]="!suiteForm.valid">
+    INITIALIZE
+  </button>
 </div>

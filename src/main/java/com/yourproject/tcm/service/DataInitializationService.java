@@ -43,6 +43,12 @@ public class DataInitializationService {
 
         // Initialize default admin user
         initializeDefaultAdmin();
+
+        // Initialize default software tester user
+        initializeDefaultTester();
+
+        // Initialize default QA/BA user
+        initializeDefaultQaBa();
     }
 
     private void initializeRoles() {
@@ -74,6 +80,51 @@ public class DataInitializationService {
             userRepository.save(admin);
 
             System.out.println("Default admin user created: " + defaultAdminUsername);
+        }
+    }
+
+    private void initializeDefaultTester() {
+        String testerUsername = "tester";
+        String testerEmail = "tester@test.com";
+        String testerPassword = "tester123";
+
+        // Check if default tester user exists
+        if (userRepository.findByUsername(testerUsername).isEmpty()) {
+            User tester = new User(testerUsername, testerEmail, encoder.encode(testerPassword));
+
+            Set<Role> roles = new HashSet<>();
+            Role testerRole = roleRepository.findByName("TESTER")
+                    .orElseThrow(() -> new RuntimeException("TESTER role not found"));
+            roles.add(testerRole);
+
+            tester.setRoles(roles);
+            userRepository.save(tester);
+
+            System.out.println("Default tester user created: " + testerUsername);
+        }
+    }
+
+    private void initializeDefaultQaBa() {
+        String qabaUsername = "qaba";
+        String qabaEmail = "qaba@test.com";
+        String qabaPassword = "qaba123";
+
+        // Check if default QA/BA user exists
+        if (userRepository.findByUsername(qabaUsername).isEmpty()) {
+            User qaba = new User(qabaUsername, qabaEmail, encoder.encode(qabaPassword));
+
+            Set<Role> roles = new HashSet<>();
+            Role qaRole = roleRepository.findByName("QA")
+                    .orElseThrow(() -> new RuntimeException("QA role not found"));
+            Role baRole = roleRepository.findByName("BA")
+                    .orElseThrow(() -> new RuntimeException("BA role not found"));
+            roles.add(qaRole);
+            roles.add(baRole);
+
+            qaba.setRoles(roles);
+            userRepository.save(qaba);
+
+            System.out.println("Default QA/BA user created: " + qabaUsername);
         }
     }
 }

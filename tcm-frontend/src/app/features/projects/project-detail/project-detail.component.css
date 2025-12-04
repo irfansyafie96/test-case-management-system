@@ -116,7 +116,7 @@
 .module-title-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .module-title-row h3 {
@@ -131,8 +131,11 @@
 .delete-btn {
   width: 24px;
   height: 24px;
-  line-height: 24px;
   color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .delete-btn mat-icon {

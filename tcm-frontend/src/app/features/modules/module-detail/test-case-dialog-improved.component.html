@@ -1,184 +1,131 @@
-<div class="dialog-container">
-  <div class="dialog-header">
-    <div class="header-content">
-      <mat-icon class="dialog-icon">fact_check</mat-icon>
-      <div class="header-text">
-        <h1 mat-dialog-title>{{ data?.id ? 'Edit Test Case' : 'Create New Test Case' }}</h1>
-        <p class="subtitle">Define your test scenario with steps and expected results</p>
+<h1 mat-dialog-title>{{ data?.id ? 'Edit Test Case' : 'Test Case Blueprint' }}</h1>
+
+<div mat-dialog-content class="dialog-content">
+  <p class="dialog-subtitle">Define your test scenario with steps and expected results.</p>
+  
+  <form [formGroup]="testCaseForm" class="test-case-form">
+    
+    <!-- Main Information Section -->
+    <div class="form-section">
+      <h3 class="section-title">Basic Information</h3>
+      
+      <div class="info-grid">
+        <mat-form-field appearance="outline" class="id-field">
+          <mat-label>Test Case ID</mat-label>
+          <input
+            matInput
+            formControlName="testCaseId"
+            placeholder="e.g., TC-001"
+            required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="priority-field">
+          <mat-label>Priority</mat-label>
+          <mat-select formControlName="priority" required>
+            <mat-option value="LOW">Low</mat-option>
+            <mat-option value="MEDIUM">Medium</mat-option>
+            <mat-option value="HIGH">High</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width title-field">
+        <mat-label>Title</mat-label>
+        <input
+          matInput
+          formControlName="title"
+          placeholder="Enter a descriptive title..."
+          required>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width description-field">
+        <mat-label>Description</mat-label>
+        <textarea
+          matInput
+          formControlName="description"
+          placeholder="Provide additional details..."
+          rows="2"
+          cdkTextareaAutosize
+          cdkAutosizeMinRows="2"
+          cdkAutosizeMaxRows="6"></textarea>
+      </mat-form-field>
+    </div>
+
+    <mat-divider class="bold-divider"></mat-divider>
+
+    <!-- Test Steps Section -->
+    <div class="form-section">
+      <div class="steps-header-row">
+        <h3 class="section-title">Test Steps <span class="step-count">({{ testSteps.length }})</span></h3>
+        <button
+          type="button"
+          mat-stroked-button
+          (click)="addTestStep()"
+          color="primary"
+          class="add-step-btn">
+          <mat-icon>add</mat-icon> Add Step
+        </button>
+      </div>
+
+      <div formArrayName="testSteps" class="test-steps-container">
+        <div *ngFor="let step of testSteps.controls; let i = index" [formGroupName]="i" class="step-row">
+          <div class="step-number">{{ i + 1 }}</div>
+          
+          <div class="step-fields">
+            <mat-form-field appearance="outline" class="step-input">
+              <mat-label>Action</mat-label>
+              <input matInput formControlName="action" placeholder="Action" required>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="step-input">
+              <mat-label>Expected Result</mat-label>
+              <input matInput formControlName="expectedResult" placeholder="Expected Result" required>
+            </mat-form-field>
+          </div>
+
+          <div class="step-actions">
+            <button
+              type="button"
+              mat-icon-button
+              [disabled]="i === 0"
+              (click)="moveStepUp(i)"
+              matTooltip="Move up">
+              <mat-icon>keyboard_arrow_up</mat-icon>
+            </button>
+            <button
+              type="button"
+              mat-icon-button
+              [disabled]="i === testSteps.length - 1"
+              (click)="moveStepDown(i)"
+              matTooltip="Move down">
+              <mat-icon>keyboard_arrow_down</mat-icon>
+            </button>
+            <button
+              type="button"
+              mat-icon-button
+              color="warn"
+              (click)="removeTestStep(i)"
+              matTooltip="Remove">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="testSteps.length === 0" class="empty-steps">
+         No steps defined. Click "Add Step" to begin.
       </div>
     </div>
-  </div>
+  </form>
+</div>
 
-  <div mat-dialog-content>
-    <form [formGroup]="testCaseForm" class="test-case-form">
-      
-      <!-- Main Information Card -->
-      <mat-card class="info-card">
-        <mat-card-header>
-          <mat-card-title>Test Case Information</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="info-grid">
-            <mat-form-field appearance="outline" class="id-field">
-              <mat-label>Test Case ID</mat-label>
-              <input
-                matInput
-                formControlName="testCaseId"
-                placeholder="e.g., TC-001, NCS-LOGIN-01"
-                required>
-              <mat-hint>The unique identifier for this test case</mat-hint>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="priority-field">
-              <mat-label>Priority</mat-label>
-              <mat-select formControlName="priority" required>
-                <mat-option value="LOW">
-                  <div class="priority-option">
-                    <mat-icon class="priority-icon low">low_priority</mat-icon>
-                    <span>Low</span>
-                  </div>
-                </mat-option>
-                <mat-option value="MEDIUM">
-                  <div class="priority-option">
-                    <mat-icon class="priority-icon medium">signal_cellular_alt</mat-icon>
-                    <span>Medium</span>
-                  </div>
-                </mat-option>
-                <mat-option value="HIGH">
-                  <div class="priority-option">
-                    <mat-icon class="priority-icon high">priority_high</mat-icon>
-                    <span>High</span>
-                  </div>
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-
-          <mat-form-field appearance="outline" class="full-width title-field">
-            <mat-label>Title</mat-label>
-            <input
-              matInput
-              formControlName="title"
-              placeholder="Enter a descriptive title for the test case..."
-              required>
-            <mat-hint>Describe what this test case aims to verify</mat-hint>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full-width description-field">
-            <mat-label>Description</mat-label>
-            <textarea
-              matInput
-              formControlName="description"
-              placeholder="Provide additional details about the test case..."
-              rows="3"
-              cdkTextareaAutosize
-              cdkAutosizeMinRows="3"
-              cdkAutosizeMaxRows="6"></textarea>
-            <mat-hint>Optional detailed explanation of the test scenario</mat-hint>
-          </mat-form-field>
-        </mat-card-content>
-      </mat-card>
-
-      <!-- Test Steps Section -->
-      <mat-card class="steps-card">
-        <mat-card-header>
-          <mat-card-title>
-            <div class="steps-header">
-              <span>Test Steps</span>
-              <span class="step-count">({{ testSteps.length }} steps)</span>
-            </div>
-          </mat-card-title>
-          <mat-card-subtitle>Define the sequence of actions and expected outcomes</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="steps-instructions">
-            <mat-icon class="info-icon">info</mat-icon>
-            <span>Define the steps required to execute this test case. Each step should have a clear action and expected result.</span>
-          </div>
-
-          <div formArrayName="testSteps" class="test-steps-container">
-            <div *ngFor="let step of testSteps.controls; let i = index" [formGroupName]="i" class="step-row">
-              <div class="step-header">
-                <div class="step-number">
-                  <span class="number">{{ i + 1 }}</span>
-                  <span class="label">Step</span>
-                </div>
-                <div class="step-actions">
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Move up"
-                    [disabled]="i === 0"
-                    (click)="moveStepUp(i)"
-                    class="action-btn move-up">
-                    <mat-icon>arrow_upward</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Move down"
-                    [disabled]="i === testSteps.length - 1"
-                    (click)="moveStepDown(i)"
-                    class="action-btn move-down">
-                    <mat-icon>arrow_downward</mat-icon>
-                  </button>
-                  <button
-                    type="button"
-                    mat-icon-button
-                    matTooltip="Remove step"
-                    (click)="removeTestStep(i)"
-                    class="action-btn remove">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              </div>
-
-              <div class="step-content">
-                <mat-form-field appearance="outline" class="step-field">
-                  <mat-label>Action</mat-label>
-                  <input
-                    matInput
-                    formControlName="action"
-                    placeholder="What action should be performed? (e.g., Click login button)"
-                    required>
-                  <mat-hint>Describe the specific action to be taken</mat-hint>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="step-field">
-                  <mat-label>Expected Result</mat-label>
-                  <input
-                    matInput
-                    formControlName="expectedResult"
-                    placeholder="What should happen? (e.g., Login form appears)"
-                    required>
-                  <mat-hint>Describe what should be the result</mat-hint>
-                </mat-form-field>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            mat-stroked-button
-            (click)="addTestStep()"
-            class="add-step-btn">
-            <mat-icon>add</mat-icon>
-            Add Test Step
-          </button>
-        </mat-card-content>
-      </mat-card>
-    </form>
-  </div>
-
-  <div mat-dialog-actions align="end" class="dialog-actions">
-    <button mat-button (click)="onCancel()" class="cancel-btn">Cancel</button>
-    <button
-      mat-raised-button
-      color="primary"
-      (click)="onSubmit()"
-      [disabled]="!testCaseForm.valid"
-      class="submit-btn">
-      {{ data?.id ? 'Update Test Case' : 'Create Test Case' }}
-    </button>
-  </div>
+<div mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button (click)="onCancel()">CANCEL</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="!testCaseForm.valid">
+    {{ data?.id ? 'SAVE CHANGES' : 'CREATE' }}
+  </button>
 </div>

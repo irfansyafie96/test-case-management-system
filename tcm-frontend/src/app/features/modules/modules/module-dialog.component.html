@@ -1,25 +1,25 @@
-<div class="dialog-header">
-  <mat-icon class="dialog-icon">extension</mat-icon>
-  <h1 mat-dialog-title>New Module Component</h1>
-</div>
+<h1 mat-dialog-title>New Module Blueprint</h1>
 
 <div mat-dialog-content>
-  <p class="dialog-subtitle">Create a functional module to organize related test cases.</p>
+  <p class="dialog-subtitle">Initialize a new module container for your test cases.</p>
   
   <form [formGroup]="moduleForm" class="module-form">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Module Name</mat-label>
-      <input matInput formControlName="name" placeholder="e.g. User Authentication" autocomplete="off">
+      <input
+        matInput
+        formControlName="name"
+        placeholder="e.g. User Authentication">
       <mat-error *ngIf="moduleForm.get('name')?.invalid">Module name is required</mat-error>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Description</mat-label>
-       <textarea
+      <textarea
         matInput
         formControlName="description"
-        placeholder="Optional description..."
-        rows="3"></textarea>
+        placeholder="Describe the scope of this module..."
+        rows="4"></textarea>
     </mat-form-field>
   </form>
 </div>
@@ -35,6 +35,6 @@
     color="primary"
     [mat-dialog-close]="moduleForm.value"
     [disabled]="!moduleForm.valid">
-    CREATE MODULE
+    INITIALIZE
   </button>
 </div>
