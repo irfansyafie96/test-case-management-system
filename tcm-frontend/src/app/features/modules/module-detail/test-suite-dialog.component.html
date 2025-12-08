@@ -12,15 +12,6 @@
         placeholder="e.g. Login Validation">
       <mat-error *ngIf="suiteForm.get('name')?.invalid">Suite name is required</mat-error>
     </mat-form-field>
-
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description</mat-label>
-      <textarea
-        matInput
-        formControlName="description"
-        placeholder="Describe the purpose of this test suite..."
-        rows="4"></textarea>
-    </mat-form-field>
   </form>
 </div>
 

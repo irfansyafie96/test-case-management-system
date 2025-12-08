@@ -31,7 +31,7 @@ import { map, catchError, finalize } from 'rxjs/operators';
   styleUrls: ['./test-cases.component.css']
 })
 export class TestCasesComponent implements OnInit {
-  displayedColumns: string[] = ['id', 'title', 'priority', 'status', 'actions'];
+  displayedColumns: string[] = ['id', 'title', 'status', 'actions'];
 
   private loadingSubject = new BehaviorSubject<boolean>(true);
   private errorSubject = new BehaviorSubject<boolean>(false);
@@ -67,10 +67,6 @@ export class TestCasesComponent implements OnInit {
     });
   }
 
-  getPriorityClass(priority: string | undefined): string {
-    if (!priority) return 'low';
-    return priority.toLowerCase();
-  }
 
   getStatusClass(status: string | undefined): string {
     if (!status) return 'draft';

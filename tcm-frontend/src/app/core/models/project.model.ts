@@ -39,7 +39,6 @@ export interface TestCase {
   testCaseId: string; // This is the business ID (TC-001), usually string
   title: string;
   description?: string;
-  priority?: string;
   status?: string;
   steps?: string[]; // Backend might not return this directly if it's a separate entity
   expectedResult?: string;

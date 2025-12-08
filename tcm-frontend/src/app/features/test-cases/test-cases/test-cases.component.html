@@ -44,15 +44,6 @@
               </td>
             </ng-container>
 
-            <!-- Priority Column -->
-            <ng-container matColumnDef="priority">
-              <th mat-header-cell *matHeaderCellDef> PRIORITY </th>
-              <td mat-cell *matCellDef="let element">
-                <span class="priority-badge" [ngClass]="getPriorityClass(element.priority)">
-                  {{ element.priority || 'NORMAL' }}
-                </span>
-              </td>
-            </ng-container>
 
             <!-- Status Column -->
             <ng-container matColumnDef="status">

@@ -36,8 +36,6 @@ public class TestCase {
     @Column(nullable = false)  // Title is required
     private String title; // Title/description of the test case (e.g., "Register New Training Provider")
 
-    private String priority; // Priority level: "High", "Medium", "Low" or similar
-
     /**
      * Many-to-One relationship: Many TestCases belong to One TestSuite
      * fetch = FetchType.LAZY: Only load suite data when explicitly accessed
@@ -84,14 +82,6 @@ public class TestCase {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
     }
 
     public TestSuite getTestSuite() {

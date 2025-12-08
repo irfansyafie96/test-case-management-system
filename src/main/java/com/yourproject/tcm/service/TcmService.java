@@ -359,10 +359,9 @@ public class TcmService {
         if (testCaseOpt.isPresent()) {
             TestCase testCase = testCaseOpt.get();
 
-            // Update basic properties (ID, title, testCaseId, priority)
+            // Update basic properties (ID, title, testCaseId)
             testCase.setTitle(testCaseDetails.getTitle());
             testCase.setTestCaseId(testCaseDetails.getTestCaseId());
-            testCase.setPriority(testCaseDetails.getPriority());
 
             // Handle test steps - properly manage the relationship to avoid cascade issues
             if (testCaseDetails.getTestSteps() != null) {

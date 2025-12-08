@@ -32,8 +32,7 @@ export class TestSuiteDialogComponent {
     private fb: FormBuilder
   ) {
     this.suiteForm = this.fb.group({
-      name: ['', Validators.required],
-      description: ['']
+      name: ['', Validators.required]
     });
   }
 

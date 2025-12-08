@@ -39,7 +39,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   private tcmService = inject(TcmService);
   private dialog = inject(MatDialog);
 
-  displayedColumns: string[] = ['id', 'title', 'priority', 'status', 'actions'];
+  displayedColumns: string[] = ['id', 'title', 'status', 'actions'];
 
   private loadingSubject = new BehaviorSubject<boolean>(true);
   private errorSubject = new BehaviorSubject<boolean>(false);
@@ -186,10 +186,6 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
     }
   }
 
-  getPriorityClass(priority: string | undefined): string {
-    if (!priority) return 'low';
-    return priority.toLowerCase();
-  }
 
   getStatusClass(status: string | undefined): string {
     if (!status) return 'not_executed';

@@ -67,3 +67,8 @@ target/
 
 # Memory Bank (don't include documentation in git)
 memory-bank/
+
+# Qwen and Gemini documentation files
+QWEN
+Qwen.md
+GEMINI.md

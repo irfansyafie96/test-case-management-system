@@ -111,7 +111,7 @@ mat-card-title {
   letter-spacing: 1px;
 }
 
-.priority-badge, .status-badge {
+.status-badge {
   align-self: flex-start;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
@@ -120,8 +120,6 @@ mat-card-title {
   font-weight: 700;
   box-shadow: 2px 2px 0 0 rgba(0,0,0,0.1);
 }
-
-.priority-badge.high { background-color: var(--accent-primary); color: white; border-color: var(--accent-primary); }
 
 .data-text {
   font-family: 'DM Sans', sans-serif;

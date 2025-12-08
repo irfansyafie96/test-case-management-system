@@ -39,7 +39,6 @@ export class TestCaseDialogComponent {
       testCaseId: ['', Validators.required],
       title: ['', Validators.required],
       description: [''],
-      priority: ['MEDIUM', Validators.required],
       testSteps: this.fb.array([this.createTestStep()])
     });
   }
