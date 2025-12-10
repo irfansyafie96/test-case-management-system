@@ -40,6 +40,13 @@ public class User {
     private LocalDateTime createdAt;  // When the account was created
 
     /**
+     * One-to-Many relationship with TestExecution entity (assigned to user)
+     * A user can be assigned to multiple test executions
+     */
+    @OneToMany(mappedBy = "assignedToUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TestExecution> testExecutions = new HashSet<>();  // Test executions assigned to this user
+
+    /**
      * Many-to-Many relationship with Role entity
      * A user can have multiple roles, and roles can be assigned to multiple users
      * This creates a 'user_roles' junction table in the database
@@ -118,6 +125,14 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Set<TestExecution> getTestExecutions() {
+        return testExecutions;
+    }
+
+    public void setTestExecutions(Set<TestExecution> testExecutions) {
+        this.testExecutions = testExecutions;
     }
 
     public Set<Role> getRoles() {

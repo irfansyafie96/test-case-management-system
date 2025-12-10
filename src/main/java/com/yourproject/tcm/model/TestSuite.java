@@ -47,7 +47,7 @@ public class TestSuite {
      * fetch = FetchType.EAGER: Always load test cases when loading the suite
      * @JsonManagedReference: Prevents infinite loops when serializing to JSON
      */
-    @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonManagedReference  // This side manages the relationship for JSON serialization
     private List<TestCase> testCases;  // List of test cases in this suite
 

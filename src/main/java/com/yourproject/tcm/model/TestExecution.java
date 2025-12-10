@@ -62,6 +62,16 @@ public class TestExecution {
      * @JsonManagedReference: Prevents infinite loops when serializing to JSON
      * @JsonIgnoreProperties({"testExecution"}): Prevent circular reference back to TestExecution
      */
+    /**
+     * Many-to-One relationship: Many TestExecutions can be assigned to One User
+     * fetch = FetchType.LAZY: Only load user data when explicitly accessed
+     * @JoinColumn: Foreign key 'assigned_to_user_id' in test_executions table points to User
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_to_user_id")  // Foreign key column for assigned user
+    @JsonIgnoreProperties({"testExecutions"}) // Prevent circular reference back to TestExecutions
+    private User assignedToUser;  // The user assigned to execute this test
+
     @OneToMany(mappedBy = "testExecution", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepNumber ASC")  // Keep step results in sequential order (1, 2, 3, etc.)
     @JsonManagedReference       // This side manages the relationship for JSON serialization
@@ -107,6 +117,14 @@ public class TestExecution {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public User getAssignedToUser() {
+        return assignedToUser;
+    }
+
+    public void setAssignedToUser(User assignedToUser) {
+        this.assignedToUser = assignedToUser;
     }
 
     public List<TestStepResult> getStepResults() {

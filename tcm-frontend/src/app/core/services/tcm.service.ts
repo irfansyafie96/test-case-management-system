@@ -1,6 +1,6 @@
 
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { Project, TestModule, TestSuite, TestCase, TestExecution, TestStepResult } from '../models/project.model';
@@ -14,9 +14,8 @@ import { AuthService } from './auth.service';
  * and their executions/results.
  *
  * Key Features:
- * - HTTP API communication with proper authentication headers
+ * - HTTP API communication with proper authentication headers (via Interceptor)
  * - Shared state management for projects and modules
- * - Error handling with automatic logout on authentication failures
  * - Server-Side Rendering (SSR) compatibility
  */
 @Injectable({
@@ -47,12 +46,6 @@ export class TcmService {
     }
   }
 
-  // Helper method to get authentication headers (JWT token)
-  private getAuthHeaders(): HttpHeaders {
-    const authHeaders = this.authService.getAuthHeaders();
-    return new HttpHeaders(authHeaders);
-  }
-
   // ==================== PROJECT METHODS ====================
 
   /**
@@ -60,7 +53,7 @@ export class TcmService {
    * @returns Observable<Project[]> - Stream of projects array
    */
   getProjects(): Observable<Project[]> {
-    return this.http.get<Project[]>(`${this.apiUrl}/projects`, { headers: this.getAuthHeaders() })
+    return this.http.get<Project[]>(`${this.apiUrl}/projects`)
       .pipe(
         tap(projects => this.projectsSubject.next(projects)),  // Update shared state
         catchError(this.handleError<Project[]>('getProjects', []))  // Handle errors
@@ -73,7 +66,7 @@ export class TcmService {
    * @returns Observable<Project> - Stream of single project
    */
   getProject(id: string): Observable<Project> {
-    return this.http.get<Project>(`${this.apiUrl}/projects/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.get<Project>(`${this.apiUrl}/projects/${id}`)
       .pipe(
         catchError(this.handleError<Project>('getProject'))
       );
@@ -85,7 +78,7 @@ export class TcmService {
    * @returns Observable<Project> - Stream of created project
    */
   createProject(project: { name: string; description?: string }): Observable<Project> {
-    return this.http.post<Project>(`${this.apiUrl}/projects`, project, { headers: this.getAuthHeaders() })
+    return this.http.post<Project>(`${this.apiUrl}/projects`, project)
       .pipe(
         tap(() => this.loadProjects().subscribe()), // Refresh projects list after creation
         catchError(this.handleError<Project>('createProject'))
@@ -98,7 +91,7 @@ export class TcmService {
    * @returns Observable<void> - Stream indicating completion
    */
   deleteProject(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/projects/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.delete<void>(`${this.apiUrl}/projects/${id}`)
       .pipe(
         tap(() => this.loadProjects().subscribe()), // Refresh projects list after deletion
         catchError(this.handleError<void>('deleteProject'))
@@ -113,7 +106,7 @@ export class TcmService {
    * @returns Observable<TestModule> - Stream of single module
    */
   getModule(id: string): Observable<TestModule> {
-    return this.http.get<TestModule>(`${this.apiUrl}/testmodules/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.get<TestModule>(`${this.apiUrl}/testmodules/${id}`)
       .pipe(
         catchError(this.handleError<TestModule>('getModule'))
       );
@@ -126,7 +119,7 @@ export class TcmService {
    * @returns Observable<TestModule> - Stream of created module
    */
   createModule(projectId: string, module: { name: string; description?: string }): Observable<TestModule> {
-    return this.http.post<TestModule>(`${this.apiUrl}/projects/${projectId}/testmodules`, module, { headers: this.getAuthHeaders() })
+    return this.http.post<TestModule>(`${this.apiUrl}/projects/${projectId}/testmodules`, module)
       .pipe(
         catchError(this.handleError<TestModule>('createModule'))
       );
@@ -139,7 +132,7 @@ export class TcmService {
    * @returns Observable<TestModule> - Stream of updated module
    */
   updateModule(id: string, updates: { name?: string; description?: string }): Observable<TestModule> {
-    return this.http.put<TestModule>(`${this.apiUrl}/testmodules/${id}`, updates, { headers: this.getAuthHeaders() })
+    return this.http.put<TestModule>(`${this.apiUrl}/testmodules/${id}`, updates)
       .pipe(
         catchError(this.handleError<TestModule>('updateModule'))
       );
@@ -151,7 +144,7 @@ export class TcmService {
    * @returns Observable<void> - Stream indicating completion
    */
   deleteModule(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/testmodules/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.delete<void>(`${this.apiUrl}/testmodules/${id}`)
       .pipe(
         catchError(this.handleError<void>('deleteModule'))
       );
@@ -166,7 +159,7 @@ export class TcmService {
    * @returns Observable<TestSuite> - Stream of created suite
    */
   createTestSuite(moduleId: string, suite: { name: string }): Observable<TestSuite> {
-    return this.http.post<TestSuite>(`${this.apiUrl}/testmodules/${moduleId}/testsuites`, suite, { headers: this.getAuthHeaders() })
+    return this.http.post<TestSuite>(`${this.apiUrl}/testmodules/${moduleId}/testsuites`, suite)
       .pipe(
         catchError(this.handleError<TestSuite>('createTestSuite'))
       );
@@ -179,7 +172,7 @@ export class TcmService {
    * @returns Observable<TestSuite> - Stream of updated suite
    */
   updateTestSuite(id: string, updates: { name?: string }): Observable<TestSuite> {
-    return this.http.put<TestSuite>(`${this.apiUrl}/testsuites/${id}`, updates, { headers: this.getAuthHeaders() })
+    return this.http.put<TestSuite>(`${this.apiUrl}/testsuites/${id}`, updates)
       .pipe(
         catchError(this.handleError<TestSuite>('updateTestSuite'))
       );
@@ -191,7 +184,7 @@ export class TcmService {
    * @returns Observable<void> - Stream indicating completion
    */
   deleteTestSuite(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/testsuites/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.delete<void>(`${this.apiUrl}/testsuites/${id}`)
       .pipe(
         catchError(this.handleError<void>('deleteTestSuite'))
       );
@@ -204,7 +197,7 @@ export class TcmService {
    * @returns Observable<TestCase[]> - Stream of all test cases
    */
   getAllTestCases(): Observable<TestCase[]> {
-    return this.http.get<TestCase[]>(`${this.apiUrl}/testcases`, { headers: this.getAuthHeaders() })
+    return this.http.get<TestCase[]>(`${this.apiUrl}/testcases`)
       .pipe(
         catchError(this.handleError<TestCase[]>('getAllTestCases', []))
       );
@@ -216,7 +209,7 @@ export class TcmService {
    * @returns Observable<TestCase> - Stream of single test case
    */
   getTestCase(id: string): Observable<TestCase> {
-    return this.http.get<TestCase>(`${this.apiUrl}/testcases/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.get<TestCase>(`${this.apiUrl}/testcases/${id}`)
       .pipe(
         catchError(this.handleError<TestCase>('getTestCase'))
       );
@@ -229,7 +222,7 @@ export class TcmService {
    * @returns Observable<TestCase> - Stream of created test case
    */
   createTestCase(suiteId: string, testCase: any): Observable<TestCase> {
-    return this.http.post<TestCase>(`${this.apiUrl}/testsuites/${suiteId}/testcases`, testCase, { headers: this.getAuthHeaders() })
+    return this.http.post<TestCase>(`${this.apiUrl}/testsuites/${suiteId}/testcases`, testCase)
       .pipe(
         catchError(this.handleError<TestCase>('createTestCase'))
       );
@@ -242,7 +235,7 @@ export class TcmService {
    * @returns Observable<TestCase> - Stream of updated test case
    */
   updateTestCase(id: string, testCase: any): Observable<TestCase> {
-    return this.http.put<TestCase>(`${this.apiUrl}/testcases/${id}`, testCase, { headers: this.getAuthHeaders() })
+    return this.http.put<TestCase>(`${this.apiUrl}/testcases/${id}`, testCase)
       .pipe(
         catchError(this.handleError<TestCase>('updateTestCase'))
       );
@@ -254,7 +247,7 @@ export class TcmService {
    * @returns Observable<void> - Stream indicating completion
    */
   deleteTestCase(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/testcases/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.delete<void>(`${this.apiUrl}/testcases/${id}`)
       .pipe(
         catchError(this.handleError<void>('deleteTestCase'))
       );
@@ -268,7 +261,7 @@ export class TcmService {
    * @returns Observable<TestExecution> - Stream of created execution
    */
   executeTestCase(testCaseId: string): Observable<TestExecution> {
-    return this.http.post<TestExecution>(`${this.apiUrl}/testcases/${testCaseId}/executions`, {}, { headers: this.getAuthHeaders() })
+    return this.http.post<TestExecution>(`${this.apiUrl}/testcases/${testCaseId}/executions`, {})
       .pipe(
         catchError(this.handleError<TestExecution>('executeTestCase'))
       );
@@ -280,7 +273,7 @@ export class TcmService {
    * @returns Observable<TestExecution[]> - Stream of execution records
    */
   getTestCaseExecutions(testCaseId: string): Observable<TestExecution[]> {
-    return this.http.get<TestExecution[]>(`${this.apiUrl}/testcases/${testCaseId}/executions`, { headers: this.getAuthHeaders() })
+    return this.http.get<TestExecution[]>(`${this.apiUrl}/testcases/${testCaseId}/executions`)
       .pipe(
         catchError(this.handleError<TestExecution[]>('getTestCaseExecutions', []))
       );
@@ -292,9 +285,55 @@ export class TcmService {
    * @returns Observable<TestExecution> - Stream of single execution
    */
   getExecution(id: string): Observable<TestExecution> {
-    return this.http.get<TestExecution>(`${this.apiUrl}/executions/${id}`, { headers: this.getAuthHeaders() })
+    return this.http.get<TestExecution>(`${this.apiUrl}/executions/${id}`)
       .pipe(
         catchError(this.handleError<TestExecution>('getExecution'))
+      );
+  }
+
+  /**
+   * Get all test executions assigned to the current user
+   * @returns Observable<TestExecution[]> - Stream of assigned executions
+   */
+  getMyAssignedExecutions(): Observable<TestExecution[]> {
+    return this.http.get<TestExecution[]>(`${this.apiUrl}/executions/my-assignments`)
+      .pipe(
+        catchError(this.handleError<TestExecution[]>('getMyAssignedExecutions', []))
+      );
+  }
+
+  /**
+   * Complete a test execution
+   * @param executionId - ID of the execution to complete
+   * @param overallResult - Final result (PASS, FAIL, BLOCKED)
+   * @param notes - Optional notes about the execution
+   * @returns Observable<TestExecution> - Stream of completed execution
+   */
+  completeExecution(executionId: string, overallResult: string, notes: string): Observable<TestExecution> {
+    return this.http.put<TestExecution>(`${this.apiUrl}/executions/${executionId}/complete`, {
+      overallResult,
+      notes
+    })
+      .pipe(
+        catchError(this.handleError<TestExecution>('completeExecution'))
+      );
+  }
+
+  /**
+   * Update a step result in a test execution
+   * @param executionId - ID of the execution
+   * @param stepId - ID of the step to update
+   * @param status - New status (PASS, FAIL, BLOCKED, NOT_EXECUTED)
+   * @param actualResult - Actual result description
+   * @returns Observable<any> - Stream of updated step result
+   */
+  updateStepResult(executionId: string, stepId: string, status: string, actualResult: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/executions/${executionId}/steps/${stepId}`, {
+      status,
+      actualResult
+    })
+      .pipe(
+        catchError(this.handleError('updateStepResult', {}))
       );
   }
 
@@ -317,23 +356,15 @@ export class TcmService {
   private handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
       console.error(`${operation} failed:`, error);
-
-      // Handle 401 Unauthorized errors by logging out the user
-      if (error.status === 401) {
-        console.error('Unauthorized request - logging out user');
-        // The auth service will handle the logout and navigation
-        this.authService.logout();
-      }
-
+      
+      // Note: 401 handling is now also done in auth.interceptor.ts
+      // But keeping this for service-specific logging/handling if needed is fine.
+      
       // Handle 409 Conflict errors specifically for duplicate projects
       if (error.status === 409) {
         console.error('Conflict error (likely duplicate project name):', error);
-        // Don't logout user for validation conflicts
-        // Just re-throw the error so the component can handle it
         throw error;
       }
-
-      // Could send error to error reporting service here
 
       // Return empty result or rethrow based on result parameter
       if (result !== undefined) {

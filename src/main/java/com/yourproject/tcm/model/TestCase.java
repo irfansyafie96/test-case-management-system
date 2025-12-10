@@ -36,6 +36,9 @@ public class TestCase {
     @Column(nullable = false)  // Title is required
     private String title; // Title/description of the test case (e.g., "Register New Training Provider")
 
+    @Column(columnDefinition = "TEXT")
+    private String description; // Detailed description of the test case
+
     /**
      * Many-to-One relationship: Many TestCases belong to One TestSuite
      * fetch = FetchType.LAZY: Only load suite data when explicitly accessed
@@ -51,10 +54,11 @@ public class TestCase {
      * One-to-Many relationship: One TestCase can have Many TestSteps
      * cascade = CascadeType.ALL: Changes to test case cascade to its steps
      * orphanRemoval = true: If a step is removed from this list, it's deleted
+     * fetch = FetchType.LAZY: Load steps only when explicitly accessed (improves performance)
      * @OrderBy("stepNumber ASC"): Always keep test steps in ascending order by step number
      * @JsonManagedReference: Prevents infinite loops when serializing to JSON
      */
-    @OneToMany(mappedBy = "testCase", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "testCase", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("stepNumber ASC") // Always keep steps in sequential order (1, 2, 3, etc.)
     @JsonManagedReference  // This side manages the relationship for JSON serialization
     private List<TestStep> testSteps;  // List of steps that make up this test case
@@ -82,6 +86,14 @@ public class TestCase {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public TestSuite getTestSuite() {

@@ -372,6 +372,7 @@ public class ApiController {
      * @param testCaseId ID of the test case to execute
      * @return ResponseEntity with created execution or error
      */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")  // All roles can create executions
     @PostMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> createTestExecutionForTestCase(@PathVariable Long testCaseId) {
         try {
@@ -389,6 +390,7 @@ public class ApiController {
      * @param executionId ID of the execution to retrieve
      * @return ResponseEntity with execution data or error
      */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")  // All roles can view executions
     @GetMapping("/executions/{executionId}")
     public ResponseEntity<?> getTestExecutionById(@PathVariable Long executionId) {
         try {
@@ -408,6 +410,7 @@ public class ApiController {
      * @param testCaseId ID of the test case
      * @return ResponseEntity with list of executions or error
      */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")  // All roles can view executions
     @GetMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> getTestExecutionsByTestCaseId(@PathVariable Long testCaseId) {
         try {
@@ -425,6 +428,7 @@ public class ApiController {
      * @param stepData Step result data (status and actual result) from request body
      * @return ResponseEntity with updated step result or error
      */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")  // All roles can update execution steps
     @PutMapping("/executions/{executionId}/steps/{stepId}")
     public ResponseEntity<?> updateStepResult(
             @PathVariable Long executionId,
@@ -448,6 +452,7 @@ public class ApiController {
      * @param completeData Completion data (overall result and notes) from request body
      * @return ResponseEntity with completed execution or error
      */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")  // All roles can complete executions
     @PutMapping("/executions/{executionId}/complete")
     public ResponseEntity<?> completeTestExecution(
             @PathVariable Long executionId,
@@ -461,6 +466,57 @@ public class ApiController {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>("Error completing test execution: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // ==================== TEST EXECUTION ASSIGNMENT ENDPOINTS ====================
+
+    /**
+     * POST /api/executions/{executionId}/assign - Assign a test execution to a user
+     * Assigns a specific test execution to a user for execution
+     * @param executionId ID of the execution to assign
+     * @param userId ID of the user to assign to
+     * @return ResponseEntity with the updated execution or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")  // Managers can assign executions
+    @PostMapping("/executions/{executionId}/assign")
+    public ResponseEntity<?> assignTestExecution(@PathVariable Long executionId, @RequestParam Long userId) {
+        try {
+            TestExecution assignedExecution = tcmService.assignTestExecutionToUser(executionId, userId);
+            return new ResponseEntity<>(assignedExecution, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error assigning test execution: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/executions/assigned-to/{userId} - Get all test executions assigned to a specific user
+     * @param userId ID of the user
+     * @return ResponseEntity with list of assigned executions or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")  // Managers can see assigned executions to any user
+    @GetMapping("/executions/assigned-to/{userId}")
+    public ResponseEntity<?> getTestExecutionsAssignedToUser(@PathVariable Long userId) {
+        try {
+            List<TestExecution> executions = tcmService.getTestExecutionsAssignedToUser(userId);
+            return new ResponseEntity<>(executions, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/executions/my-assignments - Get all test executions assigned to current user
+     * @return ResponseEntity with list of assigned executions or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")  // Any role can see their own assignments
+    @GetMapping("/executions/my-assignments")
+    public ResponseEntity<?> getMyAssignedExecutions() {
+        try {
+            List<TestExecution> executions = tcmService.getTestExecutionsForCurrentUser();
+            return new ResponseEntity<>(executions, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving your assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

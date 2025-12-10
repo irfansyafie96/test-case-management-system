@@ -33,6 +33,15 @@ export interface TestSuite {
   updatedDate?: string;
 }
 
+// Test Step Model
+export interface TestStep {
+  id: number | string;
+  stepNumber: number;
+  action: string;
+  expectedResult: string;
+  testCaseId?: number | string;
+}
+
 // Test Case Model
 export interface TestCase {
   id: number | string;
@@ -40,7 +49,8 @@ export interface TestCase {
   title: string;
   description?: string;
   status?: string;
-  steps?: string[]; // Backend might not return this directly if it's a separate entity
+  steps?: string[]; // Legacy/Simplified steps
+  testSteps?: TestStep[]; // Detailed steps from backend
   expectedResult?: string;
   suiteId: number | string;
   createdDate?: string;
@@ -54,12 +64,16 @@ export interface TestExecution {
   id: string;
   testCaseId: string;
   status: 'PASS' | 'FAIL' | 'BLOCKED' | 'NOT_EXECUTED';
-  executedBy: string;
-  executionDate: string;
+  executedBy?: string;
+  executionDate?: string;
   notes?: string;
   stepResults?: TestStepResult[];
   duration?: number;
   environment?: string;
+  overallResult?: string;
+  testCase?: TestCase; // Added reference to the associated test case
+  title?: string; // Added for display purposes
+  assignedToUser?: User; // Added for assignment functionality
 }
 
 // Test Step Result Model
@@ -72,6 +86,8 @@ export interface TestStepResult {
   actualResult?: string;
   notes?: string;
   screenshotFileName?: string;
+  attachments?: string[]; // Array of attachment file names
+  testStep?: any; // Reference to the test step details
 }
 
 // User Model
