@@ -322,21 +322,4 @@ export class AuthService {
     this.isAuthenticatedSubject.next(true);
     this.currentUserSubject.next(mockUser);
   }
-
-  /**
-   * Get authentication headers for API calls
-   * Includes JWT token in Authorization header for authenticated requests
-   * @returns Headers object with Authorization header if authenticated
-   */
-  getAuthHeaders(): { [header: string]: string } {
-    const token = this.getToken();
-    // Check if token is valid before returning headers
-    if (token && !this.hasValidToken()) {
-      // Token is expired, logout user
-      this.logout();
-      return {};
-    }
-    // Return Authorization header with Bearer token if authenticated
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
-  }
 }

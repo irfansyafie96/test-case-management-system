@@ -107,6 +107,26 @@
 }
 .table-link:hover { color: var(--accent-primary); }
 
+/* Fix Icon Button Alignment in Table */
+.bespoke-table button[mat-icon-button] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.bespoke-table button[mat-icon-button] ::ng-deep mat-icon {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  height: 24px !important; /* Explicitly set standard icon height */
+  width: 24px !important;
+}
+
 /* Badges */
 .status-badge { color: #666; background-color: #f0f0f0; border-color: #ccc; }
 .status-badge.passed { color: var(--accent-success); border-color: var(--accent-success); background-color: rgba(5, 150, 105, 0.05); }

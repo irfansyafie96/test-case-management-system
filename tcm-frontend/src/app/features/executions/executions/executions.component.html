@@ -1,39 +1,99 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-title"><mat-icon>terminal</mat-icon> Execution Logs</h1>
-      <p class="page-subtitle">Real-time test runner output and history</p>
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="page-container">
+
+    <!-- Loading State -->
+    <div *ngIf="vm.loading" class="loading-overlay">
+      <div class="loading-box">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>Loading Assigned Tasks...</p>
+      </div>
     </div>
-    <button mat-raised-button color="primary">
-      <mat-icon>play_arrow</mat-icon> NEW RUN
-    </button>
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title"><mat-icon>assignment</mat-icon> My Testing Assignments</h1>
+        <p class="page-subtitle">Test cases assigned to you for execution</p>
+      </div>
+      <button mat-raised-button color="primary" (click)="loadMyAssignedExecutions()">
+        <mat-icon>refresh</mat-icon> REFRESH
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!vm.loading && !vm.error">
+
+      <div *ngIf="vm.executions.length; else emptyState" class="content-section">
+        <div class="mat-elevation-z0 table-container-styled">
+          <table mat-table [dataSource]="vm.executions" class="bespoke-table">
+
+            <!-- Test Case ID Column -->
+            <ng-container matColumnDef="testCaseId">
+              <th mat-header-cell *matHeaderCellDef> ID </th>
+              <td mat-cell *matCellDef="let execution">
+                <span class="id-badge">{{ execution.testCaseId }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Test Case Title Column -->
+            <ng-container matColumnDef="testCaseTitle">
+              <th mat-header-cell *matHeaderCellDef> TEST CASE </th>
+              <td mat-cell *matCellDef="let execution" class="title-cell">
+                {{ execution?.testCase?.title || execution.title }}
+              </td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef> STATUS </th>
+              <td mat-cell *matCellDef="let execution">
+                <span class="status-badge"
+                      [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'not_executed'">
+                  {{ execution.overallResult || 'NOT EXECUTED' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
+              <td mat-cell *matCellDef="let execution">
+                <button mat-raised-button color="primary"
+                        [routerLink]="['/executions/workbench', execution.id]"
+                        [disabled]="execution.overallResult === 'PASS' || execution.overallResult === 'FAIL'">
+                  <mat-icon>play_arrow</mat-icon> EXECUTE
+                </button>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+          </table>
+        </div>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="empty-state">
+          <div class="empty-content">
+            <div class="empty-icon-wrapper">
+              <mat-icon class="empty-icon">assignment_late</mat-icon>
+            </div>
+            <h2>No Assigned Tasks</h2>
+            <p>You currently have no test cases assigned to execute.</p>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!vm.loading && vm.error">
+      <div class="empty-state">
+         <div class="empty-content">
+           <mat-icon class="empty-icon error-icon">error_outline</mat-icon>
+           <h3>System Error</h3>
+           <p>Unable to retrieve your assigned test cases.</p>
+           <button mat-raised-button color="warn" (click)="loadMyAssignedExecutions()">RETRY</button>
+         </div>
+      </div>
+    </div>
   </div>
-  
-  <!-- Simulated Log Output for Empty State or Data -->
-  <div class="console-window">
-    <div class="console-header">
-      <div class="dot red"></div>
-      <div class="dot yellow"></div>
-      <div class="dot green"></div>
-      <span class="console-title">system_output.log</span>
-    </div>
-    <div class="console-body">
-      <div class="log-entry info">
-        <span class="timestamp">[10:00:01]</span> System initialized. Ready for test execution.
-      </div>
-      <div class="log-entry warning">
-         <span class="timestamp">[10:00:05]</span> No active test runs detected.
-      </div>
-      <div class="log-entry prompt">
-         <span class="user">admin@tcm:~$</span> <span class="cursor">_</span>
-      </div>
-      
-      <div class="empty-action">
-         <p>Initiate a new test cycle to generate logs.</p>
-         <button mat-stroked-button class="terminal-btn" routerLink="/projects">
-           SELECT PROJECT
-         </button>
-      </div>
-    </div>
-  </div>
-</div>
+</ng-container>

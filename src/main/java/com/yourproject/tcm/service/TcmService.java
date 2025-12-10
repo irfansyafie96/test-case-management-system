@@ -4,6 +4,8 @@ import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.StepResultResponse;
 import com.yourproject.tcm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +55,9 @@ public class TcmService {
 
     @Autowired
     private TestExecutionRepository testExecutionRepository;  // Repository for TestExecution operations
+
+    @Autowired
+    private UserRepository userRepository;  // Repository for User operations
 
     @Autowired
     private TestStepResultRepository testStepResultRepository;  // Repository for TestStepResult operations
@@ -312,7 +317,8 @@ public class TcmService {
      */
     @Transactional(readOnly = true)
     public Optional<TestCase> getTestCaseById(Long testCaseId) {
-        return testCaseRepository.findById(testCaseId);
+        TestCase testCase = testCaseRepository.findByIdWithSteps(testCaseId);
+        return Optional.ofNullable(testCase);
     }
 
     /**
@@ -570,5 +576,59 @@ public class TcmService {
         } else {
             throw new RuntimeException("Test Execution not found with id: " + executionId);
         }
+    }
+
+    /**
+     * Assign a test execution to a specific user
+     * @param executionId ID of the execution to assign
+     * @param userId ID of the user to assign to
+     * @return The updated test execution
+     */
+    @Transactional
+    public TestExecution assignTestExecutionToUser(Long executionId, Long userId) {
+        Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
+        Optional<User> userOpt = userRepository.findById(userId);
+
+        if (executionOpt.isPresent() && userOpt.isPresent()) {
+            TestExecution execution = executionOpt.get();
+            User user = userOpt.get();
+            execution.setAssignedToUser(user);
+            TestExecution savedExecution = testExecutionRepository.save(execution);
+            entityManager.flush();
+            return savedExecution;
+        }
+        throw new RuntimeException("Test execution or user not found with id: " + executionId + " or " + userId);
+    }
+
+    /**
+     * Get all test executions assigned to a specific user
+     * @param userId ID of the user
+     * @return List of assigned test executions
+     */
+    public List<TestExecution> getTestExecutionsAssignedToUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return testExecutionRepository.findByAssignedToUserWithDetails(user);
+        }
+        throw new RuntimeException("User not found with id: " + userId);
+    }
+
+    /**
+     * Get all test executions assigned to the current authenticated user
+     * @return List of assigned test executions
+     */
+    public List<TestExecution> getTestExecutionsForCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+
+            return testExecutionRepository.findByAssignedToUserWithDetails(user);
+        }
+        throw new RuntimeException("No authenticated user found");
     }
 }

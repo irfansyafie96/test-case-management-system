@@ -44,7 +44,7 @@ public class TestStep {
      * @JsonBackReference: Part of bidirectional relationship, prevents JSON loops
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many steps can belong to one test case
-    @JoinColumn(name = "test_case_id", nullable = false)  // Foreign key column
+    @JoinColumn(name = "test_case_id", nullable = false)  // Foreign key column, add index for performance
     @JsonBackReference // Completes the bidirectional relationship with TestCase
     private TestCase testCase;  // The test case this step belongs to
 

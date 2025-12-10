@@ -49,7 +49,6 @@ import java.util.stream.Collectors;
  * the result of the CORS preflight OPTIONS request, improving performance.
  */
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")  // All endpoints in this controller start with /api/auth
 public class AuthController {

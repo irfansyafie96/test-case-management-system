@@ -1,0 +1,213 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="page-container">
+
+    <!-- Loading State -->
+    <div *ngIf="vm.loading" class="loading-overlay">
+      <div class="loading-box">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>Loading Test Execution...</p>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">
+          <a routerLink="/executions" class="back-link">
+            <mat-icon>arrow_back</mat-icon> My Assignments
+          </a>
+        </div>
+        <h1 class="page-title"><mat-icon>play_circle</mat-icon> Test Execution Workbench</h1>
+        <p class="page-subtitle">Execute the test case step by step</p>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!vm.loading && !vm.error && vm.execution">
+      <div class="execution-workbench">
+        <!-- Test Case Information -->
+        <mat-card class="info-card">
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Test Case ID</label>
+              <span class="info-value">{{ vm.execution.testCaseId }}</span>
+            </div>
+            <div class="info-item">
+              <label>Test Case Title</label>
+              <span class="info-value">{{ vm.execution.testCase?.title || vm.execution.title }}</span>
+            </div>
+            <div class="info-item">
+              <label>Status</label>
+              <span class="info-value status-badge" 
+                    [ngClass]="vm.execution.overallResult ? getStatusClass(vm.execution.overallResult) : 'not_executed'">
+                {{ vm.execution.overallResult || 'NOT EXECUTED' }}
+              </span>
+            </div>
+          </div>
+        </mat-card>
+
+        <!-- Test Steps Execution -->
+        <mat-card class="steps-card">
+          <mat-card-header>
+            <mat-card-title>Test Steps</mat-card-title>
+            <mat-card-subtitle>Execute each step and record results</mat-card-subtitle>
+          </mat-card-header>
+          
+          <div class="steps-container">
+            <table mat-table [dataSource]="vm.execution.stepResults || []" class="steps-table">
+              
+              <!-- Step Number Column -->
+              <ng-container matColumnDef="stepNumber">
+                <th mat-header-cell *matHeaderCellDef> # </th>
+                <td mat-cell *matCellDef="let stepResult">
+                  <span class="step-number">{{ stepResult.stepNumber }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Action Column -->
+              <ng-container matColumnDef="action">
+                <th mat-header-cell *matHeaderCellDef> ACTION </th>
+                <td mat-cell *matCellDef="let stepResult">
+                  <span class="action-text">{{ stepResult.testStep?.action || 'Action not specified' }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Expected Result Column -->
+              <ng-container matColumnDef="expectedResult">
+                <th mat-header-cell *matHeaderCellDef> EXPECTED RESULT </th>
+                <td mat-cell *matCellDef="let stepResult">
+                  <span class="expected-text">{{ stepResult.testStep?.expectedResult || 'Expected result not specified' }}</span>
+                </td>
+              </ng-container>
+
+              <!-- Status Column -->
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef> STATUS </th>
+                <td mat-cell *matCellDef="let stepResult" class="status-cell">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-field">
+                    <mat-select 
+                      [value]="stepResult.status || 'NOT_EXECUTED'" 
+                      (selectionChange)="updateStepResult(stepResult, $event.value)">
+                      <mat-option value="PASS">Pass</mat-option>
+                      <mat-option value="FAIL">Fail</mat-option>
+                      <mat-option value="BLOCKED">Blocked</mat-option>
+                      <mat-option value="NOT_EXECUTED">Not Executed</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </td>
+              </ng-container>
+
+              <!-- Actual Result Column -->
+              <ng-container matColumnDef="actualResult">
+                <th mat-header-cell *matHeaderCellDef> ACTUAL RESULT </th>
+                <td mat-cell *matCellDef="let stepResult">
+                  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="actual-result-field">
+                    <input
+                      matInput
+                      placeholder="Record what actually happened..."
+                      [value]="stepResult.actualResult || ''"
+                      (input)="updateStepResult(stepResult, stepResult.status || 'NOT_EXECUTED', $event.target.value)">
+                  </mat-form-field>
+                </td>
+              </ng-container>
+
+              <!-- Evidence/Attachments Column -->
+              <ng-container matColumnDef="evidence">
+                <th mat-header-cell *matHeaderCellDef> EVIDENCE </th>
+                <td mat-cell *matCellDef="let stepResult" class="evidence-cell">
+                  <input
+                    type="file"
+                    (change)="onFileSelected($event, stepResult)"
+                    class="file-input"
+                    multiple
+                    matTooltip="Upload evidence for this step (screenshots, logs, etc.)">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    matTooltip="Upload evidence file">
+                    <mat-icon>attach_file</mat-icon>
+                  </button>
+                  <div class="file-attachments" *ngIf="stepResult.attachments && stepResult.attachments.length > 0">
+                    <span class="file-count">{{ stepResult.attachments.length }} file(s)</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- Actions Column -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
+                <td mat-cell *matCellDef="let stepResult">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    matTooltip="Execute this step"
+                    (click)="updateStepResult(stepResult, 'PASS')">
+                    <mat-icon>check_circle</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="step-row"></tr>
+            </table>
+          </div>
+        </mat-card>
+
+        <!-- Execution Notes & Complete -->
+        <mat-card class="notes-card">
+          <mat-card-header>
+            <mat-card-title>Execution Notes</mat-card-title>
+            <mat-card-subtitle>Add any observations or issues encountered during testing</mat-card-subtitle>
+          </mat-card-header>
+          
+          <div class="notes-content">
+            <mat-form-field appearance="outline" class="full-width">
+              <textarea 
+                matInput 
+                placeholder="Add notes about the overall test execution..."
+                rows="4"
+                [(ngModel)]="executionNotes"
+                (ngModelChange)="onNotesChange($event)"></textarea>
+            </mat-form-field>
+            
+            <div class="completion-section">
+              <h3>Complete Execution</h3>
+              <div class="completion-controls">
+                <mat-form-field appearance="outline" class="result-field">
+                  <mat-label>Overall Result</mat-label>
+                  <mat-select [(ngModel)]="overallResult" (ngModelChange)="onResultChange($event)">
+                    <mat-option value="PASS">Pass</mat-option>
+                    <mat-option value="FAIL">Fail</mat-option>
+                    <mat-option value="BLOCKED">Blocked</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                
+                <div class="action-buttons">
+                  <button mat-stroked-button (click)="goBack()">BACK</button>
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    [disabled]="!overallResult"
+                    (click)="completeExecution(overallResult, executionNotes)">
+                    COMPLETE EXECUTION
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="!vm.loading && vm.error">
+      <div class="empty-state">
+         <div class="empty-content">
+           <mat-icon class="empty-icon error-icon">error_outline</mat-icon>
+           <h3>Execution Not Found</h3>
+           <p>The requested test execution could not be loaded.</p>
+           <button mat-raised-button color="warn" (click)="loadExecution()">RETRY</button>
+         </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
