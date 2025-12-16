@@ -83,6 +83,7 @@
   border: var(--border-medium);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
+  overflow: hidden; /* Added */
 }
 
 .suite-header {
