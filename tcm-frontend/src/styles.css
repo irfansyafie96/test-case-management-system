@@ -147,7 +147,7 @@ code, .id-badge, .meta-label {
   border-radius: var(--radius-md) !important;
   border: var(--border-medium) !important;
   box-shadow: var(--shadow-lg) !important; /* Deep shadow */
-  overflow: visible !important; /* Allow content to breathe */
+  overflow: hidden !important; /* Allow content to breathe */
   background-color: var(--surface) !important;
 }
 
