@@ -2,6 +2,7 @@ package com.yourproject.tcm.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -48,6 +49,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
+            // Don't process authentication for logout requests since the token is being cleared
+            String requestURI = request.getRequestURI();
+            if ("/api/auth/logout".equals(requestURI)) {
+                // For logout, just continue with the filter chain without setting authentication
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             // Extract JWT token from request header
             String jwt = parseJwt(request);
 
@@ -83,22 +92,29 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
     }
 
     /**
-     * Extract JWT token from Authorization header
-     * Expected format: "Bearer <token>"
-     * @param request HTTP request containing Authorization header
+     * Extract JWT token from HttpOnly cookie or Authorization header (fallback)
+     * Primary: HttpOnly cookie (more secure)
+     * Fallback: Authorization header "Bearer <token>" (backward compatibility)
+     * @param request HTTP request containing cookie or header
      * @return JWT token string, or null if not found/invalid format
      */
     private String parseJwt(HttpServletRequest request) {
-        // Get Authorization header value
-        String headerAuth = request.getHeader("Authorization");
+        // First try to get JWT from HttpOnly cookie (more secure)
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("JWT_TOKEN".equals(cookie.getName()) && StringUtils.hasText(cookie.getValue())) {
+                    return cookie.getValue();
+                }
+            }
+        }
 
-        // Check if header exists and starts with "Bearer " prefix
+        // Fallback to Authorization header for backward compatibility
+        String headerAuth = request.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            // Extract and return the actual token (remove "Bearer " prefix)
             return headerAuth.substring(7);
         }
 
-        // Return null if no valid Authorization header found
+        // Return null if no valid token found
         return null;
     }
 }

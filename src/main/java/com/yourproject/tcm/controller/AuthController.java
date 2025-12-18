@@ -9,6 +9,10 @@ import com.yourproject.tcm.repository.RoleRepository;
 import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.security.JwtUtils;
 import com.yourproject.tcm.security.UserPrincipal;
+import jakarta.validation.Valid;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,8 +23,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -80,7 +88,7 @@ public class AuthController {
      * @return ResponseEntity with JWT token and user information
      */
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         // Authenticate user - throws exception if invalid credentials
         Authentication authentication = authenticateUserInternal(loginRequest);
 
@@ -92,8 +100,20 @@ public class AuthController {
                 .map(GrantedAuthority::getAuthority)  // Convert GrantedAuthority to String
                 .collect(Collectors.toList());
 
-        // Create response with JWT token and user information
-        return ResponseEntity.ok(new JwtResponse(jwtUtils.generateJwtToken(authentication),
+        // Generate JWT token
+        String jwtToken = jwtUtils.generateJwtToken(authentication);
+
+        // Create HttpOnly cookie for JWT token
+        Cookie jwtCookie = new Cookie("JWT_TOKEN", jwtToken);
+        jwtCookie.setHttpOnly(true);  // Prevent client-side JavaScript access
+        jwtCookie.setSecure(false);   // Set to true in production with HTTPS
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
+
+        response.addCookie(jwtCookie);
+
+        // Create response with user information (no token in response body)
+        return ResponseEntity.ok(new JwtResponse(null,  // Token removed from response body
                                                  userDetails.getId(),
                                                  userDetails.getUsername(),
                                                  userDetails.getEmail(),
@@ -131,7 +151,18 @@ public class AuthController {
      * @return ResponseEntity with success/error message
      */
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest, BindingResult bindingResult) {
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            StringBuilder errors = new StringBuilder();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.append(error.getField()).append(": ").append(error.getDefaultMessage()).append("; ");
+            }
+            return ResponseEntity
+                    .badRequest()
+                    .body("Validation errors: " + errors.toString());
+        }
+
         // Check if username already exists
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
@@ -192,5 +223,27 @@ public class AuthController {
         userRepository.save(user);  // Save user to database
 
         return ResponseEntity.ok("User registered successfully!");
+    }
+
+    /**
+     * POST /api/auth/logout - Clear JWT cookie to logout user
+     * @param response HttpServletResponse to clear cookie
+     * @return ResponseEntity with logout confirmation
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logoutUser(HttpServletResponse response) {
+        // Clear JWT cookie
+        Cookie jwtCookie = new Cookie("JWT_TOKEN", null);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(false);   // Set to true in production with HTTPS
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(0);  // Immediately expire cookie
+
+        response.addCookie(jwtCookie);
+
+        // Return a proper JSON response that Angular expects
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("message", "User logged out successfully!");
+        return ResponseEntity.ok(responseMap);
     }
 }

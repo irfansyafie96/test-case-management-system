@@ -52,32 +52,13 @@ export class LoginComponent {
       // Try API login first
       this.authService.login({ username, password }).subscribe({
         next: (response) => {
-          console.log('Login successful - navigation handled by service');
+          console.log('Login successful:', response);
+          // Login successful - navigation handled by service
         },
         error: (error) => {
-          console.error('API login failed:', error);
-
-          // Only use fallback for development when backend is not available
-          // This prevents the fallback from masking actual authentication failures
-          if (error.status === 0 || error.status === 502 || error.status === 503) {
-            // Network error or server unavailable - use mock auth
-            const mockUser = {
-              id: '1',
-              username: username,
-              email: `${username}@example.com`,
-              roles: ['user'],
-              enabled: true
-            };
-
-            // Use the public method to set mock authentication
-            console.log('Falling back to mock authentication (network/server error)');
-            this.authService.setMockAuth(mockUser, 'mock-token');
-            this.router.navigate(['/dashboard']);
-          } else {
-            // Actual authentication failure - show error to user
-            console.log('Authentication failed - not using fallback');
-            // The error is already logged and user will see feedback from AuthService
-          }
+          console.error('Login failed:', error);
+          // Authentication failed - error handling is done by AuthService
+          // Mock authentication removed for security
         }
       });
     }

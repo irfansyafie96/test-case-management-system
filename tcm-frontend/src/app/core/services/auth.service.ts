@@ -27,14 +27,11 @@ export class AuthService {
   private isBrowser: boolean;  // Flag to check if running in browser (not SSR)
 
   /**
-   * Get API URL - handles development proxy configuration
-   * In development, requests are proxied through proxy.conf.json to backend
+   * Get API URL from environment configuration
    * @returns API base URL
    */
   private getApiUrl(): string {
-    // For development with proxy, use relative path
-    // The proxy.conf.json will forward /api requests to http://localhost:8080
-    return '/api';
+    return environment.apiUrl || 'http://localhost:8080/api';
   }
 
   // Shared state management using RxJS Subjects for reactive authentication
@@ -64,8 +61,8 @@ export class AuthService {
    * Login method - Authenticate user with backend
    * Process:
    * 1. Send credentials to backend /api/auth/login
-   * 2. Receive JWT token and user information if valid
-   * 3. Store token and user data in localStorage
+   * 2. Receive JWT token as HttpOnly cookie and user information in response
+   * 3. Store only user data in localStorage (token is in secure cookie)
    * 4. Update authentication state
    * 5. Navigate to dashboard
    *
@@ -73,12 +70,15 @@ export class AuthService {
    * @returns Observable with authentication result
    */
   login(credentials: { username: string; password: string }): Observable<any> {
-    console.log('Making login request to:', `${this.apiUrl}/auth/login`);
-    return this.http.post(`${this.apiUrl}/auth/login`, credentials).pipe(
+    const loginUrl = `${this.apiUrl}/auth/login`;
+    console.log(`Attempting login at: ${loginUrl}`, credentials);
+
+    return this.http.post(loginUrl, credentials, { withCredentials: true }).pipe(
       tap((response: any) => {
         console.log('Login response received:', response);
-        // Check if response contains required data (token, username, id)
-        if (response && response.token && response.username && response.id && this.isBrowser) {
+
+        // Check if response contains required user data (token is now in HttpOnly cookie)
+        if (response && response.username && response.id && this.isBrowser) {
           // Convert backend JwtResponse format to User object expected by frontend
           const user = {
             id: response.id.toString(),           // Convert to string
@@ -88,26 +88,25 @@ export class AuthService {
             enabled: true                         // Account status
           };
 
-          // Store authentication data in localStorage (persists between browser sessions)
-          localStorage.setItem('jwtToken', response.token);    // JWT token
-          localStorage.setItem('currentUser', JSON.stringify(user));  // User information
+          // Store only user data in localStorage (JWT token is in secure HttpOnly cookie)
+          localStorage.setItem('currentUser', JSON.stringify(user));  // User information only
 
           // Update shared authentication state - notifies all subscribers
           this.isAuthenticatedSubject.next(true);    // User is now authenticated
           this.currentUserSubject.next(user);        // Set current user info
 
-          console.log('Login successful, navigating to dashboard...');
+          console.log('Authentication state updated, navigating to dashboard');
+
           // Navigate to dashboard after successful login
           this.router.navigate(['/dashboard']);
         } else {
           // Handle case where response doesn't have expected structure
-          console.warn('Login response does not contain expected token/user structure:', response);
+          console.error('Invalid login response format:', response);
           throw new Error('Invalid login response format');
         }
       }),
       catchError(error => {
-        console.error('Login API failed:', error);
-        // Don't expose sensitive error details to components
+        console.error('Login error:', error);
         throw new Error('Login failed. Please check your credentials.');
       })
     );
@@ -116,23 +115,41 @@ export class AuthService {
   /**
    * Logout method - Clear authentication data and navigate to login
    * Process:
-   * 1. Remove stored JWT token and user data from localStorage
-   * 2. Update authentication state to not authenticated
-   * 3. Navigate to login page
+   * 1. Call backend logout endpoint to clear HttpOnly cookie
+   * 2. Remove stored user data from localStorage
+   * 3. Update authentication state to not authenticated
+   * 4. Navigate to login page
    */
   logout(): void {
-    if (this.isBrowser) {
-      // Clear localStorage (matching your original implementation)
-      localStorage.removeItem('jwtToken');
-      localStorage.removeItem('currentUser');
-    }
+    // Call backend logout to clear HttpOnly cookie
+    // Using a separate request without the interceptor to avoid 401 loops
+    this.http.post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
+      next: () => {
+        // Clear user data from localStorage
+        if (this.isBrowser) {
+          localStorage.removeItem('jwtToken');  // Remove any old localStorage tokens
+          localStorage.removeItem('currentUser');
+        }
 
-    // Update shared authentication state
-    this.isAuthenticatedSubject.next(false);   // User is no longer authenticated
-    this.currentUserSubject.next(null);        // Clear current user info
+        // Update shared authentication state
+        this.isAuthenticatedSubject.next(false);   // User is no longer authenticated
+        this.currentUserSubject.next(null);        // Clear current user info
 
-    // Navigate to login page
-    this.router.navigate(['/login']);
+        // Navigate to login page
+        this.router.navigate(['/login']);
+      },
+      error: (error) => {
+        console.error('Logout API failed:', error);
+        // Still clear local data even if backend call fails
+        if (this.isBrowser) {
+          localStorage.removeItem('jwtToken');
+          localStorage.removeItem('currentUser');
+        }
+        this.isAuthenticatedSubject.next(false);
+        this.currentUserSubject.next(null);
+        this.router.navigate(['/login']);
+      }
+    });
   }
 
   /**
@@ -155,10 +172,13 @@ export class AuthService {
 
   /**
    * Check if user is currently authenticated
-   * @returns true if token exists and is valid, false otherwise
+   * @returns true if user data exists (and by implication token in cookie), false otherwise
    */
   isAuthenticated(): boolean {
-    return this.hasValidToken() && this.currentUserSubject.value !== null;
+    // With HttpOnly cookies, we can't directly verify the JWT token in client-side code
+    // So we rely primarily on the user data in localStorage and assume that if it exists,
+    // then the corresponding HttpOnly cookie with valid JWT token exists as well
+    return this.currentUserSubject.value !== null || this.getCurrentUser() !== null;
   }
 
   /**
@@ -190,14 +210,12 @@ export class AuthService {
   }
 
   /**
-   * Get JWT token from localStorage
-   * @returns JWT token string or null if not available
+   * Get JWT token from localStorage (deprecated - now using HttpOnly cookies)
+   * Kept for backward compatibility but returns null
+   * @returns null - tokens are now stored in secure HttpOnly cookies
    */
   getToken(): string | null {
-    if (this.isBrowser) {
-      return localStorage.getItem('jwtToken');
-    }
-    return null;
+    return null;  // Tokens are now in HttpOnly cookies, not localStorage
   }
 
   /**
@@ -223,25 +241,14 @@ export class AuthService {
 
   /**
    * Check if stored JWT token is valid and not expired
-   * @returns true if token exists and is not expired, false otherwise
+   * NOTE: With HttpOnly cookies, this method is deprecated but kept for compatibility
+   * In a real implementation, token validation would happen server-side
+   * @returns true always as we can't validate HttpOnly tokens client-side
    */
   private hasValidToken(): boolean {
-    if (this.isBrowser) {
-      const token = localStorage.getItem('jwtToken');
-      if (!token) {
-        return false;  // No token stored
-      }
-
-      const decodedToken = this.decodeToken(token);
-      if (!decodedToken) {
-        return false;  // Invalid token format
-      }
-
-      // Check if token is expired (exp is in seconds since epoch)
-      const currentTime = Math.floor(Date.now() / 1000);
-      return decodedToken.exp > currentTime;  // Return true if not expired
-    }
-    return false;
+    // Since JWT tokens are now in HttpOnly cookies, client-side validation is not possible
+    // This method is kept for compatibility but no longer used for actual validation
+    return true;
   }
 
   /**
@@ -296,30 +303,17 @@ export class AuthService {
 
   /**
    * Initialize authentication state on app startup
-   * Checks if user was previously logged in (token exists in localStorage)
+   * Checks if user data exists (and by implication token in cookie)
    */
   initializeAuth(): void {
-    if (this.hasValidToken() && this.getCurrentUser()) {
-      // User was previously logged in and token is still valid
+    if (this.getCurrentUser()) {
+      // User was previously logged in and has user data
       this.isAuthenticatedSubject.next(true);
     } else {
-      // Token is invalid or expired, clear any stale data
-      this.logout();
+      // No user data found, or could validate with backend
+      this.isAuthenticatedSubject.next(false);
     }
   }
 
-  /**
-   * Set mock authentication (for development when backend is not available)
-   * @param mockUser Mock user object
-   * @param token Mock JWT token (defaults to 'mock-token')
-   */
-  setMockAuth(mockUser: any, token: string = 'mock-token'): void {
-    if (this.isBrowser) {
-      localStorage.setItem('jwtToken', token);
-      localStorage.setItem('currentUser', JSON.stringify(mockUser));
-    }
 
-    this.isAuthenticatedSubject.next(true);
-    this.currentUserSubject.next(mockUser);
-  }
 }
