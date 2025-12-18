@@ -71,12 +71,9 @@ export class AuthService {
    */
   login(credentials: { username: string; password: string }): Observable<any> {
     const loginUrl = `${this.apiUrl}/auth/login`;
-    console.log(`Attempting login at: ${loginUrl}`, credentials);
 
     return this.http.post(loginUrl, credentials, { withCredentials: true }).pipe(
       tap((response: any) => {
-        console.log('Login response received:', response);
-
         // Check if response contains required user data (token is now in HttpOnly cookie)
         if (response && response.username && response.id && this.isBrowser) {
           // Convert backend JwtResponse format to User object expected by frontend
@@ -95,18 +92,14 @@ export class AuthService {
           this.isAuthenticatedSubject.next(true);    // User is now authenticated
           this.currentUserSubject.next(user);        // Set current user info
 
-          console.log('Authentication state updated, navigating to dashboard');
-
           // Navigate to dashboard after successful login
           this.router.navigate(['/dashboard']);
         } else {
           // Handle case where response doesn't have expected structure
-          console.error('Invalid login response format:', response);
           throw new Error('Invalid login response format');
         }
       }),
       catchError(error => {
-        console.error('Login error:', error);
         throw new Error('Login failed. Please check your credentials.');
       })
     );
@@ -139,7 +132,6 @@ export class AuthService {
         this.router.navigate(['/login']);
       },
       error: (error) => {
-        console.error('Logout API failed:', error);
         // Still clear local data even if backend call fails
         if (this.isBrowser) {
           localStorage.removeItem('jwtToken');

@@ -47,16 +47,13 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       const { username, password } = this.loginForm.value;
-      console.log('Submitting login with:', { username, password: '***hidden***' });
 
       // Try API login first
       this.authService.login({ username, password }).subscribe({
         next: (response) => {
-          console.log('Login successful:', response);
           // Login successful - navigation handled by service
         },
         error: (error) => {
-          console.error('Login failed:', error);
           // Authentication failed - error handling is done by AuthService
           // Mock authentication removed for security
         }

@@ -31,7 +31,6 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       catchError((error: HttpErrorResponse) => {
         // For logout errors, don't trigger another logout (to avoid infinite loops)
         if (error.status === 401) {
-          console.error('Logout failed - may already be logged out or token invalid');
           // Still clear local storage even if backend call failed
           if (typeof window !== 'undefined' && window.localStorage) {
             localStorage.removeItem('currentUser');
@@ -57,10 +56,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       catchError((error: HttpErrorResponse) => {
         // Handle 401 Unauthorized errors, but don't create infinite loops during auth requests
         if (error.status === 401) {
-          if (req.url.includes('/auth/login')) {
-            console.error('Login failed - invalid credentials');
-          } else {
-            console.error('Interceptor caught 401 Unauthorized on auth request');
+          if (!req.url.includes('/auth/login')) {
             // Don't call authService.logout() here to avoid recursion
           }
         }
@@ -108,7 +104,6 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     catchError((error: HttpErrorResponse) => {
       // Handle 401 Unauthorized errors
       if (error.status === 401) {
-        console.error('Interceptor caught 401 Unauthorized - logging out');
         authService.logout();
       }
       return throwError(() => error);
