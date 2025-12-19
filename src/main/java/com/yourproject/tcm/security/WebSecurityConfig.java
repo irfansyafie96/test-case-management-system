@@ -69,10 +69,12 @@ public class WebSecurityConfig {
             config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
             config.setAllowedHeaders(Arrays.asList("*"));
             config.setAllowCredentials(true);
+            config.setExposedHeaders(Arrays.asList("Set-Cookie", "X-XSRF-TOKEN"));
             return config;
         }))
             .csrf(csrf -> csrf
             .ignoringRequestMatchers("/api/auth/**")  // Don't require CSRF for auth endpoints
+            .ignoringRequestMatchers("/api/projects/**")  // Temporarily ignore CSRF for projects endpoint
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
         )

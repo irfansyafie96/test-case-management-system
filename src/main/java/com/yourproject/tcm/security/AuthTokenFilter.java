@@ -51,19 +51,36 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
         try {
             // Don't process authentication for logout requests since the token is being cleared
             String requestURI = request.getRequestURI();
+            String requestMethod = request.getMethod();
+            logger.debug("Processing {} request for URI: {}", requestMethod, requestURI);
+            
+            // Only skip authentication for logout endpoint
             if ("/api/auth/logout".equals(requestURI)) {
+                logger.debug("Skipping authentication for logout request");
                 // For logout, just continue with the filter chain without setting authentication
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Extract JWT token from request header
+            // Extract JWT token from request header/cookie
             String jwt = parseJwt(request);
+            logger.debug("Extracted JWT token: {}", jwt != null ? "found" : "not found");
+
+            // Debug: Log all cookies for troubleshooting
+            if (request.getCookies() != null) {
+                for (Cookie cookie : request.getCookies()) {
+                    logger.debug("Cookie found: {} = {}", cookie.getName(), cookie.getValue());
+                }
+            } else {
+                logger.debug("No cookies found in request");
+            }
 
             // If token exists and is valid, set up authentication
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+                logger.debug("JWT token is valid, setting up authentication for user");
                 // Extract username from token
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                logger.debug("Username from JWT: {}", username);
 
                 // Load user details from database based on username
                 // This calls the loadUserByUsername method in UserDetailsServiceImpl
@@ -81,10 +98,18 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
                 // Set authentication in security context for current request
                 // This makes user info available throughout the request processing
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.debug("Authentication set successfully for user: {}", username);
+            } else {
+                logger.debug("JWT token validation failed or token is null");
+                // For DELETE requests on /api/projects/*, log extra info for debugging
+                if ("DELETE".equals(requestMethod) && requestURI.startsWith("/api/projects/")) {
+                    logger.error("DELETE request to {} without valid authentication!", requestURI);
+                }
             }
         } catch (Exception e) {
             // Log any errors during authentication setup
             logger.error("Cannot set user authentication: {}", e.getMessage());
+            logger.error("Exception details:", e);
         }
 
         // Continue with the filter chain (pass request to next filter/controller)
@@ -99,6 +124,21 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
      * @return JWT token string, or null if not found/invalid format
      */
     private String parseJwt(HttpServletRequest request) {
+        // Log all cookies for debugging DELETE requests
+        String requestMethod = request.getMethod();
+        String requestURI = request.getRequestURI();
+        if ("DELETE".equals(requestMethod) && requestURI.startsWith("/api/projects/")) {
+            logger.debug("DELETE request to {} - checking cookies", requestURI);
+            if (request.getCookies() != null) {
+                logger.debug("Found {} cookies", request.getCookies().length);
+                for (Cookie cookie : request.getCookies()) {
+                    logger.debug("Cookie: {} = {}", cookie.getName(), cookie.getValue() != null ? "[present]" : "[null]");
+                }
+            } else {
+                logger.debug("No cookies found in request");
+            }
+        }
+        
         // First try to get JWT from HttpOnly cookie (more secure)
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
