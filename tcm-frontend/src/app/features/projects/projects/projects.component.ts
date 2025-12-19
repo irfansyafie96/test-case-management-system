@@ -126,7 +126,7 @@ export class ProjectsComponent implements OnInit {
                   }
                 });
               });
-            }
+            } else {
               let errorMessage = 'System Failure: Unable to initialize project.';
 
               if (error.status === 401) {
