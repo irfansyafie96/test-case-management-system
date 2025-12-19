@@ -1,7 +1,16 @@
 package com.yourproject.tcm.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
 public class ExecutionCompleteRequest {
+    @NotBlank(message = "Overall result is required")
+    @Pattern(regexp = "^(PASSED|FAILED|BLOCKED|PARTIALLY_PASSED)$", 
+             message = "Overall result must be PASSED, FAILED, BLOCKED, or PARTIALLY_PASSED")
     private String overallResult;
+    
+    @Size(max = 5000, message = "Notes must not exceed 5000 characters")
     private String notes;
 
     // Constructors

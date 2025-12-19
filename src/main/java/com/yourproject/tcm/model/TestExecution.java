@@ -1,6 +1,5 @@
 package com.yourproject.tcm.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -51,17 +50,25 @@ public class TestExecution {
     @Column(nullable = false)  // Overall result is required
     private String overallResult; // Overall result: "Pass", "Fail", "Incomplete", etc.
 
+    // Alias for frontend compatibility - same as overallResult
+    public String getStatus() {
+        return overallResult;
+    }
+
+    public void setStatus(String status) {
+        this.overallResult = status;
+    }
+
     @Column(columnDefinition = "TEXT")  // TEXT allows longer notes
     private String notes;  // Optional notes about this execution
 
-    /**
-     * One-to-Many relationship: One TestExecution can have Many TestStepResults
-     * cascade = CascadeType.ALL: Changes to execution cascade to its step results
-     * orphanRemoval = true: If a step result is removed from this list, it's deleted
-     * @OrderBy("stepNumber ASC"): Always keep step results in ascending order by step number
-     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
-     * @JsonIgnoreProperties({"testExecution"}): Prevent circular reference back to TestExecution
-     */
+    // Additional fields for frontend compatibility
+    @Column(name = "execution_duration")
+    private Long duration;  // Execution duration in milliseconds
+
+    @Column(name = "execution_environment")
+    private String environment;  // Environment where test was executed (dev, staging, prod)
+
     /**
      * Many-to-One relationship: Many TestExecutions can be assigned to One User
      * fetch = FetchType.LAZY: Only load user data when explicitly accessed
@@ -72,6 +79,14 @@ public class TestExecution {
     @JsonIgnoreProperties({"testExecutions"}) // Prevent circular reference back to TestExecutions
     private User assignedToUser;  // The user assigned to execute this test
 
+    /**
+     * One-to-Many relationship: One TestExecution can have Many TestStepResults
+     * cascade = CascadeType.ALL: Changes to execution cascade to its step results
+     * orphanRemoval = true: If a step result is removed from this list, it's deleted
+     * @OrderBy("stepNumber ASC"): Always keep step results in ascending order by step number
+     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
+     * @JsonIgnoreProperties({"testExecution"}): Prevent circular reference back to TestExecution
+     */
     @OneToMany(mappedBy = "testExecution", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepNumber ASC")  // Keep step results in sequential order (1, 2, 3, etc.)
     @JsonManagedReference       // This side manages the relationship for JSON serialization
@@ -93,6 +108,19 @@ public class TestExecution {
 
     public void setTestCase(TestCase testCase) {
         this.testCase = testCase;
+    }
+
+    // Additional getters for frontend compatibility
+    public String getTestCaseId() {
+        return testCase != null ? testCase.getId().toString() : null;
+    }
+
+    public String getExecutedBy() {
+        return assignedToUser != null ? assignedToUser.getUsername() : null;
+    }
+
+    public String getTitle() {
+        return testCase != null ? testCase.getTitle() : null;
     }
 
     public LocalDateTime getExecutionDate() {
@@ -117,6 +145,23 @@ public class TestExecution {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    // Getters and setters for new fields
+    public Long getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Long duration) {
+        this.duration = duration;
+    }
+
+    public String getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(String environment) {
+        this.environment = environment;
     }
 
     public User getAssignedToUser() {

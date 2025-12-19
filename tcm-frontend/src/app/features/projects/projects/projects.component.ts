@@ -80,51 +80,65 @@ export class ProjectsComponent implements OnInit {
           }
         }
         
-        this.tcmService.createProject(result).subscribe({
-          next: () => {
-            this.snackBar.open('Project initialized successfully.', 'ACKNOWLEDGE', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-              horizontalPosition: 'right',
-              verticalPosition: 'top'
-            });
-          },
-          error: (error) => {
-            if (error.status === 409) {
-              // Handle duplicate project name error
-              this.snackBar.open('Error: Project name already exists. Please choose a unique designation.', 'DISMISS', {
-                duration: 5000,
-                panelClass: ['error-snackbar'],
-                horizontalPosition: 'center',
+        // Wait for authentication to be synchronized before making the API call
+        try {
+          await this.tcmService.waitForAuthSync();
+          this.tcmService.createProject(result).subscribe({
+            next: () => {
+              this.snackBar.open('Project initialized successfully.', 'ACKNOWLEDGE', {
+                duration: 3000,
+                panelClass: ['success-snackbar'],
+                horizontalPosition: 'right',
                 verticalPosition: 'top'
               });
-            } else if (error.isCsrfTokenIssue) {
-              // Handle CSRF token synchronization issue
-              this.snackBar.open(error.userMessage || 'Security token synchronization issue. Please try again.', 'RETRY', {
-                duration: 8000,
-                panelClass: ['warning-snackbar'],
+            },
+            error: (error) => {
+              if (error.status === 409) {
+                // Handle duplicate project name error
+                this.snackBar.open('Error: Project name already exists. Please choose a unique designation.', 'DISMISS', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              } else if (error.isCsrfTokenIssue) {
+                // Handle CSRF token synchronization issue
+                this.snackBar.open(error.userMessage || 'Security token synchronization issue. Please try again.', 'RETRY', {
+                  duration: 8000,
+                  panelClass: ['warning-snackbar'],
                 horizontalPosition: 'center',
                 verticalPosition: 'top'
-              }).onAction().subscribe(() => {
+              }).onAction().subscribe(async () => {
                 // Retry the operation when user clicks RETRY
-                this.tcmService.createProject(result).subscribe({
-                  next: () => {
-                    this.snackBar.open('Project initialized successfully.', 'ACKNOWLEDGE', {
-                      duration: 3000,
-                      panelClass: ['success-snackbar'],
-                      horizontalPosition: 'right',
-                      verticalPosition: 'top'
-                    });
-                  },
-                  error: (retryError) => {
-                    this.snackBar.open('System Failure: Unable to initialize project after retry.', 'CLOSE', {
-                      duration: 5000,
-                      panelClass: ['error-snackbar'],
-                      horizontalPosition: 'center',
-                      verticalPosition: 'top'
-                    });
-                  }
-                });
+                try {
+                  await this.tcmService.waitForAuthSync();
+                  this.tcmService.createProject(result).subscribe({
+                    next: () => {
+                      this.snackBar.open('Project initialized successfully.', 'ACKNOWLEDGE', {
+                        duration: 3000,
+                        panelClass: ['success-snackbar'],
+                        horizontalPosition: 'right',
+                        verticalPosition: 'top'
+                      });
+                    },
+                    error: (retryError) => {
+                      this.snackBar.open('System Failure: Unable to initialize project after retry.', 'CLOSE', {
+                        duration: 5000,
+                        panelClass: ['error-snackbar'],
+                        horizontalPosition: 'center',
+                        verticalPosition: 'top'
+                      });
+                    }
+                  });
+                } catch (syncError) {
+                  console.error('Authentication sync error on retry:', syncError);
+                  this.snackBar.open('Authentication synchronization failed on retry. Please refresh and try again.', 'CLOSE', {
+                    duration: 5000,
+                    panelClass: ['error-snackbar'],
+                    horizontalPosition: 'center',
+                    verticalPosition: 'top'
+                  });
+                }
               });
             } else {
               let errorMessage = 'System Failure: Unable to initialize project.';
@@ -146,6 +160,15 @@ export class ProjectsComponent implements OnInit {
             }
           }
         });
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        }
       }
     });
   }
@@ -167,27 +190,49 @@ export class ProjectsComponent implements OnInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(async result => {
       if (result) { // User confirmed
-        this.tcmService.deleteProject(idAsString).subscribe(
-          () => {
-            // The project list will be refreshed automatically due to the tap() in the service
-            this.snackBar.open('Project deleted successfully.', 'DISMISS', {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-              horizontalPosition: 'right',
-              verticalPosition: 'top'
-            });
-          },
-          error => {
-            this.snackBar.open('Failed to delete project.', 'CLOSE', {
-              duration: 5000,
-              panelClass: ['error-snackbar'],
-              horizontalPosition: 'center',
-              verticalPosition: 'top'
-            });
-          }
-        );
+        // Wait for authentication to be synchronized before making the API call
+        try {
+          await this.tcmService.waitForAuthSync();
+          this.tcmService.deleteProject(idAsString).subscribe(
+            () => {
+              // The project list will be refreshed automatically due to the tap() in the service
+              this.snackBar.open('Project deleted successfully.', 'DISMISS', {
+                duration: 3000,
+                panelClass: ['success-snackbar'],
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
+              });
+            },
+            error => {
+              // Check if this is a CSRF token issue
+              if (error.isCsrfTokenIssue) {
+                this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              } else {
+                this.snackBar.open('Failed to delete project.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              }
+            }
+          );
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        }
       }
     });
   }

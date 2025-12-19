@@ -53,3 +53,34 @@ html, body {
 /* Utilities */
 .text-center { text-align: center; }
 .full-width { width: 100%; }
+
+/* Snackbar Styles */
+::ng-deep .warning-snackbar {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+::ng-deep .warning-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+  font-weight: bold !important;
+}
+
+::ng-deep .success-snackbar {
+  background-color: #4caf50 !important;
+  color: white !important;
+}
+
+::ng-deep .success-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+  font-weight: bold !important;
+}
+
+::ng-deep .error-snackbar {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+::ng-deep .error-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+  font-weight: bold !important;
+}

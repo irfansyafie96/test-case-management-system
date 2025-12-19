@@ -132,3 +132,10 @@
   text-decoration: underline;
   font-weight: 700;
 }
+
+/* Spinner styling for loading state */
+.spinner {
+  position: absolute;
+  left: 12px;
+  top: 10px; /* Adjust to center vertically in the button */
+}

@@ -10,24 +10,25 @@
     <div *ngIf="modules.length > 0; else noModules">
       <div class="module-grid">
         <div *ngFor="let module of modules" [routerLink]="['/modules', module.id]" class="module-card">
-                  <div class="module-header">
-                    <div class="module-icon">
-                      <mat-icon>extension</mat-icon>
-                    </div>
-                    <div class="module-id">MOD-{{ module.id }}</div>
-                  </div>          
-          <div class="module-content">
-            <h3 class="module-title">{{ module.name || 'Untitled Module' }}</h3>
-            <p class="module-desc">{{ module.description || 'No description available.' }}</p>
-            
-            <!-- DEBUG: Remove after fixing -->
-            <pre style="font-size: 10px; background: #eee; padding: 4px; overflow: auto; max-height: 100px;">{{ module | json }}</pre>
-            
-            <div class="module-footer">
-              <div class="project-badge">
-                <mat-icon>folder_open</mat-icon>
-                <span>{{ module.projectName || 'Unknown Project' }}</span>
-              </div>
+          <div class="module-header">
+            <div class="module-title-row">
+              <h3>{{ module.name || 'Untitled Module' }}</h3>
+            </div>
+            <div class="project-info">
+              <mat-icon>folder_open</mat-icon>
+              <span>{{ module.projectName || 'Unknown Project' }}</span>
+            </div>
+          </div>
+
+          <div class="module-stats">
+            <div class="stat-item">
+              <span class="stat-value">{{ module.testSuites?.length || 0 }}</span>
+              <span class="stat-label">Suites</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-value">{{ getTotalTestCases(module.testSuites) }}</span>
+              <span class="stat-label">Cases</span>
             </div>
           </div>
         </div>

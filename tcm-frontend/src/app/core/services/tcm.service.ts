@@ -5,6 +5,7 @@ import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { Project, TestModule, TestSuite, TestCase, TestExecution, TestStepResult } from '../models/project.model';
 import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * TCM Service - Main API Service for the Test Case Management System
@@ -22,7 +23,7 @@ import { AuthService } from './auth.service';
   providedIn: 'root'  // Singleton service, available app-wide
 })
 export class TcmService {
-  private apiUrl = '/api';  // Base API URL (proxied through proxy.conf.json)
+  private apiUrl = environment.apiUrl || 'http://localhost:8080/api';  // Use environment configuration
   private isBrowser: boolean;  // Flag to check if running in browser environment
 
   // Shared state for components - RxJS Subjects for reactive state management
@@ -356,10 +357,14 @@ export class TcmService {
   private handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
       console.error(`${operation} failed:`, error);
-      
+      console.error(`${operation} error status:`, error.status);
+      console.error(`${operation} error status text:`, error.statusText);
+      console.error(`${operation} error message:`, error.message);
+      console.error(`${operation} error body:`, error.error);
+
       // Note: 401 handling is now also done in auth.interceptor.ts
       // But keeping this for service-specific logging/handling if needed is fine.
-      
+
       // Handle 409 Conflict errors specifically for duplicate projects
       if (error.status === 409) {
         console.error('Conflict error (likely duplicate project name):', error);
@@ -382,5 +387,14 @@ export class TcmService {
     this.loadProjects().subscribe();
     // Could emit events to components to refresh their data
   }
-}
 
+  /**
+   * Wait for authentication to be fully synchronized
+   * This ensures all tokens are properly set before making API calls
+   * @param maxWaitTime Maximum time to wait in milliseconds
+   * @returns Promise that resolves when auth is synchronized
+   */
+  waitForAuthSync(maxWaitTime: number = 5000): Promise<boolean> {
+    return this.authService.waitForAuthSync(maxWaitTime);
+  }
+}

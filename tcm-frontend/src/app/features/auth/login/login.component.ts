@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -21,7 +22,8 @@ import { AuthService } from '../../../core/services/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatCardModule,
-    MatIconModule
+    MatIconModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
@@ -29,6 +31,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class LoginComponent {
   loginForm: FormGroup;
   hidePassword = true;
+  isLoading = false;
   private isBrowser: boolean;
 
   constructor(
@@ -45,17 +48,21 @@ export class LoginComponent {
   }
 
   onSubmit() {
-    if (this.loginForm.valid) {
+    if (this.loginForm.valid && !this.isLoading) {
       const { username, password } = this.loginForm.value;
 
-      // Try API login first
+      // Show loading state during authentication
+      this.isLoading = true;
+
+      // Use login with CSRF synchronization (now included in regular login method)
       this.authService.login({ username, password }).subscribe({
-        next: (response) => {
-          // Login successful - navigation handled by service
+        next: (response: any) => {
+          // Navigation handled by service, loading state will be reset after redirect
         },
-        error: (error) => {
+        error: (error: any) => {
           // Authentication failed - error handling is done by AuthService
-          // Mock authentication removed for security
+          // Loading state will continue until successful login or manual action
+          this.isLoading = false;
         }
       });
     }

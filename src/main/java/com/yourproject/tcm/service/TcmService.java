@@ -1,7 +1,6 @@
 package com.yourproject.tcm.service;
 
 import com.yourproject.tcm.model.*;
-import com.yourproject.tcm.model.dto.StepResultResponse;
 import com.yourproject.tcm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -17,7 +16,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * TCM Service - Main Business Logic Layer for the Test Case Management System
@@ -210,39 +208,45 @@ public class TcmService {
      */
     @Transactional
     public void deleteTestModule(Long testModuleId) {
-        Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
-        if (testModuleOpt.isPresent()) {
-            TestModule testModule = testModuleOpt.get();
+        // Fetch the module with its test suites
+        TestModule testModule = testModuleRepository.findByIdWithTestSuites(testModuleId)
+                .orElseThrow(() -> new RuntimeException("Test Module not found with id: " + testModuleId));
 
-            // First, delete all test executions for test cases in this module
-            // This is necessary to avoid foreign key constraint violations
-            if (testModule.getTestSuites() != null) {
-                for (TestSuite suite : testModule.getTestSuites()) {
-                    if (suite.getTestCases() != null) {
-                        for (TestCase testCase : suite.getTestCases()) {
-                            // Delete executions for this test case
-                            List<TestExecution> executions = testExecutionRepository.findByTestCaseId(testCase.getId());
-                            for (TestExecution execution : executions) {
-                                testExecutionRepository.deleteById(execution.getId());
-                            }
+        // Fetch all test suites with their test cases for this module
+        List<TestSuite> suitesWithTestCases = testSuiteRepository.findByTestModuleIdWithTestCases(testModuleId);
 
-                            // Delete test step results for test steps in this test case
-                            if (testCase.getTestSteps() != null) {
-                                for (TestStep step : testCase.getTestSteps()) {
-                                    testStepResultRepository.deleteByTestStepId(step.getId());
-                                }
-                            }
+        // Pre-clean up: Delete all operational data (Executions and Results) linked to these test cases.
+        // This is necessary because TestStepResult has a Foreign Key to TestStep.
+        // If we try to delete TestModule -> TestSuite -> TestCase -> TestStep directly,
+        // the DB will throw a constraint violation because TestStepResult still points to TestStep.
+        for (TestSuite suite : suitesWithTestCases) {
+            if (suite.getTestCases() != null) {
+                for (TestCase testCase : suite.getTestCases()) {
+                    // 1. Delete all TestExecutions for this test case.
+                    // This cascades to delete TestStepResults linked to these executions.
+                    List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
+                    if (!executions.isEmpty()) {
+                        testExecutionRepository.deleteAll(executions);
+                    }
+
+                    // 2. Safety Net: Delete any orphaned TestStepResults that might point to these steps
+                    // but aren't linked to a valid execution (data integrity cleanup).
+                    if (testCase.getTestSteps() != null) {
+                        for (TestStep step : testCase.getTestSteps()) {
+                            testStepResultRepository.deleteByTestStepId(step.getId());
                         }
                     }
                 }
             }
-
-            // Now delete the test module (cascading should handle test suites, test cases, and test steps)
-            testModuleRepository.deleteById(testModuleId);
-            entityManager.flush(); // Ensure data is written to DB
-        } else {
-            throw new RuntimeException("Test Module not found with id: " + testModuleId);
         }
+        
+        // Flush the changes to ensure all dependent data is gone before we delete the structure
+        entityManager.flush();
+
+        // Now delete the module structure.
+        // Cascade will safely handle: Module -> Suites -> Test Cases -> Test Steps
+        testModuleRepository.delete(testModule);
+        entityManager.flush(); // Final commit
     }
 
     // ==================== TEST SUITE METHODS ====================
@@ -431,7 +435,7 @@ public class TcmService {
 
             // First, delete all test executions for this test case
             // This will cascade to delete test step results associated with those executions
-            List<TestExecution> executions = testExecutionRepository.findByTestCaseId(testCaseId);
+            List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCaseId);
             for (TestExecution execution : executions) {
                 testExecutionRepository.deleteById(execution.getId());
             }
@@ -471,7 +475,7 @@ public class TcmService {
      */
     @Transactional(readOnly = true)
     public List<TestExecution> getTestExecutionsByTestCaseId(Long testCaseId) {
-        return testExecutionRepository.findByTestCaseId(testCaseId);
+        return testExecutionRepository.findByTestCase_Id(testCaseId);
     }
 
     /**

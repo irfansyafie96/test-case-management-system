@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -433,7 +436,17 @@ public class ApiController {
     public ResponseEntity<?> updateStepResult(
             @PathVariable Long executionId,
             @PathVariable Long stepId,
-            @RequestBody StepResultRequest stepData) {
+            @Valid @RequestBody StepResultRequest stepData,
+            BindingResult bindingResult) {
+        
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            StringBuilder errors = new StringBuilder();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.append(error.getField()).append(": ").append(error.getDefaultMessage()).append("; ");
+            }
+            return new ResponseEntity<>("Validation errors: " + errors.toString(), HttpStatus.BAD_REQUEST);
+        }
         try {
             String status = stepData.getStatus();
             String actualResult = stepData.getActualResult();
@@ -456,7 +469,17 @@ public class ApiController {
     @PutMapping("/executions/{executionId}/complete")
     public ResponseEntity<?> completeTestExecution(
             @PathVariable Long executionId,
-            @RequestBody ExecutionCompleteRequest completeData) {
+            @Valid @RequestBody ExecutionCompleteRequest completeData,
+            BindingResult bindingResult) {
+        
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            StringBuilder errors = new StringBuilder();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.append(error.getField()).append(": ").append(error.getDefaultMessage()).append("; ");
+            }
+            return new ResponseEntity<>("Validation errors: " + errors.toString(), HttpStatus.BAD_REQUEST);
+        }
         try {
             String overallResult = completeData.getOverallResult();
             String notes = completeData.getNotes();

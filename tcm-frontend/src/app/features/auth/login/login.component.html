@@ -28,13 +28,15 @@
           <mat-error *ngIf="loginForm.get('password')?.invalid">Password is required</mat-error>
         </mat-form-field>
 
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="submit" 
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
           class="login-btn"
-          [disabled]="loginForm.invalid">
-          Sign In
+          [disabled]="loginForm.invalid || isLoading">
+          <mat-spinner *ngIf="isLoading" diameter="20" class="spinner"></mat-spinner>
+          <span *ngIf="!isLoading">Sign In</span>
+          <span *ngIf="isLoading">&nbsp;Signing in...</span>
         </button>
       </form>
     </mat-card-content>

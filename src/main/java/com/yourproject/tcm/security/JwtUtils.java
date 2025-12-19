@@ -34,7 +34,7 @@ public class JwtUtils {
      * This key is used to sign and verify JWT tokens
      * In production, this should be a strong, secret key stored securely
      */
-    @Value("${tcm.app.jwtSecret:bXlTZWNyZXRLaWblcm9uSldUb2tlbkdlbmVyYXRpb25SZXBsYWNlV2l0aFN0cm9uZ0tleUluUHJvZHVjdGlvbjIwMjQ}")
+    @Value("${tcm.app.jwtSecret}")
     private String jwtSecret;
 
     /**

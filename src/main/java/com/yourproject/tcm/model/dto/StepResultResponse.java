@@ -1,7 +1,5 @@
 package com.yourproject.tcm.model.dto;
 
-import com.yourproject.tcm.model.TestStep;
-
 public class StepResultResponse {
     private Long id;
     private Long stepId;

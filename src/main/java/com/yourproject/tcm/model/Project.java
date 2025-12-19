@@ -2,6 +2,7 @@ package com.yourproject.tcm.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -29,6 +30,16 @@ public class Project {
     private String name; // Project name (e.g., "NCS", "Training Platform")
 
     private String description;  // Optional description of the project
+
+    // Additional fields for frontend compatibility
+    @Column(name = "created_date")
+    private LocalDateTime createdDate;
+
+    @Column(name = "updated_date")
+    private LocalDateTime updatedDate;
+
+    @Column(name = "created_by")
+    private String createdBy;
 
     /**
      * One-to-Many relationship: One Project can have Many TestModules
@@ -72,5 +83,30 @@ public class Project {
 
     public void setModules(List<TestModule> modules) {
         this.modules = modules;
+    }
+
+    // Getters and setters for additional fields
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
+    }
+
+    public LocalDateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(LocalDateTime updatedDate) {
+        this.updatedDate = updatedDate;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 }

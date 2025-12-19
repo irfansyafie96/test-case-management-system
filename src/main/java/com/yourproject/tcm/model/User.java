@@ -127,6 +127,15 @@ public class User {
         this.createdAt = createdAt;
     }
 
+    // Alias for frontend compatibility
+    public LocalDateTime getCreatedDate() {
+        return createdAt;
+    }
+
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdAt = createdDate;
+    }
+
     public Set<TestExecution> getTestExecutions() {
         return testExecutions;
     }

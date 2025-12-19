@@ -8,6 +8,10 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+
 # Using Eclipse
 *.pydevproject
 .metadata
@@ -36,6 +40,14 @@ out/
 /nbdist/
 /.nb-gradle/
 
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
 # Vim
 *.swp
 *.swo
@@ -59,11 +71,62 @@ Icon?
 ehthumbs.db
 Thumbs.db
 
+# Angular/Node.js
+node_modules/
+dist/
+.tmp/
+.angular/
+.cache/
+*.tgz
+.yarn/
+.pnpm/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Logs
 *.log
 
+# Build outputs
+build/
+out/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
 # Target folder
 target/
+
+# Dependency directories
+**/node_modules/
+**/target/
+
+# Local Maven installation
+apache-maven-*/
+
+# Merge conflict files
+*.orig
+*.rej
+
+# Runtime data
+logs/
+temp/
+
+# Coverage directory used by tools like Istanbul
+coverage/
+*.lcov
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Yarn Integrity file
+.yarn-integrity
 
 # Memory Bank (don't include documentation in git)
 memory-bank/
@@ -72,3 +135,18 @@ memory-bank/
 QWEN
 Qwen.md
 GEMINI.md
+
+# Environment files with secrets
+.env
+.env.local
+.env.production
+.env.development
+
+# Secrets files
+*.pem
+*.key
+*.crt
+secrets/
+
+# Development notes
+dev-notes/
