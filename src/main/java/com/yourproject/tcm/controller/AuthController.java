@@ -111,6 +111,7 @@ public class AuthController {
         jwtCookie.setSecure(false);   // Set to true in production with HTTPS
         jwtCookie.setPath("/");       // Make available for all paths
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
+        jwtCookie.setAttribute("SameSite", "Lax");  // Explicit SameSite attribute
         // Remove domain setting to work better with proxy configurations
 
         response.addCookie(jwtCookie);
@@ -123,6 +124,7 @@ public class AuthController {
             csrfCookie.setSecure(false);    // Set to true in production with HTTPS
             csrfCookie.setPath("/");
             csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
+            csrfCookie.setAttribute("SameSite", "Lax");  // Explicit SameSite attribute
             // Remove domain setting to work better with proxy configurations
             response.addCookie(csrfCookie);
         }
@@ -253,6 +255,7 @@ public class AuthController {
         jwtCookie.setSecure(false);   // Set to true in production with HTTPS
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0);  // Immediately expire cookie
+        jwtCookie.setAttribute("SameSite", "Lax");  // Explicit SameSite attribute
 
         response.addCookie(jwtCookie);
 
@@ -281,6 +284,7 @@ public class AuthController {
             csrfCookie.setSecure(false);    // Set to true in production with HTTPS
             csrfCookie.setPath("/");
             csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
+            csrfCookie.setAttribute("SameSite", "Lax");  // Explicit SameSite attribute
             response.addCookie(csrfCookie);
         }
 
