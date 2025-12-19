@@ -48,9 +48,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        try {
+try {
             // Don't process authentication for logout requests since the token is being cleared
             String requestURI = request.getRequestURI();
+            String requestMethod = request.getMethod();
+            
+            // Only skip authentication for logout endpoint
             if ("/api/auth/logout".equals(requestURI)) {
                 // For logout, just continue with the filter chain without setting authentication
                 filterChain.doFilter(request, response);
@@ -59,6 +62,22 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
 
             // Extract JWT token from request header
             String jwt = parseJwt(request);
+            logger.debug("Request {} {} - JWT token found: {}", requestMethod, requestURI, jwt != null ? "YES" : "NO");
+            
+            // Debug logging for DELETE requests to projects
+            if ("DELETE".equals(requestMethod) && requestURI.startsWith("/api/projects/")) {
+                logger.error("DELETE request to {} - JWT token found: {}", requestURI, jwt != null ? "YES" : "NO");
+                if (request.getCookies() != null) {
+                    for (Cookie cookie : request.getCookies()) {
+                        if ("JWT_TOKEN".equals(cookie.getName())) {
+                            logger.error("JWT_TOKEN cookie found with value length: {}", 
+                                cookie.getValue() != null ? cookie.getValue().length() : 0);
+                        }
+                    }
+                } else {
+                    logger.error("No cookies found in DELETE request");
+                }
+            }
 
             // If token exists and is valid, set up authentication
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
@@ -84,7 +103,14 @@ public class AuthTokenFilter extends OncePerRequestFilter {  // Ensures filter r
             }
         } catch (Exception e) {
             // Log any errors during authentication setup
-            logger.error("Cannot set user authentication: {}", e.getMessage());
+            String requestURI = request.getRequestURI();
+            String requestMethod = request.getMethod();
+            logger.error("Cannot set user authentication for {} {}: {}", requestMethod, requestURI, e.getMessage());
+            
+            // For DELETE requests, log the full exception
+            if ("DELETE".equals(requestMethod) && requestURI.startsWith("/api/projects/")) {
+                logger.error("Full exception for DELETE request:", e);
+            }
         }
 
         // Continue with the filter chain (pass request to next filter/controller)

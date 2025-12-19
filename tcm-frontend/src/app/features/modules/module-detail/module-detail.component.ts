@@ -7,6 +7,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
@@ -30,7 +31,8 @@ import { catchError, finalize, map, startWith } from 'rxjs/operators';
     MatTooltipModule,
     MatDialogModule,
     RouterModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatSnackBarModule
   ],
   templateUrl: './module-detail.component.html',
   styleUrls: ['./module-detail.component.css']
@@ -38,6 +40,7 @@ import { catchError, finalize, map, startWith } from 'rxjs/operators';
 export class ModuleDetailComponent implements OnInit {  private route = inject(ActivatedRoute);
   private tcmService = inject(TcmService);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   displayedColumns: string[] = ['id', 'title', 'status', 'actions'];
 
@@ -89,21 +92,50 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
       data: { moduleId: idAsString }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(async result => {
       if (result) {
         this.loadingSubject.next(true); // Show loading indicator
-        this.tcmService.createTestSuite(idAsString, result).subscribe({
-          next: (createdSuite) => {
-            console.log('Test suite created successfully:', createdSuite);
-            // Instead of calling ngOnInit(), refresh the module data directly
-            this.refreshModuleData();
-          },
-          error: (error) => {
-            console.error('Error creating test suite:', error);
-            this.loadingSubject.next(false); // Hide loading indicator
-            alert('Failed to create test suite. Please try again.');
-          }
-        });
+        
+        // Wait for authentication to be synchronized before making the API call
+        try {
+          await this.tcmService.waitForAuthSync();
+          this.tcmService.createTestSuite(idAsString, result).subscribe({
+            next: (createdSuite) => {
+              // Instead of calling ngOnInit(), refresh the module data directly
+              this.refreshModuleData();
+            },
+            error: (error) => {
+              console.error('Error creating test suite:', error);
+              this.loadingSubject.next(false); // Hide loading indicator
+              
+              // Check if this is a CSRF token issue
+              if (error.isCsrfTokenIssue) {
+                this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['warning-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              } else {
+                this.snackBar.open('Failed to create test suite. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              }
+            }
+          });
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.loadingSubject.next(false);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        }
       }
     });
   }
@@ -117,21 +149,51 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
       data: { suiteId: idAsString }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(async result => {
       if (result) {
         this.loadingSubject.next(true); // Show loading indicator
-        this.tcmService.createTestCase(idAsString, result).subscribe({
-          next: (createdTestCase) => {
-            console.log('Test case created successfully:', createdTestCase);
-            // Instead of calling ngOnInit(), refresh the module data directly
-            this.refreshModuleData();
-          },
-          error: (error) => {
-            console.error('Error creating test case:', error);
-            this.loadingSubject.next(false); // Hide loading indicator
-            alert('Failed to create test case. Please try again.');
-          }
-        });
+        
+        // Wait for authentication to be synchronized before making the API call
+        try {
+          await this.tcmService.waitForAuthSync();
+          this.tcmService.createTestCase(idAsString, result).subscribe({
+            next: (createdTestCase) => {
+              console.log('Test case created successfully:', createdTestCase);
+              // Instead of calling ngOnInit(), refresh the module data directly
+              this.refreshModuleData();
+            },
+            error: (error) => {
+              console.error('Error creating test case:', error);
+              this.loadingSubject.next(false); // Hide loading indicator
+              
+              // Check if this is a CSRF token issue
+              if (error.isCsrfTokenIssue) {
+                this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['warning-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              } else {
+                this.snackBar.open('Failed to create test case. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              }
+            }
+          });
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.loadingSubject.next(false);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        }
       }
     });
   }
@@ -144,23 +206,53 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
       data: testCase // Pass the entire test case object for editing
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(async result => {
       if (result) {
         this.loadingSubject.next(true); // Show loading indicator
-        // Use the ID from the original test case if editing, or from the result
-        const testCaseId = testCase.id as string;
-        this.tcmService.updateTestCase(testCaseId, result).subscribe({
-          next: (updatedTestCase) => {
-            console.log('Test case updated successfully:', updatedTestCase);
-            // Refresh the module data to show changes
-            this.refreshModuleData();
-          },
-          error: (error) => {
-            console.error('Error updating test case:', error);
-            this.loadingSubject.next(false); // Hide loading indicator
-            alert('Failed to update test case. Please try again.');
-          }
-        });
+        
+        // Wait for authentication to be synchronized before making the API call
+        try {
+          await this.tcmService.waitForAuthSync();
+          // Use the ID from the original test case if editing, or from the result
+          const testCaseId = testCase.id as string;
+          this.tcmService.updateTestCase(testCaseId, result).subscribe({
+            next: (updatedTestCase) => {
+              console.log('Test case updated successfully:', updatedTestCase);
+              // Refresh the module data to show changes
+              this.refreshModuleData();
+            },
+            error: (error) => {
+              console.error('Error updating test case:', error);
+              this.loadingSubject.next(false); // Hide loading indicator
+              
+              // Check if this is a CSRF token issue
+              if (error.isCsrfTokenIssue) {
+                this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['warning-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              } else {
+                this.snackBar.open('Failed to update test case. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              }
+            }
+          });
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.loadingSubject.next(false);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        }
       }
     });
   }
