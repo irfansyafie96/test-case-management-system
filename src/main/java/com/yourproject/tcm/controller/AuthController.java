@@ -24,7 +24,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.csrf.CsrfToken;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -88,7 +90,7 @@ public class AuthController {
      * @return ResponseEntity with JWT token and user information
      */
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
         // Authenticate user - throws exception if invalid credentials
         Authentication authentication = authenticateUserInternal(loginRequest);
 
@@ -107,10 +109,21 @@ public class AuthController {
         Cookie jwtCookie = new Cookie("JWT_TOKEN", jwtToken);
         jwtCookie.setHttpOnly(true);  // Prevent client-side JavaScript access
         jwtCookie.setSecure(false);   // Set to true in production with HTTPS
-        jwtCookie.setPath("/");
+        jwtCookie.setPath("/");       // Make available for all paths
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
 
         response.addCookie(jwtCookie);
+
+        // Also set CSRF token after successful login
+        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        if (csrfToken != null) {
+            Cookie csrfCookie = new Cookie("XSRF-TOKEN", csrfToken.getToken());
+            csrfCookie.setHttpOnly(false);  // Must be false for JavaScript access
+            csrfCookie.setSecure(false);    // Set to true in production with HTTPS
+            csrfCookie.setPath("/");
+            csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
+            response.addCookie(csrfCookie);
+        }
 
         // Create response with user information (no token in response body)
         return ResponseEntity.ok(new JwtResponse(null,  // Token removed from response body
@@ -245,5 +258,70 @@ public class AuthController {
         Map<String, String> responseMap = new HashMap<>();
         responseMap.put("message", "User logged out successfully!");
         return ResponseEntity.ok(responseMap);
+    }
+
+    /**
+     * GET /api/auth/csrf - Trigger CSRF token generation
+     * This endpoint exists to help frontend synchronize CSRF tokens after login
+     * @return ResponseEntity indicating CSRF token refresh
+     */
+    @GetMapping("/csrf")
+    public ResponseEntity<Map<String, String>> refreshCsrfToken(HttpServletResponse response, HttpServletRequest request) {
+        // This endpoint's main purpose is to trigger Spring Security's CSRF token generation
+        // The actual CSRF token will be set in cookies automatically by Spring Security
+        
+        // Explicitly force CSRF token generation and ensure it's set in the response
+        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        if (csrfToken != null) {
+            // Ensure the CSRF token cookie is set with proper attributes
+            Cookie csrfCookie = new Cookie("XSRF-TOKEN", csrfToken.getToken());
+            csrfCookie.setHttpOnly(false);  // Must be false for JavaScript access
+            csrfCookie.setSecure(false);    // Set to true in production with HTTPS
+            csrfCookie.setPath("/");
+            csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
+            response.addCookie(csrfCookie);
+        }
+
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("message", "CSRF token refreshed");
+        responseBody.put("timestamp", String.valueOf(System.currentTimeMillis()));
+        if (csrfToken != null) {
+            responseBody.put("tokenSet", "true");
+        }
+
+        return ResponseEntity.ok(responseBody);
+    }
+
+    /**
+     * GET /api/auth/check - Verify authentication is working
+     * This endpoint can be used to verify that JWT token authentication is properly established
+     * @return ResponseEntity with user authentication status
+     */
+    @GetMapping("/check")
+    public ResponseEntity<Map<String, Object>> checkAuth() {
+        // This endpoint will return user info if authentication is valid
+        // This allows the frontend to verify that the JWT token is working correctly
+
+        // Get the authenticated user details from the security context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            // User is authenticated, return basic user info as verification
+            Map<String, Object> response = new HashMap<>();
+            response.put("authenticated", true);
+            response.put("user", authentication.getName());
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.ok(response);
+        } else {
+            // User is not authenticated
+            Map<String, Object> response = new HashMap<>();
+            response.put("authenticated", false);
+            response.put("timestamp", System.currentTimeMillis());
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
     }
 }

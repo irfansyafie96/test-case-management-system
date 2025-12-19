@@ -9,6 +9,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ProjectDialogComponent } from './project-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { TcmService } from '../../../core/services/tcm.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Project } from '../../../core/models/project.model';
 import { Observable } from 'rxjs';
 import { RouterModule } from '@angular/router';
@@ -33,8 +34,9 @@ export class ProjectsComponent implements OnInit {
   projects$!: Observable<Project[]>;
 
   constructor(
-    public dialog: MatDialog, 
+    public dialog: MatDialog,
     private tcmService: TcmService,
+    private authService: AuthService,
     private snackBar: MatSnackBar
   ) {}
 
@@ -49,11 +51,37 @@ export class ProjectsComponent implements OnInit {
       data: {}
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe(async result => {
       if (result) {
+        // Wait for auth synchronization before creating project
+        await this.authService.waitForAuthSync(3000);
+        
+        // Ensure CSRF token is available with explicit check
+        let csrfTokenAvailable = false;
+        let attempts = 0;
+        const maxAttempts = 5;
+        
+        while (!csrfTokenAvailable && attempts < maxAttempts) {
+          attempts++;
+          
+          // Refresh CSRF token
+          try {
+            await this.authService.refreshCsrfToken().toPromise();
+            // Wait for token to be set in cookie
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Check if token is now available
+            if (this.authService.getCsrfToken()) {
+              csrfTokenAvailable = true;
+              break;
+            }
+          } catch (error) {
+            // Continue trying
+          }
+        }
+        
         this.tcmService.createProject(result).subscribe({
           next: () => {
-            console.log('Project created successfully');
             this.snackBar.open('Project initialized successfully.', 'ACKNOWLEDGE', {
               duration: 3000,
               panelClass: ['success-snackbar'],
@@ -70,9 +98,46 @@ export class ProjectsComponent implements OnInit {
                 horizontalPosition: 'center',
                 verticalPosition: 'top'
               });
-            } else {
-              console.error('Error creating project:', error);
-              this.snackBar.open('System Failure: Unable to initialize project.', 'CLOSE', {
+            } else if (error.isCsrfTokenIssue) {
+              // Handle CSRF token synchronization issue
+              this.snackBar.open(error.userMessage || 'Security token synchronization issue. Please try again.', 'RETRY', {
+                duration: 8000,
+                panelClass: ['warning-snackbar'],
+                horizontalPosition: 'center',
+                verticalPosition: 'top'
+              }).onAction().subscribe(() => {
+                // Retry the operation when user clicks RETRY
+                this.tcmService.createProject(result).subscribe({
+                  next: () => {
+                    this.snackBar.open('Project initialized successfully.', 'ACKNOWLEDGE', {
+                      duration: 3000,
+                      panelClass: ['success-snackbar'],
+                      horizontalPosition: 'right',
+                      verticalPosition: 'top'
+                    });
+                  },
+                  error: (retryError) => {
+                    this.snackBar.open('System Failure: Unable to initialize project after retry.', 'CLOSE', {
+                      duration: 5000,
+                      panelClass: ['error-snackbar'],
+                      horizontalPosition: 'center',
+                      verticalPosition: 'top'
+                    });
+                  }
+                });
+              });
+            }
+              let errorMessage = 'System Failure: Unable to initialize project.';
+
+              if (error.status === 401) {
+                errorMessage = 'Authentication required. Please login again.';
+              } else if (error.status === 403) {
+                errorMessage = 'Permission denied. You do not have rights to create projects.';
+              } else if (error.status === 500) {
+                errorMessage = 'Server error. Please try again later.';
+              }
+
+              this.snackBar.open(errorMessage, 'CLOSE', {
                 duration: 5000,
                 panelClass: ['error-snackbar'],
                 horizontalPosition: 'center',
@@ -107,7 +172,6 @@ export class ProjectsComponent implements OnInit {
         this.tcmService.deleteProject(idAsString).subscribe(
           () => {
             // The project list will be refreshed automatically due to the tap() in the service
-            console.log('Project deleted successfully');
             this.snackBar.open('Project deleted successfully.', 'DISMISS', {
               duration: 3000,
               panelClass: ['success-snackbar'],
@@ -116,7 +180,6 @@ export class ProjectsComponent implements OnInit {
             });
           },
           error => {
-            console.error('Error deleting project:', error);
             this.snackBar.open('Failed to delete project.', 'CLOSE', {
               duration: 5000,
               panelClass: ['error-snackbar'],

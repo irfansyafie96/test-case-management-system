@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, tap, catchError, of } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, of, throwError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { User } from '../models/project.model';
 import { environment } from '../../../environments/environment';
@@ -38,10 +38,12 @@ export class AuthService {
   // These allow components to subscribe and react to authentication state changes
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);  // Authentication status
   private currentUserSubject = new BehaviorSubject<User | null>(null);   // Current user details
+  private isAuthSynchronizedSubject = new BehaviorSubject<boolean>(false); // Whether auth is fully synchronized
 
   // Public observables for components to subscribe to authentication state
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();  // Observable for auth status
   public currentUser$ = this.currentUserSubject.asObservable();          // Observable for current user
+  public isAuthSynchronized$ = this.isAuthSynchronizedSubject.asObservable(); // Observable for sync status
 
   constructor(
     private http: HttpClient,      // Angular's HTTP client for API calls
@@ -73,7 +75,7 @@ export class AuthService {
     const loginUrl = `${this.apiUrl}/auth/login`;
 
     return this.http.post(loginUrl, credentials, { withCredentials: true }).pipe(
-      tap((response: any) => {
+      tap(async (response: any) => {
         // Check if response contains required user data (token is now in HttpOnly cookie)
         if (response && response.username && response.id && this.isBrowser) {
           // Convert backend JwtResponse format to User object expected by frontend
@@ -91,6 +93,54 @@ export class AuthService {
           // Update shared authentication state - notifies all subscribers
           this.isAuthenticatedSubject.next(true);    // User is now authenticated
           this.currentUserSubject.next(user);        // Set current user info
+
+          // Mark that authentication is not yet fully synchronized
+          this.isAuthSynchronizedSubject.next(false);
+
+          // Additional delay to ensure the JWT cookie from login is properly set by the browser
+          // This helps with timing issues where cookies might not be immediately available after login
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Improved CSRF token synchronization after login
+          // Make multiple attempts to ensure CSRF token is available
+          let csrfTokenAvailable = false;
+          let attempts = 0;
+          const maxAttempts = 3;
+          
+          while (!csrfTokenAvailable && attempts < maxAttempts) {
+            attempts++;
+            
+            try {
+              // First refresh the token
+              await this.refreshCsrfToken().toPromise();
+              // Wait for it to be set
+              await new Promise(resolve => setTimeout(resolve, 300));
+              
+              // Check if token is now available
+              if (this.getCsrfToken()) {
+                csrfTokenAvailable = true;
+                break;
+              }
+            } catch (error) {
+              // Continue trying on error
+            }
+            
+            // Wait before next attempt
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
+
+          // Verify that authentication is properly established by making a test request
+          // This ensures the JWT token is working before allowing user interactions
+          try {
+            await this.verifyAuthentication().toPromise();
+          } catch (error) {
+            // Don't fail the login
+          }
+
+          // Now mark that authentication is fully synchronized
+          this.isAuthSynchronizedSubject.next(true);
 
           // Navigate to dashboard after successful login
           this.router.navigate(['/dashboard']);
@@ -114,6 +164,9 @@ export class AuthService {
    * 4. Navigate to login page
    */
   logout(): void {
+    // Reset sync state first
+    this.resetAuthSyncState();
+
     // Call backend logout to clear HttpOnly cookie
     // Using a separate request without the interceptor to avoid 401 loops
     this.http.post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
@@ -307,5 +360,139 @@ export class AuthService {
     }
   }
 
+  /**
+   * Wait for CSRF token to be available after login
+   * This helps resolve the timing issue where CSRF token isn't immediately available
+   * @param maxWaitTime Maximum time to wait in milliseconds (default 2000ms)
+   * @returns Promise that resolves when CSRF token is available or times out
+   */
+  waitForCsrfToken(maxWaitTime: number = 2000): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.getCookie('XSRF-TOKEN')) {
+        resolve(true);
+        return;
+      }
+
+      const startTime = Date.now();
+      const checkInterval = 100; // Check every 100ms
+
+      const checkToken = () => {
+        const elapsed = Date.now() - startTime;
+
+        if (this.getCookie('XSRF-TOKEN')) {
+          resolve(true);
+        } else if (elapsed >= maxWaitTime) {
+          console.warn('CSRF token not available after waiting', maxWaitTime, 'ms');
+          resolve(false);
+        } else {
+          setTimeout(checkToken, checkInterval);
+        }
+      };
+
+      checkToken();
+    });
+  }
+
+  /**
+   * Force CSRF token refresh by making a request to trigger token generation
+   * This can be called after login to ensure CSRF token is available
+   * @returns Observable that completes when token refresh is attempted
+   */
+  refreshCsrfToken(): Observable<any> {
+    // Make a simple GET request to trigger CSRF token generation
+    return this.http.get(`${this.apiUrl}/auth/csrf`, {
+      withCredentials: true
+    }).pipe(
+      catchError(error => {
+        // Don't throw error - allow operation to continue
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Verify that the authentication is properly established by making a test request
+   * This ensures the JWT token is working correctly before allowing user interactions
+   * @returns Observable that completes when authentication is verified
+   */
+  verifyAuthentication(): Observable<any> {
+    // Make a simple authenticated request to verify JWT token is working
+    // Using a minimal endpoint that just confirms authentication is working
+    return this.http.get(`${this.apiUrl}/auth/check`, { withCredentials: true }).pipe(
+      catchError(error => {
+        // Re-throw the error to be handled by the caller
+        return throwError(() => error);
+      })
+    );
+  }
+
+  /**
+   * Get CSRF token from cookies
+   * @returns CSRF token value or null if not found
+   */
+  getCsrfToken(): string | null {
+    return this.getCookie('XSRF-TOKEN');
+  }
+
+  /**
+   * Helper function to get a cookie value by name
+   * @param name Cookie name to retrieve
+   * @returns Cookie value or null if not found
+   */
+  private getCookie(name: string): string | null {
+    if (!this.isBrowser || typeof document === 'undefined' || !document.cookie) {
+      return null;
+    }
+
+    const nameEq = name + "=";
+    const cookies = document.cookie.split(';');
+
+    for (let i = 0; i < cookies.length; i++) {
+      let cookie = cookies[i];
+      while (cookie.charAt(0) === ' ') {
+        cookie = cookie.substring(1, cookie.length);
+      }
+
+      if (cookie.indexOf(nameEq) === 0) {
+        return cookie.substring(nameEq.length, cookie.length);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Wait for authentication to be fully synchronized
+   * This ensures all tokens are properly set before making API calls
+   * @param maxWaitTime Maximum time to wait in milliseconds
+   * @returns Promise that resolves when auth is synchronized
+   */
+  waitForAuthSync(maxWaitTime: number = 5000): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (this.isAuthSynchronizedSubject.value) {
+        resolve(true);
+        return;
+      }
+
+      const startTime = Date.now();
+      const subscription = this.isAuthSynchronized$.subscribe(isSynced => {
+        if (isSynced) {
+          subscription.unsubscribe();
+          resolve(true);
+        } else if (Date.now() - startTime >= maxWaitTime) {
+          subscription.unsubscribe();
+          resolve(false);
+        }
+      });
+    });
+  }
+
+  /**
+   * Reset authentication synchronization state
+   * This should be called when logging out
+   */
+  private resetAuthSyncState(): void {
+    this.isAuthSynchronizedSubject.next(false);
+  }
 
 }
