@@ -41,11 +41,14 @@ out/
 /.nb-gradle/
 
 # VS Code
-.vscode/
+.vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!tcm-frontend/.vscode/extensions.json
+!tcm-frontend/.vscode/launch.json
+!tcm-frontend/.vscode/tasks.json
 .history/
 
 # Vim
@@ -135,6 +138,8 @@ memory-bank/
 QWEN
 Qwen.md
 GEMINI.md
+.gemini/
+.crush/
 
 # Environment files with secrets
 .env
