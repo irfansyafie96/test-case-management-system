@@ -134,8 +134,19 @@
 }
 
 /* Spinner styling for loading state */
-.spinner {
-  position: absolute;
-  left: 12px;
-  top: 10px; /* Adjust to center vertically in the button */
+.login-progress {
+  margin-bottom: 16px;
+  border-radius: 4px;
+}
+
+.btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.spinner-inline {
+  /* Ensure spinner color matches or contrasts well */
 }

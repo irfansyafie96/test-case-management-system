@@ -6,6 +6,8 @@
       <mat-card-subtitle>Please sign in to continue</mat-card-subtitle>
     </mat-card-header>
 
+    <mat-progress-bar *ngIf="isLoading" mode="indeterminate" class="login-progress"></mat-progress-bar>
+
     <mat-card-content>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
         <mat-form-field class="full-width" appearance="outline">
@@ -34,9 +36,10 @@
           type="submit"
           class="login-btn"
           [disabled]="loginForm.invalid || isLoading">
-          <mat-spinner *ngIf="isLoading" diameter="20" class="spinner"></mat-spinner>
-          <span *ngIf="!isLoading">Sign In</span>
-          <span *ngIf="isLoading">&nbsp;Signing in...</span>
+          <div class="btn-content">
+            <mat-spinner *ngIf="isLoading" diameter="18" class="spinner-inline"></mat-spinner>
+            <span>{{ isLoading ? 'Signing in...' : 'Sign In' }}</span>
+          </div>
         </button>
       </form>
     </mat-card-content>
