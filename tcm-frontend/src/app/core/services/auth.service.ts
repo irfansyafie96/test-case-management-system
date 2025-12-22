@@ -223,7 +223,15 @@ export class AuthService {
     // With HttpOnly cookies, we can't directly verify the JWT token in client-side code
     // So we rely primarily on the user data in localStorage and assume that if it exists,
     // then the corresponding HttpOnly cookie with valid JWT token exists as well
-    return this.currentUserSubject.value !== null || this.getCurrentUser() !== null;
+    
+    // First check if user is already in memory
+    if (this.currentUserSubject.value !== null) {
+      return true;
+    }
+    
+    // If not in memory, check localStorage
+    const user = this.getCurrentUser();
+    return user !== null;
   }
 
   /**
@@ -242,11 +250,19 @@ export class AuthService {
       if (userJson) {
         try {
           const user = JSON.parse(userJson);
+          // Validate that the user object has required properties
+          if (!user || typeof user !== 'object' || user.id === undefined || user.id === null || !user.username || user.roles === undefined || !Array.isArray(user.roles)) {
+            console.error('Invalid user data in localStorage, clearing it. User object:', user);
+            localStorage.removeItem('currentUser');
+            return null;
+          }
           // Update memory state for future lookups
           this.currentUserSubject.next(user);
           return user;
         } catch (error) {
           console.error('Error parsing current user:', error);
+          // Clear invalid data
+          localStorage.removeItem('currentUser');
           return null;
         }
       }
@@ -351,9 +367,11 @@ export class AuthService {
    * Checks if user data exists (and by implication token in cookie)
    */
   initializeAuth(): void {
-    if (this.getCurrentUser()) {
+    const user = this.getCurrentUser();
+    if (user) {
       // User was previously logged in and has user data
       this.isAuthenticatedSubject.next(true);
+      this.currentUserSubject.next(user); // Ensure currentUserSubject is also set
     } else {
       // No user data found, or could validate with backend
       this.isAuthenticatedSubject.next(false);

@@ -36,12 +36,7 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     if (this.isBrowser) {
       this.currentUser = this.authService.getCurrentUser();
-
-      // If not authenticated, redirect to login
-      if (!this.authService.isAuthenticated()) {
-        this.router.navigate(['/login']);
-        return;
-      }
+      // Auth guard already handles authentication, no need to check here
     }
   }
 

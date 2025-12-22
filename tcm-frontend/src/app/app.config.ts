@@ -4,7 +4,6 @@ import { provideHttpClient, withFetch, withInterceptors, withXsrfConfiguration }
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 import { routes } from './app.routes';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { authInterceptor } from './core/auth.interceptor';
 import { credentialsInterceptor } from './core/credentials.interceptor';
 
@@ -18,7 +17,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideClientHydration(withEventReplay()),
     provideHttpClient(
       withFetch(),
       withInterceptors([credentialsInterceptor, authInterceptor]), // Register interceptors

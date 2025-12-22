@@ -70,6 +70,8 @@ export class App implements OnInit {
         .subscribe(() => {
           this.updateSidebarVisibility();  // Update sidebar based on new route
         });
+
+
     }
   }
 
