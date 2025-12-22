@@ -82,7 +82,17 @@ export class ProjectsComponent implements OnInit {
         
         // Wait for authentication to be synchronized before making the API call
         try {
-          await this.tcmService.waitForAuthSync();
+          const isAuthSynced = await this.tcmService.waitForAuthSync();
+          if (!isAuthSynced) {
+            this.snackBar.open('Authentication synchronization failed. Please refresh the page and try again.', 'CLOSE', {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+              horizontalPosition: 'center',
+              verticalPosition: 'top'
+            });
+            return;
+          }
+          
           this.tcmService.createProject(result).subscribe({
             next: () => {
               this.snackBar.open('Project initialized successfully.', 'ACKNOWLEDGE', {
