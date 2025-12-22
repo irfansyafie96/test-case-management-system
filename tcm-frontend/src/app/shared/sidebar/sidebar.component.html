@@ -1,4 +1,4 @@
-<div class="sidebar-container" [class.collapsed]="isCollapsed">
+<div class="sidebar-container desktop-sidebar" [class.collapsed]="isCollapsed">
   <div class="sidebar-header">
     <div class="header-top">
       <div class="logo">
@@ -56,3 +56,32 @@
     </div>
   </div>
 </div>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-bottom-nav">
+  <a routerLink="/dashboard" routerLinkActive="active" class="mobile-nav-item">
+    <mat-icon>dashboard</mat-icon>
+    <span>Home</span>
+  </a>
+
+  <a routerLink="/projects" routerLinkActive="active" class="mobile-nav-item">
+    <mat-icon>folder</mat-icon>
+    <span>Projects</span>
+  </a>
+
+  <div class="mobile-nav-fab-container">
+    <a routerLink="/executions" routerLinkActive="active" class="mobile-nav-fab">
+      <mat-icon>play_arrow</mat-icon>
+    </a>
+  </div>
+
+  <a routerLink="/modules" routerLinkActive="active" class="mobile-nav-item">
+    <mat-icon>view_module</mat-icon>
+    <span>Modules</span>
+  </a>
+
+  <a routerLink="/test-cases" routerLinkActive="active" class="mobile-nav-item">
+    <mat-icon>list_alt</mat-icon>
+    <span>Tests</span>
+  </a>
+</nav>
