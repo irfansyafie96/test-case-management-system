@@ -98,6 +98,17 @@
   box-shadow: var(--shadow-md) !important;
 }
 
+@media (max-width: 600px) {
+  .welcome-card {
+    padding: 24px !important;
+  }
+  
+  .dashboard-grid {
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+}
+
 .quick-actions-list {
   margin-top: 32px;
   display: grid;

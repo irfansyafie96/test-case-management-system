@@ -219,6 +219,35 @@ code, .id-badge, .meta-label {
   font-weight: 400;
 }
 
+/* Mobile Responsiveness for Global Layout */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 24px 16px; /* Reduced padding for mobile */
+  }
+
+  .page-title {
+    font-size: 28px; /* Smaller title size */
+    flex-wrap: wrap; /* Allow wrapping if icon + text is too wide */
+    gap: 8px;
+  }
+  
+  .page-title mat-icon {
+    font-size: 28px; /* Scale icon with text */
+    width: 28px;
+    height: 28px;
+  }
+
+  .page-subtitle {
+    font-size: 14px; /* Smaller subtitle */
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
 /* Badges & Status Indicators */
 .badge, .status-badge {
   font-family: 'JetBrains Mono', monospace;

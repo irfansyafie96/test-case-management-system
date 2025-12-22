@@ -14,16 +14,14 @@
         <h1 class="page-title"><mat-icon>assignment</mat-icon> My Testing Assignments</h1>
         <p class="page-subtitle">Test cases assigned to you for execution</p>
       </div>
-      <button mat-raised-button color="primary" (click)="loadMyAssignedExecutions()">
-        <mat-icon>refresh</mat-icon> REFRESH
-      </button>
     </div>
 
     <!-- Content -->
     <div *ngIf="!vm.loading && !vm.error">
 
-      <div *ngIf="vm.executions.length; else emptyState" class="content-section">
-        <div class="mat-elevation-z0 table-container-styled">
+      <div *ngIf="vm.executions.length; else emptyState">
+        <!-- Desktop Table View -->
+        <div class="mat-elevation-z0 table-container-styled desktop-view">
           <table mat-table [dataSource]="vm.executions" class="bespoke-table">
 
             <!-- Test Case ID Column -->
@@ -68,6 +66,28 @@
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
           </table>
+        </div>
+
+        <!-- Mobile Card View -->
+        <div class="mobile-view">
+          <div *ngFor="let execution of vm.executions" class="mobile-execution-card">
+            <div class="mobile-card-header">
+              <span class="id-badge">{{ execution.testCaseId }}</span>
+              <span class="status-badge-mobile" [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'not_executed'">
+                {{ execution.overallResult || 'NOT EXECUTED' }}
+              </span>
+            </div>
+            <div class="mobile-card-body">
+              <h3>{{ execution?.testCase?.title || execution.title }}</h3>
+            </div>
+            <div class="mobile-card-actions">
+              <button mat-raised-button color="primary" class="full-width-btn"
+                      [routerLink]="['/executions/workbench', execution.id]"
+                      [disabled]="execution.overallResult === 'PASS' || execution.overallResult === 'FAIL'">
+                <mat-icon>play_arrow</mat-icon> EXECUTE
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

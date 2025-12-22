@@ -11,11 +11,6 @@
 
     <div class="page-header">
       <div>
-        <div class="breadcrumb">
-           <a routerLink="/projects" class="back-link">
-            <mat-icon>arrow_back</mat-icon> Projects
-           </a>
-        </div>
         <h1 class="page-title"><mat-icon>list_alt</mat-icon> Global Test Cases</h1>
         <p class="page-subtitle">Master list of all test definitions across the system.</p>
       </div>
@@ -24,8 +19,9 @@
     <!-- Content -->
     <div *ngIf="!vm.loading && !vm.error">
       
-      <div *ngIf="vm.testCases.length; else emptyState" class="content-section">
-        <div class="mat-elevation-z0 table-container-styled">
+      <div *ngIf="vm.testCases.length; else emptyState">
+        <!-- Desktop Table View -->
+        <div class="mat-elevation-z0 table-container-styled desktop-view">
           <table mat-table [dataSource]="vm.testCases" class="bespoke-table">
             
             <!-- ID Column -->
@@ -69,6 +65,24 @@
             <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
           </table>
         </div>
+
+        <!-- Mobile Card View -->
+        <div class="mobile-view">
+          <div *ngFor="let element of vm.testCases" class="mobile-test-card" [routerLink]="['/test-cases', element.id]">
+            <div class="mobile-card-header">
+              <span class="id-badge">{{ element.testCaseId }}</span>
+              <span class="status-badge-mobile" [ngClass]="getStatusClass(element.status)">
+                {{ element.status || 'DRAFT' }}
+              </span>
+            </div>
+            <div class="mobile-card-body">
+              <h3>{{ element.title }}</h3>
+            </div>
+            <div class="mobile-card-footer">
+              <mat-icon class="action-icon">visibility</mat-icon> View Details
+            </div>
+          </div>
+        </div>
       </div>
 
       <ng-template #emptyState>
@@ -80,7 +94,7 @@
             <h2>No Test Cases Found</h2>
             <p>The system currently has no test definitions. Create a project and module to start defining tests.</p>
             <button mat-raised-button color="primary" routerLink="/projects">
-              GO TO PROJECTS
+              <mat-icon>arrow_forward</mat-icon> Go to Projects
             </button>
           </div>
         </div>

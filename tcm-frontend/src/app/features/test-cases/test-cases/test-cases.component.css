@@ -132,6 +132,88 @@
 .status-badge.passed { color: var(--accent-success); border-color: var(--accent-success); background-color: rgba(5, 150, 105, 0.05); }
 .status-badge.failed { color: var(--accent-danger); border-color: var(--accent-danger); background-color: rgba(227, 27, 84, 0.05); }
 
+/* Mobile View Utilities */
+.mobile-view {
+  display: none;
+}
+
+.desktop-view {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .desktop-view {
+    display: none;
+  }
+  
+  .mobile-view {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .mobile-test-card {
+    background-color: var(--surface);
+    border: var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  
+  .mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  
+  .mobile-card-body {
+    margin-bottom: 16px;
+  }
+  
+  .mobile-card-body h3 {
+    margin: 0;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  
+  .mobile-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent-primary);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+  }
+  
+  .action-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .status-badge-mobile {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+  }
+  
+  /* Reuse status colors */
+  .status-badge-mobile { color: #666; background-color: #f0f0f0; border-color: #ccc; }
+  .status-badge-mobile.passed { color: var(--accent-success); border-color: var(--accent-success); background-color: rgba(5, 150, 105, 0.05); }
+  .status-badge-mobile.failed { color: var(--accent-danger); border-color: var(--accent-danger); background-color: rgba(227, 27, 84, 0.05); }
+}
+
 /* Empty State */
 .empty-state {
   display: flex;
@@ -141,7 +223,6 @@
   border: 2px dashed var(--ink);
   border-radius: 8px;
   background-color: rgba(255,255,255,0.5);
-  margin-top: 32px;
 }
 
 .empty-content {
@@ -167,6 +248,8 @@
   width: 40px;
   height: 40px;
   color: var(--accent-primary);
+  opacity: 1;
+  margin-bottom: 0;
 }
 
 .empty-content h2 {

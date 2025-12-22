@@ -4,6 +4,13 @@
   gap: 24px;
 }
 
+@media (max-width: 600px) {
+  .module-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 .module-card {
   background-color: var(--surface);
   border: var(--border-medium);
