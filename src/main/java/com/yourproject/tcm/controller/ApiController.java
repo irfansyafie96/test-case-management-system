@@ -97,29 +97,22 @@ public class ApiController {
      * DELETE /api/projects/{projectId} - Delete a project and all its contents
      * Requires ADMIN role only
      * @param projectId ID of the project to delete
-     * @return ResponseEntity with appropriate status code
+     * @return ResponseEntity with 204 No Content on success
+     * @throws RuntimeException if project not found or deletion fails
+     *         Handled by GlobalExceptionHandler with appropriate HTTP status codes
      */
     @DeleteMapping("/projects/{projectId}")
     @PreAuthorize("hasRole('ADMIN')")  // Only ADMIN can delete projects
-    public ResponseEntity<?> deleteProject(@PathVariable Long projectId) {
-        try {
-            // First check if project exists
-            Optional<Project> projectOpt = tcmService.getProjectById(projectId);
-            if (!projectOpt.isPresent()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Project not found with id: " + projectId);
-            }
-
-            // Use tcmService to delete the project (which handles cascading deletions)
-            tcmService.deleteProject(projectId);
-            return ResponseEntity.noContent().build(); // Return 204 No Content for successful delete
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error deleting project: " + e.getMessage());
+    public ResponseEntity<Void> deleteProject(@PathVariable Long projectId) {
+        // First check if project exists
+        Optional<Project> projectOpt = tcmService.getProjectById(projectId);
+        if (!projectOpt.isPresent()) {
+            throw new RuntimeException("Project not found with id: " + projectId);
         }
+
+        // Use tcmService to delete the project (which handles cascading deletions)
+        tcmService.deleteProject(projectId);
+        return ResponseEntity.noContent().build(); // Return 204 No Content for successful delete
     }
 
     // ==================== MODULE ENDPOINTS ====================

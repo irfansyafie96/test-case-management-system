@@ -208,32 +208,31 @@ public class TcmService {
      */
     @Transactional
     public void deleteTestModule(Long testModuleId) {
-        // Fetch the module with its test suites
-        TestModule testModule = testModuleRepository.findByIdWithTestSuites(testModuleId)
+        // Fetch the module with its test suites, test cases, and test steps in a single query
+        TestModule testModule = testModuleRepository.findByIdWithSuitesAndCasesAndSteps(testModuleId)
                 .orElseThrow(() -> new RuntimeException("Test Module not found with id: " + testModuleId));
-
-        // Fetch all test suites with their test cases for this module
-        List<TestSuite> suitesWithTestCases = testSuiteRepository.findByTestModuleIdWithTestCases(testModuleId);
 
         // Pre-clean up: Delete all operational data (Executions and Results) linked to these test cases.
         // This is necessary because TestStepResult has a Foreign Key to TestStep.
         // If we try to delete TestModule -> TestSuite -> TestCase -> TestStep directly,
         // the DB will throw a constraint violation because TestStepResult still points to TestStep.
-        for (TestSuite suite : suitesWithTestCases) {
-            if (suite.getTestCases() != null) {
-                for (TestCase testCase : suite.getTestCases()) {
-                    // 1. Delete all TestExecutions for this test case.
-                    // This cascades to delete TestStepResults linked to these executions.
-                    List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
-                    if (!executions.isEmpty()) {
-                        testExecutionRepository.deleteAll(executions);
-                    }
+        if (testModule.getTestSuites() != null) {
+            for (TestSuite suite : testModule.getTestSuites()) {
+                if (suite.getTestCases() != null) {
+                    for (TestCase testCase : suite.getTestCases()) {
+                        // 1. Delete all TestExecutions for this test case.
+                        // This cascades to delete TestStepResults linked to these executions.
+                        List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
+                        if (!executions.isEmpty()) {
+                            testExecutionRepository.deleteAll(executions);
+                        }
 
-                    // 2. Safety Net: Delete any orphaned TestStepResults that might point to these steps
-                    // but aren't linked to a valid execution (data integrity cleanup).
-                    if (testCase.getTestSteps() != null) {
-                        for (TestStep step : testCase.getTestSteps()) {
-                            testStepResultRepository.deleteByTestStepId(step.getId());
+                        // 2. Safety Net: Delete any orphaned TestStepResults that might point to these steps
+                        // but aren't linked to a valid execution (data integrity cleanup).
+                        if (testCase.getTestSteps() != null) {
+                            for (TestStep step : testCase.getTestSteps()) {
+                                testStepResultRepository.deleteByTestStepId(step.getId());
+                            }
                         }
                     }
                 }
