@@ -242,8 +242,17 @@ public class TcmService {
         // Flush the changes to ensure all dependent data is gone before we delete the structure
         entityManager.flush();
 
-        // Now delete the module structure.
-        // Cascade will safely handle: Module -> Suites -> Test Cases -> Test Steps
+        // Manually delete test suites to avoid orphanRemoval constraint violation
+        // orphanRemoval=true tries to nullify foreign key (test_module_id) before deleting,
+        // which violates NOT NULL constraint. Delete suites directly instead.
+        if (testModule.getTestSuites() != null) {
+            for (TestSuite suite : testModule.getTestSuites()) {
+                entityManager.remove(suite); // Cascade delete will handle TestCases → TestSteps
+            }
+            entityManager.flush();
+        }
+
+        // Now delete the module structure (test suites already deleted)
         testModuleRepository.delete(testModule);
         entityManager.flush(); // Final commit
     }
