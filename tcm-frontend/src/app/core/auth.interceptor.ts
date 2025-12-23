@@ -1,5 +1,5 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
+import { inject, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError, retry, timer } from 'rxjs';
 import { AuthService } from './services/auth.service';
@@ -14,8 +14,11 @@ import { finalize } from 'rxjs/operators';
  * 3. Catch 401 Unauthorized errors globally and redirect to login.
  */
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-  const authService = inject(AuthService);
+  const injector = inject(Injector);
   const router = inject(Router);
+  
+  // Helper to get AuthService lazily to avoid circular dependency
+  const getAuthService = (): AuthService => injector.get(AuthService);
 
   // Check if this is an authentication request
   const isAuthRequest = req.url.includes('/auth/');
@@ -37,8 +40,8 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
             localStorage.removeItem('currentUser');
           }
           // Update auth state to not authenticated without triggering another logout
-          authService['isAuthenticatedSubject']?.next(false);
-          authService['currentUserSubject']?.next(null);
+          getAuthService()['isAuthenticatedSubject']?.next(false);
+          getAuthService()['currentUserSubject']?.next(null);
         }
         // Always navigate to login after logout attempt
         router.navigate(['/login']);
@@ -111,7 +114,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         if (error.status === 401 && needsCsrf && !getCookie('XSRF-TOKEN')) {
           // For the first retry, trigger a CSRF token refresh
           if (retryIndex === 0) {
-            authService.refreshCsrfToken().subscribe();
+            getAuthService().refreshCsrfToken().subscribe();
           }
           
           // Exponential backoff: 200ms, 400ms, 800ms
@@ -137,12 +140,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         const hasCsrfToken = !!getCookie('XSRF-TOKEN');
         // Note: We can't directly check for HttpOnly JWT tokens from JavaScript,
         // so we rely on the user data stored in localStorage to determine authentication state
-        const hasStoredUser = authService.getCurrentUser() !== null;
+        const hasStoredUser = getAuthService().getCurrentUser() !== null;
 
         if (!hasCsrfToken && hasStoredUser && needsCsrf) {
           // Instead of failing, try to refresh the CSRF token and retry automatically
           // Make a request to refresh CSRF token
-          authService.refreshCsrfToken().subscribe();
+          getAuthService().refreshCsrfToken().subscribe();
           
           // Don't logout immediately - let the user try again
           return throwError(() => ({
@@ -152,13 +155,13 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
           }));
         } else if (!hasStoredUser) {
           // No stored user - logout regardless of request type
-          authService.logout();
+          getAuthService().logout();
           return throwError(() => error);
         } else {
           // User data exists but authentication still failed
           // This indicates the JWT token in the HttpOnly cookie is no longer valid
           // Logout the user since their authentication is indeed invalid
-          authService.logout();
+          getAuthService().logout();
           return throwError(() => error);
         }
       }
