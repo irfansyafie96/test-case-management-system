@@ -27,7 +27,7 @@
            <h1>Test Case Specification</h1>
         </div>
         <div class="header-actions">
-          <button mat-stroked-button>
+          <button mat-stroked-button *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
             <mat-icon>edit</mat-icon> EDIT
           </button>
           <button mat-raised-button color="primary">

@@ -8,6 +8,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TcmService } from '../../../core/services/tcm.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TestCase } from '../../../core/models/project.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subscription } from 'rxjs';
@@ -39,22 +40,23 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private tcmService: TcmService,
+    public authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
-    console.log('TestCaseDetailComponent initialized');
+
     
     // Force change detection after a short delay to handle SSR hydration
     setTimeout(() => {
       this.cdr.detectChanges();
-      console.log('Manual change detection triggered');
+
     }, 100);
     
     // Subscribe to route parameter changes instead of using snapshot
     this.routeSub = this.route.paramMap.subscribe(params => {
       this.testCaseId = params.get('id');
-      console.log('Route param changed, testCaseId:', this.testCaseId);
+
       
       if (this.testCaseId) {
         this.loadTestCase(this.testCaseId);
@@ -69,14 +71,14 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
   }
 
   loadTestCase(id: string) {
-    console.log('Loading test case with ID:', id);
+
     this.isLoading = true;
     this.error = null;
     this.cdr.detectChanges(); // Force UI update immediately
     
     this.tcmService.getTestCase(id).subscribe({
       next: (data) => {
-        console.log('Test case loaded successfully:', data);
+
         this.testCase = data;
         this.isLoading = false;
         this.cdr.detectChanges(); // Force UI update

@@ -114,7 +114,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
     if (stepResult.id) {
       this.tcmService.updateStepResult(this.executionId, stepResult.id, status, actualResult || '').subscribe({
         next: (updatedResult) => {
-          console.log('Step result updated successfully:', updatedResult);
+
         },
         error: (error) => {
           console.error('Error updating step result:', error);
@@ -152,7 +152,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
     if (!this.executionId) return;
 
     // In a real implementation, we would call the API to complete the execution
-    console.log('Completing execution with result:', overallResult, 'Notes:', notes);
+
 
     // For now, just navigate back to the assignments page
     this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({

@@ -59,14 +59,14 @@ public class ApiController {
 
     /**
      * POST /api/projects - Create a new project
-     * Requires ADMIN, QA, or BA role
+     * Requires ADMIN role only (Project Managers)
      * @param project Project data from request body
      * @return ResponseEntity with created project and HTTP 201 CREATED
      * @throws RuntimeException if project creation fails (e.g., duplicate name)
      *         Handled by GlobalExceptionHandler with appropriate HTTP status codes
      */
     @PostMapping("/projects")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")  // Role-based access
+    @PreAuthorize("hasRole('ADMIN')")  // Role-based access - only ADMIN/Project Managers can create projects
     public ResponseEntity<Project> createProject(@RequestBody Project project) {
         Project savedProject = tcmService.createProject(project);
         return new ResponseEntity<>(savedProject, HttpStatus.CREATED);

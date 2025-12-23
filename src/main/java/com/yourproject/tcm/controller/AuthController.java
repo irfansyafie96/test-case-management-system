@@ -97,9 +97,10 @@ public class AuthController {
         // Extract user details from authenticated principal
         UserPrincipal userDetails = (UserPrincipal) authentication.getPrincipal();
 
-        // Extract user roles from authorities
+        // Extract user roles from authorities (strip "ROLE_" prefix for frontend)
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)  // Convert GrantedAuthority to String
+                .map(authority -> authority.startsWith("ROLE_") ? authority.substring(5) : authority)
                 .collect(Collectors.toList());
 
         // Generate JWT token

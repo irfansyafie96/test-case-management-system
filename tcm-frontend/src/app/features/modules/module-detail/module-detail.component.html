@@ -28,7 +28,11 @@
       <div class="content-section">
         <div class="section-header">
           <h2><mat-icon>folder_special</mat-icon> Test Suites</h2>
-          <button mat-raised-button color="primary" (click)="createTestSuite(vm.module!.id)">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="createTestSuite(vm.module!.id)"
+            *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
             <mat-icon>add</mat-icon> NEW SUITE
           </button>
         </div>
@@ -44,7 +48,8 @@
                 <button
                   mat-stroked-button
                   class="small-btn"
-                  (click)="createTestCase(suite.id)">
+                  (click)="createTestCase(suite.id)"
+                  *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
                   <mat-icon>post_add</mat-icon> ADD CASE
                 </button>
               </div>
@@ -83,7 +88,8 @@
                       matTooltip="Edit test case"
                       (click)="editTestCase(testCase)"
                       color="primary"
-                      class="action-btn">
+                      class="action-btn"
+                      *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
                       <mat-icon>edit</mat-icon>
                     </button>
                   </td>
@@ -105,7 +111,8 @@
                 <mat-icon class="empty-icon">folder_open</mat-icon>
               </div>
               <h2>Empty Module</h2>
-              <p>Create a test suite to begin organizing test cases.</p>
+              <p *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">Create a test suite to begin organizing test cases.</p>
+              <p *ngIf="!authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">No test suites found. Contact an administrator to create test suites.</p>
             </div>
           </div>
         </div>

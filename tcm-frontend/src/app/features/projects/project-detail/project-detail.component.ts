@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ModuleDialogComponent } from '../../modules/modules/module-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { Project, TestModule } from '../../../core/models/project.model';
@@ -30,6 +31,7 @@ export class ProjectDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private tcmService: TcmService,
+    public authService: AuthService,
     private dialog: MatDialog
   ) {}
 

@@ -49,4 +49,16 @@ export class HeaderComponent implements OnInit {
       window.location.reload();
     }
   }
+
+  getPrimaryRole(roles: string[] | undefined): string {
+    if (!roles || roles.length === 0) {
+      return 'USER';
+    }
+    // Return the highest privilege role (prioritizing ADMIN, then QA/BA, then TESTER)
+    if (roles.includes('ADMIN')) return 'ADMIN';
+    if (roles.includes('QA')) return 'QA';
+    if (roles.includes('BA')) return 'BA';
+    if (roles.includes('TESTER')) return 'TESTER';
+    return roles[0];
+  }
 }

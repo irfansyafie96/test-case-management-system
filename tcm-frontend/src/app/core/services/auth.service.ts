@@ -205,7 +205,7 @@ export class AuthService {
   register(userData: { username: string; email: string; password: string; roles?: string[] }): Observable<any> {
     return this.http.post(`${this.apiUrl}/auth/signup`, userData).pipe(
       tap(response => {
-        console.log('Registration successful:', response);
+
         // Could auto-login after registration or just navigate to login
       }),
       catchError(error => {
@@ -255,7 +255,7 @@ export class AuthService {
         } catch (error) {
           // JSON parsing failed, but data exists
           // Still consider authenticated - let API calls fail if token invalid
-          console.warn('Failed to parse user data, but data exists in localStorage');
+
           return true;
         }
       }
@@ -434,7 +434,7 @@ export class AuthService {
       error: (error) => {
         // Authentication check failed, but don't change auth state
         // The token might still be valid for actual API calls
-        console.warn('Background authentication check failed:', error);
+
         
         // Still try to refresh CSRF token
         this.refreshCsrfTokenOnInit();
@@ -505,7 +505,7 @@ export class AuthService {
         if (this.getCookie('XSRF-TOKEN')) {
           resolve(true);
         } else if (elapsed >= maxWaitTime) {
-          console.warn('CSRF token not available after waiting', maxWaitTime, 'ms');
+
           resolve(false);
         } else {
           setTimeout(checkToken, checkInterval);

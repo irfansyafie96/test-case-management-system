@@ -11,6 +11,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TestSuiteDialogComponent } from './test-suite-dialog.component';
 import { TestCaseDialogComponent } from './test-case-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component'; // New improved dialog
@@ -39,6 +40,7 @@ import { catchError, finalize, map, startWith } from 'rxjs/operators';
 })
 export class ModuleDetailComponent implements OnInit {  private route = inject(ActivatedRoute);
   private tcmService = inject(TcmService);
+  public authService = inject(AuthService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 

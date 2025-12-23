@@ -5,6 +5,7 @@
       <p class="page-subtitle">Manage your test projects and repositories</p>
     </div>
     <button
+      *ngIf="authService.hasRole('ADMIN')"
       mat-raised-button
       color="primary"
       class="create-btn"
@@ -22,6 +23,7 @@
       <div class="card-header">
         <h3 class="project-title">{{ project.name || 'Untitled Project' }}</h3>
         <button
+          *ngIf="authService.hasRole('ADMIN')"
           mat-icon-button
           class="delete-btn"
           (click)="deleteProject($event, project.id)"
@@ -50,7 +52,8 @@
           <mat-icon class="empty-icon">folder_open</mat-icon>
         </div>
         <h2>No Projects Found</h2>
-        <p>Create your first project to start managing test cases.</p>
+        <p *ngIf="authService.hasRole('ADMIN')">Create your first project to start managing test cases.</p>
+        <p *ngIf="!authService.hasRole('ADMIN')">No projects available. Contact an administrator to create projects.</p>
       </div>
     </div>
   </ng-template>

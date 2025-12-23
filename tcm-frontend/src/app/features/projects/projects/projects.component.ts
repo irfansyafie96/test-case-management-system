@@ -36,7 +36,7 @@ export class ProjectsComponent implements OnInit {
   constructor(
     public dialog: MatDialog,
     private tcmService: TcmService,
-    private authService: AuthService,
+    public authService: AuthService,
     private snackBar: MatSnackBar
   ) {}
 
