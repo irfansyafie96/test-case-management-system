@@ -74,8 +74,9 @@ public class WebSecurityConfig {
         }))
             .csrf(csrf -> csrf
             .ignoringRequestMatchers("/api/auth/**")  // Don't require CSRF for auth endpoints
-            .ignoringRequestMatchers("/api/projects/**")  // Temporarily ignore CSRF for projects endpoint
-            .ignoringRequestMatchers("/api/testmodules/**")  // Temporarily ignore CSRF for testmodules endpoint
+            .ignoringRequestMatchers("/api/projects/**")  // Temporarily ignore CSRF for projects endpoint // TODO: Re-enable CSRF before production
+            .ignoringRequestMatchers("/api/testmodules/**")  // Temporarily ignore CSRF for testmodules endpoint // TODO: Re-enable CSRF before production
+            .ignoringRequestMatchers("/api/testsuites/**")  // TODO: Re-enable CSRF before production
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
         )

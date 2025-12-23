@@ -105,7 +105,6 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
               this.refreshModuleData();
             },
             error: (error) => {
-              console.error('Error creating test suite:', error);
               this.loadingSubject.next(false); // Hide loading indicator
               
               // Check if this is a CSRF token issue
@@ -158,12 +157,10 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
           await this.tcmService.waitForAuthSync();
           this.tcmService.createTestCase(idAsString, result).subscribe({
             next: (createdTestCase) => {
-              console.log('Test case created successfully:', createdTestCase);
               // Instead of calling ngOnInit(), refresh the module data directly
               this.refreshModuleData();
             },
             error: (error) => {
-              console.error('Error creating test case:', error);
               this.loadingSubject.next(false); // Hide loading indicator
               
               // Check if this is a CSRF token issue
@@ -217,12 +214,10 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
           const testCaseId = testCase.id as string;
           this.tcmService.updateTestCase(testCaseId, result).subscribe({
             next: (updatedTestCase) => {
-              console.log('Test case updated successfully:', updatedTestCase);
               // Refresh the module data to show changes
               this.refreshModuleData();
             },
             error: (error) => {
-              console.error('Error updating test case:', error);
               this.loadingSubject.next(false); // Hide loading indicator
               
               // Check if this is a CSRF token issue
