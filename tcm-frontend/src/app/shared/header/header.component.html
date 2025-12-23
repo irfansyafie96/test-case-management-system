@@ -12,7 +12,7 @@
       </button>
 
       <ng-container *ngIf="currentUser$ | async as user; else loginButton">
-        <span class="user-greeting">Welcome, {{ user.username }} <span class="role-badge role-badge-{{getPrimaryRole(user.roles).toLowerCase()}}">{{ getPrimaryRole(user.roles) }}</span></span>
+        <span class="user-greeting">Welcome, {{ user.username }}</span>
         <button mat-raised-button color="primary" (click)="logout()" class="logout-btn">
           <mat-icon>logout</mat-icon>
           <span>Logout</span>
