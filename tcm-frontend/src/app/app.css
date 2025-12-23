@@ -85,8 +85,9 @@ html, body {
   color: white !important;
 }
 
-::ng-deep .warning-snackbar .mat-simple-snackbar-action {
-  color: white !important;
+::ng-deep .warning-snackbar .mat-simple-snackbar-action,
+::ng-deep .warning-snackbar .mat-mdc-snack-bar-action {
+  color: var(--accent-warning) !important;
   font-weight: bold !important;
 }
 
@@ -95,8 +96,9 @@ html, body {
   color: white !important;
 }
 
-::ng-deep .success-snackbar .mat-simple-snackbar-action {
-  color: white !important;
+::ng-deep .success-snackbar .mat-simple-snackbar-action,
+::ng-deep .success-snackbar .mat-mdc-snack-bar-action {
+  color: var(--accent-success) !important;
   font-weight: bold !important;
 }
 
@@ -105,7 +107,8 @@ html, body {
   color: white !important;
 }
 
-::ng-deep .error-snackbar .mat-simple-snackbar-action {
-  color: white !important;
+::ng-deep .error-snackbar .mat-simple-snackbar-action,
+::ng-deep .error-snackbar .mat-mdc-snack-bar-action {
+  color: var(--accent-danger) !important;
   font-weight: bold !important;
 }

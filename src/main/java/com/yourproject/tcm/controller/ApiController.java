@@ -61,22 +61,15 @@ public class ApiController {
      * POST /api/projects - Create a new project
      * Requires ADMIN, QA, or BA role
      * @param project Project data from request body
-     * @return ResponseEntity with created project and HTTP 201 CREATED, or error response
+     * @return ResponseEntity with created project and HTTP 201 CREATED
+     * @throws RuntimeException if project creation fails (e.g., duplicate name)
+     *         Handled by GlobalExceptionHandler with appropriate HTTP status codes
      */
     @PostMapping("/projects")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")  // Role-based access
-    public ResponseEntity<?> createProject(@RequestBody Project project) {
-        try {
-            Project savedProject = tcmService.createProject(project);
-            return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            // Handle specific exceptions like duplicate project name
-            if (e.getMessage().contains("already exists")) {
-                return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT); // 409 Conflict
-            }
-            // For other runtime exceptions, return 400 Bad Request
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<Project> createProject(@RequestBody Project project) {
+        Project savedProject = tcmService.createProject(project);
+        return new ResponseEntity<>(savedProject, HttpStatus.CREATED);
     }
 
     /**
@@ -136,19 +129,15 @@ public class ApiController {
      * Requires ADMIN, QA, or BA role
      * @param projectId Parent project ID
      * @param testModule Module data from request body
-     * @return ResponseEntity with created module or error
+     * @return ResponseEntity with created module and HTTP 201 CREATED
+     * @throws RuntimeException if parent project not found or other validation fails
+     *         Handled by GlobalExceptionHandler with appropriate HTTP status codes
      */
     @PostMapping("/projects/{projectId}/testmodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> createTestModuleForProject(@PathVariable Long projectId, @RequestBody TestModule testModule) {
-        try {
-            TestModule savedTestModule = tcmService.createTestModuleForProject(projectId, testModule);
-            return new ResponseEntity<>(savedTestModule, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error creating test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<TestModule> createTestModuleForProject(@PathVariable Long projectId, @RequestBody TestModule testModule) {
+        TestModule savedTestModule = tcmService.createTestModuleForProject(projectId, testModule);
+        return new ResponseEntity<>(savedTestModule, HttpStatus.CREATED);
     }
 
     /**
@@ -280,19 +269,15 @@ public class ApiController {
      * Note: Request body should include the list of TestSteps
      * @param suiteId Parent suite ID
      * @param testCase Test case data (including steps) from request body
-     * @return ResponseEntity with created test case or error
+     * @return ResponseEntity with created test case and HTTP 201 CREATED
+     * @throws RuntimeException if parent suite not found or other validation fails
+     *         Handled by GlobalExceptionHandler with appropriate HTTP status codes
      */
     @PostMapping("/testsuites/{suiteId}/testcases")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> createTestCaseForTestSuite(@PathVariable Long suiteId, @RequestBody TestCase testCase) {
-        try {
-            TestCase savedTestCase = tcmService.createTestCaseForTestSuite(suiteId, testCase);
-            return new ResponseEntity<>(savedTestCase, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error creating test case: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+    public ResponseEntity<TestCase> createTestCaseForTestSuite(@PathVariable Long suiteId, @RequestBody TestCase testCase) {
+        TestCase savedTestCase = tcmService.createTestCaseForTestSuite(suiteId, testCase);
+        return new ResponseEntity<>(savedTestCase, HttpStatus.CREATED);
     }
 
     /**

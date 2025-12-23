@@ -281,10 +281,9 @@ code, .id-badge, .meta-label {
 
 /* Snackbars: System Alerts */
 .mat-mdc-snack-bar-container {
-  &.error-snackbar, &.success-snackbar {
+  &.error-snackbar, &.success-snackbar, &.warning-snackbar {
     --mdc-snackbar-container-color: var(--surface);
     --mdc-snackbar-supporting-text-color: var(--ink);
-    --mat-snack-bar-button-color: var(--accent-primary);
 
     border: var(--border-medium);
     border-radius: var(--radius-md);
@@ -307,6 +306,7 @@ code, .id-badge, .meta-label {
   }
 
   &.error-snackbar {
+    --mat-snack-bar-button-color: var(--accent-danger);
     border-color: var(--accent-danger); /* Red border for errors */
     box-shadow: var(--shadow-sm) !important; /* Simplified shadow */
 
@@ -316,11 +316,22 @@ code, .id-badge, .meta-label {
   }
 
   &.success-snackbar {
+     --mat-snack-bar-button-color: var(--accent-success);
      border-color: var(--accent-success);
      box-shadow: var(--shadow-sm) !important; /* Simplified shadow */
 
      .mat-mdc-snack-bar-action {
        color: var(--accent-success);
+     }
+  }
+
+  &.warning-snackbar {
+     --mat-snack-bar-button-color: var(--accent-warning);
+     border-color: var(--accent-warning);
+     box-shadow: var(--shadow-sm) !important; /* Simplified shadow */
+
+     .mat-mdc-snack-bar-action {
+       color: var(--accent-warning);
      }
   }
 }
