@@ -140,42 +140,54 @@ export class ProjectDetailComponent implements OnInit {
     if (this.showAssignments) {
       const projectId = this.route.snapshot.paramMap.get('id');
       if (projectId) {
+        console.log('Opening assignments for project:', projectId);
         this.loadAssignedUsers(projectId);
         this.loadAvailableUsers();
+      } else {
+        console.error('No project ID found in route');
       }
+    } else {
+      console.log('Closing assignments panel');
     }
   }
 
   loadAssignedUsers(projectId: string): void {
     this.loadingAssignments = true;
-    this.tcmService.getUsersAssignedToProject(projectId).subscribe(
-      (users: User[]) => {
+    console.log('Loading assigned users for project:', projectId);
+    this.tcmService.getUsersAssignedToProject(projectId).subscribe({
+      next: (users: User[]) => {
+        console.log('Assigned users loaded:', users.length, 'users');
         this.assignedUsers = users;
         this.loadingAssignments = false;
       },
-      (error: any) => {
+      error: (error: any) => {
         console.error('Error loading assigned users:', error);
         this.loadingAssignments = false;
       }
-    );
+    });
   }
 
   loadAvailableUsers(): void {
-    // Load QA and BA users
-    this.tcmService.getUsersByRole('QA').subscribe(
-      (qaUsers: User[]) => {
-        this.tcmService.getUsersByRole('BA').subscribe(
-          (baUsers: User[]) => {
-            // Combine and filter out already assigned users
-            const allUsers = [...qaUsers, ...baUsers];
-            const assignedIds = this.assignedUsers.map(u => u.id);
-            this.availableUsers = allUsers.filter(user => !assignedIds.includes(user.id));
-          },
-          (error: any) => console.error('Error loading BA users:', error)
-        );
-      },
-      (error: any) => console.error('Error loading QA users:', error)
-    );
+    console.log('Loading available QA and BA users');
+    // Load QA and BA users in parallel
+    import('rxjs').then(({ forkJoin }) => {
+      forkJoin({
+        qaUsers: this.tcmService.getUsersByRole('QA'),
+        baUsers: this.tcmService.getUsersByRole('BA')
+      }).subscribe({
+        next: ({ qaUsers, baUsers }) => {
+          console.log('QA users loaded:', qaUsers.length, 'BA users loaded:', baUsers.length);
+          // Combine and filter out already assigned users
+          const allUsers = [...qaUsers, ...baUsers];
+          const assignedIds = this.assignedUsers.map(u => u.id);
+          this.availableUsers = allUsers.filter(user => !assignedIds.includes(user.id));
+          console.log('Available users after filtering:', this.availableUsers.length);
+        },
+        error: (error: any) => {
+          console.error('Error loading available users:', error);
+        }
+      });
+    });
   }
 
   assignUser(userId: string): void {
