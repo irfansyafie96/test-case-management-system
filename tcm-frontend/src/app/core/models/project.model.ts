@@ -92,7 +92,7 @@ export interface TestStepResult {
 
 // User Model
 export interface User {
-  id: string;
+  id: number | string;
   username: string;
   email: string;
   roles: string[];
@@ -104,12 +104,12 @@ export interface User {
 
 // Assignment Request DTOs
 export interface ProjectAssignmentRequest {
-  userId: string;
-  projectId: string;
+  userId: number | string;
+  projectId: number | string;
 }
 
 export interface ModuleAssignmentRequest {
-  userId: string;
-  testModuleId: string;
+  userId: number | string;
+  testModuleId: number | string;
 }
 

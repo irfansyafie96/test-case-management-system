@@ -346,8 +346,9 @@ export class TcmService {
    * @returns Observable<User> Updated user with assignments
    */
   assignUserToProject(request: ProjectAssignmentRequest): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/projects/assign`, request)
+    return this.http.post<any>(`${this.apiUrl}/projects/assign`, request)
       .pipe(
+        map(user => this.transformUserRoles(user)),
         catchError(this.handleError<User>('assignUserToProject'))
       );
   }
@@ -358,8 +359,9 @@ export class TcmService {
    * @returns Observable<User> Updated user with assignments
    */
   removeUserFromProject(request: ProjectAssignmentRequest): Observable<User> {
-    return this.http.delete<User>(`${this.apiUrl}/projects/assign`, { body: request })
+    return this.http.delete<any>(`${this.apiUrl}/projects/assign`, { body: request })
       .pipe(
+        map(user => this.transformUserRoles(user)),
         catchError(this.handleError<User>('removeUserFromProject'))
       );
   }
@@ -381,8 +383,9 @@ export class TcmService {
    * @returns Observable<User[]> List of assigned users
    */
   getUsersAssignedToProject(projectId: string): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/projects/${projectId}/assigned-users`)
+    return this.http.get<any[]>(`${this.apiUrl}/projects/${projectId}/assigned-users`)
       .pipe(
+        map(users => users.map(user => this.transformUserRoles(user))),
         catchError(this.handleError<User[]>('getUsersAssignedToProject', []))
       );
   }
@@ -393,8 +396,9 @@ export class TcmService {
    * @returns Observable<User> Updated user with assignments
    */
   assignUserToTestModule(request: ModuleAssignmentRequest): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/testmodules/assign`, request)
+    return this.http.post<any>(`${this.apiUrl}/testmodules/assign`, request)
       .pipe(
+        map(user => this.transformUserRoles(user)),
         catchError(this.handleError<User>('assignUserToTestModule'))
       );
   }
@@ -405,8 +409,9 @@ export class TcmService {
    * @returns Observable<User> Updated user with assignments
    */
   removeUserFromTestModule(request: ModuleAssignmentRequest): Observable<User> {
-    return this.http.delete<User>(`${this.apiUrl}/testmodules/assign`, { body: request })
+    return this.http.delete<any>(`${this.apiUrl}/testmodules/assign`, { body: request })
       .pipe(
+        map(user => this.transformUserRoles(user)),
         catchError(this.handleError<User>('removeUserFromTestModule'))
       );
   }
@@ -428,8 +433,9 @@ export class TcmService {
    * @returns Observable<User[]> List of assigned users
    */
   getUsersAssignedToTestModule(moduleId: string): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/testmodules/${moduleId}/assigned-users`)
+    return this.http.get<any[]>(`${this.apiUrl}/testmodules/${moduleId}/assigned-users`)
       .pipe(
+        map(users => users.map(user => this.transformUserRoles(user))),
         catchError(this.handleError<User[]>('getUsersAssignedToTestModule', []))
       );
   }
@@ -440,8 +446,9 @@ export class TcmService {
    * @returns Observable<User[]> List of users with that role
    */
   getUsersByRole(roleName: string): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/users/by-role/${roleName}`)
+    return this.http.get<any[]>(`${this.apiUrl}/users/by-role/${roleName}`)
       .pipe(
+        map(users => users.map(user => this.transformUserRoles(user))),
         catchError(this.handleError<User[]>('getUsersByRole', []))
       );
   }
@@ -485,6 +492,36 @@ export class TcmService {
       } else {
         throw error;
       }
+    };
+  }
+
+  /**
+   * Transform User roles from Role objects to role names
+   * @param user User object from backend
+   * @returns User with roles as string array
+   */
+  private transformUserRoles(user: any): User {
+    if (!user) return user;
+    
+    // Extract role names from Role objects if needed
+    let roles: string[] = [];
+    if (user.roles && Array.isArray(user.roles)) {
+      roles = user.roles.map((role: any) => {
+        if (typeof role === 'string') {
+          return role;
+        } else if (role && typeof role === 'object') {
+          const roleName = role.name || role.authority || role.role;
+          if (typeof roleName === 'string') {
+            // Remove 'ROLE_' prefix if present
+            return roleName.replace('ROLE_', '');
+          }
+        }
+        return String(role);
+      });
+    }
+    return {
+      ...user,
+      roles
     };
   }
 

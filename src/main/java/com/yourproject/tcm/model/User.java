@@ -1,6 +1,8 @@
 package com.yourproject.tcm.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,6 +21,7 @@ import java.util.Set;
  * to prevent duplicate accounts.
  */
 @Entity
+@JsonIgnoreProperties({"assignedProjects", "assignedTestModules", "testExecutions"})
 @Table(name = "users", uniqueConstraints = {
     @UniqueConstraint(columnNames = "username"),  // Prevent duplicate usernames
     @UniqueConstraint(columnNames = "email")      // Prevent duplicate emails
@@ -159,6 +162,7 @@ public class User {
         this.createdAt = createdDate;
     }
 
+    @JsonIgnore
     public Set<TestExecution> getTestExecutions() {
         return testExecutions;
     }
@@ -175,6 +179,7 @@ public class User {
         this.roles = roles;
     }
 
+    @JsonIgnore
     public Set<Project> getAssignedProjects() {
         return assignedProjects;
     }
@@ -183,6 +188,7 @@ public class User {
         this.assignedProjects = assignedProjects;
     }
 
+    @JsonIgnore
     public Set<TestModule> getAssignedTestModules() {
         return assignedTestModules;
     }

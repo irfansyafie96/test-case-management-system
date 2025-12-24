@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -53,6 +53,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   public authService = inject(AuthService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
 
   displayedColumns: string[] = ['id', 'title', 'status', 'actions'];
 
@@ -60,7 +61,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   showAssignments = false;
   assignedUsers: User[] = [];
   availableUsers: User[] = [];
-  selectedUserId: string | null = null;
+  selectedUserId: number | string | null = null;
   loadingAssignments = false;
 
   private loadingSubject = new BehaviorSubject<boolean>(true);
@@ -305,53 +306,106 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
     if (this.showAssignments) {
       const moduleId = this.route.snapshot.paramMap.get('id');
       if (moduleId) {
-        this.loadAssignedUsers(moduleId);
-        this.loadAvailableUsers();
+        console.log('Opening assignments for module:', moduleId);
+        this.loadAssignmentData(moduleId);
+      } else {
+        console.error('No module ID found in route');
       }
+    } else {
+      console.log('Closing assignments panel');
     }
   }
 
-  loadAssignedUsers(moduleId: string): void {
+  loadAssignmentData(moduleId: string): void {
     this.loadingAssignments = true;
-    this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe(
-      (users: User[]) => {
-        this.assignedUsers = users;
-        this.loadingAssignments = false;
+    console.log('Loading assignment data for module:', moduleId);
+    
+    // First load assigned users, then load available TESTER users
+    this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
+      next: (assignedUsers: User[]) => {
+        console.log('Assigned users loaded:', assignedUsers.length, 'users');
+        this.assignedUsers = assignedUsers;
+        
+        // Now load TESTER users
+        this.tcmService.getUsersByRole('TESTER').subscribe({
+          next: (testerUsers: User[]) => {
+            console.log('TESTER users loaded:', testerUsers.length, 'users');
+            // Filter out already assigned users
+            const assignedIds = this.assignedUsers.map(u => String(u.id));
+            this.availableUsers = testerUsers.filter(user => !assignedIds.includes(String(user.id)));
+            console.log('Available users after filtering:', this.availableUsers.length);
+            this.loadingAssignments = false;
+            this.cdr.detectChanges();
+          },
+          error: (error: any) => {
+            console.error('Error loading TESTER users:', error);
+            this.loadingAssignments = false;
+            this.cdr.detectChanges();
+          }
+        });
       },
-      (error: any) => {
+      error: (error: any) => {
         console.error('Error loading assigned users:', error);
         this.loadingAssignments = false;
+        this.cdr.detectChanges();
       }
-    );
+    });
+  }
+
+  // Keep these methods for refreshing after assignments
+  loadAssignedUsers(moduleId: string): void {
+    this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
+      next: (users: User[]) => {
+        console.log('Assigned users refreshed:', users.length, 'users');
+        this.assignedUsers = users;
+        // Re-filter available users based on new assigned users
+        this.refilterAvailableUsers();
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error('Error refreshing assigned users:', error);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadAvailableUsers(): void {
-    // Load TESTER users
-    this.tcmService.getUsersByRole('TESTER').subscribe(
-      (testerUsers: User[]) => {
-        // Filter out already assigned users
-        const assignedIds = this.assignedUsers.map(u => u.id);
-        this.availableUsers = testerUsers.filter(user => !assignedIds.includes(user.id));
+    this.tcmService.getUsersByRole('TESTER').subscribe({
+      next: (testerUsers: User[]) => {
+        console.log('Available users refreshed:', testerUsers.length, 'users');
+        const assignedIds = this.assignedUsers.map(u => String(u.id));
+        this.availableUsers = testerUsers.filter(user => !assignedIds.includes(String(user.id)));
+        console.log('Available users after filtering:', this.availableUsers.length);
+        this.cdr.detectChanges();
       },
-      (error: any) => console.error('Error loading TESTER users:', error)
-    );
+      error: (error: any) => {
+        console.error('Error refreshing available users:', error);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
-  assignUser(userId: string): void {
+  private refilterAvailableUsers(): void {
+    if (this.availableUsers.length > 0) {
+      const assignedIds = this.assignedUsers.map(u => String(u.id));
+      this.availableUsers = this.availableUsers.filter(user => !assignedIds.includes(String(user.id)));
+    }
+  }
+
+  assignUser(userId: number | string): void {
     if (!userId) return;
     const moduleId = this.route.snapshot.paramMap.get('id');
     if (!moduleId) return;
 
     const request: ModuleAssignmentRequest = {
-      userId: userId,
-      testModuleId: moduleId
+      userId: Number(userId),
+      testModuleId: Number(moduleId)
     };
 
     this.tcmService.assignUserToTestModule(request).subscribe(
       (updatedUser: User) => {
-        // Refresh lists
-        this.loadAssignedUsers(moduleId);
-        this.loadAvailableUsers();
+        // Refresh all assignment data
+        this.loadAssignmentData(moduleId);
         this.selectedUserId = null;
       },
       (error: any) => {
@@ -361,13 +415,13 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
     );
   }
 
-  removeUser(userId: string): void {
+  removeUser(userId: number | string): void {
     const moduleId = this.route.snapshot.paramMap.get('id');
     if (!moduleId) return;
 
     const request: ModuleAssignmentRequest = {
-      userId: userId,
-      testModuleId: moduleId
+      userId: Number(userId),
+      testModuleId: Number(moduleId)
     };
 
     if (!confirm('Are you sure you want to remove this user from the module?')) {
@@ -376,9 +430,8 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
 
     this.tcmService.removeUserFromTestModule(request).subscribe(
       (updatedUser: User) => {
-        // Refresh lists
-        this.loadAssignedUsers(moduleId);
-        this.loadAvailableUsers();
+        // Refresh all assignment data
+        this.loadAssignmentData(moduleId);
       },
       (error: any) => {
         console.error('Error removing user:', error);

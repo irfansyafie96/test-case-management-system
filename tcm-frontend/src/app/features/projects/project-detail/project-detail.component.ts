@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +17,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ModuleDialogComponent } from '../../modules/modules/module-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { Project, TestModule, User, ProjectAssignmentRequest } from '../../../core/models/project.model';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-project-detail',
@@ -37,14 +37,15 @@ export class ProjectDetailComponent implements OnInit {
   showAssignments = false;
   assignedUsers: User[] = [];
   availableUsers: User[] = [];
-  selectedUserId: string | null = null;
+  selectedUserId: number | string | null = null;
   loadingAssignments = false;
 
   constructor(
     private route: ActivatedRoute,
     private tcmService: TcmService,
     public authService: AuthService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -141,8 +142,7 @@ export class ProjectDetailComponent implements OnInit {
       const projectId = this.route.snapshot.paramMap.get('id');
       if (projectId) {
         console.log('Opening assignments for project:', projectId);
-        this.loadAssignedUsers(projectId);
-        this.loadAvailableUsers();
+        this.loadAssignmentData(projectId);
       } else {
         console.error('No project ID found in route');
       }
@@ -151,60 +151,114 @@ export class ProjectDetailComponent implements OnInit {
     }
   }
 
-  loadAssignedUsers(projectId: string): void {
+  loadAssignmentData(projectId: string): void {
     this.loadingAssignments = true;
-    console.log('Loading assigned users for project:', projectId);
+    console.log('Loading assignment data for project:', projectId);
+    
+    // First load assigned users, then load available users
     this.tcmService.getUsersAssignedToProject(projectId).subscribe({
-      next: (users: User[]) => {
-        console.log('Assigned users loaded:', users.length, 'users');
-        this.assignedUsers = users;
-        this.loadingAssignments = false;
+      next: (assignedUsers: User[]) => {
+        console.log('Assigned users loaded:', assignedUsers.length, 'users');
+        this.assignedUsers = assignedUsers;
+        
+        // Now load QA and BA users in parallel
+        forkJoin({
+          qaUsers: this.tcmService.getUsersByRole('QA'),
+          baUsers: this.tcmService.getUsersByRole('BA')
+        }).subscribe({
+          next: ({ qaUsers, baUsers }) => {
+            console.log('QA users loaded:', qaUsers.length, 'BA users loaded:', baUsers.length);
+            // Combine QA and BA users, deduplicate by ID
+            const userMap = new Map<string, User>();
+            [...qaUsers, ...baUsers].forEach(user => {
+              userMap.set(String(user.id), user);
+            });
+            const allUsers = Array.from(userMap.values());
+            
+            // Filter out already assigned users
+            const assignedIds = this.assignedUsers.map(u => String(u.id));
+            this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
+            console.log('Available users after filtering:', this.availableUsers.length);
+            this.loadingAssignments = false;
+            this.cdr.detectChanges();
+          },
+          error: (error: any) => {
+            console.error('Error loading available users:', error);
+            this.loadingAssignments = false;
+            this.cdr.detectChanges();
+          }
+        });
       },
       error: (error: any) => {
         console.error('Error loading assigned users:', error);
         this.loadingAssignments = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Keep these methods for refreshing after assignments
+  loadAssignedUsers(projectId: string): void {
+    this.tcmService.getUsersAssignedToProject(projectId).subscribe({
+      next: (users: User[]) => {
+        console.log('Assigned users refreshed:', users.length, 'users');
+        this.assignedUsers = users;
+        // Re-filter available users based on new assigned users
+        this.refilterAvailableUsers();
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error('Error refreshing assigned users:', error);
       }
     });
   }
 
   loadAvailableUsers(): void {
-    console.log('Loading available QA and BA users');
-    // Load QA and BA users in parallel
-    import('rxjs').then(({ forkJoin }) => {
-      forkJoin({
-        qaUsers: this.tcmService.getUsersByRole('QA'),
-        baUsers: this.tcmService.getUsersByRole('BA')
-      }).subscribe({
-        next: ({ qaUsers, baUsers }) => {
-          console.log('QA users loaded:', qaUsers.length, 'BA users loaded:', baUsers.length);
-          // Combine and filter out already assigned users
-          const allUsers = [...qaUsers, ...baUsers];
-          const assignedIds = this.assignedUsers.map(u => u.id);
-          this.availableUsers = allUsers.filter(user => !assignedIds.includes(user.id));
-          console.log('Available users after filtering:', this.availableUsers.length);
-        },
-        error: (error: any) => {
-          console.error('Error loading available users:', error);
-        }
-      });
+    forkJoin({
+      qaUsers: this.tcmService.getUsersByRole('QA'),
+      baUsers: this.tcmService.getUsersByRole('BA')
+    }).subscribe({
+      next: ({ qaUsers, baUsers }) => {
+        console.log('Available users refreshed: QA:', qaUsers.length, 'BA:', baUsers.length);
+        // Combine QA and BA users, deduplicate by ID
+        const userMap = new Map<string, User>();
+        [...qaUsers, ...baUsers].forEach(user => {
+          userMap.set(String(user.id), user);
+        });
+        const allUsers = Array.from(userMap.values());
+        const assignedIds = this.assignedUsers.map(u => String(u.id));
+        this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
+        console.log('Available users after filtering:', this.availableUsers.length);
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error('Error refreshing available users:', error);
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  assignUser(userId: string): void {
+  private refilterAvailableUsers(): void {
+    if (this.availableUsers.length > 0) {
+      const assignedIds = this.assignedUsers.map(u => String(u.id));
+      this.availableUsers = this.availableUsers.filter(user => !assignedIds.includes(String(user.id)));
+    }
+  }
+
+  assignUser(userId: number | string): void {
     if (!userId) return;
     const projectId = this.route.snapshot.paramMap.get('id');
     if (!projectId) return;
 
     const request: ProjectAssignmentRequest = {
-      userId: userId,
-      projectId: projectId
+      userId: Number(userId),
+      projectId: Number(projectId)
     };
 
     this.tcmService.assignUserToProject(request).subscribe(
       (updatedUser: User) => {
-        // Refresh lists
-        this.loadAssignedUsers(projectId);
-        this.loadAvailableUsers();
+        // Refresh all assignment data
+        this.loadAssignmentData(projectId);
         this.selectedUserId = null;
       },
       (error: any) => {
@@ -214,13 +268,13 @@ export class ProjectDetailComponent implements OnInit {
     );
   }
 
-  removeUser(userId: string): void {
+  removeUser(userId: number | string): void {
     const projectId = this.route.snapshot.paramMap.get('id');
     if (!projectId) return;
 
     const request: ProjectAssignmentRequest = {
-      userId: userId,
-      projectId: projectId
+      userId: Number(userId),
+      projectId: Number(projectId)
     };
 
     if (!confirm('Are you sure you want to remove this user from the project?')) {
@@ -229,9 +283,8 @@ export class ProjectDetailComponent implements OnInit {
 
     this.tcmService.removeUserFromProject(request).subscribe(
       (updatedUser: User) => {
-        // Refresh lists
-        this.loadAssignedUsers(projectId);
-        this.loadAvailableUsers();
+        // Refresh all assignment data
+        this.loadAssignmentData(projectId);
       },
       (error: any) => {
         console.error('Error removing user:', error);
