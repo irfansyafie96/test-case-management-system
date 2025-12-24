@@ -11,6 +11,65 @@
   align-items: center;
 }
 
+.project-header-section {
+  margin-bottom: 48px;
+  padding-bottom: 24px;
+}
+
+.dossier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.dossier-title h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 8px 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.dossier-title p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  color: #4b4845;
+  margin: 0;
+  max-width: 600px;
+}
+
+.dossier-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .dossier-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  
+  .dossier-title h1 {
+    font-size: 32px;
+  }
+  
+  .dossier-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .dossier-actions button {
+    width: 100%;
+    height: 48px;
+  }
+}
+
 .loading-box {
   background: var(--surface);
   border: var(--border-medium);
@@ -24,13 +83,13 @@
 }
 
 .breadcrumb {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 16px; /* Increased from 12px */
-  color: #666;
-  margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px; /* Increased from 12px */
+  color: #666;
 }
 
 .back-link {
@@ -195,6 +254,12 @@
 /* Badges */
 .status-badge { color: #666; background-color: #f0f0f0; border-color: #ccc; }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 /* Empty State */
 .empty-state {
   display: flex;
@@ -204,6 +269,11 @@
   border: 2px dashed var(--ink);
   border-radius: 8px;
   background-color: rgba(255,255,255,0.5);
+}
+
+.empty-state.compact {
+  min-height: 200px;
+  margin-bottom: 32px;
 }
 
 .empty-content {
@@ -251,76 +321,98 @@
 
 .error-icon { color: var(--warn-color); }
 
-/* Assignment Management */
-.assignment-section {
-  margin-top: 48px;
-  padding-top: 24px;
-  border-top: var(--border-thin);
+.count-badge {
+  background-color: var(--ink);
+  color: var(--surface);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.header-actions {
-  display: flex;
-  gap: 12px;
+/* Assignment Management */
+.assignments-container {
+  background-color: var(--surface);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 32px;
+  margin-bottom: 48px;
+  box-shadow: 8px 8px 0px 0px var(--ink);
+  border-color: var(--ink);
+  background-image: radial-gradient(var(--paper) 1px, transparent 1px);
+  background-size: 20px 20px; /* Subtle blueprint grid */
 }
 
 .assigned-users-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
 }
 
 .user-card {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px;
+  align-items: flex-start;
+  padding: 20px;
   background-color: var(--surface);
-  border: var(--border-thin);
+  border: var(--border-medium);
   border-radius: var(--radius-md);
   transition: var(--transition-moderate);
+  box-shadow: 4px 4px 0px 0px var(--paper);
 }
 
 .user-card:hover {
   border-color: var(--accent-primary);
+  box-shadow: 4px 4px 0px 0px var(--ink);
+  transform: translate(-2px, -2px);
 }
 
 .user-info {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .user-icon {
   color: var(--accent-primary);
+  background-color: var(--paper);
+  padding: 8px;
+  border-radius: 50%;
+  border: var(--border-thin);
 }
 
 .user-details h4 {
   margin: 0 0 4px 0;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--ink);
 }
 
 .user-details p {
-  margin: 0 0 4px 0;
+  margin: 0 0 12px 0;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   color: #666;
+  word-break: break-all;
 }
 
 .user-roles {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .role-badge {
-  background-color: var(--paper);
-  border: 1px solid var(--ink);
-  color: var(--ink);
-  padding: 2px 6px;
-  border-radius: 12px;
+  background-color: var(--ink);
+  color: var(--surface);
+  padding: 2px 8px;
+  border-radius: 4px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 700;
@@ -329,30 +421,127 @@
 
 .add-user-form {
   background-color: var(--paper);
-  border: var(--border-thin);
+  border: var(--border-medium);
   border-radius: var(--radius-md);
-  padding: 24px;
+  padding: 32px;
   margin-top: 32px;
+  box-shadow: inset 4px 4px 0px 0px rgba(0,0,0,0.05);
 }
 
 .add-user-form h3 {
-  margin: 0 0 16px 0;
+  margin: 0 0 24px 0;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 20px;
+  font-weight: 700;
   color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-user-form h3::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background-color: var(--accent-primary);
+  border: 2px solid var(--ink);
 }
 
 .form-row {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 24px;
 }
 
 .user-select {
   flex: 1;
 }
 
-.empty-state.small {
-  min-height: 100px;
-  border-width: 1px;
+.add-user-form button {
+  height: 56px;
+  padding: 0 32px;
+}
+
+.loading-overlay-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+}
+
+.empty-state-simple {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  background: var(--paper);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--ink);
+  margin-bottom: 32px;
+}
+
+.empty-state-simple mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .header-actions button {
+    width: 100%;
+  }
+
+  .assignments-container {
+    padding: 20px 16px;
+    box-shadow: 4px 4px 0px 0px var(--ink);
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+  }
+
+  .assigned-users-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .user-card {
+    padding: 12px;
+  }
+
+  .user-icon {
+    padding: 6px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .user-details h4 {
+    font-size: 16px;
+  }
+
+  .user-details p {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
 }

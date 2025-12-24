@@ -22,7 +22,8 @@
         </button>
         <button
           *ngIf="authService.hasRole('ADMIN')"
-          mat-stroked-button
+          mat-raised-button
+          color="primary"
           (click)="toggleAssignments()"
           [disabled]="loading$ | async">
           <mat-icon>{{ showAssignments ? 'close' : 'group' }}</mat-icon>
@@ -33,7 +34,7 @@
   </div>
 
   <!-- Assignments Section -->
-  <div class="content-section" *ngIf="showAssignments">
+  <div class="assignments-container" *ngIf="showAssignments">
     <div class="section-header">
       <h2><mat-icon>group</mat-icon> Project Assignments</h2>
       <div class="count-badge">{{ assignedUsers.length }} Assigned</div>
