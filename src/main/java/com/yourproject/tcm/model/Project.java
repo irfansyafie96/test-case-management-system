@@ -3,7 +3,9 @@ package com.yourproject.tcm.model;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Project Entity - Top-level container in the test case hierarchy
@@ -52,6 +54,14 @@ public class Project {
     @JsonManagedReference
     private List<TestModule> modules;  // List of modules belonging to this project
 
+    /**
+     * Many-to-Many relationship with User entity (project assignments)
+     * QA/BA users can be assigned to this project to work on it
+     * This is the inverse side of the relationship mapped in User entity
+     */
+    @ManyToMany(mappedBy = "assignedProjects", fetch = FetchType.LAZY)
+    private Set<User> assignedUsers = new HashSet<>();  // Users assigned to this project
+
     // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
@@ -83,6 +93,14 @@ public class Project {
 
     public void setModules(List<TestModule> modules) {
         this.modules = modules;
+    }
+
+    public Set<User> getAssignedUsers() {
+        return assignedUsers;
+    }
+
+    public void setAssignedUsers(Set<User> assignedUsers) {
+        this.assignedUsers = assignedUsers;
     }
 
     // Getters and setters for additional fields

@@ -3,7 +3,9 @@ package com.yourproject.tcm.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * TestModule Entity - Second level in the test case hierarchy
@@ -52,6 +54,15 @@ public class TestModule {
     @JsonManagedReference  // This side manages the relationship for JSON serialization
     private List<TestSuite> testSuites;  // List of test suites in this module
 
+    /**
+     * Many-to-Many relationship with User entity (module assignments)
+     * TESTER users can be assigned to this module to test it
+     * QA/BA users can also be assigned modules for testing purposes
+     * This is the inverse side of the relationship mapped in User entity
+     */
+    @ManyToMany(mappedBy = "assignedTestModules", fetch = FetchType.LAZY)
+    private Set<User> assignedUsers = new HashSet<>();  // Users assigned to this module
+
     // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
@@ -91,6 +102,14 @@ public class TestModule {
 
     public void setTestSuites(List<TestSuite> testSuites) {
         this.testSuites = testSuites;
+    }
+
+    public Set<User> getAssignedUsers() {
+        return assignedUsers;
+    }
+
+    public void setAssignedUsers(Set<User> assignedUsers) {
+        this.assignedUsers = assignedUsers;
     }
 
     // Helper method to expose project ID to frontend without exposing entire project object

@@ -20,6 +20,88 @@
           [disabled]="loading$ | async">
           <mat-icon>add</mat-icon> NEW MODULE
         </button>
+        <button
+          *ngIf="authService.hasRole('ADMIN')"
+          mat-stroked-button
+          (click)="toggleAssignments()"
+          [disabled]="loading$ | async">
+          <mat-icon>{{ showAssignments ? 'close' : 'group' }}</mat-icon>
+          {{ showAssignments ? 'CLOSE ASSIGNMENTS' : 'MANAGE ASSIGNMENTS' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assignments Section -->
+  <div class="content-section" *ngIf="showAssignments">
+    <div class="section-header">
+      <h2><mat-icon>group</mat-icon> Project Assignments</h2>
+      <div class="count-badge">{{ assignedUsers.length }} Assigned</div>
+    </div>
+
+    <div *ngIf="loadingAssignments" class="loading-overlay">
+      <div class="loading-box">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>Loading assignments...</p>
+      </div>
+    </div>
+
+    <div *ngIf="!loadingAssignments">
+      <!-- Assigned Users List -->
+      <div *ngIf="assignedUsers.length > 0; else noAssignedUsers">
+        <div class="assigned-users-list">
+          <div *ngFor="let user of assignedUsers" class="user-card">
+            <div class="user-info">
+              <mat-icon class="user-icon">person</mat-icon>
+              <div class="user-details">
+                <h4>{{ user.username }}</h4>
+                <p>{{ user.email }}</p>
+                <div class="user-roles">
+                  <span *ngFor="let role of user.roles" class="role-badge">{{ role }}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              mat-icon-button
+              color="warn"
+              (click)="removeUser(user.id)"
+              [disabled]="loadingAssignments"
+              matTooltip="Remove from project">
+              <mat-icon>remove_circle</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      <ng-template #noAssignedUsers>
+        <div class="empty-state">
+          <div class="empty-content">
+            <mat-icon class="empty-icon">group_off</mat-icon>
+            <h3>No users assigned</h3>
+            <p>Assign QA or BA users to this project using the form below.</p>
+          </div>
+        </div>
+      </ng-template>
+
+      <!-- Add User Form -->
+      <div class="add-user-form">
+        <h3>Assign New User</h3>
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="user-select">
+            <mat-label>Select QA/BA User</mat-label>
+            <mat-select [(ngModel)]="selectedUserId">
+              <mat-option *ngFor="let user of availableUsers" [value]="user.id">
+                {{ user.username }} ({{ user.email }}) - {{ user.roles.join(', ') }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="assignUser(selectedUserId!)"
+            [disabled]="!selectedUserId || loadingAssignments">
+            <mat-icon>add</mat-icon> Assign User
+          </button>
+        </div>
       </div>
     </div>
   </div>

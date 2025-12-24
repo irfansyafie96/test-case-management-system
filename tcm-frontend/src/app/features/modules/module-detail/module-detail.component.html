@@ -28,13 +28,22 @@
       <div class="content-section">
         <div class="section-header">
           <h2><mat-icon>folder_special</mat-icon> Test Suites</h2>
-          <button 
-            mat-raised-button 
-            color="primary" 
-            (click)="createTestSuite(vm.module!.id)"
-            *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
-            <mat-icon>add</mat-icon> NEW SUITE
-          </button>
+          <div class="header-actions">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="createTestSuite(vm.module!.id)"
+              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+              <mat-icon>add</mat-icon> NEW SUITE
+            </button>
+            <button 
+              mat-stroked-button 
+              color="accent" 
+              (click)="toggleAssignments()"
+              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+              <mat-icon>people</mat-icon> MANAGE ASSIGNMENTS
+            </button>
+          </div>
         </div>
 
         <div class="test-suites-container">
@@ -116,6 +125,58 @@
             </div>
           </div>
         </div>
+        
+        <!-- Assignment Management -->
+        <div *ngIf="showAssignments" class="assignment-section">
+          <h3>Assigned Users</h3>
+          <div *ngIf="loadingAssignments" class="loading-overlay">
+            <mat-spinner diameter="32"></mat-spinner>
+            <p>Loading assignments...</p>
+          </div>
+          <div *ngIf="!loadingAssignments">
+            <div class="assigned-users-list">
+              <div *ngFor="let user of assignedUsers" class="user-card">
+                <div class="user-info">
+                  <mat-icon class="user-icon">person</mat-icon>
+                  <div class="user-details">
+                    <h4>{{ user.username }}</h4>
+                    <p>{{ user.email }}</p>
+                    <div class="user-roles">
+                      <span class="role-badge">{{ user.roles[0] }}</span>
+                    </div>
+                  </div>
+                </div>
+                <button mat-icon-button color="warn" (click)="removeUser(user.id.toString())" matTooltip="Remove user">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              <div *ngIf="!assignedUsers.length" class="empty-state small">
+                <div class="empty-content">
+                  <mat-icon class="empty-icon">people_outline</mat-icon>
+                  <p>No users assigned to this module.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="add-user-form">
+              <h3>Assign New Tester</h3>
+              <div class="form-row">
+                <mat-form-field class="user-select">
+                  <mat-label>Select Tester</mat-label>
+                  <mat-select [(ngModel)]="selectedUserId">
+                    <mat-option *ngFor="let user of availableUsers" [value]="user.id.toString()">
+                      {{ user.username }} ({{ user.email }})
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <button mat-raised-button color="primary" [disabled]="!selectedUserId" (click)="assignUser(selectedUserId!)">
+                  <mat-icon>add</mat-icon> Assign
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
       </div>
     </div>
 

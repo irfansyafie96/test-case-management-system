@@ -250,3 +250,109 @@
 }
 
 .error-icon { color: var(--warn-color); }
+
+/* Assignment Management */
+.assignment-section {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: var(--border-thin);
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.assigned-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  transition: var(--transition-moderate);
+}
+
+.user-card:hover {
+  border-color: var(--accent-primary);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-icon {
+  color: var(--accent-primary);
+}
+
+.user-details h4 {
+  margin: 0 0 4px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.user-details p {
+  margin: 0 0 4px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #666;
+}
+
+.user-roles {
+  display: flex;
+  gap: 6px;
+}
+
+.role-badge {
+  background-color: var(--paper);
+  border: 1px solid var(--ink);
+  color: var(--ink);
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.add-user-form {
+  background-color: var(--paper);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-top: 32px;
+}
+
+.add-user-form h3 {
+  margin: 0 0 16px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  color: var(--ink);
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-select {
+  flex: 1;
+}
+
+.empty-state.small {
+  min-height: 100px;
+  border-width: 1px;
+}

@@ -58,6 +58,29 @@ public class User {
     private Set<Role> roles = new HashSet<>();  // Set of user's roles
 
     /**
+     * Many-to-Many relationship with Project entity (project assignments)
+     * QA/BA users can be assigned to specific projects they can work on
+     * This creates a 'user_projects' junction table in the database
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_projects",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "project_id"))
+    private Set<Project> assignedProjects = new HashSet<>();  // Projects assigned to this user
+
+    /**
+     * Many-to-Many relationship with TestModule entity (module assignments)
+     * TESTER users can be assigned to specific modules they can test
+     * QA/BA users can also be assigned modules for testing purposes
+     * This creates a 'user_test_modules' junction table in the database
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_test_modules",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "test_module_id"))
+    private Set<TestModule> assignedTestModules = new HashSet<>();  // Test modules assigned to this user
+
+    /**
      * Default constructor - Creates a user with current timestamp
      */
     public User() {
@@ -150,5 +173,21 @@ public class User {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public Set<Project> getAssignedProjects() {
+        return assignedProjects;
+    }
+
+    public void setAssignedProjects(Set<Project> assignedProjects) {
+        this.assignedProjects = assignedProjects;
+    }
+
+    public Set<TestModule> getAssignedTestModules() {
+        return assignedTestModules;
+    }
+
+    public void setAssignedTestModules(Set<TestModule> assignedTestModules) {
+        this.assignedTestModules = assignedTestModules;
     }
 }

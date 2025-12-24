@@ -9,13 +9,18 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TestSuiteDialogComponent } from './test-suite-dialog.component';
 import { TestCaseDialogComponent } from './test-case-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component'; // New improved dialog
-import { Project, TestModule, TestSuite, TestCase } from '../../../core/models/project.model';
+import { Project, TestModule, TestSuite, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
 import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
 
@@ -33,7 +38,12 @@ import { catchError, finalize, map, startWith } from 'rxjs/operators';
     MatDialogModule,
     RouterModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule
   ],
   templateUrl: './module-detail.component.html',
   styleUrls: ['./module-detail.component.css']
@@ -45,6 +55,13 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   private snackBar = inject(MatSnackBar);
 
   displayedColumns: string[] = ['id', 'title', 'status', 'actions'];
+
+  // Assignment management
+  showAssignments = false;
+  assignedUsers: User[] = [];
+  availableUsers: User[] = [];
+  selectedUserId: string | null = null;
+  loadingAssignments = false;
 
   private loadingSubject = new BehaviorSubject<boolean>(true);
   private errorSubject = new BehaviorSubject<boolean>(false);
@@ -279,5 +296,94 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   getStatusClass(status: string | undefined): string {
     if (!status) return 'not_executed';
     return status.toLowerCase();
+  }
+
+  // ==================== ASSIGNMENT METHODS ====================
+
+  toggleAssignments(): void {
+    this.showAssignments = !this.showAssignments;
+    if (this.showAssignments) {
+      const moduleId = this.route.snapshot.paramMap.get('id');
+      if (moduleId) {
+        this.loadAssignedUsers(moduleId);
+        this.loadAvailableUsers();
+      }
+    }
+  }
+
+  loadAssignedUsers(moduleId: string): void {
+    this.loadingAssignments = true;
+    this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe(
+      (users: User[]) => {
+        this.assignedUsers = users;
+        this.loadingAssignments = false;
+      },
+      (error: any) => {
+        console.error('Error loading assigned users:', error);
+        this.loadingAssignments = false;
+      }
+    );
+  }
+
+  loadAvailableUsers(): void {
+    // Load TESTER users
+    this.tcmService.getUsersByRole('TESTER').subscribe(
+      (testerUsers: User[]) => {
+        // Filter out already assigned users
+        const assignedIds = this.assignedUsers.map(u => u.id);
+        this.availableUsers = testerUsers.filter(user => !assignedIds.includes(user.id));
+      },
+      (error: any) => console.error('Error loading TESTER users:', error)
+    );
+  }
+
+  assignUser(userId: string): void {
+    if (!userId) return;
+    const moduleId = this.route.snapshot.paramMap.get('id');
+    if (!moduleId) return;
+
+    const request: ModuleAssignmentRequest = {
+      userId: userId,
+      testModuleId: moduleId
+    };
+
+    this.tcmService.assignUserToTestModule(request).subscribe(
+      (updatedUser: User) => {
+        // Refresh lists
+        this.loadAssignedUsers(moduleId);
+        this.loadAvailableUsers();
+        this.selectedUserId = null;
+      },
+      (error: any) => {
+        console.error('Error assigning user:', error);
+        alert('Failed to assign user. Please try again.');
+      }
+    );
+  }
+
+  removeUser(userId: string): void {
+    const moduleId = this.route.snapshot.paramMap.get('id');
+    if (!moduleId) return;
+
+    const request: ModuleAssignmentRequest = {
+      userId: userId,
+      testModuleId: moduleId
+    };
+
+    if (!confirm('Are you sure you want to remove this user from the module?')) {
+      return;
+    }
+
+    this.tcmService.removeUserFromTestModule(request).subscribe(
+      (updatedUser: User) => {
+        // Refresh lists
+        this.loadAssignedUsers(moduleId);
+        this.loadAvailableUsers();
+      },
+      (error: any) => {
+        console.error('Error removing user:', error);
+        alert('Failed to remove user. Please try again.');
+      }
+    );
   }
 }

@@ -98,5 +98,18 @@ export interface User {
   roles: string[];
   enabled: boolean;
   createdDate?: string;
+  assignedProjects?: Project[];
+  assignedTestModules?: TestModule[];
+}
+
+// Assignment Request DTOs
+export interface ProjectAssignmentRequest {
+  userId: string;
+  projectId: string;
+}
+
+export interface ModuleAssignmentRequest {
+  userId: string;
+  testModuleId: string;
 }
 

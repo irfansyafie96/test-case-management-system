@@ -4,6 +4,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -11,13 +16,13 @@ import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ModuleDialogComponent } from '../../modules/modules/module-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
-import { Project, TestModule } from '../../../core/models/project.model';
+import { Project, TestModule, User, ProjectAssignmentRequest } from '../../../core/models/project.model';
 import { Observable, BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatCardModule, MatIconModule, RouterModule, MatDialogModule, MatTooltipModule, MatProgressSpinnerModule],
+  imports: [CommonModule, MatButtonModule, MatCardModule, MatIconModule, RouterModule, MatDialogModule, MatTooltipModule, MatProgressSpinnerModule, MatSelectModule, MatOptionModule, MatFormFieldModule, MatInputModule, FormsModule],
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css']
 })
@@ -27,6 +32,13 @@ export class ProjectDetailComponent implements OnInit {
   creatingModule$ = new BehaviorSubject<boolean>(false);
   isDeletingModule$ = new BehaviorSubject<boolean>(false);
   deletingModuleId: string | number | null = null;
+
+  // Assignment management
+  showAssignments = false;
+  assignedUsers: User[] = [];
+  availableUsers: User[] = [];
+  selectedUserId: string | null = null;
+  loadingAssignments = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -119,5 +131,100 @@ export class ProjectDetailComponent implements OnInit {
     return testSuites.reduce((total, suite) => {
       return total + (suite.testCases ? suite.testCases.length : 0);
     }, 0);
+  }
+
+  // ==================== ASSIGNMENT METHODS ====================
+
+  toggleAssignments(): void {
+    this.showAssignments = !this.showAssignments;
+    if (this.showAssignments) {
+      const projectId = this.route.snapshot.paramMap.get('id');
+      if (projectId) {
+        this.loadAssignedUsers(projectId);
+        this.loadAvailableUsers();
+      }
+    }
+  }
+
+  loadAssignedUsers(projectId: string): void {
+    this.loadingAssignments = true;
+    this.tcmService.getUsersAssignedToProject(projectId).subscribe(
+      (users: User[]) => {
+        this.assignedUsers = users;
+        this.loadingAssignments = false;
+      },
+      (error: any) => {
+        console.error('Error loading assigned users:', error);
+        this.loadingAssignments = false;
+      }
+    );
+  }
+
+  loadAvailableUsers(): void {
+    // Load QA and BA users
+    this.tcmService.getUsersByRole('QA').subscribe(
+      (qaUsers: User[]) => {
+        this.tcmService.getUsersByRole('BA').subscribe(
+          (baUsers: User[]) => {
+            // Combine and filter out already assigned users
+            const allUsers = [...qaUsers, ...baUsers];
+            const assignedIds = this.assignedUsers.map(u => u.id);
+            this.availableUsers = allUsers.filter(user => !assignedIds.includes(user.id));
+          },
+          (error: any) => console.error('Error loading BA users:', error)
+        );
+      },
+      (error: any) => console.error('Error loading QA users:', error)
+    );
+  }
+
+  assignUser(userId: string): void {
+    if (!userId) return;
+    const projectId = this.route.snapshot.paramMap.get('id');
+    if (!projectId) return;
+
+    const request: ProjectAssignmentRequest = {
+      userId: userId,
+      projectId: projectId
+    };
+
+    this.tcmService.assignUserToProject(request).subscribe(
+      (updatedUser: User) => {
+        // Refresh lists
+        this.loadAssignedUsers(projectId);
+        this.loadAvailableUsers();
+        this.selectedUserId = null;
+      },
+      (error: any) => {
+        console.error('Error assigning user:', error);
+        alert('Failed to assign user. Please try again.');
+      }
+    );
+  }
+
+  removeUser(userId: string): void {
+    const projectId = this.route.snapshot.paramMap.get('id');
+    if (!projectId) return;
+
+    const request: ProjectAssignmentRequest = {
+      userId: userId,
+      projectId: projectId
+    };
+
+    if (!confirm('Are you sure you want to remove this user from the project?')) {
+      return;
+    }
+
+    this.tcmService.removeUserFromProject(request).subscribe(
+      (updatedUser: User) => {
+        // Refresh lists
+        this.loadAssignedUsers(projectId);
+        this.loadAvailableUsers();
+      },
+      (error: any) => {
+        console.error('Error removing user:', error);
+        alert('Failed to remove user. Please try again.');
+      }
+    );
   }
 }

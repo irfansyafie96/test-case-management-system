@@ -1,6 +1,8 @@
 package com.yourproject.tcm.service;
 
 import com.yourproject.tcm.model.*;
+import com.yourproject.tcm.model.dto.ModuleAssignmentRequest;
+import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
 import com.yourproject.tcm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -60,14 +62,46 @@ public class TcmService {
     @Autowired
     private TestStepResultRepository testStepResultRepository;  // Repository for TestStepResult operations
 
+    // Helper methods for assignment-based filtering
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+            String username = authentication.getName();
+            return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    private boolean isAdmin(User user) {
+        return user.getRoles().stream().anyMatch(role -> role.getName().equals("ADMIN"));
+    }
+
+    private boolean isQaOrBa(User user) {
+        return user.getRoles().stream().anyMatch(role -> 
+            role.getName().equals("QA") || role.getName().equals("BA"));
+    }
+
+    private boolean isTester(User user) {
+        return user.getRoles().stream().anyMatch(role -> role.getName().equals("TESTER"));
+    }
+
     // ==================== PROJECT METHODS ====================
 
     /**
      * Get all projects in the system
-     * @return List of all projects
+     * For ADMIN users: returns all projects
+     * For QA/BA users: returns only projects assigned to them
+     * @return List of projects based on user role and assignments
      */
     public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+        User currentUser = getCurrentUser();
+        if (isAdmin(currentUser)) {
+            return projectRepository.findAll();
+        } else {
+            return projectRepository.findProjectsAssignedToUser(currentUser.getId());
+        }
     }
 
     /**
@@ -88,12 +122,28 @@ public class TcmService {
 
     /**
      * Get a specific project by ID
+     * For ADMIN users: returns project if it exists
+     * For QA/BA users: returns project only if assigned to them
      * @param projectId The ID of the project to retrieve
-     * @return Optional containing the project, or empty if not found
+     * @return Optional containing the project, or empty if not found/not assigned
      */
     @Transactional(readOnly = true)  // Read-only transaction for better performance
     public Optional<Project> getProjectById(Long projectId) {
-        return projectRepository.findById(projectId);
+        User currentUser = getCurrentUser();
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
+        
+        if (!projectOpt.isPresent()) {
+            return Optional.empty();
+        }
+        
+        if (isAdmin(currentUser)) {
+            return projectOpt;
+        } else {
+            // Check if project is assigned to the user
+            List<Project> assignedProjects = projectRepository.findProjectsAssignedToUser(currentUser.getId());
+            boolean isAssigned = assignedProjects.stream().anyMatch(p -> p.getId().equals(projectId));
+            return isAssigned ? projectOpt : Optional.empty();
+        }
     }
 
     /**
@@ -651,6 +701,170 @@ public class TcmService {
                 .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
 
             return testExecutionRepository.findByAssignedToUserWithDetails(user);
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    // ==================== PROJECT ASSIGNMENT METHODS ====================
+
+    /**
+     * Assign a QA/BA user to a project
+     * @param request Project assignment request containing userId and projectId
+     * @return The updated user with assigned projects
+     */
+    @Transactional
+    public User assignUserToProject(ProjectAssignmentRequest request) {
+        Optional<User> userOpt = userRepository.findById(request.getUserId());
+        Optional<Project> projectOpt = projectRepository.findById(request.getProjectId());
+
+        if (userOpt.isPresent() && projectOpt.isPresent()) {
+            User user = userOpt.get();
+            Project project = projectOpt.get();
+
+            // Check if user has QA or BA role
+            boolean hasQaOrBaRole = user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("QA") || role.getName().equals("BA"));
+            
+            if (!hasQaOrBaRole) {
+                throw new RuntimeException("User must have QA or BA role to be assigned to projects");
+            }
+
+            // Add project to user's assigned projects if not already assigned
+            if (!user.getAssignedProjects().contains(project)) {
+                user.getAssignedProjects().add(project);
+                User savedUser = userRepository.save(user);
+                entityManager.flush();
+                return savedUser;
+            } else {
+                return user; // Already assigned
+            }
+        }
+        throw new RuntimeException("User or project not found with id: " + request.getUserId() + " or " + request.getProjectId());
+    }
+
+    /**
+     * Remove a QA/BA user from a project assignment
+     * @param request Project assignment request containing userId and projectId
+     * @return The updated user
+     */
+    @Transactional
+    public User removeUserFromProject(ProjectAssignmentRequest request) {
+        Optional<User> userOpt = userRepository.findById(request.getUserId());
+        Optional<Project> projectOpt = projectRepository.findById(request.getProjectId());
+
+        if (userOpt.isPresent() && projectOpt.isPresent()) {
+            User user = userOpt.get();
+            Project project = projectOpt.get();
+
+            // Remove project from user's assigned projects
+            if (user.getAssignedProjects().contains(project)) {
+                user.getAssignedProjects().remove(project);
+                User savedUser = userRepository.save(user);
+                entityManager.flush();
+                return savedUser;
+            } else {
+                return user; // Not assigned
+            }
+        }
+        throw new RuntimeException("User or project not found with id: " + request.getUserId() + " or " + request.getProjectId());
+    }
+
+    /**
+     * Get all projects assigned to the current authenticated user
+     * @return List of assigned projects
+     */
+    public List<Project> getProjectsAssignedToCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+
+            return projectRepository.findProjectsAssignedToUser(user.getId());
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    // ==================== MODULE ASSIGNMENT METHODS ====================
+
+    /**
+     * Assign a TESTER (or QA/BA) user to a test module
+     * @param request Module assignment request containing userId and testModuleId
+     * @return The updated user with assigned test modules
+     */
+    @Transactional
+    public User assignUserToTestModule(ModuleAssignmentRequest request) {
+        Optional<User> userOpt = userRepository.findById(request.getUserId());
+        Optional<TestModule> moduleOpt = testModuleRepository.findById(request.getTestModuleId());
+
+        if (userOpt.isPresent() && moduleOpt.isPresent()) {
+            User user = userOpt.get();
+            TestModule module = moduleOpt.get();
+
+            // Check if user has TESTER, QA, or BA role
+            boolean hasValidRole = user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("TESTER") || role.getName().equals("QA") || role.getName().equals("BA"));
+            
+            if (!hasValidRole) {
+                throw new RuntimeException("User must have TESTER, QA, or BA role to be assigned to test modules");
+            }
+
+            // Add module to user's assigned test modules if not already assigned
+            if (!user.getAssignedTestModules().contains(module)) {
+                user.getAssignedTestModules().add(module);
+                User savedUser = userRepository.save(user);
+                entityManager.flush();
+                return savedUser;
+            } else {
+                return user; // Already assigned
+            }
+        }
+        throw new RuntimeException("User or test module not found with id: " + request.getUserId() + " or " + request.getTestModuleId());
+    }
+
+    /**
+     * Remove a user from a test module assignment
+     * @param request Module assignment request containing userId and testModuleId
+     * @return The updated user
+     */
+    @Transactional
+    public User removeUserFromTestModule(ModuleAssignmentRequest request) {
+        Optional<User> userOpt = userRepository.findById(request.getUserId());
+        Optional<TestModule> moduleOpt = testModuleRepository.findById(request.getTestModuleId());
+
+        if (userOpt.isPresent() && moduleOpt.isPresent()) {
+            User user = userOpt.get();
+            TestModule module = moduleOpt.get();
+
+            // Remove module from user's assigned test modules
+            if (user.getAssignedTestModules().contains(module)) {
+                user.getAssignedTestModules().remove(module);
+                User savedUser = userRepository.save(user);
+                entityManager.flush();
+                return savedUser;
+            } else {
+                return user; // Not assigned
+            }
+        }
+        throw new RuntimeException("User or test module not found with id: " + request.getUserId() + " or " + request.getTestModuleId());
+    }
+
+    /**
+     * Get all test modules assigned to the current authenticated user
+     * @return List of assigned test modules
+     */
+    public List<TestModule> getTestModulesAssignedToCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+
+            return testModuleRepository.findTestModulesAssignedToUser(user.getId());
         }
         throw new RuntimeException("No authenticated user found");
     }

@@ -1,7 +1,10 @@
 package com.yourproject.tcm.controller;
 
 import com.yourproject.tcm.model.*;
+import com.yourproject.tcm.model.dto.ModuleAssignmentRequest;
+import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
 import com.yourproject.tcm.model.dto.StepResultResponse;
+import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.service.TcmService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -39,10 +42,12 @@ import java.util.Optional;
 public class ApiController {
 
     private final TcmService tcmService;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ApiController(TcmService tcmService) {
+    public ApiController(TcmService tcmService, UserRepository userRepository) {
         this.tcmService = tcmService;
+        this.userRepository = userRepository;
     }
 
     // ==================== PROJECT ENDPOINTS ====================
@@ -518,6 +523,158 @@ public class ApiController {
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving your assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // ==================== PROJECT ASSIGNMENT ENDPOINTS ====================
+
+    /**
+     * POST /api/projects/assign - Assign a QA/BA user to a project
+     * Requires ADMIN role (Project Manager)
+     * @param request Project assignment request containing userId and projectId
+     * @return ResponseEntity with updated user or error
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/projects/assign")
+    public ResponseEntity<?> assignUserToProject(@Valid @RequestBody ProjectAssignmentRequest request) {
+        try {
+            User updatedUser = tcmService.assignUserToProject(request);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error assigning user to project: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * DELETE /api/projects/assign - Remove a QA/BA user from a project assignment
+     * Requires ADMIN role (Project Manager)
+     * @param request Project assignment request containing userId and projectId
+     * @return ResponseEntity with updated user or error
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/projects/assign")
+    public ResponseEntity<?> removeUserFromProject(@Valid @RequestBody ProjectAssignmentRequest request) {
+        try {
+            User updatedUser = tcmService.removeUserFromProject(request);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error removing user from project: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/projects/assigned-to-me - Get all projects assigned to current user
+     * @return ResponseEntity with list of assigned projects or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @GetMapping("/projects/assigned-to-me")
+    public ResponseEntity<?> getProjectsAssignedToCurrentUser() {
+        try {
+            List<Project> projects = tcmService.getProjectsAssignedToCurrentUser();
+            return new ResponseEntity<>(projects, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving assigned projects: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/projects/{projectId}/assigned-users - Get all users assigned to a specific project
+     * Requires ADMIN role
+     * @param projectId ID of the project
+     * @return ResponseEntity with list of assigned users or error
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/projects/{projectId}/assigned-users")
+    public ResponseEntity<?> getUsersAssignedToProject(@PathVariable Long projectId) {
+        try {
+            List<User> users = userRepository.findUsersAssignedToProject(projectId);
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving users assigned to project: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // ==================== MODULE ASSIGNMENT ENDPOINTS ====================
+
+    /**
+     * POST /api/testmodules/assign - Assign a TESTER (or QA/BA) user to a test module
+     * Requires ADMIN, QA, or BA role
+     * @param request Module assignment request containing userId and testModuleId
+     * @return ResponseEntity with updated user or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PostMapping("/testmodules/assign")
+    public ResponseEntity<?> assignUserToTestModule(@Valid @RequestBody ModuleAssignmentRequest request) {
+        try {
+            User updatedUser = tcmService.assignUserToTestModule(request);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error assigning user to test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * DELETE /api/testmodules/assign - Remove a user from a test module assignment
+     * Requires ADMIN, QA, or BA role
+     * @param request Module assignment request containing userId and testModuleId
+     * @return ResponseEntity with updated user or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @DeleteMapping("/testmodules/assign")
+    public ResponseEntity<?> removeUserFromTestModule(@Valid @RequestBody ModuleAssignmentRequest request) {
+        try {
+            User updatedUser = tcmService.removeUserFromTestModule(request);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error removing user from test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/testmodules/assigned-to-me - Get all test modules assigned to current user
+     * @return ResponseEntity with list of assigned test modules or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @GetMapping("/testmodules/assigned-to-me")
+    public ResponseEntity<?> getTestModulesAssignedToCurrentUser() {
+        try {
+            List<TestModule> testModules = tcmService.getTestModulesAssignedToCurrentUser();
+            return new ResponseEntity<>(testModules, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving assigned test modules: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/testmodules/{moduleId}/assigned-users - Get all users assigned to a specific test module
+     * Requires ADMIN, QA, or BA role
+     * @param moduleId ID of the test module
+     * @return ResponseEntity with list of assigned users or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @GetMapping("/testmodules/{moduleId}/assigned-users")
+    public ResponseEntity<?> getUsersAssignedToTestModule(@PathVariable Long moduleId) {
+        try {
+            List<User> users = userRepository.findUsersAssignedToTestModule(moduleId);
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving users assigned to test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/users/by-role/{roleName} - Get all users with a specific role
+     * @param roleName Role name (e.g., "QA", "BA", "TESTER")
+     * @return ResponseEntity with list of users having that role
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @GetMapping("/users/by-role/{roleName}")
+    public ResponseEntity<?> getUsersByRole(@PathVariable String roleName) {
+        try {
+            List<User> users = userRepository.findByRoleName(roleName);
+            return new ResponseEntity<>(users, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving users by role: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

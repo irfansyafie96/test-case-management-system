@@ -3,7 +3,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { Project, TestModule, TestSuite, TestCase, TestExecution, TestStepResult } from '../models/project.model';
+import { Project, TestModule, TestSuite, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest } from '../models/project.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -335,6 +335,114 @@ export class TcmService {
     })
       .pipe(
         catchError(this.handleError('updateStepResult', {}))
+      );
+  }
+
+  // ==================== ASSIGNMENT METHODS ====================
+
+  /**
+   * Assign a QA/BA user to a project (ADMIN only)
+   * @param request Project assignment request
+   * @returns Observable<User> Updated user with assignments
+   */
+  assignUserToProject(request: ProjectAssignmentRequest): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/projects/assign`, request)
+      .pipe(
+        catchError(this.handleError<User>('assignUserToProject'))
+      );
+  }
+
+  /**
+   * Remove a QA/BA user from a project assignment (ADMIN only)
+   * @param request Project assignment request
+   * @returns Observable<User> Updated user with assignments
+   */
+  removeUserFromProject(request: ProjectAssignmentRequest): Observable<User> {
+    return this.http.delete<User>(`${this.apiUrl}/projects/assign`, { body: request })
+      .pipe(
+        catchError(this.handleError<User>('removeUserFromProject'))
+      );
+  }
+
+  /**
+   * Get all projects assigned to the current user
+   * @returns Observable<Project[]> List of assigned projects
+   */
+  getProjectsAssignedToCurrentUser(): Observable<Project[]> {
+    return this.http.get<Project[]>(`${this.apiUrl}/projects/assigned-to-me`)
+      .pipe(
+        catchError(this.handleError<Project[]>('getProjectsAssignedToCurrentUser', []))
+      );
+  }
+
+  /**
+   * Get all users assigned to a specific project (ADMIN only)
+   * @param projectId ID of the project
+   * @returns Observable<User[]> List of assigned users
+   */
+  getUsersAssignedToProject(projectId: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/projects/${projectId}/assigned-users`)
+      .pipe(
+        catchError(this.handleError<User[]>('getUsersAssignedToProject', []))
+      );
+  }
+
+  /**
+   * Assign a TESTER (or QA/BA) user to a test module (ADMIN/QA/BA)
+   * @param request Module assignment request
+   * @returns Observable<User> Updated user with assignments
+   */
+  assignUserToTestModule(request: ModuleAssignmentRequest): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/testmodules/assign`, request)
+      .pipe(
+        catchError(this.handleError<User>('assignUserToTestModule'))
+      );
+  }
+
+  /**
+   * Remove a user from a test module assignment (ADMIN/QA/BA)
+   * @param request Module assignment request
+   * @returns Observable<User> Updated user with assignments
+   */
+  removeUserFromTestModule(request: ModuleAssignmentRequest): Observable<User> {
+    return this.http.delete<User>(`${this.apiUrl}/testmodules/assign`, { body: request })
+      .pipe(
+        catchError(this.handleError<User>('removeUserFromTestModule'))
+      );
+  }
+
+  /**
+   * Get all test modules assigned to the current user
+   * @returns Observable<TestModule[]> List of assigned test modules
+   */
+  getTestModulesAssignedToCurrentUser(): Observable<TestModule[]> {
+    return this.http.get<TestModule[]>(`${this.apiUrl}/testmodules/assigned-to-me`)
+      .pipe(
+        catchError(this.handleError<TestModule[]>('getTestModulesAssignedToCurrentUser', []))
+      );
+  }
+
+  /**
+   * Get all users assigned to a specific test module (ADMIN/QA/BA)
+   * @param moduleId ID of the test module
+   * @returns Observable<User[]> List of assigned users
+   */
+  getUsersAssignedToTestModule(moduleId: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/testmodules/${moduleId}/assigned-users`)
+      .pipe(
+        catchError(this.handleError<User[]>('getUsersAssignedToTestModule', []))
+      );
+  }
+
+  /**
+   * Get all users with a specific role (ADMIN/QA/BA)
+   * @param roleName Role name (e.g., "QA", "BA", "TESTER")
+   * @returns Observable<User[]> List of users with that role
+   */
+  getUsersByRole(roleName: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/users/by-role/${roleName}`)
+      .pipe(
+        catchError(this.handleError<User[]>('getUsersByRole', []))
       );
   }
 
