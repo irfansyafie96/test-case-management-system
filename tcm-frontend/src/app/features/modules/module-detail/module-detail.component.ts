@@ -306,34 +306,27 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
     if (this.showAssignments) {
       const moduleId = this.route.snapshot.paramMap.get('id');
       if (moduleId) {
-        console.log('Opening assignments for module:', moduleId);
         this.loadAssignmentData(moduleId);
       } else {
         console.error('No module ID found in route');
       }
-    } else {
-      console.log('Closing assignments panel');
     }
   }
 
   loadAssignmentData(moduleId: string): void {
     this.loadingAssignments = true;
-    console.log('Loading assignment data for module:', moduleId);
     
     // First load assigned users, then load available TESTER users
     this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
       next: (assignedUsers: User[]) => {
-        console.log('Assigned users loaded:', assignedUsers.length, 'users');
         this.assignedUsers = assignedUsers;
         
         // Now load TESTER users
         this.tcmService.getUsersByRole('TESTER').subscribe({
           next: (testerUsers: User[]) => {
-            console.log('TESTER users loaded:', testerUsers.length, 'users');
             // Filter out already assigned users
             const assignedIds = this.assignedUsers.map(u => String(u.id));
             this.availableUsers = testerUsers.filter(user => !assignedIds.includes(String(user.id)));
-            console.log('Available users after filtering:', this.availableUsers.length);
             this.loadingAssignments = false;
             this.cdr.detectChanges();
           },
@@ -356,7 +349,6 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   loadAssignedUsers(moduleId: string): void {
     this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
       next: (users: User[]) => {
-        console.log('Assigned users refreshed:', users.length, 'users');
         this.assignedUsers = users;
         // Re-filter available users based on new assigned users
         this.refilterAvailableUsers();
@@ -372,10 +364,8 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   loadAvailableUsers(): void {
     this.tcmService.getUsersByRole('TESTER').subscribe({
       next: (testerUsers: User[]) => {
-        console.log('Available users refreshed:', testerUsers.length, 'users');
         const assignedIds = this.assignedUsers.map(u => String(u.id));
         this.availableUsers = testerUsers.filter(user => !assignedIds.includes(String(user.id)));
-        console.log('Available users after filtering:', this.availableUsers.length);
         this.cdr.detectChanges();
       },
       error: (error: any) => {

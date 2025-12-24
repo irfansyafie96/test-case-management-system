@@ -141,24 +141,19 @@ export class ProjectDetailComponent implements OnInit {
     if (this.showAssignments) {
       const projectId = this.route.snapshot.paramMap.get('id');
       if (projectId) {
-        console.log('Opening assignments for project:', projectId);
         this.loadAssignmentData(projectId);
       } else {
         console.error('No project ID found in route');
       }
-    } else {
-      console.log('Closing assignments panel');
     }
   }
 
   loadAssignmentData(projectId: string): void {
     this.loadingAssignments = true;
-    console.log('Loading assignment data for project:', projectId);
     
     // First load assigned users, then load available users
     this.tcmService.getUsersAssignedToProject(projectId).subscribe({
       next: (assignedUsers: User[]) => {
-        console.log('Assigned users loaded:', assignedUsers.length, 'users');
         this.assignedUsers = assignedUsers;
         
         // Now load QA and BA users in parallel
@@ -167,7 +162,6 @@ export class ProjectDetailComponent implements OnInit {
           baUsers: this.tcmService.getUsersByRole('BA')
         }).subscribe({
           next: ({ qaUsers, baUsers }) => {
-            console.log('QA users loaded:', qaUsers.length, 'BA users loaded:', baUsers.length);
             // Combine QA and BA users, deduplicate by ID
             const userMap = new Map<string, User>();
             [...qaUsers, ...baUsers].forEach(user => {
@@ -178,7 +172,6 @@ export class ProjectDetailComponent implements OnInit {
             // Filter out already assigned users
             const assignedIds = this.assignedUsers.map(u => String(u.id));
             this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
-            console.log('Available users after filtering:', this.availableUsers.length);
             this.loadingAssignments = false;
             this.cdr.detectChanges();
           },
@@ -201,7 +194,6 @@ export class ProjectDetailComponent implements OnInit {
   loadAssignedUsers(projectId: string): void {
     this.tcmService.getUsersAssignedToProject(projectId).subscribe({
       next: (users: User[]) => {
-        console.log('Assigned users refreshed:', users.length, 'users');
         this.assignedUsers = users;
         // Re-filter available users based on new assigned users
         this.refilterAvailableUsers();
@@ -219,7 +211,6 @@ export class ProjectDetailComponent implements OnInit {
       baUsers: this.tcmService.getUsersByRole('BA')
     }).subscribe({
       next: ({ qaUsers, baUsers }) => {
-        console.log('Available users refreshed: QA:', qaUsers.length, 'BA:', baUsers.length);
         // Combine QA and BA users, deduplicate by ID
         const userMap = new Map<string, User>();
         [...qaUsers, ...baUsers].forEach(user => {
@@ -228,7 +219,6 @@ export class ProjectDetailComponent implements OnInit {
         const allUsers = Array.from(userMap.values());
         const assignedIds = this.assignedUsers.map(u => String(u.id));
         this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
-        console.log('Available users after filtering:', this.availableUsers.length);
         this.cdr.detectChanges();
       },
       error: (error: any) => {
