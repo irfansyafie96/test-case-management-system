@@ -362,13 +362,13 @@
   background-color: var(--surface);
   border: var(--border-medium);
   border-radius: var(--radius-md);
-  transition: var(--transition-moderate);
-  box-shadow: 4px 4px 0px 0px var(--paper);
+  transition: var(--transition-quick);
+  box-shadow: 3px 3px 0 0 var(--accent-primary);
 }
 
 .user-card:hover {
-  border-color: var(--accent-primary);
-  box-shadow: 4px 4px 0px 0px var(--ink);
+  border-color: var(--ink);
+  box-shadow: 5px 5px 0 0 var(--accent-primary);
   transform: translate(-2px, -2px);
 }
 

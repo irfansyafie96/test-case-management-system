@@ -671,7 +671,8 @@ public class ApiController {
     @GetMapping("/users/by-role/{roleName}")
     public ResponseEntity<?> getUsersByRole(@PathVariable String roleName) {
         try {
-            List<User> users = userRepository.findByRoleName(roleName);
+            String organization = tcmService.getCurrentUserOrganization();
+            List<User> users = userRepository.findByRoleNameAndOrganization(roleName, organization);
             return new ResponseEntity<>(users, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving users by role: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

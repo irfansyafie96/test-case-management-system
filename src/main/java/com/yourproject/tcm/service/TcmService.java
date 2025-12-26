@@ -63,7 +63,7 @@ public class TcmService {
     private TestStepResultRepository testStepResultRepository;  // Repository for TestStepResult operations
 
     // Helper methods for assignment-based filtering
-    private User getCurrentUser() {
+    public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() &&
             !authentication.getPrincipal().equals("anonymousUser")) {
@@ -72,6 +72,11 @@ public class TcmService {
                 .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
         }
         throw new RuntimeException("No authenticated user found");
+    }
+
+    public String getCurrentUserOrganization() {
+        String org = getCurrentUser().getOrganization();
+        return org != null ? org : "default";
     }
 
     private boolean isAdmin(User user) {
@@ -665,6 +670,27 @@ public class TcmService {
         if (executionOpt.isPresent() && userOpt.isPresent()) {
             TestExecution execution = executionOpt.get();
             User user = userOpt.get();
+
+            // Check if user has QA, BA, or TESTER role
+            boolean hasValidRole = user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("QA") || role.getName().equals("BA") || role.getName().equals("TESTER"));
+            if (!hasValidRole) {
+                throw new RuntimeException("User must have QA, BA, or TESTER role to be assigned to test executions");
+            }
+
+            // Check if user belongs to same organization as current user
+            String currentUserOrganization = getCurrentUser().getOrganization();
+            if (currentUserOrganization == null) {
+                currentUserOrganization = "default";
+            }
+            String userOrganization = user.getOrganization();
+            if (userOrganization == null) {
+                userOrganization = "default";
+            }
+            if (!userOrganization.equals(currentUserOrganization)) {
+                throw new RuntimeException("User must belong to the same organization as the assigner");
+            }
+
             execution.setAssignedToUser(user);
             TestExecution savedExecution = testExecutionRepository.save(execution);
             entityManager.flush();
@@ -727,6 +753,19 @@ public class TcmService {
             
             if (!hasQaOrBaRole) {
                 throw new RuntimeException("User must have QA or BA role to be assigned to projects");
+            }
+
+            // Check if user belongs to same organization as current user
+            String currentUserOrganization = getCurrentUser().getOrganization();
+            if (currentUserOrganization == null) {
+                currentUserOrganization = "default";
+            }
+            String userOrganization = user.getOrganization();
+            if (userOrganization == null) {
+                userOrganization = "default";
+            }
+            if (!userOrganization.equals(currentUserOrganization)) {
+                throw new RuntimeException("User must belong to the same organization as the assigner");
             }
 
             // Add project to user's assigned projects if not already assigned
@@ -809,6 +848,19 @@ public class TcmService {
             
             if (!hasValidRole) {
                 throw new RuntimeException("User must have TESTER, QA, or BA role to be assigned to test modules");
+            }
+
+            // Check if user belongs to same organization as current user
+            String currentUserOrganization = getCurrentUser().getOrganization();
+            if (currentUserOrganization == null) {
+                currentUserOrganization = "default";
+            }
+            String userOrganization = user.getOrganization();
+            if (userOrganization == null) {
+                userOrganization = "default";
+            }
+            if (!userOrganization.equals(currentUserOrganization)) {
+                throw new RuntimeException("User must belong to the same organization as the assigner");
             }
 
             // Add module to user's assigned test modules if not already assigned

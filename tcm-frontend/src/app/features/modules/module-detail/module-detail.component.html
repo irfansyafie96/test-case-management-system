@@ -79,15 +79,15 @@
             <div class="empty-content">
               <mat-icon class="empty-icon">group_off</mat-icon>
               <h3>No users assigned</h3>
-              <p>No testers are currently assigned to this module.</p>
+              <p>No users are currently assigned to this module.</p>
             </div>
           </div>
           
           <div class="add-user-form">
-            <h3>Assign New Tester</h3>
+            <h3>Assign New User</h3>
             <div class="form-row">
               <mat-form-field appearance="outline" class="user-select">
-                <mat-label>Select Tester</mat-label>
+                <mat-label>Select User</mat-label>
                 <mat-select [(ngModel)]="selectedUserId">
                   <mat-option *ngFor="let user of availableUsers" [value]="user.id.toString()">
                     {{ user.username }} ({{ user.email }})

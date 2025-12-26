@@ -21,7 +21,7 @@ import { TestSuiteDialogComponent } from './test-suite-dialog.component';
 import { TestCaseDialogComponent } from './test-case-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component'; // New improved dialog
 import { Project, TestModule, TestSuite, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
-import { Observable, of, BehaviorSubject, combineLatest } from 'rxjs';
+import { Observable, of, BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
 
 @Component({
@@ -315,32 +315,51 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
 
   loadAssignmentData(moduleId: string): void {
     this.loadingAssignments = true;
+    this.cdr.detectChanges(); // Force update to show loading state
     
-    // First load assigned users, then load available TESTER users
+    // First load assigned users, then load available QA, BA, and TESTER users
     this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
       next: (assignedUsers: User[]) => {
         this.assignedUsers = assignedUsers;
         
-        // Now load TESTER users
-        this.tcmService.getUsersByRole('TESTER').subscribe({
-          next: (testerUsers: User[]) => {
-            // Filter out already assigned users
-            const assignedIds = this.assignedUsers.map(u => String(u.id));
-            this.availableUsers = testerUsers.filter(user => !assignedIds.includes(String(user.id)));
-            this.loadingAssignments = false;
-            this.cdr.detectChanges();
+        // Now load QA, BA, and TESTER users in parallel
+        forkJoin({
+          qaUsers: this.tcmService.getUsersByRole('QA'),
+          baUsers: this.tcmService.getUsersByRole('BA'),
+          testerUsers: this.tcmService.getUsersByRole('TESTER')
+        }).subscribe({
+          next: ({ qaUsers, baUsers, testerUsers }) => {
+            // Defer updates to next tick to avoid ExpressionChangedAfterItHasBeenCheckedError
+            setTimeout(() => {
+              // Combine QA, BA, and TESTER users, deduplicate by ID
+              const userMap = new Map<string, User>();
+              [...qaUsers, ...baUsers, ...testerUsers].forEach(user => {
+                userMap.set(String(user.id), user);
+              });
+              const allUsers = Array.from(userMap.values());
+              
+              // Filter out already assigned users
+              const assignedIds = assignedUsers.map(u => String(u.id));
+              this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
+              this.loadingAssignments = false;
+              this.cdr.detectChanges(); // Update template after changes
+            }, 0);
           },
           error: (error: any) => {
-            console.error('Error loading TESTER users:', error);
-            this.loadingAssignments = false;
-            this.cdr.detectChanges();
+            console.error('Error loading available users:', error);
+            setTimeout(() => {
+              this.loadingAssignments = false;
+              this.cdr.detectChanges(); // Update template even on error
+            }, 0);
           }
         });
       },
       error: (error: any) => {
         console.error('Error loading assigned users:', error);
-        this.loadingAssignments = false;
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.loadingAssignments = false;
+          this.cdr.detectChanges(); // Update template even on error
+        }, 0);
       }
     });
   }
@@ -349,28 +368,41 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   loadAssignedUsers(moduleId: string): void {
     this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
       next: (users: User[]) => {
-        this.assignedUsers = users;
-        // Re-filter available users based on new assigned users
-        this.refilterAvailableUsers();
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.assignedUsers = users;
+          // Re-filter available users based on new assigned users
+          this.refilterAvailableUsers();
+          this.cdr.detectChanges(); // Update template after changes
+        }, 0);
       },
       error: (error: any) => {
         console.error('Error refreshing assigned users:', error);
-        this.cdr.detectChanges();
       }
     });
   }
 
   loadAvailableUsers(): void {
-    this.tcmService.getUsersByRole('TESTER').subscribe({
-      next: (testerUsers: User[]) => {
-        const assignedIds = this.assignedUsers.map(u => String(u.id));
-        this.availableUsers = testerUsers.filter(user => !assignedIds.includes(String(user.id)));
-        this.cdr.detectChanges();
+    forkJoin({
+      qaUsers: this.tcmService.getUsersByRole('QA'),
+      baUsers: this.tcmService.getUsersByRole('BA'),
+      testerUsers: this.tcmService.getUsersByRole('TESTER')
+    }).subscribe({
+      next: ({ qaUsers, baUsers, testerUsers }) => {
+        setTimeout(() => {
+          // Combine QA, BA, and TESTER users, deduplicate by ID
+          const userMap = new Map<string, User>();
+          [...qaUsers, ...baUsers, ...testerUsers].forEach(user => {
+            userMap.set(String(user.id), user);
+          });
+          const allUsers = Array.from(userMap.values());
+          
+          const assignedIds = this.assignedUsers.map(u => String(u.id));
+          this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
+          this.cdr.detectChanges(); // Update template after changes
+        }, 0);
       },
       error: (error: any) => {
         console.error('Error refreshing available users:', error);
-        this.cdr.detectChanges();
       }
     });
   }

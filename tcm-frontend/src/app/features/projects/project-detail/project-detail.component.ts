@@ -150,6 +150,7 @@ export class ProjectDetailComponent implements OnInit {
 
   loadAssignmentData(projectId: string): void {
     this.loadingAssignments = true;
+    this.cdr.detectChanges(); // Force update to show loading state
     
     // First load assigned users, then load available users
     this.tcmService.getUsersAssignedToProject(projectId).subscribe({
@@ -162,30 +163,37 @@ export class ProjectDetailComponent implements OnInit {
           baUsers: this.tcmService.getUsersByRole('BA')
         }).subscribe({
           next: ({ qaUsers, baUsers }) => {
-            // Combine QA and BA users, deduplicate by ID
-            const userMap = new Map<string, User>();
-            [...qaUsers, ...baUsers].forEach(user => {
-              userMap.set(String(user.id), user);
-            });
-            const allUsers = Array.from(userMap.values());
-            
-            // Filter out already assigned users
-            const assignedIds = this.assignedUsers.map(u => String(u.id));
-            this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
-            this.loadingAssignments = false;
-            this.cdr.detectChanges();
+            // Defer updates to next tick to avoid ExpressionChangedAfterItHasBeenCheckedError
+            setTimeout(() => {
+              // Combine QA and BA users, deduplicate by ID
+              const userMap = new Map<string, User>();
+              [...qaUsers, ...baUsers].forEach(user => {
+                userMap.set(String(user.id), user);
+              });
+              const allUsers = Array.from(userMap.values());
+              
+              // Filter out already assigned users
+              const assignedIds = assignedUsers.map(u => String(u.id));
+              this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
+              this.loadingAssignments = false;
+              this.cdr.detectChanges(); // Update template after changes
+            }, 0);
           },
           error: (error: any) => {
             console.error('Error loading available users:', error);
-            this.loadingAssignments = false;
-            this.cdr.detectChanges();
+            setTimeout(() => {
+              this.loadingAssignments = false;
+              this.cdr.detectChanges(); // Update template even on error
+            }, 0);
           }
         });
       },
       error: (error: any) => {
         console.error('Error loading assigned users:', error);
-        this.loadingAssignments = false;
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.loadingAssignments = false;
+          this.cdr.detectChanges(); // Update template even on error
+        }, 0);
       }
     });
   }
@@ -194,10 +202,11 @@ export class ProjectDetailComponent implements OnInit {
   loadAssignedUsers(projectId: string): void {
     this.tcmService.getUsersAssignedToProject(projectId).subscribe({
       next: (users: User[]) => {
-        this.assignedUsers = users;
-        // Re-filter available users based on new assigned users
-        this.refilterAvailableUsers();
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.assignedUsers = users;
+          // Re-filter available users based on new assigned users
+          this.refilterAvailableUsers();
+        }, 0);
       },
       error: (error: any) => {
         console.error('Error refreshing assigned users:', error);
@@ -211,19 +220,19 @@ export class ProjectDetailComponent implements OnInit {
       baUsers: this.tcmService.getUsersByRole('BA')
     }).subscribe({
       next: ({ qaUsers, baUsers }) => {
-        // Combine QA and BA users, deduplicate by ID
-        const userMap = new Map<string, User>();
-        [...qaUsers, ...baUsers].forEach(user => {
-          userMap.set(String(user.id), user);
-        });
-        const allUsers = Array.from(userMap.values());
-        const assignedIds = this.assignedUsers.map(u => String(u.id));
-        this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          // Combine QA and BA users, deduplicate by ID
+          const userMap = new Map<string, User>();
+          [...qaUsers, ...baUsers].forEach(user => {
+            userMap.set(String(user.id), user);
+          });
+          const allUsers = Array.from(userMap.values());
+          const assignedIds = this.assignedUsers.map(u => String(u.id));
+          this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
+        }, 0);
       },
       error: (error: any) => {
         console.error('Error refreshing available users:', error);
-        this.cdr.detectChanges();
       }
     });
   }

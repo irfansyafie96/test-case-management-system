@@ -341,6 +341,19 @@ export class TcmService {
   // ==================== ASSIGNMENT METHODS ====================
 
   /**
+   * Assign a test execution to a user (ADMIN/QA/BA only)
+   * @param executionId ID of the execution
+   * @param userId ID of the user
+   * @returns Observable<TestExecution> Updated execution with assigned user
+   */
+  assignTestExecution(executionId: string, userId: string): Observable<TestExecution> {
+    return this.http.post<TestExecution>(`${this.apiUrl}/executions/${executionId}/assign?userId=${userId}`, {})
+      .pipe(
+        catchError(this.handleError<TestExecution>('assignTestExecution'))
+      );
+  }
+
+  /**
    * Assign a QA/BA user to a project (ADMIN only)
    * @param request Project assignment request
    * @returns Observable<User> Updated user with assignments

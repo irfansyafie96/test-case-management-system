@@ -35,6 +35,7 @@ public class User {
     private String username;  // Login username
     private String email;     // User's email address
     private String password;  // Encrypted password
+    private String organization = "default";  // User's organization
 
     @Column(name = "enabled")
     private boolean enabled = true;  // Account status - true means active
@@ -135,6 +136,14 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(String organization) {
+        this.organization = organization;
     }
 
     public boolean isEnabled() {

@@ -238,6 +238,7 @@ public class AuthController {
         }
 
         user.setRoles(roles);  // Assign roles to user
+        user.setOrganization("default");  // Default organization
         userRepository.save(user);  // Save user to database
 
         return ResponseEntity.ok("User registered successfully!");

@@ -49,6 +49,9 @@ public class DataInitializationService {
 
         // Initialize default QA/BA user
         initializeDefaultQaBa();
+
+        // Initialize test users with different organizations for testing
+        initializeTestUsersWithDifferentOrganizations();
     }
 
     private void initializeRoles() {
@@ -77,6 +80,7 @@ public class DataInitializationService {
             roles.add(adminRole);
 
             admin.setRoles(roles);
+            admin.setOrganization("default");
             userRepository.save(admin);
 
             System.out.println("Default admin user created: " + defaultAdminUsername);
@@ -98,6 +102,7 @@ public class DataInitializationService {
             roles.add(testerRole);
 
             tester.setRoles(roles);
+            tester.setOrganization("default");
             userRepository.save(tester);
 
             System.out.println("Default tester user created: " + testerUsername);
@@ -122,9 +127,43 @@ public class DataInitializationService {
             roles.add(baRole);
 
             qaba.setRoles(roles);
+            qaba.setOrganization("default");
             userRepository.save(qaba);
 
             System.out.println("Default QA/BA user created: " + qabaUsername);
+        }
+    }
+
+    private void initializeTestUsersWithDifferentOrganizations() {
+        // Test user 1: QA user in organization "org1"
+        createTestUserIfNotExists("qa_org1", "qa_org1@test.com", "qa123", "QA", "org1");
+        
+        // Test user 2: BA user in organization "org1"
+        createTestUserIfNotExists("ba_org1", "ba_org1@test.com", "ba123", "BA", "org1");
+        
+        // Test user 3: TESTER user in organization "org2"
+        createTestUserIfNotExists("tester_org2", "tester_org2@test.com", "tester123", "TESTER", "org2");
+        
+        // Test user 4: QA user in organization "org2"
+        createTestUserIfNotExists("qa_org2", "qa_org2@test.com", "qa123", "QA", "org2");
+        
+        System.out.println("Test users with different organizations created for testing");
+    }
+
+    private void createTestUserIfNotExists(String username, String email, String password, String roleName, String organization) {
+        if (userRepository.findByUsername(username).isEmpty()) {
+            User user = new User(username, email, encoder.encode(password));
+            
+            Set<Role> roles = new HashSet<>();
+            Role role = roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new RuntimeException(roleName + " role not found"));
+            roles.add(role);
+            
+            user.setRoles(roles);
+            user.setOrganization(organization);
+            userRepository.save(user);
+            
+            System.out.println("Test user created: " + username + " (role: " + roleName + ", org: " + organization + ")");
         }
     }
 }

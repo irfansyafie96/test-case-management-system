@@ -18,6 +18,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     List<User> findByRoleName(@Param("roleName") String roleName);
 
+    // Find users by specific role and organization
+    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.organization = :organization")
+    List<User> findByRoleNameAndOrganization(@Param("roleName") String roleName, @Param("organization") String organization);
+
     // Find QA users (users with QA role)
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = 'QA'")
     List<User> findQaUsers();
