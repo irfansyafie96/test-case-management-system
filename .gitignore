@@ -155,3 +155,6 @@ secrets/
 
 # Development notes
 dev-notes/
+
+# Testing scripts
+test_qa_project.ps1
