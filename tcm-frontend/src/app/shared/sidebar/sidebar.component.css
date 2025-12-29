@@ -196,6 +196,7 @@
   border: var(--border-thin); /* Subtle border for each item */
   box-shadow: 2px 2px 0 0 var(--ink);
   background-color: var(--surface);
+  flex-shrink: 0;
 }
 
 .sidebar-container.collapsed .nav-item {
@@ -234,33 +235,37 @@
 }
 
 .sidebar-footer {
-  padding: 24px;
+  padding: 16px;
   border-top: var(--border-medium);
   background-color: var(--paper);
+  flex-shrink: 0;
 }
 
-.user-info {
+.user-container {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px;
+  padding: 12px;
   border: var(--border-thin);
   border-radius: var(--radius-sm);
   background-color: var(--surface);
   box-shadow: 2px 2px 0 0 rgba(0,0,0,0.1);
+  transition: var(--transition-quick);
 }
 
-.sidebar-container.collapsed .user-info {
-  justify-content: center;
-  border: none;
+.sidebar-container.collapsed .user-container {
+  flex-direction: column;
   padding: 0;
+  gap: 16px;
+  border: none;
+  background-color: transparent;
   box-shadow: none;
 }
 
 .user-avatar {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm); /* Square-ish avatar */
+  border-radius: var(--radius-sm);
   background-color: var(--accent-secondary);
   color: white;
   display: flex;
@@ -268,6 +273,7 @@
   justify-content: center;
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .user-avatar mat-icon {
@@ -279,6 +285,8 @@
 .user-details {
   flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .user-name {
@@ -286,17 +294,46 @@
   font-weight: 700;
   font-size: 14px;
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-role {
   font-family: 'JetBrains Mono', monospace !important;
   font-size: 10px !important;
-  padding: 0 6px;
-  min-height: 18px;
+  padding: 0 4px;
+  margin-top: 4px;
   background-color: var(--paper);
   border: 1px solid var(--ink);
   color: var(--ink);
   border-radius: 4px;
-  display: inline-flex;
+  align-self: flex-start;
+}
+
+.logout-icon-btn {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--accent-danger);
+  border: 1px solid transparent;
+  background-color: transparent;
+  cursor: pointer;
+  transition: var(--transition-quick);
+  padding: 0;
+}
+
+.logout-icon-btn:hover {
+  background-color: #fff0f5; /* Light ruby tint */
+  border-color: var(--accent-danger);
+  transform: scale(1.05);
+}
+
+.logout-icon-btn mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
 }

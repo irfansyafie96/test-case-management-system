@@ -42,17 +42,22 @@
   </nav>
 
   <div class="sidebar-footer">
-    <div class="user-info" *ngIf="currentUser" [matTooltip]="isCollapsed ? currentUser.username : ''">
-      <div class="user-avatar">
+    <div class="user-container" *ngIf="currentUser">
+      <div class="user-avatar" [matTooltip]="isCollapsed ? currentUser.username : ''">
         <mat-icon *ngIf="isCollapsed">account_circle</mat-icon>
         <span *ngIf="!isCollapsed">{{ currentUser.username.charAt(0).toUpperCase() }}</span>
       </div>
+      
       <div class="user-details" *ngIf="!isCollapsed">
         <div class="user-name">{{ currentUser.username }}</div>
         <div class="user-role" *ngFor="let role of currentUser.roles">
           {{ role }}
         </div>
       </div>
+
+      <button class="logout-icon-btn" (click)="logout()" matTooltip="Logout">
+        <mat-icon>logout</mat-icon>
+      </button>
     </div>
   </div>
 </div>

@@ -3,7 +3,6 @@ import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { filter } from 'rxjs';
 import { SidebarComponent } from './shared/sidebar/sidebar.component';
-import { HeaderComponent } from './shared/header/header.component';
 import { AuthService } from './core/services/auth.service';
 
 /**
@@ -18,15 +17,13 @@ import { AuthService } from './core/services/auth.service';
  * The component uses:
  * - RouterOutlet: To display different views based on current route
  * - SidebarComponent: Navigation sidebar (shown on authenticated routes)
- * - HeaderComponent: Top header with user info and navigation
  */
 @Component({
   selector: 'app-root',  // CSS selector for this component
   imports: [            // Components this component uses
     CommonModule,      // Angular's common directives (ngIf, ngFor, etc.)
     RouterOutlet,      // Router outlet for displaying routed components
-    SidebarComponent,  // Sidebar navigation component
-    HeaderComponent    // Top header component
+    SidebarComponent   // Sidebar navigation component
   ],
   templateUrl: './app.html',  // HTML template
   styleUrl: './app.css'       // CSS styles
