@@ -158,3 +158,6 @@ dev-notes/
 
 # Testing scripts
 test_qa_project.ps1
+
+# Compile output
+compile_output.txt
