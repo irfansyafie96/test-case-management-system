@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
@@ -845,7 +846,7 @@ public class TcmService {
             // Check if user has TESTER, QA, or BA role
             boolean hasValidRole = user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals("TESTER") || role.getName().equals("QA") || role.getName().equals("BA"));
-            
+
             if (!hasValidRole) {
                 throw new RuntimeException("User must have TESTER, QA, or BA role to be assigned to test modules");
             }
@@ -868,12 +869,100 @@ public class TcmService {
                 user.getAssignedTestModules().add(module);
                 User savedUser = userRepository.save(user);
                 entityManager.flush();
+
+                // Create test executions for all test cases in this module
+                createTestExecutionsForModuleAndUser(module, user);
+
                 return savedUser;
             } else {
                 return user; // Already assigned
             }
         }
         throw new RuntimeException("User or test module not found with id: " + request.getUserId() + " or " + request.getTestModuleId());
+    }
+
+    /**
+     * Create test executions for all test cases in a module and assign them to a user
+     * Skips test cases that already have executions assigned to this user
+     * @param module The test module
+     * @param user The user to assign executions to
+     */
+    private void createTestExecutionsForModuleAndUser(TestModule module, User user) {
+        // Get all test suites in the module
+        List<TestSuite> suites = module.getTestSuites();
+        if (suites == null || suites.isEmpty()) {
+            return;
+        }
+
+        // Get existing executions for this user to avoid duplicates
+        List<TestExecution> existingExecutions = testExecutionRepository.findByAssignedToUser(user);
+
+        // Iterate through all test suites and their test cases
+        for (TestSuite suite : suites) {
+            List<TestCase> testCases = suite.getTestCases();
+            if (testCases == null || testCases.isEmpty()) {
+                continue;
+            }
+
+            // Create execution for each test case if not already exists
+            for (TestCase testCase : testCases) {
+                // Check if execution already exists for this test case and user
+                boolean alreadyExists = existingExecutions.stream()
+                    .anyMatch(e -> e.getTestCase() != null && e.getTestCase().getId().equals(testCase.getId()));
+
+                if (!alreadyExists) {
+                    try {
+                        createTestExecutionForTestCaseAndUser(testCase.getId(), user.getId());
+                    } catch (Exception e) {
+                        // Log error but continue with other test cases
+                        System.err.println("Error creating execution for test case " + testCase.getId() + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Create a test execution for a specific test case and assign it to a user
+     * @param testCaseId The test case ID
+     * @param userId The user ID to assign the execution to
+     * @return The created test execution
+     */
+    @Transactional
+    public TestExecution createTestExecutionForTestCaseAndUser(Long testCaseId, Long userId) {
+        Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
+        Optional<User> userOpt = userRepository.findById(userId);
+
+        if (testCaseOpt.isPresent() && userOpt.isPresent()) {
+            TestCase testCase = testCaseOpt.get();
+            User user = userOpt.get();
+
+            // Create new test execution
+            TestExecution execution = new TestExecution();
+            execution.setTestCase(testCase);
+            execution.setExecutionDate(LocalDateTime.now());
+            execution.setOverallResult("NOT_EXECUTED");
+            execution.setAssignedToUser(user);
+
+            // Create step results for each step in the test case
+            List<TestStep> steps = testCase.getTestSteps();
+            if (steps != null && !steps.isEmpty()) {
+                List<TestStepResult> stepResults = new ArrayList<>();
+                for (TestStep step : steps) {
+                    TestStepResult stepResult = new TestStepResult();
+                    stepResult.setTestExecution(execution);
+                    stepResult.setTestStep(step);
+                    stepResult.setStepNumber(step.getStepNumber());
+                    stepResult.setStatus("NOT_EXECUTED");
+                    stepResult.setActualResult("");
+                    stepResults.add(stepResult);
+                }
+                execution.setStepResults(stepResults);
+            }
+
+            return testExecutionRepository.save(execution);
+        }
+        throw new RuntimeException("Test case or user not found with id: " + testCaseId + " or " + userId);
     }
 
     /**
@@ -919,5 +1008,27 @@ public class TcmService {
             return testModuleRepository.findTestModulesAssignedToUser(user.getId());
         }
         throw new RuntimeException("No authenticated user found");
+    }
+
+    /**
+     * Regenerate test executions for all test cases in a module for all assigned users
+     * Useful for generating executions after module assignment
+     * @param moduleId ID of the test module
+     */
+    @Transactional
+    public void regenerateExecutionsForModule(Long moduleId) {
+        Optional<TestModule> moduleOpt = testModuleRepository.findById(moduleId);
+        if (!moduleOpt.isPresent()) {
+            throw new RuntimeException("Test module not found with id: " + moduleId);
+        }
+
+        TestModule module = moduleOpt.get();
+        Set<User> assignedUsers = module.getAssignedUsers();
+
+        if (assignedUsers != null && !assignedUsers.isEmpty()) {
+            for (User user : assignedUsers) {
+                createTestExecutionsForModuleAndUser(module, user);
+            }
+        }
     }
 }

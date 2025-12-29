@@ -165,6 +165,43 @@ export class ExecutionWorkbenchComponent implements OnInit {
     });
   }
 
+  completeAndNextExecution(overallResult: string, notes?: string): void {
+    if (!this.executionId) return;
+
+    // Complete the current execution first
+    this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({
+      next: () => {
+        // Get all assigned executions to find the next one
+        this.tcmService.getMyAssignedExecutions().subscribe({
+          next: (executions) => {
+            // Sort executions by ID (convert to numbers for proper sorting)
+            const sortedExecutions = executions.sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
+
+            // Find the current execution index
+            const currentExecutionId = Number(this.executionId);
+            const currentIndex = sortedExecutions.findIndex(e => Number(e.id) === currentExecutionId);
+
+            // If there's a next execution, navigate to it
+            if (currentIndex !== -1 && currentIndex < sortedExecutions.length - 1) {
+              const nextExecution = sortedExecutions[currentIndex + 1];
+              this.router.navigate(['/executions/workbench', nextExecution.id]);
+            } else {
+              // No more executions, go back to assignments page
+              this.router.navigate(['/executions']);
+            }
+          },
+          error: (error) => {
+            console.error('Error loading assigned executions:', error);
+            this.router.navigate(['/executions']);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error completing execution:', error);
+      }
+    });
+  }
+
   goBack(): void {
     this.router.navigate(['/executions']);
   }

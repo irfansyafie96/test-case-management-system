@@ -155,16 +155,17 @@ export class ProjectDetailComponent implements OnInit {
     // First load assigned users, then load available users
     this.tcmService.getUsersAssignedToProject(projectId).subscribe({
       next: (assignedUsers: User[]) => {
-        this.assignedUsers = assignedUsers;
-        
         // Now load QA and BA users in parallel
         forkJoin({
           qaUsers: this.tcmService.getUsersByRole('QA'),
           baUsers: this.tcmService.getUsersByRole('BA')
         }).subscribe({
           next: ({ qaUsers, baUsers }) => {
-            // Defer updates to next tick to avoid ExpressionChangedAfterItHasBeenCheckedError
+            // Defer all updates to next tick to avoid ExpressionChangedAfterItHasBeenCheckedError
             setTimeout(() => {
+              // Update assigned users first
+              this.assignedUsers = assignedUsers;
+              
               // Combine QA and BA users, deduplicate by ID
               const userMap = new Map<string, User>();
               [...qaUsers, ...baUsers].forEach(user => {

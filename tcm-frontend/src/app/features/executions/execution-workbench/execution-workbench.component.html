@@ -180,15 +180,22 @@
                     <mat-option value="BLOCKED">Blocked</mat-option>
                   </mat-select>
                 </mat-form-field>
-                
+
                 <div class="action-buttons">
                   <button mat-stroked-button (click)="goBack()">BACK</button>
-                  <button 
-                    mat-raised-button 
-                    color="primary" 
+                  <button
+                    mat-raised-button
+                    color="primary"
                     [disabled]="!overallResult"
                     (click)="completeExecution(overallResult, executionNotes)">
                     COMPLETE EXECUTION
+                  </button>
+                  <button
+                    mat-raised-button
+                    color="accent"
+                    [disabled]="!overallResult"
+                    (click)="completeAndNextExecution(overallResult, executionNotes)">
+                    <mat-icon>skip_next</mat-icon> NEXT TEST CASE
                   </button>
                 </div>
               </div>

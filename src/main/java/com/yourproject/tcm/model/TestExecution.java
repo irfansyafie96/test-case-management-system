@@ -76,7 +76,7 @@ public class TestExecution {
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_to_user_id")  // Foreign key column for assigned user
-    @JsonIgnoreProperties({"testExecutions"}) // Prevent circular reference back to TestExecutions
+    @JsonIgnoreProperties({"testExecutions", "roles"}) // Prevent circular reference back to TestExecutions
     private User assignedToUser;  // The user assigned to execute this test
 
     /**

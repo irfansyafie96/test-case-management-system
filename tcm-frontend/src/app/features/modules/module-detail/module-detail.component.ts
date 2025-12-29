@@ -55,7 +55,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   private snackBar = inject(MatSnackBar);
   private cdr = inject(ChangeDetectorRef);
 
-  displayedColumns: string[] = ['id', 'title', 'status', 'actions'];
+  displayedColumns: string[] = ['id', 'title', 'actions'];
 
   // Assignment management
   showAssignments = false;
@@ -294,11 +294,6 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   }
 
 
-  getStatusClass(status: string | undefined): string {
-    if (!status) return 'not_executed';
-    return status.toLowerCase();
-  }
-
   // ==================== ASSIGNMENT METHODS ====================
 
   toggleAssignments(): void {
@@ -320,8 +315,6 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
     // First load assigned users, then load available QA, BA, and TESTER users
     this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
       next: (assignedUsers: User[]) => {
-        this.assignedUsers = assignedUsers;
-        
         // Now load QA, BA, and TESTER users in parallel
         forkJoin({
           qaUsers: this.tcmService.getUsersByRole('QA'),
@@ -329,8 +322,11 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
           testerUsers: this.tcmService.getUsersByRole('TESTER')
         }).subscribe({
           next: ({ qaUsers, baUsers, testerUsers }) => {
-            // Defer updates to next tick to avoid ExpressionChangedAfterItHasBeenCheckedError
+            // Defer all updates to next tick to avoid ExpressionChangedAfterItHasBeenCheckedError
             setTimeout(() => {
+              // Update assigned users first
+              this.assignedUsers = assignedUsers;
+              
               // Combine QA, BA, and TESTER users, deduplicate by ID
               const userMap = new Map<string, User>();
               [...qaUsers, ...baUsers, ...testerUsers].forEach(user => {

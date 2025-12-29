@@ -678,4 +678,22 @@ public class ApiController {
             return new ResponseEntity<>("Error retrieving users by role: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    /**
+     * POST /api/testmodules/{moduleId}/regenerate-executions - Regenerate test executions for a module
+     * Creates test executions for all test cases in the module for all assigned users
+     * Useful for generating executions after module assignment
+     * @param moduleId ID of the test module
+     * @return ResponseEntity with success message or error
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PostMapping("/testmodules/{moduleId}/regenerate-executions")
+    public ResponseEntity<?> regenerateExecutionsForModule(@PathVariable Long moduleId) {
+        try {
+            tcmService.regenerateExecutionsForModule(moduleId);
+            return new ResponseEntity<>("Test executions regenerated successfully for module " + moduleId, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error regenerating test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
