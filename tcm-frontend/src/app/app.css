@@ -48,6 +48,15 @@ html, body {
   overflow-x: hidden;
   padding: 0;
   scroll-behavior: smooth;
+  
+  /* Hide scrollbar but allow scroll */
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.page-content::-webkit-scrollbar {
+  display: none;
 }
 
 /* Mobile Layout Adjustments */
@@ -71,7 +80,12 @@ html, body {
   .content-wrapper {
     width: 100%;
     height: 100%;
-    padding-bottom: 80px; /* Space for bottom nav */
+    /* padding-bottom moved to .page-content */
+  }
+
+  /* Apply padding to scroll container so content scrolls BEHIND nav but can reach bottom */
+  .main-content.with-sidebar .content-wrapper .page-content {
+    padding-bottom: 80px;
   }
 }
 

@@ -67,42 +67,12 @@
     color: var(--ink);
   }
 
-  /* Floating Action Button Style for Center Item */
-  .mobile-nav-fab-container {
-    position: relative;
-    top: -24px; /* Float above */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .mobile-nav-fab {
-    width: 56px;
-    height: 56px;
-    background-color: var(--ink);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--surface);
-    box-shadow: 4px 4px 0 0 var(--accent-primary);
-    text-decoration: none;
-    transition: transform 0.2s;
+    .logout-icon {
+      color: var(--accent-danger);
+    }
   }
   
-  .mobile-nav-fab:active {
-    transform: scale(0.95);
-  }
-
-  .mobile-nav-fab mat-icon {
-    font-size: 28px;
-    width: 28px;
-    height: 28px;
-  }
-}
-
-.sidebar-container.collapsed {
-  width: 80px;
+  .sidebar-container.collapsed {  width: 80px;
 }
 
 .sidebar-header {

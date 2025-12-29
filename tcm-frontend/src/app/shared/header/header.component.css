@@ -62,3 +62,47 @@ button[mat-icon-button]:hover {
   box-shadow: 3px 3px 0 0 var(--accent-primary);
   background-color: var(--surface);
 }
+
+/* Responsive Header */
+@media (max-width: 900px) {
+  .app-header {
+    padding: 0 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0 16px; /* Tighter padding */
+  }
+
+  .header-right {
+    gap: 12px;
+  }
+
+  .user-greeting {
+    display: none; /* Hide greeting on tablets/mobile */
+  }
+
+  .page-title {
+    font-size: 24px; /* Scale down title */
+  }
+}
+
+@media (max-width: 600px) {
+  /* Icon-only mode for main actions */
+  .logout-btn span,
+  .login-btn span {
+    display: none;
+  }
+
+  .logout-btn,
+  .login-btn {
+    min-width: 0 !important; /* Allow shrinking */
+    padding: 0 12px !important; /* Square-ish aspect */
+  }
+
+  .logout-btn mat-icon,
+  .login-btn mat-icon {
+    margin-right: 0 !important; /* Remove icon margin */
+  }
+}

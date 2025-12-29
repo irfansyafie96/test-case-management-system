@@ -29,6 +29,10 @@
   overflow-y: auto; /* Internal scroll only if absolutely necessary */
   display: flex;
   flex-direction: column;
+  
+  /* Hide scrollbar but allow scroll */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .login-card:hover { /* Override global mat-mdc-card hover */
@@ -36,10 +40,9 @@
   box-shadow: var(--shadow-md) !important;
 }
 
-/* Hide scrollbar in card if it appears */
+/* Hide scrollbar in card if it appears (Chrome/Safari/Webkit) */
 .login-card::-webkit-scrollbar {
-  width: 0;
-  background: transparent;
+  display: none;
 }
 
 .login-card mat-card-header {
@@ -149,4 +152,41 @@
 
 .spinner-inline {
   /* Ensure spinner color matches or contrasts well */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .login-container {
+    padding: 16px; /* Slightly more breathing room on mobile */
+  }
+
+  .login-card {
+    padding: 24px !important; /* Reduce internal padding */
+    width: 100%;
+    max-width: 100%; /* Allow it to take full width available */
+    box-shadow: none !important; /* Optional: simplify on mobile */
+    border: var(--border-thin);
+  }
+
+  .login-card mat-card-title {
+    font-size: 20px;
+  }
+
+  .login-btn {
+    margin-top: 16px; /* Restore some spacing */
+  }
+}
+
+@media (max-width: 380px) {
+  .login-card {
+    padding: 16px !important; /* Even tighter for very small screens */
+  }
+
+  .login-card mat-card-header {
+    margin-bottom: 8px;
+  }
+
+  .mat-mdc-form-field-infix {
+     min-height: 36px !important;
+  }
 }

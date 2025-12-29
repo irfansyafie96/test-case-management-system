@@ -74,11 +74,10 @@
     <span>Projects</span>
   </a>
 
-  <div class="mobile-nav-fab-container">
-    <a routerLink="/executions" routerLinkActive="active" class="mobile-nav-fab">
-      <mat-icon>play_arrow</mat-icon>
-    </a>
-  </div>
+  <a routerLink="/executions" routerLinkActive="active" class="mobile-nav-item">
+    <mat-icon>play_circle</mat-icon>
+    <span>Executions</span>
+  </a>
 
   <a routerLink="/modules" routerLinkActive="active" class="mobile-nav-item">
     <mat-icon>view_module</mat-icon>
@@ -89,4 +88,9 @@
     <mat-icon>list_alt</mat-icon>
     <span>Tests</span>
   </a>
+
+  <div class="mobile-nav-item" (click)="logout()" style="cursor: pointer;">
+    <mat-icon class="logout-icon">logout</mat-icon>
+    <span>Logout</span>
+  </div>
 </nav>

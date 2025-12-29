@@ -10,14 +10,14 @@
 
     <mat-card-content>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-        <mat-form-field class="full-width" appearance="outline">
+        <mat-form-field class="full-width" appearance="outline" subscriptSizing="dynamic">
           <mat-label>Username</mat-label>
           <input matInput formControlName="username" placeholder="Enter your username">
           <mat-icon matSuffix>person</mat-icon>
           <mat-error *ngIf="loginForm.get('username')?.invalid">Username is required</mat-error>
         </mat-form-field>
 
-        <mat-form-field class="full-width" appearance="outline">
+        <mat-form-field class="full-width" appearance="outline" subscriptSizing="dynamic">
           <mat-label>Password</mat-label>
           <input 
             matInput 
