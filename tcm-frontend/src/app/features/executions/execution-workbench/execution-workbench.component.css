@@ -142,7 +142,7 @@
 }
 
 .steps-container {
-  padding: 24px;
+  padding: 0; /* Remove padding to make table flush */
 }
 
 .steps-table {
@@ -156,12 +156,12 @@
   color: #666;
   text-transform: uppercase;
   border-bottom: var(--border-thin);
-  padding: 8px 12px;
+  padding: 12px 16px; /* Adjusted padding */
   background-color: var(--paper);
 }
 
 .steps-table td {
-  padding: 12px;
+  padding: 16px; /* Increased padding for breathing room */
   border-bottom: var(--border-thin);
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
@@ -172,13 +172,13 @@
 
 .step-number {
   display: inline-block;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
+  width: 28px; /* Slightly smaller */
+  height: 28px;
+  line-height: 28px;
   text-align: center;
   background-color: var(--ink);
   color: var(--surface);
-  border-radius: 50%;
+  border-radius: 4px; /* Square instead of circle for 'tech' feel */
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
   font-size: 12px;
@@ -186,10 +186,9 @@
 
 .action-text, .expected-text {
   display: block;
-  padding: 8px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  border-left: 3px solid var(--accent-primary);
+  /* Removed background and border for cleaner look */
+  color: var(--ink);
+  line-height: 1.5;
 }
 
 .status-field, .actual-result-field {
@@ -261,8 +260,8 @@
 }
 
 .completion-section {
-  margin-top: 24px;
-  padding-top: 24px;
+  margin: 24px -24px 0 -24px; /* Counteract parent padding to make border full-width */
+  padding: 24px 24px 0 24px;
   border-top: var(--border-thin);
 }
 
@@ -272,6 +271,7 @@
   font-weight: 700;
   margin: 0 0 16px 0;
   color: var(--ink);
+  text-transform: uppercase; /* Match other section titles */
 }
 
 .completion-controls {

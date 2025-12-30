@@ -51,7 +51,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
   
   vm$ = this.createViewModel();
 
-  displayedColumns: string[] = ['stepNumber', 'action', 'expectedResult', 'status', 'actualResult', 'evidence', 'actions'];
+  displayedColumns: string[] = ['stepNumber', 'action', 'expectedResult', 'status', 'actualResult', 'actions'];
   executionId: string | null = null;
   executionNotes: string = '';
   overallResult: string = '';

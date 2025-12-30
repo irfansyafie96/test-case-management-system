@@ -110,28 +110,6 @@
                 </td>
               </ng-container>
 
-              <!-- Evidence/Attachments Column -->
-              <ng-container matColumnDef="evidence">
-                <th mat-header-cell *matHeaderCellDef> EVIDENCE </th>
-                <td mat-cell *matCellDef="let stepResult" class="evidence-cell">
-                  <input
-                    type="file"
-                    (change)="onFileSelected($event, stepResult)"
-                    class="file-input"
-                    multiple
-                    matTooltip="Upload evidence for this step (screenshots, logs, etc.)">
-                  <button
-                    mat-icon-button
-                    color="primary"
-                    matTooltip="Upload evidence file">
-                    <mat-icon>attach_file</mat-icon>
-                  </button>
-                  <div class="file-attachments" *ngIf="stepResult.attachments && stepResult.attachments.length > 0">
-                    <span class="file-count">{{ stepResult.attachments.length }} file(s)</span>
-                  </div>
-                </td>
-              </ng-container>
-
               <!-- Actions Column -->
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
@@ -182,7 +160,9 @@
                 </mat-form-field>
 
                 <div class="action-buttons">
-                  <button mat-stroked-button (click)="goBack()">BACK</button>
+                  <button mat-stroked-button type="button" (click)="goBack()">
+                    <mat-icon>arrow_back</mat-icon> BACK
+                  </button>
                   <button
                     mat-raised-button
                     color="primary"
