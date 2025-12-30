@@ -53,6 +53,14 @@
   gap: 32px;
 }
 
+/* Remove hover effects for workbench cards */
+.info-card:hover,
+.steps-card:hover,
+.notes-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
 .info-card {
   background-color: var(--surface);
   border: var(--border-medium);
