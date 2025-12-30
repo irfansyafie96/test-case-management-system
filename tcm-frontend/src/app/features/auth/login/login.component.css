@@ -114,6 +114,19 @@
   box-shadow: 4px 4px 0 0 var(--accent-primary) !important; /* Keep same shadow */
 }
 
+/* Ensure button shadow and position remain static when pressed or loading */
+.login-btn:active, 
+.login-btn:disabled {
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+  transform: none !important;
+}
+
+/* Ensure card shadow remains static when submitting */
+.login-card.is-loading {
+  transform: none !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
 .login-card mat-card-actions {
   margin-top: 8px; /* Reduced to minimal gap */
   padding: 0 !important;
@@ -164,8 +177,9 @@
     padding: 24px !important; /* Reduce internal padding */
     width: 100%;
     max-width: 100%; /* Allow it to take full width available */
-    box-shadow: none !important; /* Optional: simplify on mobile */
-    border: var(--border-thin);
+    box-shadow: var(--shadow-md) !important; /* Restore shadow on mobile */
+    border: var(--border-medium); /* Keep consistent border */
+    transform: none !important; /* Ensure no lift-up on mobile */
   }
 
   .login-card mat-card-title {
@@ -174,6 +188,15 @@
 
   .login-btn {
     margin-top: 16px; /* Restore some spacing */
+    transform: none !important; /* Static button */
+    box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+  }
+
+  /* Ensure button remains static on mobile when pressing/loading */
+  .login-btn:active,
+  .login-btn:disabled {
+    box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+    transform: none !important;
   }
 }
 
