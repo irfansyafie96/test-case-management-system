@@ -888,11 +888,13 @@ public class TcmService {
      * @param user The user to assign executions to
      */
     private void createTestExecutionsForModuleAndUser(TestModule module, User user) {
-        // Get all test suites in the module
-        List<TestSuite> suites = module.getTestSuites();
+        // Fetch all test suites with their test cases for this module in a single query
+        List<TestSuite> suites = testSuiteRepository.findByTestModuleIdWithTestCases(module.getId());
         if (suites == null || suites.isEmpty()) {
+            System.out.println("No test suites found for module " + module.getId());
             return;
         }
+        System.out.println("Creating test executions for module " + module.getId() + " and user " + user.getId() + ", found " + suites.size() + " suites");
 
         // Get existing executions for this user to avoid duplicates
         List<TestExecution> existingExecutions = testExecutionRepository.findByAssignedToUser(user);
@@ -912,11 +914,14 @@ public class TcmService {
 
                 if (!alreadyExists) {
                     try {
+                        System.out.println("Creating execution for test case " + testCase.getId() + " (" + testCase.getTestCaseId() + ")");
                         createTestExecutionForTestCaseAndUser(testCase.getId(), user.getId());
                     } catch (Exception e) {
                         // Log error but continue with other test cases
                         System.err.println("Error creating execution for test case " + testCase.getId() + ": " + e.getMessage());
                     }
+                } else {
+                    System.out.println("Execution already exists for test case " + testCase.getId() + " and user " + user.getId());
                 }
             }
         }
