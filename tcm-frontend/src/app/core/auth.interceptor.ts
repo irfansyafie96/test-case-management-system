@@ -107,9 +107,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
 
   // Preserve Content-Type header if it exists (important for POST/PUT requests with JSON body)
   if (req.headers.has('Content-Type') && !authReq.headers.has('Content-Type')) {
+    const contentType = req.headers.get('Content-Type') || 'application/json';
+    // Strip charset from Content-Type (e.g., "application/json;charset=UTF-8" -> "application/json")
+    const cleanContentType = contentType.split(';')[0].trim();
     authReq = authReq.clone({
       setHeaders: {
-        'Content-Type': req.headers.get('Content-Type') || 'application/json'
+        'Content-Type': cleanContentType
       }
     });
   }
