@@ -84,7 +84,7 @@
   display: inline-block;
 }
 
-.status-badge.skipped { color: #666; background-color: #f5f5f5; border-color: #999; }
+.status-badge.pending { color: #666; background-color: #f5f5f5; border-color: #999; }
 .status-badge.passed { color: #166534; background-color: #dcfce7; border-color: #166534; }
 .status-badge.failed { color: #991b1b; background-color: #fee2e2; border-color: #991b1b; }
 .status-badge.blocked { color: #92400e; background-color: #fef3c7; border-color: #92400e; }
@@ -146,11 +146,10 @@
     border: 1px solid currentColor;
   }
   
-  .status-badge-mobile.skipped { color: #666; background-color: #f5f5f5; border-color: #999; }
+  .status-badge-mobile.pending { color: #666; background-color: #f5f5f5; border-color: #999; }
   .status-badge-mobile.passed { color: #166534; background-color: #dcfce7; border-color: #166534; }
   .status-badge-mobile.failed { color: #991b1b; background-color: #fee2e2; border-color: #991b1b; }
-  .status-badge-mobile.blocked { color: #92400e; background-color: #fef3c7; border-color: #92400e; }
-  
+  .status-badge-mobile.blocked { color: #92400e; background-color: #fef3c7; border-color: #92400e; }  
   .full-width-btn {
     width: 100%;
   }

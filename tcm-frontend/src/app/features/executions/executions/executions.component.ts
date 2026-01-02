@@ -75,7 +75,7 @@ export class ExecutionsComponent implements OnInit {
   }
 
   getStatusClass(status: string | undefined): string {
-    if (!status) return 'skipped';
+    if (!status) return 'pending';
     return status.toLowerCase();
   }
 }

@@ -64,7 +64,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
   get isExecutionCompleted(): boolean {
     const execution = this.executionSubject.value;
-    return execution && (execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' || execution.overallResult === 'BLOCKED');
+    return !!execution && (execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' || execution.overallResult === 'BLOCKED');
   }
 
   ngOnInit(): void {
@@ -85,7 +85,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
   }
 
   getStatusClass(status: string | undefined): string {
-    if (!status) return 'skipped';
+    if (!status) return 'pending';
     return status.toLowerCase();
   }
 
@@ -109,7 +109,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
     });
   }
 
-  updateStepResult(stepResult: TestStepResult, status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED', actualResult?: string): void {
+  updateStepResult(stepResult: TestStepResult, status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'PENDING', actualResult?: string): void {
     if (!this.executionId) return;
 
     // Update the step result status and actual result

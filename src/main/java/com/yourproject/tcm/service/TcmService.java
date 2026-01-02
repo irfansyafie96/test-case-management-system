@@ -570,7 +570,7 @@ public class TcmService {
             TestExecution execution = new TestExecution();
             execution.setTestCase(testCase);  // Link to the test case
             execution.setExecutionDate(LocalDateTime.now());  // Set current time
-            execution.setOverallResult("SKIPPED");  // Default to skipped until executed
+            execution.setOverallResult("PENDING");  // Default to pending until executed
 
             TestExecution initialExecution = testExecutionRepository.save(execution);
             entityManager.flush(); // Ensure execution has an ID
@@ -583,7 +583,7 @@ public class TcmService {
                         result.setTestExecution(initialExecution); // Link to the execution
                         result.setTestStep(step);  // Link to the step
                         result.setStepNumber(step.getStepNumber());  // Copy step number
-                        result.setStatus("Skipped");  // Default to skipped until executed
+                        result.setStatus("PENDING");  // Default to pending until executed
                         return result;
                     })
                     .collect(Collectors.toList());
@@ -946,7 +946,7 @@ public class TcmService {
             TestExecution execution = new TestExecution();
             execution.setTestCase(testCase);
             execution.setExecutionDate(LocalDateTime.now());
-            execution.setOverallResult("SKIPPED");
+            execution.setOverallResult("PENDING");
             execution.setAssignedToUser(user);
 
             // Create step results for each step in the test case

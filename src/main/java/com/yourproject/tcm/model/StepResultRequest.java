@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 public class StepResultRequest {
     @NotBlank(message = "Status is required")
-    @Pattern(regexp = "^(PASSED|FAILED|BLOCKED|SKIPPED)$", message = "Status must be PASSED, FAILED, BLOCKED, or SKIPPED")
+    @Pattern(regexp = "^(PASSED|FAILED|BLOCKED|PENDING)$", message = "Status must be PASSED, FAILED, BLOCKED, or PENDING")
     private String status;
     
     @Size(max = 2000, message = "Actual result must not exceed 2000 characters")

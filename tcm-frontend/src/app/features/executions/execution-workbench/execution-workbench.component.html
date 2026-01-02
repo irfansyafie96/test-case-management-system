@@ -47,8 +47,8 @@
             <div class="info-item">
               <label>Status</label>
               <span class="info-value status-badge"
-                    [ngClass]="vm.execution.overallResult ? getStatusClass(vm.execution.overallResult) : 'skipped'">
-                {{ vm.execution.overallResult || 'SKIPPED' }}
+                    [ngClass]="vm.execution.overallResult ? getStatusClass(vm.execution.overallResult) : 'pending'">
+                {{ vm.execution.overallResult || 'PENDING' }}
               </span>
             </div>
           </div>
@@ -94,13 +94,13 @@
                 <td mat-cell *matCellDef="let stepResult" class="status-cell">
                   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-field">
                     <mat-select
-                      [value]="stepResult.status || 'SKIPPED'"
+                      [value]="stepResult.status || 'PENDING'"
                       [disabled]="isExecutionCompleted"
                       (selectionChange)="updateStepResult(stepResult, $event.value)">
                       <mat-option value="PASSED">Pass</mat-option>
                       <mat-option value="FAILED">Fail</mat-option>
                       <mat-option value="BLOCKED">Blocked</mat-option>
-                      <mat-option value="SKIPPED">Not Executed</mat-option>
+                      <mat-option value="PENDING">Pending</mat-option>
                     </mat-select>
                   </mat-form-field>
                 </td>
@@ -116,7 +116,7 @@
                       placeholder="Record what actually happened..."
                       [value]="stepResult.actualResult || ''"
                       [disabled]="isExecutionCompleted"
-                      (input)="updateStepResult(stepResult, stepResult.status || 'SKIPPED', $event.target.value)">
+                      (input)="updateStepResult(stepResult, stepResult.status || 'PENDING', $event.target.value)">
                   </mat-form-field>
                 </td>
               </ng-container>

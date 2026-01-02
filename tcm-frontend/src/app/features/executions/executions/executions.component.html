@@ -45,8 +45,8 @@
               <th mat-header-cell *matHeaderCellDef> STATUS </th>
               <td mat-cell *matCellDef="let execution">
                 <span class="status-badge"
-                                    [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'skipped'">
-                                {{ execution.overallResult || 'SKIPPED' }}
+                                    [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'pending'">
+                                {{ execution.overallResult || 'PENDING' }}
                               </span>              </td>
             </ng-container>
 
@@ -71,8 +71,8 @@
           <div *ngFor="let execution of vm.executions" class="mobile-execution-card">
             <div class="mobile-card-header">
               <span class="id-badge">{{ execution.testCaseId }}</span>
-              <span class="status-badge-mobile" [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'skipped'">
-                {{ execution.overallResult || 'SKIPPED' }}
+              <span class="status-badge-mobile" [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'pending'">
+                {{ execution.overallResult || 'PENDING' }}
               </span>
             </div>
             <div class="mobile-card-body">

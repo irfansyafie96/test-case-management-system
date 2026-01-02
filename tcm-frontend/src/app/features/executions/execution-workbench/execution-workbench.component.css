@@ -97,6 +97,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: flex-start;
 }
 
 .info-item label {
@@ -124,12 +125,13 @@
   border: 1px solid currentColor;
   box-shadow: 2px 2px 0 0 rgba(0,0,0,0.1);
   display: inline-block;
+  width: fit-content;
 }
 
 .status-badge.passed { color: var(--accent-success); border-color: var(--accent-success); background-color: rgba(5, 150, 105, 0.05); }
 .status-badge.failed { color: var(--accent-danger); border-color: var(--accent-danger); background-color: rgba(227, 27, 84, 0.05); }
 .status-badge.blocked { color: var(--accent-warning); border-color: var(--accent-warning); background-color: rgba(217, 119, 6, 0.05); }
-.status-badge.skipped { color: #666; background-color: #f0f0f0; border-color: #ccc; }
+.status-badge.pending { color: #666; background-color: #f0f0f0; border-color: #ccc; }
 
 .steps-card {
   background-color: var(--surface);
