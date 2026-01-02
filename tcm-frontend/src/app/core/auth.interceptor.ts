@@ -105,6 +105,15 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     });
   }
 
+  // Preserve Content-Type header if it exists (important for POST/PUT requests with JSON body)
+  if (req.headers.has('Content-Type') && !authReq.headers.has('Content-Type')) {
+    authReq = authReq.clone({
+      setHeaders: {
+        'Content-Type': req.headers.get('Content-Type') || 'application/json'
+      }
+    });
+  }
+
   // Pass on to the next interceptor chain with enhanced retry logic for CSRF token issues
   return next(authReq).pipe(
     retry({
