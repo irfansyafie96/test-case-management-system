@@ -1,5 +1,6 @@
 package com.yourproject.tcm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -48,10 +49,10 @@ public class Project {
      * cascade = CascadeType.ALL: Any changes to project cascade to its modules
      * orphanRemoval = true: If a module is removed from this list, it's deleted from DB
      * mappedBy = "project": The 'project' field in TestModule entity owns this relationship
-     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
+     * @JsonIgnoreProperties({"project"}): Prevent circular reference back to Project
      */
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonIgnoreProperties({"project"})
     private List<TestModule> modules;  // List of modules belonging to this project
 
     /**
