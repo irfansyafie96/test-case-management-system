@@ -43,11 +43,11 @@ public class TestCase {
      * Many-to-One relationship: Many TestCases belong to One TestSuite
      * fetch = FetchType.LAZY: Only load suite data when explicitly accessed
      * @JoinColumn: Foreign key 'test_suite_id' in test_cases table points to TestSuite
-     * @JsonBackReference: Part of bidirectional relationship, prevents JSON loops
+     * @JsonIgnoreProperties: Prevent circular reference back to TestCases when serializing
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many test cases can belong to one suite
     @JoinColumn(name = "test_suite_id", nullable = false)  // Foreign key column
-    @JsonBackReference  // Completes the bidirectional relationship with TestSuite
+    @JsonIgnoreProperties({"testCases"})  // Prevent circular reference back to TestCases
     private TestSuite testSuite;  // The suite this test case belongs to
 
     /**

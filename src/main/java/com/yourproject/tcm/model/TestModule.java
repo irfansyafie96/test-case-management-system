@@ -35,13 +35,13 @@ public class TestModule {
 
     /**
      * Many-to-One relationship: Many TestModules belong to One Project
-     * fetch = FetchType.LAZY: Only load project data when explicitly accessed
+     * fetch = FetchType.LAZY: Only load module data when explicitly accessed
      * @JoinColumn: Foreign key 'project_id' in test_modules table points to Project
-     * @JsonBackReference: Part of bidirectional relationship, prevents JSON loops
+     * @JsonIgnoreProperties: Prevent circular reference back to TestModules when serializing
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many modules can belong to one project
     @JoinColumn(name = "project_id", nullable = false)  // Foreign key column
-    @JsonBackReference  // Completes the bidirectional relationship with Project
+    @JsonIgnoreProperties({"testModules"})  // Prevent circular reference back to TestModules
     private Project project;  // The project this module belongs to
 
     /**
