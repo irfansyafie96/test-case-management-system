@@ -83,37 +83,24 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     // Get CSRF token from cookie (JWT token doesn't need to be read - it's HttpOnly)
     const csrfToken = getCookie('XSRF-TOKEN');
 
+    // For POST/PUT requests, explicitly set Content-Type to 'application/json'
+    // This prevents Angular from adding 'application/json;charset=UTF-8'
+    const headers: { [key: string]: string } = {
+      'Content-Type': 'application/json'
+    };
+
     if (csrfToken) {
-      // Clone request to include both credentials and CSRF token
-      authReq = req.clone({
-        withCredentials: true,  // Include cookies (JWT token) in requests
-        setHeaders: {
-          'X-XSRF-TOKEN': csrfToken  // Include CSRF token in header
-        }
-      });
-    } else {
-      // If CSRF token is missing for state-changing request, make the request anyway
-      // The backend may handle missing CSRF tokens differently than expected
-      authReq = req.clone({
-        withCredentials: true  // Include cookies (JWT token) in requests
-      });
+      headers['X-XSRF-TOKEN'] = csrfToken;
     }
+
+    authReq = req.clone({
+      withCredentials: true,  // Include cookies (JWT token) in requests
+      setHeaders: headers
+    });
   } else {
     // For requests that don't need CSRF
     authReq = req.clone({
       withCredentials: true  // Include cookies (JWT token) in requests
-    });
-  }
-
-  // Preserve Content-Type header if it exists (important for POST/PUT requests with JSON body)
-  if (req.headers.has('Content-Type') && !authReq.headers.has('Content-Type')) {
-    const contentType = req.headers.get('Content-Type') || 'application/json';
-    // Strip charset from Content-Type (e.g., "application/json;charset=UTF-8" -> "application/json")
-    const cleanContentType = contentType.split(';')[0].trim();
-    authReq = authReq.clone({
-      setHeaders: {
-        'Content-Type': cleanContentType
-      }
     });
   }
 
