@@ -16,6 +16,7 @@ export interface TestModule {
   name: string;
   projectId: number | string;
   projectName?: string; // Added dynamically for display
+  project?: Project; // Full project information for display
   description?: string;
   testSuites?: TestSuite[];
   createdDate?: string;
