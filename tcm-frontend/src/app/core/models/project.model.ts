@@ -53,6 +53,7 @@ export interface TestCase {
   testSteps?: TestStep[]; // Detailed steps from backend
   expectedResult?: string;
   suiteId: number | string;
+  testSuite?: TestSuite; // Full suite information for display
   createdDate?: string;
   updatedDate?: string;
   prerequisites?: string;

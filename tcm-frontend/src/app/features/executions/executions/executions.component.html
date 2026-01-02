@@ -20,71 +20,90 @@
     <div *ngIf="!vm.loading && !vm.error">
 
       <div *ngIf="vm.executions.length; else emptyState">
-        <!-- Desktop Table View -->
-        <div class="mat-elevation-z0 table-container-styled desktop-view">
-          <table mat-table [dataSource]="vm.executions" class="bespoke-table">
+        <!-- Grouped View by Project, Module, Suite -->
+        <div class="grouped-executions">
+          <mat-accordion class="executions-accordion">
 
-            <!-- Test Case ID Column -->
-            <ng-container matColumnDef="testCaseId">
-              <th mat-header-cell *matHeaderCellDef> ID </th>
-              <td mat-cell *matCellDef="let execution">
-                <span class="id-badge">{{ execution.testCaseId }}</span>
-              </td>
-            </ng-container>
+            <!-- Projects -->
+            <mat-expansion-panel *ngFor="let project of vm.groupedExecutions" class="project-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon class="panel-icon">folder</mat-icon>
+                  {{ project.projectName }}
+                  <span class="badge">{{ project.modules.reduce((acc, m) => acc + m.suites.reduce((sacc, s) => sacc + s.executions.length, 0), 0) }} test cases</span>
+                </mat-panel-title>
+              </mat-expansion-panel-header>
 
-            <!-- Test Case Title Column -->
-            <ng-container matColumnDef="testCaseTitle">
-              <th mat-header-cell *matHeaderCellDef> TEST CASE </th>
-              <td mat-cell *matCellDef="let execution" class="title-cell">
-                {{ execution?.testCase?.title || execution.title }}
-              </td>
-            </ng-container>
+              <!-- Modules -->
+              <mat-expansion-panel *ngFor="let module of project.modules" class="module-panel">
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    <mat-icon class="panel-icon">folder_open</mat-icon>
+                    {{ module.moduleName }}
+                    <span class="badge">{{ module.suites.reduce((acc, s) => acc + s.executions.length, 0) }} test cases</span>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
 
-            <!-- Status Column -->
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef> STATUS </th>
-              <td mat-cell *matCellDef="let execution">
-                <span class="status-badge"
-                                    [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'pending'">
-                                {{ execution.overallResult || 'PENDING' }}
-                              </span>              </td>
-            </ng-container>
+                <!-- Suites -->
+                <div class="suites-container">
+                  <div *ngFor="let suite of module.suites" class="suite-section">
+                    <div class="suite-header">
+                      <mat-icon>description</mat-icon>
+                      <h3>{{ suite.suiteName }}</h3>
+                      <span class="badge">{{ suite.executions.length }} test cases</span>
+                    </div>
 
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
-              <td mat-cell *matCellDef="let execution">
-                <button mat-raised-button color="primary"
-                        [routerLink]="['/executions/workbench', execution.id]">
-                  <mat-icon>play_arrow</mat-icon> {{ execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'VIEW' : 'EXECUTE' }}
-                </button>
-              </td>
-            </ng-container>
+                    <!-- Test Cases Table -->
+                    <div class="mat-elevation-z0 table-container-styled">
+                      <table mat-table [dataSource]="suite.executions" class="bespoke-table">
+                        <!-- Test Case ID Column -->
+                        <ng-container matColumnDef="testCaseId">
+                          <th mat-header-cell *matHeaderCellDef> ID </th>
+                          <td mat-cell *matCellDef="let execution">
+                            <span class="id-badge">{{ execution.testCaseId }}</span>
+                          </td>
+                        </ng-container>
 
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
-          </table>
-        </div>
+                        <!-- Test Case Title Column -->
+                        <ng-container matColumnDef="testCaseTitle">
+                          <th mat-header-cell *matHeaderCellDef> TEST CASE </th>
+                          <td mat-cell *matCellDef="let execution" class="title-cell">
+                            {{ execution?.testCase?.title || execution.title }}
+                          </td>
+                        </ng-container>
 
-        <!-- Mobile Card View -->
-        <div class="mobile-view">
-          <div *ngFor="let execution of vm.executions" class="mobile-execution-card">
-            <div class="mobile-card-header">
-              <span class="id-badge">{{ execution.testCaseId }}</span>
-              <span class="status-badge-mobile" [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'pending'">
-                {{ execution.overallResult || 'PENDING' }}
-              </span>
-            </div>
-            <div class="mobile-card-body">
-              <h3>{{ execution?.testCase?.title || execution.title }}</h3>
-            </div>
-            <div class="mobile-card-actions">
-              <button mat-raised-button color="primary" class="full-width-btn"
-                      [routerLink]="['/executions/workbench', execution.id]">
-                <mat-icon>play_arrow</mat-icon> {{ execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'VIEW' : 'EXECUTE' }}
-              </button>
-            </div>
-          </div>
+                        <!-- Status Column -->
+                        <ng-container matColumnDef="status">
+                          <th mat-header-cell *matHeaderCellDef> STATUS </th>
+                          <td mat-cell *matCellDef="let execution">
+                            <span class="status-badge"
+                              [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'pending'">
+                              {{ execution.overallResult || 'PENDING' }}
+                            </span>
+                          </td>
+                        </ng-container>
+
+                        <!-- Actions Column -->
+                        <ng-container matColumnDef="actions">
+                          <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
+                          <td mat-cell *matCellDef="let execution">
+                            <button mat-raised-button color="primary"
+                              [routerLink]="['/executions/workbench', execution.id]">
+                              <mat-icon>play_arrow</mat-icon> {{ execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'VIEW' : 'EXECUTE' }}
+                            </button>
+                          </td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </mat-expansion-panel>
+            </mat-expansion-panel>
+
+          </mat-accordion>
         </div>
       </div>
 

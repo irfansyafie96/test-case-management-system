@@ -1,5 +1,84 @@
 /* Shared Design System - Refined Atelier */
 
+/* Grouped Executions View */
+.grouped-executions {
+  margin-bottom: 24px;
+}
+
+.executions-accordion {
+  box-shadow: none;
+}
+
+.project-panel,
+.module-panel {
+  margin-bottom: 8px !important;
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-panel {
+  background-color: var(--surface);
+}
+
+.module-panel {
+  background-color: var(--paper);
+  margin-left: 16px;
+  margin-right: 16px;
+}
+
+.panel-icon {
+  margin-right: 12px;
+  color: var(--accent-primary);
+}
+
+.badge {
+  background-color: var(--accent-primary);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.suites-container {
+  padding: 16px;
+}
+
+.suite-section {
+  margin-bottom: 24px;
+}
+
+.suite-section:last-child {
+  margin-bottom: 0;
+}
+
+.suite-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: var(--border-thin);
+}
+
+.suite-header mat-icon {
+  color: var(--accent-secondary);
+}
+
+.suite-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  flex: 1;
+}
+
+.suite-header .badge {
+  background-color: var(--accent-secondary);
+}
+
 /* Loading State */
 .loading-overlay {
   position: fixed;
