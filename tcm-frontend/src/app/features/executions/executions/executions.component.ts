@@ -68,6 +68,15 @@ export class ExecutionsComponent implements OnInit {
     this.loadMyAssignedExecutions();
   }
 
+  // Helper methods to calculate counts
+  getProjectTestCount(project: ProjectGroup): number {
+    return project.modules.reduce((acc, m) => acc + this.getModuleTestCount(m), 0);
+  }
+
+  getModuleTestCount(module: ModuleGroup): number {
+    return module.suites.reduce((acc, s) => acc + s.executions.length, 0);
+  }
+
   private createViewModel() {
     return combineLatest({
       loading: this.loadingSubject.asObservable(),

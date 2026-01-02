@@ -30,7 +30,7 @@
                 <mat-panel-title>
                   <mat-icon class="panel-icon">folder</mat-icon>
                   {{ project.projectName }}
-                  <span class="badge">{{ project.modules.reduce((acc, m) => acc + m.suites.reduce((sacc, s) => sacc + s.executions.length, 0), 0) }} test cases</span>
+                  <span class="badge">{{ getProjectTestCount(project) }} test cases</span>
                 </mat-panel-title>
               </mat-expansion-panel-header>
 
@@ -40,7 +40,7 @@
                   <mat-panel-title>
                     <mat-icon class="panel-icon">folder_open</mat-icon>
                     {{ module.moduleName }}
-                    <span class="badge">{{ module.suites.reduce((acc, s) => acc + s.executions.length, 0) }} test cases</span>
+                    <span class="badge">{{ getModuleTestCount(module) }} test cases</span>
                   </mat-panel-title>
                 </mat-expansion-panel-header>
 

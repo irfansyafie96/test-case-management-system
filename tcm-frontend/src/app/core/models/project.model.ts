@@ -28,6 +28,7 @@ export interface TestSuite {
   name: string;
   moduleId: number | string;
   moduleName?: string;
+  testModule?: TestModule; // Full module information for display
   testCases?: TestCase[];
   createdDate?: string;
   updatedDate?: string;
