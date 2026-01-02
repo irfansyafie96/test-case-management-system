@@ -62,6 +62,11 @@ export class ExecutionWorkbenchComponent implements OnInit {
     private router: Router
   ) {}
 
+  get isExecutionCompleted(): boolean {
+    const execution = this.executionSubject.value;
+    return execution && (execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' || execution.overallResult === 'BLOCKED');
+  }
+
   ngOnInit(): void {
     this.executionId = this.route.snapshot.paramMap.get('id');
     if (this.executionId) {
@@ -80,7 +85,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
   }
 
   getStatusClass(status: string | undefined): string {
-    if (!status) return 'not_executed';
+    if (!status) return 'skipped';
     return status.toLowerCase();
   }
 
@@ -91,6 +96,9 @@ export class ExecutionWorkbenchComponent implements OnInit {
     this.tcmService.getExecution(this.executionId!).subscribe({
       next: (execution) => {
         this.executionSubject.next(execution);
+        // Initialize form fields from loaded execution
+        this.executionNotes = execution.notes || '';
+        this.overallResult = execution.overallResult || '';
         this.loadingSubject.next(false);
       },
       error: (error) => {
@@ -101,7 +109,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
     });
   }
 
-  updateStepResult(stepResult: TestStepResult, status: 'PASS' | 'FAIL' | 'BLOCKED' | 'NOT_EXECUTED', actualResult?: string): void {
+  updateStepResult(stepResult: TestStepResult, status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED', actualResult?: string): void {
     if (!this.executionId) return;
 
     // Update the step result status and actual result

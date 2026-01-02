@@ -306,7 +306,7 @@ export class TcmService {
   /**
    * Complete a test execution
    * @param executionId - ID of the execution to complete
-   * @param overallResult - Final result (PASS, FAIL, BLOCKED)
+   * @param overallResult - Final result (PASSED, FAILED, BLOCKED)
    * @param notes - Optional notes about the execution
    * @returns Observable<TestExecution> - Stream of completed execution
    */
@@ -324,7 +324,7 @@ export class TcmService {
    * Update a step result in a test execution
    * @param executionId - ID of the execution
    * @param stepId - ID of the step to update
-   * @param status - New status (PASS, FAIL, BLOCKED, NOT_EXECUTED)
+   * @param status - New status (PASSED, FAILED, BLOCKED, SKIPPED)
    * @param actualResult - Actual result description
    * @returns Observable<any> - Stream of updated step result
    */

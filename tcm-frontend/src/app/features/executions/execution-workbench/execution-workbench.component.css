@@ -2,6 +2,24 @@
   margin-bottom: 32px;
 }
 
+.read-only-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--accent-warning);
+  color: white;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 24px;
+  font-weight: 500;
+}
+
+.read-only-banner mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
 .breadcrumb {
   display: flex;
   align-items: center;
@@ -111,7 +129,7 @@
 .status-badge.passed { color: var(--accent-success); border-color: var(--accent-success); background-color: rgba(5, 150, 105, 0.05); }
 .status-badge.failed { color: var(--accent-danger); border-color: var(--accent-danger); background-color: rgba(227, 27, 84, 0.05); }
 .status-badge.blocked { color: var(--accent-warning); border-color: var(--accent-warning); background-color: rgba(217, 119, 6, 0.05); }
-.status-badge.not_executed { color: #666; background-color: #f0f0f0; border-color: #ccc; }
+.status-badge.skipped { color: #666; background-color: #f0f0f0; border-color: #ccc; }
 
 .steps-card {
   background-color: var(--surface);

@@ -16,13 +16,22 @@
             <mat-icon>arrow_back</mat-icon> My Assignments
           </a>
         </div>
-        <h1 class="page-title"><mat-icon>play_circle</mat-icon> Test Execution Workbench</h1>
-        <p class="page-subtitle">Execute the test case step by step</p>
+        <h1 class="page-title">
+          <mat-icon>{{ isExecutionCompleted ? 'visibility' : 'play_circle' }}</mat-icon>
+          {{ isExecutionCompleted ? 'View Execution' : 'Test Execution Workbench' }}
+        </h1>
+        <p class="page-subtitle">{{ isExecutionCompleted ? 'Review the completed test execution results' : 'Execute the test case step by step' }}</p>
       </div>
     </div>
 
     <!-- Content -->
     <div *ngIf="!vm.loading && !vm.error && vm.execution">
+      <!-- Read-only banner for completed executions -->
+      <div *ngIf="isExecutionCompleted" class="read-only-banner">
+        <mat-icon>visibility</mat-icon>
+        <span>This execution is completed and is in read-only mode</span>
+      </div>
+
       <div class="execution-workbench">
         <!-- Test Case Information -->
         <mat-card class="info-card">
@@ -37,9 +46,9 @@
             </div>
             <div class="info-item">
               <label>Status</label>
-              <span class="info-value status-badge" 
-                    [ngClass]="vm.execution.overallResult ? getStatusClass(vm.execution.overallResult) : 'not_executed'">
-                {{ vm.execution.overallResult || 'NOT EXECUTED' }}
+              <span class="info-value status-badge"
+                    [ngClass]="vm.execution.overallResult ? getStatusClass(vm.execution.overallResult) : 'skipped'">
+                {{ vm.execution.overallResult || 'SKIPPED' }}
               </span>
             </div>
           </div>
@@ -84,13 +93,14 @@
                 <th mat-header-cell *matHeaderCellDef> STATUS </th>
                 <td mat-cell *matCellDef="let stepResult" class="status-cell">
                   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-field">
-                    <mat-select 
-                      [value]="stepResult.status || 'NOT_EXECUTED'" 
+                    <mat-select
+                      [value]="stepResult.status || 'SKIPPED'"
+                      [disabled]="isExecutionCompleted"
                       (selectionChange)="updateStepResult(stepResult, $event.value)">
-                      <mat-option value="PASS">Pass</mat-option>
-                      <mat-option value="FAIL">Fail</mat-option>
+                      <mat-option value="PASSED">Pass</mat-option>
+                      <mat-option value="FAILED">Fail</mat-option>
                       <mat-option value="BLOCKED">Blocked</mat-option>
-                      <mat-option value="NOT_EXECUTED">Not Executed</mat-option>
+                      <mat-option value="SKIPPED">Not Executed</mat-option>
                     </mat-select>
                   </mat-form-field>
                 </td>
@@ -105,7 +115,8 @@
                       matInput
                       placeholder="Record what actually happened..."
                       [value]="stepResult.actualResult || ''"
-                      (input)="updateStepResult(stepResult, stepResult.status || 'NOT_EXECUTED', $event.target.value)">
+                      [disabled]="isExecutionCompleted"
+                      (input)="updateStepResult(stepResult, stepResult.status || 'SKIPPED', $event.target.value)">
                   </mat-form-field>
                 </td>
               </ng-container>
@@ -118,7 +129,8 @@
                     mat-icon-button
                     color="primary"
                     matTooltip="Execute this step"
-                    (click)="updateStepResult(stepResult, 'PASS')">
+                    [disabled]="isExecutionCompleted"
+                    (click)="updateStepResult(stepResult, 'PASSED')">
                     <mat-icon>check_circle</mat-icon>
                   </button>
                 </td>
@@ -139,10 +151,11 @@
           
           <div class="notes-content">
             <mat-form-field appearance="outline" class="full-width">
-              <textarea 
-                matInput 
+              <textarea
+                matInput
                 placeholder="Add notes about the overall test execution..."
                 rows="4"
+                [disabled]="isExecutionCompleted"
                 [(ngModel)]="executionNotes"
                 (ngModelChange)="onNotesChange($event)"></textarea>
             </mat-form-field>
@@ -152,9 +165,9 @@
               <div class="completion-controls">
                 <mat-form-field appearance="outline" class="result-field">
                   <mat-label>Overall Result</mat-label>
-                  <mat-select [(ngModel)]="overallResult" (ngModelChange)="onResultChange($event)">
-                    <mat-option value="PASS">Pass</mat-option>
-                    <mat-option value="FAIL">Fail</mat-option>
+                  <mat-select [(ngModel)]="overallResult" [disabled]="isExecutionCompleted" (ngModelChange)="onResultChange($event)">
+                    <mat-option value="PASSED">Pass</mat-option>
+                    <mat-option value="FAILED">Fail</mat-option>
                     <mat-option value="BLOCKED">Blocked</mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -166,14 +179,14 @@
                   <button
                     mat-raised-button
                     color="primary"
-                    [disabled]="!overallResult"
+                    [disabled]="!overallResult || isExecutionCompleted"
                     (click)="completeExecution(overallResult, executionNotes)">
                     COMPLETE EXECUTION
                   </button>
                   <button
                     mat-raised-button
                     color="accent"
-                    [disabled]="!overallResult"
+                    [disabled]="!overallResult || isExecutionCompleted"
                     (click)="completeAndNextExecution(overallResult, executionNotes)">
                     <mat-icon>skip_next</mat-icon> NEXT TEST CASE
                   </button>

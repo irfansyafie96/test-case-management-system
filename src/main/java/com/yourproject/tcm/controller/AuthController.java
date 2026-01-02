@@ -112,7 +112,9 @@ public class AuthController {
         jwtCookie.setSecure(false);   // Set to true in production with HTTPS
         jwtCookie.setPath("/");       // Make available for all paths
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
-        jwtCookie.setAttribute("SameSite", "None");  // Allow cookie to be sent with PUT requests (non-safe methods)
+        // Note: SameSite=None requires Secure=true, which doesn't work in development with HTTP
+        // Using Lax (default) which works properly with HTTP and allows cookies to be sent
+        // For production with HTTPS, change to: jwtCookie.setSecure(true); and use SameSite=None if needed
         // Remove domain setting to work better with proxy configurations
 
         response.addCookie(jwtCookie);
@@ -125,7 +127,8 @@ public class AuthController {
             csrfCookie.setSecure(false);    // Set to true in production with HTTPS
             csrfCookie.setPath("/");
             csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
-            csrfCookie.setAttribute("SameSite", "None");  // Allow cookie to be sent with PUT requests (non-safe methods)
+            // Note: SameSite=None requires Secure=true, which doesn't work in development with HTTP
+            // Using Lax (default) which works properly with HTTP
             // Remove domain setting to work better with proxy configurations
             response.addCookie(csrfCookie);
         }
@@ -257,7 +260,7 @@ public class AuthController {
         jwtCookie.setSecure(false);   // Set to true in production with HTTPS
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0);  // Immediately expire cookie
-        jwtCookie.setAttribute("SameSite", "None");  // Consistent with login endpoint
+        // Note: Using Lax (default) which works properly with HTTP
 
         response.addCookie(jwtCookie);
 
@@ -276,7 +279,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> refreshCsrfToken(HttpServletResponse response, HttpServletRequest request) {
         // This endpoint's main purpose is to trigger Spring Security's CSRF token generation
         // The actual CSRF token will be set in cookies automatically by Spring Security
-        
+
         // Explicitly force CSRF token generation and ensure it's set in the response
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         if (csrfToken != null) {
@@ -286,7 +289,7 @@ public class AuthController {
             csrfCookie.setSecure(false);    // Set to true in production with HTTPS
             csrfCookie.setPath("/");
             csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
-            csrfCookie.setAttribute("SameSite", "None");  // Consistent with login endpoint
+            // Note: Using Lax (default) which works properly with HTTP
             response.addCookie(csrfCookie);
         }
 

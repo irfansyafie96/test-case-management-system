@@ -75,7 +75,7 @@ export class ExecutionsComponent implements OnInit {
   }
 
   getStatusClass(status: string | undefined): string {
-    if (!status) return 'not_executed';
+    if (!status) return 'skipped';
     return status.toLowerCase();
   }
 }

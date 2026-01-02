@@ -84,9 +84,10 @@
   display: inline-block;
 }
 
-.status-badge.not_executed { color: #666; background-color: #f5f5f5; border-color: #999; }
-.status-badge.pass { color: #166534; background-color: #dcfce7; border-color: #166534; }
-.status-badge.fail { color: #991b1b; background-color: #fee2e2; border-color: #991b1b; }
+.status-badge.skipped { color: #666; background-color: #f5f5f5; border-color: #999; }
+.status-badge.passed { color: #166534; background-color: #dcfce7; border-color: #166534; }
+.status-badge.failed { color: #991b1b; background-color: #fee2e2; border-color: #991b1b; }
+.status-badge.blocked { color: #92400e; background-color: #fef3c7; border-color: #92400e; }
 
 /* Mobile View Utilities */
 .mobile-view {
@@ -145,9 +146,10 @@
     border: 1px solid currentColor;
   }
   
-  .status-badge-mobile.not_executed { color: #666; background-color: #f5f5f5; border-color: #999; }
-  .status-badge-mobile.pass { color: #166534; background-color: #dcfce7; border-color: #166534; }
-  .status-badge-mobile.fail { color: #991b1b; background-color: #fee2e2; border-color: #991b1b; }
+  .status-badge-mobile.skipped { color: #666; background-color: #f5f5f5; border-color: #999; }
+  .status-badge-mobile.passed { color: #166534; background-color: #dcfce7; border-color: #166534; }
+  .status-badge-mobile.failed { color: #991b1b; background-color: #fee2e2; border-color: #991b1b; }
+  .status-badge-mobile.blocked { color: #92400e; background-color: #fef3c7; border-color: #92400e; }
   
   .full-width-btn {
     width: 100%;

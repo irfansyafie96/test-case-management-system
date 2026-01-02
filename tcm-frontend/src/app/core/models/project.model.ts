@@ -63,7 +63,7 @@ export interface TestCase {
 export interface TestExecution {
   id: string;
   testCaseId: string;
-  status: 'PASS' | 'FAIL' | 'BLOCKED' | 'NOT_EXECUTED';
+  status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED';
   executedBy?: string;
   executionDate?: string;
   notes?: string;
@@ -82,7 +82,7 @@ export interface TestStepResult {
   executionId: string;
   stepNumber: number;
   stepDescription: string;
-  status: 'PASS' | 'FAIL' | 'BLOCKED' | 'NOT_EXECUTED';
+  status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'SKIPPED';
   actualResult?: string;
   notes?: string;
   screenshotFileName?: string;

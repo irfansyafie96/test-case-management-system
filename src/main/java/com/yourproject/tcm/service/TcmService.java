@@ -570,7 +570,7 @@ public class TcmService {
             TestExecution execution = new TestExecution();
             execution.setTestCase(testCase);  // Link to the test case
             execution.setExecutionDate(LocalDateTime.now());  // Set current time
-            execution.setOverallResult("Incomplete");  // Default to incomplete until finished
+            execution.setOverallResult("SKIPPED");  // Default to skipped until executed
 
             TestExecution initialExecution = testExecutionRepository.save(execution);
             entityManager.flush(); // Ensure execution has an ID
@@ -644,7 +644,7 @@ public class TcmService {
      */
     @Transactional
     public TestExecution completeTestExecution(Long executionId, String overallResult, String notes) {
-        Optional<TestExecution> executionOpt = testExecutionRepository.findById(executionId);
+        Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
         if (executionOpt.isPresent()) {
             TestExecution execution = executionOpt.get();
             execution.setOverallResult(overallResult);  // Set the final result
@@ -946,7 +946,7 @@ public class TcmService {
             TestExecution execution = new TestExecution();
             execution.setTestCase(testCase);
             execution.setExecutionDate(LocalDateTime.now());
-            execution.setOverallResult("NOT_EXECUTED");
+            execution.setOverallResult("SKIPPED");
             execution.setAssignedToUser(user);
 
             // Create step results for each step in the test case
