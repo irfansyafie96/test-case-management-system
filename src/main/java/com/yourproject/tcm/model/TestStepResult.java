@@ -1,6 +1,6 @@
 package com.yourproject.tcm.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -33,24 +33,22 @@ public class TestStepResult {
      * Many-to-One relationship: Many TestStepResults belong to One TestExecution
      * fetch = FetchType.LAZY: Only load execution data when explicitly accessed
      * @JoinColumn: Foreign key 'execution_id' in test_step_results table points to TestExecution
-     * @JsonBackReference: Part of bidirectional relationship, prevents JSON loops
-     * @JsonIgnoreProperties({"stepResults"}): Prevent circular reference back to TestExecution
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestExecutionId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "execution_id", nullable = false)  // Foreign key column
-    @JsonBackReference
-    @JsonIgnoreProperties({"stepResults"}) // Prevent circular reference back to TestExecution
+    @JsonIgnore
     private TestExecution testExecution;  // The execution this step result belongs to
 
     /**
      * Many-to-One relationship: Many TestStepResults reference One TestStep
      * fetch = FetchType.LAZY: Only load test step data when explicitly accessed
      * @JoinColumn: Foreign key 'step_id' in test_step_results table points to TestStep
-     * @JsonIgnoreProperties({"testCase"}): Prevent circular reference back to TestCase
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestStepId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "step_id", nullable = false)  // Foreign key column
-    @JsonIgnoreProperties({"testCase"}) // Prevent circular reference back to TestCase
+    @JsonIgnore
     private TestStep testStep;  // The test step that was executed
 
     @Column(nullable = false)  // Step number is required
@@ -109,5 +107,23 @@ public class TestStepResult {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    /**
+     * Get the ID of the test execution this step result belongs to.
+     * This is used by Jackson when serializing, since the testExecution field
+     * is marked with @JsonIgnore to prevent Hibernate proxy serialization.
+     */
+    public Long getTestExecutionId() {
+        return testExecution != null ? testExecution.getId() : null;
+    }
+
+    /**
+     * Get the ID of the test step this result is for.
+     * This is used by Jackson when serializing, since the testStep field
+     * is marked with @JsonIgnore to prevent Hibernate proxy serialization.
+     */
+    public Long getTestStepId() {
+        return testStep != null ? testStep.getId() : null;
     }
 }

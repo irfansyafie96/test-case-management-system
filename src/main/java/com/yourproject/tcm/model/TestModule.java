@@ -1,8 +1,7 @@
 package com.yourproject.tcm.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +22,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "test_modules")  // Maps to 'test_modules' table in database
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Ignore Hibernate proxy properties during JSON serialization
 public class TestModule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment primary key
@@ -38,21 +38,21 @@ public class TestModule {
      * Many-to-One relationship: Many TestModules belong to One Project
      * fetch = FetchType.LAZY: Only load module data when explicitly accessed
      * @JoinColumn: Foreign key 'project_id' in test_modules table points to Project
-     * @JsonIgnoreProperties: Prevent circular reference back to TestModules when serializing
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getProjectId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many modules can belong to one project
     @JoinColumn(name = "project_id", nullable = false)  // Foreign key column
-    @JsonIgnoreProperties({"testModules"})  // Prevent circular reference back to TestModules
+    @JsonIgnore
     private Project project;  // The project this module belongs to
 
     /**
      * One-to-Many relationship: One TestModule can have Many TestSuites
      * cascade = CascadeType.ALL: Changes to module cascade to its suites
      * orphanRemoval = true: If a suite is removed from this list, it's deleted
-     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
+     * @JsonIgnoreProperties: Prevent circular reference back to TestModule
      */
     @OneToMany(mappedBy = "testModule", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference  // This side manages the relationship for JSON serialization
+    @JsonIgnoreProperties({"testModule"})  // Prevent circular reference back to TestModule
     private List<TestSuite> testSuites;  // List of test suites in this module
 
     /**

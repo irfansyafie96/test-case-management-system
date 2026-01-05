@@ -1,7 +1,6 @@
 package com.yourproject.tcm.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -24,6 +23,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "projects")  // Maps to 'projects' table in database
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Ignore Hibernate proxy properties during JSON serialization
 public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment primary key

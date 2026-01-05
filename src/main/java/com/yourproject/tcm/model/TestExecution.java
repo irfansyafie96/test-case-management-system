@@ -1,7 +1,7 @@
 package com.yourproject.tcm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,11 +37,11 @@ public class TestExecution {
      * Many-to-One relationship: Many TestExecutions can belong to One TestCase
      * fetch = FetchType.LAZY: Only load test case data when explicitly accessed
      * @JoinColumn: Foreign key 'test_case_id' in test_executions table points to TestCase
-     * @JsonIgnoreProperties({"testSteps"}): Prevent circular reference back to TestSteps when serializing
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestCaseId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "test_case_id", nullable = false)  // Foreign key column
-    @JsonIgnoreProperties({"testSteps"}) // Prevent circular reference back to TestSteps
+    @JsonIgnore
     private TestCase testCase;  // The test case that was executed
 
     @Column(nullable = false)  // Execution date is required
@@ -84,12 +84,10 @@ public class TestExecution {
      * cascade = CascadeType.ALL: Changes to execution cascade to its step results
      * orphanRemoval = true: If a step result is removed from this list, it's deleted
      * @OrderBy("stepNumber ASC"): Always keep step results in ascending order by step number
-     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
-     * @JsonIgnoreProperties({"testExecution"}): Prevent circular reference back to TestExecution
+     * @JsonIgnoreProperties: Prevent circular reference back to TestExecution
      */
     @OneToMany(mappedBy = "testExecution", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepNumber ASC")  // Keep step results in sequential order (1, 2, 3, etc.)
-    @JsonManagedReference       // This side manages the relationship for JSON serialization
     @JsonIgnoreProperties({"testExecution"}) // Prevent circular reference back to TestExecution
     private List<TestStepResult> stepResults;  // Results for each step in this execution
 

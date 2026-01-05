@@ -16,7 +16,7 @@ public interface TestSuiteRepository extends JpaRepository<TestSuite, Long> {
     @Query("SELECT ts FROM TestSuite ts LEFT JOIN FETCH ts.testCases WHERE ts.testModule.id = :moduleId")
     List<TestSuite> findByTestModuleIdWithTestCases(@Param("moduleId") Long moduleId);
     
-    List<TestSuite> findByTestModuleId(@Param("moduleId") Long moduleId);
+    List<TestSuite> findByTestModule_Id(Long moduleId);
     
     @Modifying
     @Query("DELETE FROM TestSuite ts WHERE ts.testModule.id = :moduleId")

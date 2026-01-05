@@ -302,7 +302,7 @@ public class TcmService {
 
         // Fetch test suites separately (not as part of module's collection)
         // This avoids triggering orphanRemoval when we delete them
-        List<TestSuite> testSuites = testSuiteRepository.findByTestModuleId(testModuleId);
+        List<TestSuite> testSuites = testSuiteRepository.findByTestModule_Id(testModuleId);
         
         // Delete each test suite separately, which will cascade to delete its test cases and steps
         // Using testSuiteRepository.delete() instead of entityManager.remove() to work with JPA properly
@@ -612,7 +612,7 @@ public class TcmService {
      */
     @Transactional
     public com.yourproject.tcm.model.dto.StepResultResponse updateStepResult(Long executionId, Long stepId, String status, String actualResult) {
-        TestStepResult existingResult = testStepResultRepository.findByTestExecutionIdAndTestStepId(executionId, stepId);
+        TestStepResult existingResult = testStepResultRepository.findByTestExecution_IdAndTestStep_Id(executionId, stepId);
         if (existingResult != null) {
             existingResult.setStatus(status);       // Update status
             existingResult.setActualResult(actualResult);  // Update actual result

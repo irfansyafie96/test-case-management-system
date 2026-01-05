@@ -1,6 +1,6 @@
 package com.yourproject.tcm.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -41,11 +41,11 @@ public class TestStep {
      * Many-to-One relationship: Many TestSteps belong to One TestCase
      * fetch = FetchType.LAZY: Only load test case data when explicitly accessed
      * @JoinColumn: Foreign key 'test_case_id' in test_steps table points to TestCase
-     * @JsonBackReference: Part of bidirectional relationship, prevents JSON loops
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestCaseId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many steps can belong to one test case
     @JoinColumn(name = "test_case_id", nullable = false)  // Foreign key column, add index for performance
-    @JsonBackReference // Completes the bidirectional relationship with TestCase
+    @JsonIgnore
     private TestCase testCase;  // The test case this step belongs to
 
     // Getters and Setters - Standard methods to access private fields
@@ -87,5 +87,14 @@ public class TestStep {
 
     public void setTestCase(TestCase testCase) {
         this.testCase = testCase;
+    }
+
+    /**
+     * Get the ID of the test case this step belongs to.
+     * This is used by Jackson when serializing, since the testCase field
+     * is marked with @JsonIgnore to prevent Hibernate proxy serialization.
+     */
+    public Long getTestCaseId() {
+        return testCase != null ? testCase.getId() : null;
     }
 }

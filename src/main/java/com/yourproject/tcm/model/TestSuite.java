@@ -1,8 +1,7 @@
 package com.yourproject.tcm.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -22,6 +21,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "test_suites")  // Maps to 'test_suites' table in database
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Ignore Hibernate proxy properties during JSON serialization
 public class TestSuite {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment primary key
@@ -34,11 +34,11 @@ public class TestSuite {
      * Many-to-One relationship: Many TestSuites belong to One TestModule
      * fetch = FetchType.LAZY: Only load module data when explicitly accessed
      * @JoinColumn: Foreign key 'test_module_id' in test_suites table points to TestModule
-     * @JsonIgnoreProperties: Prevent circular reference back to TestSuites when serializing
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestModuleId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many suites can belong to one module
     @JoinColumn(name = "test_module_id", nullable = false)  // Foreign key column
-    @JsonIgnoreProperties({"testSuites"})  // Prevent circular reference back to TestSuites
+    @JsonIgnore
     private TestModule testModule;  // The module this suite belongs to
 
     /**
@@ -46,10 +46,10 @@ public class TestSuite {
      * cascade = CascadeType.ALL: Changes to suite cascade to its test cases
      * orphanRemoval = true: If a test case is removed from this list, it's deleted
      * fetch = FetchType.EAGER: Always load test cases when loading the suite
-     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
+     * @JsonIgnoreProperties: Prevent circular reference back to TestSuite
      */
     @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference  // This side manages the relationship for JSON serialization
+    @JsonIgnoreProperties({"testSuite"})  // Prevent circular reference back to TestSuite
     private List<TestCase> testCases;  // List of test cases in this suite
 
     // Getters and Setters - Standard methods to access private fields
@@ -83,5 +83,14 @@ public class TestSuite {
 
     public void setTestCases(List<TestCase> testCases) {
         this.testCases = testCases;
+    }
+
+    /**
+     * Get the ID of the test module this suite belongs to.
+     * This is used by Jackson when serializing, since the testModule field
+     * is marked with @JsonIgnore to prevent Hibernate proxy serialization.
+     */
+    public Long getTestModuleId() {
+        return testModule != null ? testModule.getId() : null;
     }
 }

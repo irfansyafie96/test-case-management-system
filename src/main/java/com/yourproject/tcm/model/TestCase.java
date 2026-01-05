@@ -1,8 +1,7 @@
 package com.yourproject.tcm.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -43,11 +42,11 @@ public class TestCase {
      * Many-to-One relationship: Many TestCases belong to One TestSuite
      * fetch = FetchType.LAZY: Only load suite data when explicitly accessed
      * @JoinColumn: Foreign key 'test_suite_id' in test_cases table points to TestSuite
-     * @JsonIgnoreProperties: Prevent circular reference back to TestCases when serializing
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestSuiteId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many test cases can belong to one suite
     @JoinColumn(name = "test_suite_id", nullable = false)  // Foreign key column
-    @JsonIgnoreProperties({"testCases"})  // Prevent circular reference back to TestCases
+    @JsonIgnore
     private TestSuite testSuite;  // The suite this test case belongs to
 
     /**
@@ -56,11 +55,11 @@ public class TestCase {
      * orphanRemoval = true: If a step is removed from this list, it's deleted
      * fetch = FetchType.LAZY: Load steps only when explicitly accessed (improves performance)
      * @OrderBy("stepNumber ASC"): Always keep test steps in ascending order by step number
-     * @JsonManagedReference: Prevents infinite loops when serializing to JSON
+     * @JsonIgnoreProperties: Prevent circular reference back to TestCase
      */
     @OneToMany(mappedBy = "testCase", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("stepNumber ASC") // Always keep steps in sequential order (1, 2, 3, etc.)
-    @JsonManagedReference  // This side manages the relationship for JSON serialization
+    @JsonIgnoreProperties({"testCase"})  // Prevent circular reference back to TestCase
     private List<TestStep> testSteps;  // List of steps that make up this test case
 
     // Getters and Setters - Standard methods to access private fields
@@ -110,5 +109,14 @@ public class TestCase {
 
     public void setTestSteps(List<TestStep> testSteps) {
         this.testSteps = testSteps;
+    }
+
+    /**
+     * Get the ID of the test suite this test case belongs to.
+     * This is used by Jackson when serializing, since the testSuite field
+     * is marked with @JsonIgnore to prevent Hibernate proxy serialization.
+     */
+    public Long getTestSuiteId() {
+        return testSuite != null ? testSuite.getId() : null;
     }
 }
