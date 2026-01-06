@@ -136,7 +136,7 @@ public class TcmService {
     @Transactional(readOnly = true)  // Read-only transaction for better performance
     public Optional<Project> getProjectById(Long projectId) {
         User currentUser = getCurrentUser();
-        Optional<Project> projectOpt = projectRepository.findById(projectId);
+        Optional<Project> projectOpt = projectRepository.findProjectWithModulesById(projectId);
         
         if (!projectOpt.isPresent()) {
             return Optional.empty();

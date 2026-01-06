@@ -2,6 +2,7 @@ package com.yourproject.tcm.repository;
 
 import com.yourproject.tcm.model.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -10,6 +11,9 @@ import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     Optional<Project> findByName(String name);
+
+    @Query("SELECT p FROM Project p LEFT JOIN FETCH p.modules WHERE p.id = :id")
+    Optional<Project> findProjectWithModulesById(@Param("id") Long id);
 
     // Find projects assigned to a specific user
     @Query("SELECT DISTINCT p FROM Project p JOIN p.assignedUsers u WHERE u.id = :userId")

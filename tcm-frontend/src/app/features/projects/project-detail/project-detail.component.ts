@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -22,7 +23,7 @@ import { Observable, BehaviorSubject, forkJoin } from 'rxjs';
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatCardModule, MatIconModule, RouterModule, MatDialogModule, MatTooltipModule, MatProgressSpinnerModule, MatSelectModule, MatOptionModule, MatFormFieldModule, MatInputModule, FormsModule],
+  imports: [CommonModule, MatButtonModule, MatCardModule, MatIconModule, RouterModule, MatDialogModule, MatTooltipModule, MatProgressSpinnerModule, MatSelectModule, MatOptionModule, MatFormFieldModule, MatInputModule, FormsModule, MatSnackBarModule],
   templateUrl: './project-detail.component.html',
   styleUrls: ['./project-detail.component.css']
 })
@@ -45,6 +46,7 @@ export class ProjectDetailComponent implements OnInit {
     private tcmService: TcmService,
     public authService: AuthService,
     private dialog: MatDialog,
+    private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -56,29 +58,90 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   openModuleDialog(projectId: string | number): void {
+    console.log('openModuleDialog called with projectId:', projectId);
+    
     const idAsString = String(projectId);
-    const dialogRef = this.dialog.open(ModuleDialogComponent, {
-      width: '400px',
-      data: { projectId: idAsString }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
+    console.log('Opening dialog with data:', { projectId: idAsString });
+    
+    let dialogRef;
+    try {
+      dialogRef = this.dialog.open(ModuleDialogComponent, {
+        width: '400px',
+        data: { projectId: idAsString }
+      });
+      console.log('Dialog opened successfully:', dialogRef);
+    } catch (dialogError) {
+      console.error('Failed to open dialog:', dialogError);
+      this.snackBar.open('Failed to open module dialog. Please refresh the page.', 'Close', {
+        duration: 5000,
+        panelClass: ['error-snackbar'],
+        horizontalPosition: 'center',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+    
+    dialogRef.afterClosed().subscribe(async result => {
+      console.log('Dialog closed with result:', result);
+      
       if (result) {
+        console.log('Creating module with data:', result);
         this.creatingModule$.next(true);
         this.loading$.next(true);
 
-        this.tcmService.createModule(idAsString, result).subscribe(
-          (createdModule) => {
-            this.project$ = this.tcmService.getProject(idAsString);
-            this.creatingModule$.next(false);
-            this.loading$.next(false);
-          },
-          error => {
-            console.error('Error creating test module:', error);
-            this.creatingModule$.next(false);
-            this.loading$.next(false);
-          }
-        );
+        try {
+          // Wait for authentication to be synchronized before making the API call
+          await this.tcmService.waitForAuthSync();
+          
+          this.tcmService.createModule(idAsString, result).subscribe({
+            next: (createdModule) => {
+              console.log('Module created successfully:', createdModule);
+              this.project$ = this.tcmService.getProject(idAsString);
+              this.creatingModule$.next(false);
+              this.loading$.next(false);
+              
+              this.snackBar.open('Module created successfully!', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+            },
+            error: (error) => {
+              console.error('Error creating test module:', error);
+              console.error('Error details:', error.status, error.statusText, error.error);
+              this.creatingModule$.next(false);
+              this.loading$.next(false);
+              
+              // Check if this is a CSRF token issue
+              if (error.isCsrfTokenIssue) {
+                this.snackBar.open('Security token synchronization issue. Please try again.', 'Close', {
+                  duration: 5000,
+                  panelClass: ['warning-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              } else {
+                this.snackBar.open('Failed to create module. Please try again.', 'Close', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                });
+              }
+            }
+          });
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.creatingModule$.next(false);
+          this.loading$.next(false);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
+          });
+        }
+      } else {
+        console.log('Dialog closed without result (user cancelled)');
       }
     });
   }
