@@ -58,10 +58,7 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   openModuleDialog(projectId: string | number): void {
-    console.log('openModuleDialog called with projectId:', projectId);
-    
     const idAsString = String(projectId);
-    console.log('Opening dialog with data:', { projectId: idAsString });
     
     let dialogRef;
     try {
@@ -69,23 +66,19 @@ export class ProjectDetailComponent implements OnInit {
         width: '400px',
         data: { projectId: idAsString }
       });
-      console.log('Dialog opened successfully:', dialogRef);
     } catch (dialogError) {
       console.error('Failed to open dialog:', dialogError);
       this.snackBar.open('Failed to open module dialog. Please refresh the page.', 'Close', {
         duration: 5000,
         panelClass: ['error-snackbar'],
-        horizontalPosition: 'center',
+        horizontalPosition: 'right',
         verticalPosition: 'top'
       });
       return;
     }
     
     dialogRef.afterClosed().subscribe(async result => {
-      console.log('Dialog closed with result:', result);
-      
       if (result) {
-        console.log('Creating module with data:', result);
         this.creatingModule$.next(true);
         this.loading$.next(true);
 
@@ -95,19 +88,19 @@ export class ProjectDetailComponent implements OnInit {
           
           this.tcmService.createModule(idAsString, result).subscribe({
             next: (createdModule) => {
-              console.log('Module created successfully:', createdModule);
               this.project$ = this.tcmService.getProject(idAsString);
               this.creatingModule$.next(false);
               this.loading$.next(false);
               
               this.snackBar.open('Module created successfully!', 'Close', {
                 duration: 3000,
-                panelClass: ['success-snackbar']
+                panelClass: ['success-snackbar'],
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
               });
             },
             error: (error) => {
               console.error('Error creating test module:', error);
-              console.error('Error details:', error.status, error.statusText, error.error);
               this.creatingModule$.next(false);
               this.loading$.next(false);
               
@@ -116,14 +109,14 @@ export class ProjectDetailComponent implements OnInit {
                 this.snackBar.open('Security token synchronization issue. Please try again.', 'Close', {
                   duration: 5000,
                   panelClass: ['warning-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               } else {
                 this.snackBar.open('Failed to create module. Please try again.', 'Close', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               }
@@ -136,12 +129,10 @@ export class ProjectDetailComponent implements OnInit {
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'Close', {
             duration: 5000,
             panelClass: ['error-snackbar'],
-            horizontalPosition: 'center',
+            horizontalPosition: 'right',
             verticalPosition: 'top'
           });
         }
-      } else {
-        console.log('Dialog closed without result (user cancelled)');
       }
     });
   }
@@ -177,10 +168,22 @@ export class ProjectDetailComponent implements OnInit {
             this.isDeletingModule$.next(false);
             this.loading$.next(false);
             this.deletingModuleId = null;
+            // Show success snackbar
+            this.snackBar.open('Module deleted successfully', 'Close', {
+              duration: 3000,
+              panelClass: ['success-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
           },
           error => {
             console.error('Error deleting module:', error);
-            alert('Failed to delete module. Please try again.');
+            this.snackBar.open('Failed to delete module. Please try again.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
             this.isDeletingModule$.next(false);
             this.loading$.next(false);
             this.deletingModuleId = null;
@@ -323,10 +326,22 @@ export class ProjectDetailComponent implements OnInit {
         // Refresh all assignment data
         this.loadAssignmentData(projectId);
         this.selectedUserId = null;
+        // Show success snackbar
+        this.snackBar.open('User assigned successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
       },
       (error: any) => {
         console.error('Error assigning user:', error);
-        alert('Failed to assign user. Please try again.');
+        this.snackBar.open('Failed to assign user. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
       }
     );
   }
@@ -340,19 +355,42 @@ export class ProjectDetailComponent implements OnInit {
       projectId: Number(projectId)
     };
 
-    if (!confirm('Are you sure you want to remove this user from the project?')) {
-      return;
-    }
-
-    this.tcmService.removeUserFromProject(request).subscribe(
-      (updatedUser: User) => {
-        // Refresh all assignment data
-        this.loadAssignmentData(projectId);
-      },
-      (error: any) => {
-        console.error('Error removing user:', error);
-        alert('Failed to remove user. Please try again.');
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Remove User',
+        message: 'Are you sure you want to remove this user from the project?',
+        icon: 'warning',
+        confirmButtonText: 'Remove',
+        confirmButtonColor: 'warn'
       }
-    );
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.tcmService.removeUserFromProject(request).subscribe(
+          (updatedUser: User) => {
+            // Refresh all assignment data
+            this.loadAssignmentData(projectId);
+            // Show success snackbar
+            this.snackBar.open('User removed successfully', 'Close', {
+              duration: 3000,
+              panelClass: ['success-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
+          },
+          (error: any) => {
+            console.error('Error removing user:', error);
+            this.snackBar.open('Failed to remove user. Please try again.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
+          }
+        );
+      }
+    });
   }
 }

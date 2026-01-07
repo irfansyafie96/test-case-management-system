@@ -98,7 +98,7 @@ export interface User {
   id: number | string;
   username: string;
   email: string;
-  roles: string[];
+  roles?: string[];
   enabled: boolean;
   createdDate?: string;
   assignedProjects?: Project[];

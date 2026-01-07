@@ -18,34 +18,42 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Boolean existsByEmail(String email);
 
     // Find users by specific role
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     List<User> findByRoleName(@Param("roleName") String roleName);
 
     // Find users by specific role and organization
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.organization = :organization")
     List<User> findByRoleNameAndOrganization(@Param("roleName") String roleName, @Param("organization") String organization);
 
     // Find QA users (users with QA role)
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = 'QA'")
     List<User> findQaUsers();
 
     // Find BA users (users with BA role)  
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = 'BA'")
     List<User> findBaUsers();
 
     // Find TESTER users (users with TESTER role)
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = 'TESTER'")
     List<User> findTesterUsers();
 
     // Find QA/BA users (users with either QA or BA role)
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA')")
     List<User> findQaBaUsers();
 
     // Find users assigned to a specific project
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedProjects p WHERE p.id = :projectId")
     List<User> findUsersAssignedToProject(@Param("projectId") Long projectId);
 
     // Find users assigned to a specific test module
+    @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTestModules tm WHERE tm.id = :moduleId")
     List<User> findUsersAssignedToTestModule(@Param("moduleId") Long moduleId);
 }

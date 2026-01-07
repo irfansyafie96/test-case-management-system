@@ -117,4 +117,9 @@ public class TestModule {
     public Long getProjectId() {
         return project != null ? project.getId() : null;
     }
+
+    // Helper method to expose project name to frontend for display
+    public String getProjectName() {
+        return project != null ? project.getName() : null;
+    }
 }

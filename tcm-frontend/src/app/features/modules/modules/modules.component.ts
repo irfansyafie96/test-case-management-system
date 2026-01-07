@@ -21,24 +21,12 @@ export class ModulesComponent implements OnInit {
   modules$: Observable<TestModule[]>;
 
   constructor(private tcmService: TcmService) {
-    this.modules$ = this.tcmService.projects$.pipe(
-      map(projects => {
-        const allModules: TestModule[] = [];
-        projects.forEach(project => {
-          if (project.modules && project.modules.length > 0) {
-            project.modules.forEach(module => {
-              (module as TestModule).projectName = project.name;
-              allModules.push(module as TestModule);
-            });
-          }
-        });
-        return allModules;
-      })
-    );
+    this.modules$ = this.tcmService.getTestModulesAssignedToCurrentUser();
   }
 
   ngOnInit(): void {
-    this.tcmService.getProjects().subscribe();
+    // Load modules on initialization
+    this.tcmService.getTestModulesAssignedToCurrentUser().subscribe();
   }
 
   getTotalTestCases(testSuites: TestSuite[] | undefined): number {

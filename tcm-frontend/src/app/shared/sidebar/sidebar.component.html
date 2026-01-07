@@ -50,7 +50,7 @@
       
       <div class="user-details" *ngIf="!isCollapsed">
         <div class="user-name">{{ currentUser.username }}</div>
-        <div class="user-role" *ngFor="let role of currentUser.roles">
+        <div class="user-role" *ngFor="let role of currentUser.roles || []">
           {{ role }}
         </div>
       </div>

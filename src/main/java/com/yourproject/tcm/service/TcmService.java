@@ -727,6 +727,12 @@ public class TcmService {
             User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
 
+            // If user is ADMIN, return all executions with details
+            if (isAdmin(user)) {
+                return testExecutionRepository.findAllWithDetails();
+            }
+            
+            // Otherwise return only executions assigned to the user
             return testExecutionRepository.findByAssignedToUserWithDetails(user);
         }
         throw new RuntimeException("No authenticated user found");
@@ -1010,6 +1016,12 @@ public class TcmService {
             User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
 
+            // If user is ADMIN, return all modules
+            if (isAdmin(user)) {
+                return testModuleRepository.findAll();
+            }
+            
+            // Otherwise return only modules assigned to the user
             return testModuleRepository.findTestModulesAssignedToUser(user.getId());
         }
         throw new RuntimeException("No authenticated user found");

@@ -484,18 +484,12 @@ export class TcmService {
    */
   private handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
-      console.error(`${operation} failed:`, error);
-      console.error(`${operation} error status:`, error.status);
-      console.error(`${operation} error status text:`, error.statusText);
-      console.error(`${operation} error message:`, error.message);
-      console.error(`${operation} error body:`, error.error);
-
-      // Note: 401 handling is now also done in auth.interceptor.ts
-      // But keeping this for service-specific logging/handling if needed is fine.
+      // Log essential error information without excessive detail
+      console.error(`${operation} failed:`, error.status, error.statusText, error.message);
 
       // Handle 409 Conflict errors specifically for duplicate projects
       if (error.status === 409) {
-        console.error('Conflict error (likely duplicate project name):', error);
+        console.error('Conflict error (likely duplicate project name)');
         throw error;
       }
 
@@ -515,10 +509,10 @@ export class TcmService {
    */
   private transformUserRoles(user: any): User {
     if (!user) return user;
-    
+
     // Extract role names from Role objects if needed
     let roles: string[] = [];
-    if (user.roles && Array.isArray(user.roles)) {
+    if (user?.roles && Array.isArray(user.roles)) {
       roles = user.roles.map((role: any) => {
         if (typeof role === 'string') {
           return role;

@@ -87,7 +87,7 @@ export class ProjectsComponent implements OnInit {
             this.snackBar.open('Authentication synchronization failed. Please refresh the page and try again.', 'CLOSE', {
               duration: 5000,
               panelClass: ['error-snackbar'],
-              horizontalPosition: 'center',
+              horizontalPosition: 'right',
               verticalPosition: 'top'
             });
             return;
@@ -108,7 +108,7 @@ export class ProjectsComponent implements OnInit {
                 this.snackBar.open('Error: Project name already exists. Please choose a unique designation.', 'DISMISS', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               } else if (error.isCsrfTokenIssue) {
@@ -116,7 +116,7 @@ export class ProjectsComponent implements OnInit {
                 this.snackBar.open(error.userMessage || 'Security token synchronization issue. Please try again.', 'RETRY', {
                   duration: 8000,
                   panelClass: ['warning-snackbar'],
-                horizontalPosition: 'center',
+                horizontalPosition: 'right',
                 verticalPosition: 'top'
               }).onAction().subscribe(async () => {
                 // Retry the operation when user clicks RETRY
@@ -135,7 +135,7 @@ export class ProjectsComponent implements OnInit {
                       this.snackBar.open('System Failure: Unable to initialize project after retry.', 'CLOSE', {
                         duration: 5000,
                         panelClass: ['error-snackbar'],
-                        horizontalPosition: 'center',
+                        horizontalPosition: 'right',
                         verticalPosition: 'top'
                       });
                     }
@@ -145,7 +145,7 @@ export class ProjectsComponent implements OnInit {
                   this.snackBar.open('Authentication synchronization failed on retry. Please refresh and try again.', 'CLOSE', {
                     duration: 5000,
                     panelClass: ['error-snackbar'],
-                    horizontalPosition: 'center',
+                    horizontalPosition: 'right',
                     verticalPosition: 'top'
                   });
                 }
@@ -164,7 +164,7 @@ export class ProjectsComponent implements OnInit {
               this.snackBar.open(errorMessage, 'CLOSE', {
                 duration: 5000,
                 panelClass: ['error-snackbar'],
-                horizontalPosition: 'center',
+                horizontalPosition: 'right',
                 verticalPosition: 'top'
               });
             }
@@ -175,7 +175,7 @@ export class ProjectsComponent implements OnInit {
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],
-            horizontalPosition: 'center',
+            horizontalPosition: 'right',
             verticalPosition: 'top'
           });
         }
@@ -221,14 +221,14 @@ export class ProjectsComponent implements OnInit {
                 this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               } else {
                 this.snackBar.open('Failed to delete project.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               }
@@ -239,7 +239,7 @@ export class ProjectsComponent implements OnInit {
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],
-            horizontalPosition: 'center',
+            horizontalPosition: 'right',
             verticalPosition: 'top'
           });
         }
@@ -247,3 +247,4 @@ export class ProjectsComponent implements OnInit {
     });
   }
 }
+

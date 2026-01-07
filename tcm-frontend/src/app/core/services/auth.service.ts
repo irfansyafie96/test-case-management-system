@@ -354,7 +354,7 @@ export class AuthService {
    */
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
-    return user ? user.roles.includes(role) : false;
+    return user?.roles?.includes(role) ?? false;
   }
 
   /**
@@ -364,7 +364,8 @@ export class AuthService {
    */
   hasAnyRole(roles: string[]): boolean {
     const user = this.getCurrentUser();
-    return user ? roles.some(role => user.roles.includes(role)) : false;
+    const userRoles = user?.roles;
+    return userRoles ? roles.some(role => userRoles.includes(role)) : false;
   }
 
   /**

@@ -18,6 +18,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TestSuiteDialogComponent } from './test-suite-dialog.component';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { TestCaseDialogComponent } from './test-case-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component'; // New improved dialog
 import { Project, TestModule, TestSuite, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
@@ -132,14 +133,14 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
                 this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['warning-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               } else {
                 this.snackBar.open('Failed to create test suite. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               }
@@ -151,7 +152,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],
-            horizontalPosition: 'center',
+            horizontalPosition: 'right',
             verticalPosition: 'top'
           });
         }
@@ -188,14 +189,14 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
                 this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['warning-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               } else {
                 this.snackBar.open('Failed to create test case. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               }
@@ -207,7 +208,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],
-            horizontalPosition: 'center',
+            horizontalPosition: 'right',
             verticalPosition: 'top'
           });
         }
@@ -245,14 +246,14 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
                 this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['warning-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               } else {
                 this.snackBar.open('Failed to update test case. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
-                  horizontalPosition: 'center',
+                  horizontalPosition: 'right',
                   verticalPosition: 'top'
                 });
               }
@@ -264,7 +265,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],
-            horizontalPosition: 'center',
+            horizontalPosition: 'right',
             verticalPosition: 'top'
           });
         }
@@ -311,7 +312,7 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
   loadAssignmentData(moduleId: string): void {
     this.loadingAssignments = true;
     this.cdr.detectChanges(); // Force update to show loading state
-    
+
     // First load assigned users, then load available QA, BA, and TESTER users
     this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
       next: (assignedUsers: User[]) => {
@@ -326,14 +327,14 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
             setTimeout(() => {
               // Update assigned users first
               this.assignedUsers = assignedUsers;
-              
+
               // Combine QA, BA, and TESTER users, deduplicate by ID
               const userMap = new Map<string, User>();
               [...qaUsers, ...baUsers, ...testerUsers].forEach(user => {
                 userMap.set(String(user.id), user);
               });
               const allUsers = Array.from(userMap.values());
-              
+
               // Filter out already assigned users
               const assignedIds = assignedUsers.map(u => String(u.id));
               this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
@@ -425,10 +426,22 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
         // Refresh all assignment data
         this.loadAssignmentData(moduleId);
         this.selectedUserId = null;
+        // Show success snackbar
+        this.snackBar.open('User assigned successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
       },
       (error: any) => {
         console.error('Error assigning user:', error);
-        alert('Failed to assign user. Please try again.');
+        this.snackBar.open('Failed to assign user. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
       }
     );
   }
@@ -442,19 +455,43 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
       testModuleId: Number(moduleId)
     };
 
-    if (!confirm('Are you sure you want to remove this user from the module?')) {
-      return;
-    }
-
-    this.tcmService.removeUserFromTestModule(request).subscribe(
-      (updatedUser: User) => {
-        // Refresh all assignment data
-        this.loadAssignmentData(moduleId);
-      },
-      (error: any) => {
-        console.error('Error removing user:', error);
-        alert('Failed to remove user. Please try again.');
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Remove User',
+        message: 'Are you sure you want to remove this user from the module?',
+        icon: 'warning',
+        confirmButtonText: 'Remove',
+        confirmButtonColor: 'warn'
       }
-    );
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.tcmService.removeUserFromTestModule(request).subscribe(
+          (updatedUser: User) => {
+            // Refresh all assignment data
+            this.loadAssignmentData(moduleId);
+            // Show success snackbar
+            this.snackBar.open('User removed successfully', 'Close', {
+              duration: 3000,
+              panelClass: ['success-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
+          },
+          (error: any) => {
+            console.error('Error removing user:', error);
+            this.snackBar.open('Failed to remove user. Please try again.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
+          }
+        );
+      }
+    });
   }
 }
+
