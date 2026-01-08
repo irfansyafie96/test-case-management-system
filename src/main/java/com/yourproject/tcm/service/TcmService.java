@@ -98,7 +98,7 @@ public class TcmService {
     /**
      * Get all projects in the system
      * For ADMIN users: returns all projects
-     * For QA/BA users: returns only projects assigned to them
+     * For QA/BA/TESTER users: returns projects they have ANY access to (Direct or via Module)
      * @return List of projects based on user role and assignments
      */
     public List<Project> getAllProjects() {
@@ -161,7 +161,7 @@ public class TcmService {
         if (isAdmin(currentUser)) {
             return projectOpt;
         } else {
-            // Check if project is assigned to the user
+            // Check if project is assigned to the user (Directly or via Module)
             List<Project> assignedProjects = projectRepository.findProjectsAssignedToUser(currentUser.getId());
             boolean isAssigned = assignedProjects.stream().anyMatch(p -> p.getId().equals(projectId));
             return isAssigned ? projectOpt : Optional.empty();
@@ -1075,7 +1075,7 @@ public class TcmService {
             if (isAdmin(user)) {
                 modules = testModuleRepository.findAll();
             } else {
-                // Otherwise return only modules assigned to the user
+                // Otherwise return modules where user is assigned OR user is assigned to project
                 modules = testModuleRepository.findTestModulesAssignedToUser(user.getId());
             }
 

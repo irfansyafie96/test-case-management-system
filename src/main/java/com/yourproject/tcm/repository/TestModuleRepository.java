@@ -19,11 +19,13 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.assignedUsers WHERE tm.id = :id")
     Optional<TestModule> findByIdWithAssignedUsers(@Param("id") Long id);
 
-    // Find test modules assigned to a specific user
+    // Find test modules assigned to a specific user (Directly OR via Project assignment)
     @Query("SELECT DISTINCT tm FROM TestModule tm " +
-           "JOIN FETCH tm.project " +
+           "JOIN FETCH tm.project p " +
            "LEFT JOIN FETCH tm.testSuites ts " +
-           "JOIN tm.assignedUsers u WHERE u.id = :userId")
+           "LEFT JOIN tm.assignedUsers u " +
+           "LEFT JOIN p.assignedUsers pu " +
+           "WHERE u.id = :userId OR pu.id = :userId")
     List<TestModule> findTestModulesAssignedToUser(@Param("userId") Long userId);
 
     // Find test modules NOT assigned to a specific user (for assignment purposes)
