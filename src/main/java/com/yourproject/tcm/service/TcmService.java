@@ -141,6 +141,22 @@ public class TcmService {
         if (!projectOpt.isPresent()) {
             return Optional.empty();
         }
+
+        // Force initialization of lazy collections
+        Project project = projectOpt.get();
+        if (project.getModules() != null) {
+            for (TestModule module : project.getModules()) {
+                // Accessing the collection forces Hibernate to load it
+                if (module.getTestSuites() != null) {
+                    module.getTestSuites().size(); 
+                    for (TestSuite suite : module.getTestSuites()) {
+                        if (suite.getTestCases() != null) {
+                            suite.getTestCases().size();
+                        }
+                    }
+                }
+            }
+        }
         
         if (isAdmin(currentUser)) {
             return projectOpt;
@@ -1042,13 +1058,28 @@ public class TcmService {
             User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
 
+            List<TestModule> modules;
             // If user is ADMIN, return all modules
             if (isAdmin(user)) {
-                return testModuleRepository.findAll();
+                modules = testModuleRepository.findAll();
+            } else {
+                // Otherwise return only modules assigned to the user
+                modules = testModuleRepository.findTestModulesAssignedToUser(user.getId());
+            }
+
+            // Force initialization of test cases for counts
+            for (TestModule module : modules) {
+                if (module.getTestSuites() != null) {
+                    module.getTestSuites().size(); // Ensure suites are loaded
+                    for (TestSuite suite : module.getTestSuites()) {
+                        if (suite.getTestCases() != null) {
+                            suite.getTestCases().size(); // Ensure cases are loaded
+                        }
+                    }
+                }
             }
             
-            // Otherwise return only modules assigned to the user
-            return testModuleRepository.findTestModulesAssignedToUser(user.getId());
+            return modules;
         }
         throw new RuntimeException("No authenticated user found");
     }

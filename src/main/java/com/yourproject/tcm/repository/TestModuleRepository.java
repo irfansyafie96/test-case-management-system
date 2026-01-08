@@ -17,7 +17,10 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     Optional<TestModule> findByIdWithSuitesAndCasesAndSteps(@Param("id") Long id);
 
     // Find test modules assigned to a specific user
-    @Query("SELECT DISTINCT tm FROM TestModule tm JOIN FETCH tm.project JOIN tm.assignedUsers u WHERE u.id = :userId")
+    @Query("SELECT DISTINCT tm FROM TestModule tm " +
+           "JOIN FETCH tm.project " +
+           "LEFT JOIN FETCH tm.testSuites ts " +
+           "JOIN tm.assignedUsers u WHERE u.id = :userId")
     List<TestModule> findTestModulesAssignedToUser(@Param("userId") Long userId);
 
     // Find test modules NOT assigned to a specific user (for assignment purposes)
@@ -30,6 +33,8 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     // Find test modules in projects assigned to a user (for QA/BA users)
     @Query("SELECT DISTINCT tm FROM TestModule tm JOIN FETCH tm.project p JOIN p.assignedUsers u WHERE u.id = :userId")
     List<TestModule> findTestModulesInProjectsAssignedToUser(@Param("userId") Long userId);
-    @EntityGraph(attributePaths = {"project"})
+    @Query("SELECT DISTINCT tm FROM TestModule tm " +
+           "JOIN FETCH tm.project " +
+           "LEFT JOIN FETCH tm.testSuites ts")
     List<TestModule> findAll();
 }
