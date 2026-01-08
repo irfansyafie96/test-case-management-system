@@ -440,24 +440,36 @@ public class TcmService {
             }
             TestCase savedTestCase = testCaseRepository.save(testCase);
             entityManager.flush(); // Ensure data is written to DB
-            entityManager.clear(); // Clear the persistence context to avoid stale data
 
             // Automatically create executions for users assigned to the parent module
             try {
-                // Re-fetch suite and module to ensure we have fresh data
-                TestSuite freshSuite = testSuiteRepository.findByIdWithModule(suiteId).orElse(testSuite);
-                TestModule module = freshSuite.getTestModule();
-                
-                if (module != null) {
-                    // Fetch users assigned to this module
-                    Set<User> assignedUsers = module.getAssignedUsers();
+                // Get the module ID from the suite (even if proxy, getting ID is safe or we use the object)
+                Long moduleId = null;
+                if (testSuite.getTestModule() != null) {
+                    moduleId = testSuite.getTestModule().getId();
+                } else {
+                    // Fallback: try to fetch suite with module
+                    TestSuite freshSuite = testSuiteRepository.findByIdWithModule(suiteId).orElse(null);
+                    if (freshSuite != null && freshSuite.getTestModule() != null) {
+                        moduleId = freshSuite.getTestModule().getId();
+                    }
+                }
+
+                if (moduleId != null) {
+                    // Fetch module with assigned users eagerly
+                    Optional<TestModule> moduleOpt = testModuleRepository.findByIdWithAssignedUsers(moduleId);
                     
-                    if (assignedUsers != null && !assignedUsers.isEmpty()) {
-                        for (User user : assignedUsers) {
-                            try {
-                                createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
-                            } catch (Exception e) {
-                                System.err.println("Failed to auto-generate execution for user " + user.getId() + ": " + e.getMessage());
+                    if (moduleOpt.isPresent()) {
+                        TestModule module = moduleOpt.get();
+                        Set<User> assignedUsers = module.getAssignedUsers();
+                        
+                        if (assignedUsers != null && !assignedUsers.isEmpty()) {
+                            for (User user : assignedUsers) {
+                                try {
+                                    createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
+                                } catch (Exception e) {
+                                    System.err.println("Failed to auto-generate execution for user " + user.getId() + ": " + e.getMessage());
+                                }
                             }
                         }
                     }

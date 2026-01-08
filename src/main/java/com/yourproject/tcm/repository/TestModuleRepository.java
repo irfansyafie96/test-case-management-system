@@ -16,6 +16,9 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.testSuites WHERE tm.id = :id")
     Optional<TestModule> findByIdWithSuitesAndCasesAndSteps(@Param("id") Long id);
 
+    @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.assignedUsers WHERE tm.id = :id")
+    Optional<TestModule> findByIdWithAssignedUsers(@Param("id") Long id);
+
     // Find test modules assigned to a specific user
     @Query("SELECT DISTINCT tm FROM TestModule tm " +
            "JOIN FETCH tm.project " +

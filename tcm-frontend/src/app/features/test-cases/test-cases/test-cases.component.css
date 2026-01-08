@@ -1,5 +1,125 @@
 /* Shared Design System - Refined Atelier */
 
+/* Stats Dashboard */
+.stats-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.total-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.stat-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: rgba(5, 150, 105, 0.1);
+  color: var(--accent-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon mat-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.stat-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.distribution-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+}
+
+.bars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.p-count {
+  font-family: 'JetBrains Mono', monospace;
+  color: #666;
+}
+
+.bar-track {
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background-color: var(--accent-primary);
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+@media (max-width: 768px) {
+  .stats-dashboard {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-number {
+    font-size: 36px;
+  }
+}
+
 /* Loading State */
 .loading-overlay {
   position: fixed;
@@ -106,6 +226,29 @@
   transition: color 0.2s;
 }
 .table-link:hover { color: var(--accent-primary); }
+
+.context-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #666;
+}
+
+.context-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.tiny-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #999;
+}
 
 /* Fix Icon Button Alignment in Table */
 .bespoke-table button[mat-icon-button] {

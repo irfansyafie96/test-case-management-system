@@ -60,6 +60,11 @@ export interface TestCase {
   updatedDate?: string;
   prerequisites?: string;
   tags?: string[];
+  
+  // Flattened hierarchy fields from backend
+  projectName?: string;
+  moduleName?: string;
+  testSuiteName?: string;
 }
 
 // Test Execution Model

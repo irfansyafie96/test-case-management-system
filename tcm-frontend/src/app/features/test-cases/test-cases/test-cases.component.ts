@@ -31,13 +31,13 @@ import { map, catchError, finalize } from 'rxjs/operators';
   styleUrls: ['./test-cases.component.css']
 })
 export class TestCasesComponent implements OnInit {
-  displayedColumns: string[] = ['id', 'title', 'status', 'actions'];
+  displayedColumns: string[] = ['id', 'title', 'project', 'module', 'actions'];
 
   private loadingSubject = new BehaviorSubject<boolean>(true);
   private errorSubject = new BehaviorSubject<boolean>(false);
   private testCasesSubject = new BehaviorSubject<TestCase[]>([]);
 
-  vm$: Observable<{ loading: boolean; error: boolean; testCases: TestCase[] }>;
+  vm$: Observable<{ loading: boolean; error: boolean; testCases: TestCase[]; stats: any }>;
 
   constructor(private tcmService: TcmService) {
     this.vm$ = combineLatest({
@@ -45,8 +45,29 @@ export class TestCasesComponent implements OnInit {
       error: this.errorSubject.asObservable(),
       testCases: this.testCasesSubject.asObservable()
     }).pipe(
-      map(({ loading, error, testCases }) => ({ loading, error, testCases }))
+      map(({ loading, error, testCases }) => ({ 
+        loading, 
+        error, 
+        testCases,
+        stats: this.calculateStats(testCases)
+      }))
     );
+  }
+
+  calculateStats(testCases: TestCase[]) {
+    const projectCounts: {[key: string]: number} = {};
+    testCases.forEach(tc => {
+      // Use the direct property first (new backend logic), then fallback
+      const projectName = tc.projectName || tc.testSuite?.testModule?.project?.name || 'Unassigned';
+      projectCounts[projectName] = (projectCounts[projectName] || 0) + 1;
+    });
+
+    return {
+      total: testCases.length,
+      byProject: Object.entries(projectCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count) // Sort by count descending
+    };
   }
 
   ngOnInit() {

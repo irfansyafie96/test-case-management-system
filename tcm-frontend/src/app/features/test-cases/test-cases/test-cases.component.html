@@ -19,6 +19,34 @@
     <!-- Content -->
     <div *ngIf="!vm.loading && !vm.error">
       
+      <!-- Stats Dashboard -->
+      <div class="stats-dashboard" *ngIf="vm.testCases.length">
+        <div class="stat-card total-card">
+          <div class="stat-icon">
+            <mat-icon>library_books</mat-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-label">Total Test Cases</span>
+            <span class="stat-number">{{ vm.stats.total }}</span>
+          </div>
+        </div>
+
+        <div class="stat-card distribution-card">
+          <h3><mat-icon>pie_chart</mat-icon> Distribution by Project</h3>
+          <div class="bars-container">
+            <div *ngFor="let p of vm.stats.byProject" class="bar-row">
+              <div class="bar-label">
+                <span class="p-name">{{ p.name }}</span>
+                <span class="p-count">{{ p.count }}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="(p.count / vm.stats.total) * 100"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div *ngIf="vm.testCases.length; else emptyState">
         <!-- Desktop Table View -->
         <div class="mat-elevation-z0 table-container-styled desktop-view">
@@ -40,13 +68,22 @@
               </td>
             </ng-container>
 
-
-            <!-- Status Column -->
-            <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef> STATUS </th>
+            <!-- Project Column -->
+            <ng-container matColumnDef="project">
+              <th mat-header-cell *matHeaderCellDef> PROJECT </th>
               <td mat-cell *matCellDef="let element">
-                <span class="status-badge" [ngClass]="getStatusClass(element.status)">
-                  {{ element.status || 'DRAFT' }}
+                <span class="context-text">
+                  {{ element.projectName || element.testSuite?.testModule?.project?.name || '-' }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Module Column -->
+            <ng-container matColumnDef="module">
+              <th mat-header-cell *matHeaderCellDef> MODULE </th>
+              <td mat-cell *matCellDef="let element">
+                <span class="context-text">
+                  {{ element.moduleName || element.testSuite?.testModule?.name || '-' }}
                 </span>
               </td>
             </ng-container>
@@ -71,12 +108,13 @@
           <div *ngFor="let element of vm.testCases" class="mobile-test-card" [routerLink]="['/test-cases', element.id]">
             <div class="mobile-card-header">
               <span class="id-badge">{{ element.testCaseId }}</span>
-              <span class="status-badge-mobile" [ngClass]="getStatusClass(element.status)">
-                {{ element.status || 'DRAFT' }}
-              </span>
             </div>
             <div class="mobile-card-body">
               <h3>{{ element.title }}</h3>
+              <div class="context-info" *ngIf="element.projectName || element.testSuite?.testModule?.project">
+                <mat-icon class="tiny-icon">folder</mat-icon> 
+                {{ element.projectName || element.testSuite?.testModule?.project?.name }} / {{ element.moduleName || element.testSuite?.testModule?.name }}
+              </div>
             </div>
             <div class="mobile-card-footer">
               <mat-icon class="action-icon">visibility</mat-icon> View Details

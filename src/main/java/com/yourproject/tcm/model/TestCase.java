@@ -119,4 +119,26 @@ public class TestCase {
     public Long getTestSuiteId() {
         return testSuite != null ? testSuite.getId() : null;
     }
+
+    // Flattened hierarchy getters for Frontend (avoids JsonIgnore/Proxy issues)
+
+    public String getTestSuiteName() {
+        return testSuite != null ? testSuite.getName() : null;
+    }
+
+    public String getModuleName() {
+        if (testSuite != null && testSuite.getTestModule() != null) {
+            return testSuite.getTestModule().getName();
+        }
+        return null;
+    }
+
+    public String getProjectName() {
+        if (testSuite != null && 
+            testSuite.getTestModule() != null && 
+            testSuite.getTestModule().getProject() != null) {
+            return testSuite.getTestModule().getProject().getName();
+        }
+        return null;
+    }
 }
