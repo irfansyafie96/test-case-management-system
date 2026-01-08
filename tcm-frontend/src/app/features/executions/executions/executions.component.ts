@@ -113,23 +113,43 @@ export class ExecutionsComponent implements OnInit {
     const projectMap = new Map<string, ProjectGroup>();
 
     executions.forEach(execution => {
-      const testCase = execution.testCase;
-      if (!testCase?.testSuite) return;
+      // Try to get data from flattened fields first (new backend logic), then fallback to traversal
+      let projectId = execution.projectId?.toString();
+      let projectName = execution.projectName;
+      let moduleId = execution.moduleId?.toString();
+      let moduleName = execution.moduleName;
+      let suiteId = (execution.testSuiteId || execution.suiteId)?.toString();
+      let suiteName = execution.testSuiteName || execution.suiteName;
 
-      const suite = testCase.testSuite;
-      const module = suite.testModule;
-      const project = module?.project;
+      // Fallback: Traverse object graph if flat fields are missing
+      if (!projectId) {
+        const testCase = execution.testCase;
+        if (!testCase?.testSuite) return;
 
-      if (!project) return;
+        const suite = testCase.testSuite;
+        const module = suite.testModule;
+        const project = module?.project;
 
-      const projectKey = project.id.toString();
-      const moduleKey = `${projectKey}-${module.id}`;
-      const suiteKey = `${moduleKey}-${suite.id}`;
+        if (!project) return;
+
+        projectId = project.id.toString();
+        projectName = project.name;
+        moduleId = module?.id.toString();
+        moduleName = module?.name;
+        suiteId = suite.id.toString();
+        suiteName = suite.name;
+      }
+
+      if (!projectId || !moduleId || !suiteId) return;
+
+      const projectKey = projectId;
+      const moduleKey = `${projectKey}-${moduleId}`;
+      const suiteKey = `${moduleKey}-${suiteId}`;
 
       // Get or create project group
       if (!projectMap.has(projectKey)) {
         projectMap.set(projectKey, {
-          projectName: project.name,
+          projectName: projectName || 'Unknown Project',
           projectId: projectKey,
           modules: []
         });
@@ -141,7 +161,7 @@ export class ExecutionsComponent implements OnInit {
       let moduleGroup = projectGroup.modules.find(m => m.moduleId === moduleKey);
       if (!moduleGroup) {
         moduleGroup = {
-          moduleName: module.name,
+          moduleName: moduleName || 'Unknown Module',
           moduleId: moduleKey,
           suites: []
         };
@@ -152,7 +172,7 @@ export class ExecutionsComponent implements OnInit {
       let suiteGroup = moduleGroup.suites.find(s => s.suiteId === suiteKey);
       if (!suiteGroup) {
         suiteGroup = {
-          suiteName: suite.name,
+          suiteName: suiteName || 'Unknown Suite',
           suiteId: suiteKey,
           executions: []
         };

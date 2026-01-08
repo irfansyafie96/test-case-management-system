@@ -77,6 +77,16 @@ export interface TestExecution {
   testCase?: TestCase; // Added reference to the associated test case
   title?: string; // Added for display purposes
   assignedToUser?: User; // Added for assignment functionality
+  
+  // Flattened hierarchy fields for easier grouping
+  projectId?: number | string;
+  projectName?: string;
+  moduleId?: number | string;
+  moduleName?: string;
+  suiteId?: number | string;
+  suiteName?: string;
+  testSuiteId?: number | string; // Backend getter might be mapped to this
+  testSuiteName?: string; // Backend getter might be mapped to this
 }
 
 // Test Step Result Model

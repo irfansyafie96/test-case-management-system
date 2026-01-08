@@ -425,6 +425,32 @@ public class TcmService {
             TestCase savedTestCase = testCaseRepository.save(testCase);
             entityManager.flush(); // Ensure data is written to DB
             entityManager.clear(); // Clear the persistence context to avoid stale data
+
+            // Automatically create executions for users assigned to the parent module
+            try {
+                // Re-fetch suite and module to ensure we have fresh data
+                TestSuite freshSuite = testSuiteRepository.findByIdWithModule(suiteId).orElse(testSuite);
+                TestModule module = freshSuite.getTestModule();
+                
+                if (module != null) {
+                    // Fetch users assigned to this module
+                    Set<User> assignedUsers = module.getAssignedUsers();
+                    
+                    if (assignedUsers != null && !assignedUsers.isEmpty()) {
+                        for (User user : assignedUsers) {
+                            try {
+                                createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
+                            } catch (Exception e) {
+                                System.err.println("Failed to auto-generate execution for user " + user.getId() + ": " + e.getMessage());
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error in auto-execution generation: " + e.getMessage());
+                // Don't fail the test case creation if execution generation fails
+            }
+
             return savedTestCase;
         } else {
             throw new RuntimeException("Test Suite not found with id: " + suiteId);

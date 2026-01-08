@@ -466,6 +466,19 @@ export class TcmService {
       );
   }
 
+  /**
+   * Regenerate test executions for a module
+   * Useful when assignments have changed or executions are missing
+   * @param moduleId ID of the test module
+   * @returns Observable<string> Success message
+   */
+  regenerateExecutions(moduleId: string): Observable<string> {
+    return this.http.post(`${this.apiUrl}/testmodules/${moduleId}/regenerate-executions`, {}, { responseType: 'text' })
+      .pipe(
+        catchError(this.handleError<string>('regenerateExecutions'))
+      );
+  }
+
   // ==================== UTILITY METHODS ====================
 
   /**

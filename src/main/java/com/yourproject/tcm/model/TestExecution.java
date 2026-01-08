@@ -177,4 +177,59 @@ public class TestExecution {
     public void setStepResults(List<TestStepResult> stepResults) {
         this.stepResults = stepResults;
     }
+
+    // Helper methods to flatten the hierarchy for the frontend
+    // This allows the frontend to group executions without needing the full object graph
+
+    public String getTestSuiteName() {
+        if (testCase != null && testCase.getTestSuite() != null) {
+            return testCase.getTestSuite().getName();
+        }
+        return null;
+    }
+
+    public Long getTestSuiteId() {
+        if (testCase != null && testCase.getTestSuite() != null) {
+            return testCase.getTestSuite().getId();
+        }
+        return null;
+    }
+
+    public String getModuleName() {
+        if (testCase != null && 
+            testCase.getTestSuite() != null && 
+            testCase.getTestSuite().getTestModule() != null) {
+            return testCase.getTestSuite().getTestModule().getName();
+        }
+        return null;
+    }
+
+    public Long getModuleId() {
+        if (testCase != null && 
+            testCase.getTestSuite() != null && 
+            testCase.getTestSuite().getTestModule() != null) {
+            return testCase.getTestSuite().getTestModule().getId();
+        }
+        return null;
+    }
+
+    public String getProjectName() {
+        if (testCase != null && 
+            testCase.getTestSuite() != null && 
+            testCase.getTestSuite().getTestModule() != null &&
+            testCase.getTestSuite().getTestModule().getProject() != null) {
+            return testCase.getTestSuite().getTestModule().getProject().getName();
+        }
+        return null;
+    }
+
+    public Long getProjectId() {
+        if (testCase != null && 
+            testCase.getTestSuite() != null && 
+            testCase.getTestSuite().getTestModule() != null &&
+            testCase.getTestSuite().getTestModule().getProject() != null) {
+            return testCase.getTestSuite().getTestModule().getProject().getId();
+        }
+        return null;
+    }
 }

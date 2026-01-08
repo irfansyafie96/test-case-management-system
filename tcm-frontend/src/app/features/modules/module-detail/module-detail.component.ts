@@ -493,5 +493,34 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
       }
     });
   }
+
+  regenerateExecutions(): void {
+    const moduleId = this.route.snapshot.paramMap.get('id');
+    if (!moduleId) return;
+
+    this.loadingSubject.next(true); // Show global loading since this is an important operation
+
+    this.tcmService.regenerateExecutions(moduleId).subscribe({
+      next: (message) => {
+        this.loadingSubject.next(false);
+        this.snackBar.open('Test executions regenerated successfully for all assigned users.', 'Close', {
+          duration: 5000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      },
+      error: (error) => {
+        console.error('Error regenerating executions:', error);
+        this.loadingSubject.next(false);
+        this.snackBar.open('Failed to regenerate test executions. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
 }
 
