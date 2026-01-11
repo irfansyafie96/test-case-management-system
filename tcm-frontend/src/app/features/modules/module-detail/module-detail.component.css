@@ -193,11 +193,20 @@
   padding: 12px 24px;
 }
 
+.bespoke-table th.mat-column-actions {
+  text-align: left;
+}
+
 .bespoke-table td {
   padding: 12px 24px;
   border-bottom: var(--border-thin);
   font-family: 'DM Sans', sans-serif;
   font-size: 16px; /* Increased from 14px */
+  vertical-align: middle;
+}
+
+.bespoke-table td.mat-column-actions {
+  vertical-align: middle;
 }
 
 /* Fix Icon Button Alignment in Table */
@@ -230,17 +239,40 @@
 
 .title-cell { font-weight: 500; }
 
+/* Fix Icon Button Alignment in Table */
+.bespoke-table button[mat-icon-button] {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.bespoke-table button[mat-icon-button] ::ng-deep mat-icon {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+}
+
 .actions-cell {
-  text-align: right;
-  padding-right: 24px !important;
+  text-align: left;
   white-space: nowrap;
+}
+
+.actions-cell ::ng-deep {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
 }
 
 .action-btn {
   width: 32px;
   height: 32px;
   min-width: 32px;
-  margin-left: 4px;
+  padding: 0;
+  margin: 0;
 }
 
 .empty-suite-msg {

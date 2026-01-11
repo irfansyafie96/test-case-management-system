@@ -14,7 +14,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TestSuiteDialogComponent } from './test-suite-dialog.component';
@@ -49,7 +49,9 @@ import { catchError, finalize, map, startWith } from 'rxjs/operators';
   templateUrl: './module-detail.component.html',
   styleUrls: ['./module-detail.component.css']
 })
-export class ModuleDetailComponent implements OnInit {  private route = inject(ActivatedRoute);
+export class ModuleDetailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private tcmService = inject(TcmService);
   public authService = inject(AuthService);
   private dialog = inject(MatDialog);
@@ -216,6 +218,11 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
     });
   }
 
+  viewTestCase(testCase: TestCase): void {
+    const testCaseId = testCase.id as string;
+    this.router.navigate(['/test-cases', testCaseId]);
+  }
+
   editTestCase(testCase: TestCase): void {
     const dialogRef = this.dialog.open(TestCaseDialogImprovedComponent, {
       width: '900px', // Wider for better layout
@@ -251,6 +258,70 @@ export class ModuleDetailComponent implements OnInit {  private route = inject(A
                 });
               } else {
                 this.snackBar.open('Failed to update test case. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'right',
+                  verticalPosition: 'top'
+                });
+              }
+            }
+          });
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.loadingSubject.next(false);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'right',
+            verticalPosition: 'top'
+          });
+        }
+      }
+    });
+  }
+
+  deleteTestCase(testCase: TestCase): void {
+    const testCaseId = testCase.id as string;
+    
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Test Case',
+        message: `Are you sure you want to delete test case "${testCase.title}"? This action cannot be undone.`,
+        icon: 'warning',
+        confirmButtonText: 'Delete',
+        confirmButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result) {
+        this.loadingSubject.next(true); // Show loading indicator
+        
+        try {
+          await this.tcmService.waitForAuthSync();
+          this.tcmService.deleteTestCase(testCaseId).subscribe({
+            next: () => {
+              this.refreshModuleData();
+              this.snackBar.open('Test case deleted successfully', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar'],
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
+              });
+            },
+            error: (error) => {
+              this.loadingSubject.next(false);
+              
+              if (error.isCsrfTokenIssue) {
+                this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['warning-snackbar'],
+                  horizontalPosition: 'right',
+                  verticalPosition: 'top'
+                });
+              } else {
+                this.snackBar.open('Failed to delete test case. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
                   horizontalPosition: 'right',

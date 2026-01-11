@@ -156,12 +156,29 @@
                   <td mat-cell *matCellDef="let testCase" class="actions-cell">
                     <button
                       mat-icon-button
+                      matTooltip="View test case"
+                      (click)="viewTestCase(testCase)"
+                      color="accent"
+                      class="action-btn">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
                       matTooltip="Edit test case"
                       (click)="editTestCase(testCase)"
                       color="primary"
                       class="action-btn"
                       *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
                       <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      matTooltip="Delete test case"
+                      (click)="deleteTestCase(testCase)"
+                      color="warn"
+                      class="action-btn"
+                      *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+                      <mat-icon>delete</mat-icon>
                     </button>
                   </td>
                 </ng-container>
