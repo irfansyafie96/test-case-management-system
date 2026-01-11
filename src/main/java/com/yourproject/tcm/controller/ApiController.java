@@ -4,6 +4,7 @@ import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.ModuleAssignmentRequest;
 import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
 import com.yourproject.tcm.model.dto.StepResultResponse;
+import com.yourproject.tcm.model.dto.TestAnalyticsDTO;
 import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.service.TcmService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -308,6 +309,21 @@ public class ApiController {
             return new ResponseEntity<>(testCases, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * GET /api/testcases/analytics - Get test execution analytics
+     * Returns KPIs and breakdown by project/module
+     * @return ResponseEntity with analytics data or error
+     */
+    @GetMapping("/testcases/analytics")
+    public ResponseEntity<?> getTestAnalytics() {
+        try {
+            TestAnalyticsDTO analytics = tcmService.getTestAnalytics();
+            return new ResponseEntity<>(analytics, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving analytics: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

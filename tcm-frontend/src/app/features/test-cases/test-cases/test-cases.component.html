@@ -5,138 +5,157 @@
     <div *ngIf="vm.loading" class="loading-overlay">
       <div class="loading-box">
         <mat-spinner diameter="32"></mat-spinner>
-        <p>Retrieving Test Specifications...</p>
+        <p>Loading Analytics...</p>
       </div>
     </div>
 
     <div class="page-header">
       <div>
-        <h1 class="page-title"><mat-icon>list_alt</mat-icon> Global Test Cases</h1>
-        <p class="page-subtitle">Master list of all test definitions across the system.</p>
+        <h1 class="page-title"><mat-icon>analytics</mat-icon> Test Analytics Dashboard</h1>
+        <p class="page-subtitle">Overview of test execution results across all projects.</p>
       </div>
     </div>
 
     <!-- Content -->
     <div *ngIf="!vm.loading && !vm.error">
       
-      <!-- Stats Dashboard -->
-      <div class="stats-dashboard" *ngIf="vm.testCases.length">
-        <div class="stat-card total-card">
-          <div class="stat-icon">
+      <!-- KPI Cards -->
+      <div class="kpi-cards">
+        <div class="kpi-card total-cases">
+          <div class="kpi-icon">
             <mat-icon>library_books</mat-icon>
           </div>
-          <div class="stat-content">
-            <span class="stat-label">Total Test Cases</span>
-            <span class="stat-number">{{ vm.stats.total }}</span>
+          <div class="kpi-content">
+            <span class="kpi-label">Total Test Cases</span>
+            <span class="kpi-number">{{ vm.analytics.totalTestCases }}</span>
           </div>
         </div>
 
-        <div class="stat-card distribution-card">
-          <h3><mat-icon>pie_chart</mat-icon> Distribution by Project</h3>
-          <div class="bars-container">
-            <div *ngFor="let p of vm.stats.byProject" class="bar-row">
-              <div class="bar-label">
-                <span class="p-name">{{ p.name }}</span>
-                <span class="p-count">{{ p.count }}</span>
+        <div class="kpi-card executed">
+          <div class="kpi-icon">
+            <mat-icon>play_circle</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Executed</span>
+            <span class="kpi-number">{{ vm.analytics.executedCount }}</span>
+            <span class="kpi-sub">{{ getPercentage(vm.analytics.executedCount, vm.analytics.totalTestCases) }}%</span>
+          </div>
+        </div>
+
+        <div class="kpi-card passed">
+          <div class="kpi-icon">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Passed</span>
+            <span class="kpi-number">{{ vm.analytics.passedCount }}</span>
+            <span class="kpi-sub">{{ vm.analytics.passRate.toFixed(1) }}%</span>
+          </div>
+        </div>
+
+        <div class="kpi-card failed">
+          <div class="kpi-icon">
+            <mat-icon>cancel</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Failed</span>
+            <span class="kpi-number">{{ vm.analytics.failedCount }}</span>
+            <span class="kpi-sub">{{ vm.analytics.failRate.toFixed(1) }}%</span>
+          </div>
+        </div>
+
+        <div class="kpi-card not-executed">
+          <div class="kpi-icon">
+            <mat-icon>schedule</mat-icon>
+          </div>
+          <div class="kpi-content">
+            <span class="kpi-label">Not Executed</span>
+            <span class="kpi-number">{{ vm.analytics.notExecutedCount }}</span>
+            <span class="kpi-sub">{{ getPercentage(vm.analytics.notExecutedCount, vm.analytics.totalTestCases) }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pass/Fail Progress -->
+      <div class="progress-section">
+        <h2 class="section-title">Execution Progress</h2>
+        <div class="progress-bars">
+          <div class="progress-item">
+            <div class="progress-label">
+              <span class="label-text">Passed</span>
+              <span class="label-value">{{ vm.analytics.passedCount }} ({{ vm.analytics.passRate.toFixed(1) }}%)</span>
+            </div>
+            <mat-progress-bar mode="determinate" [value]="vm.analytics.passRate" class="progress-bar passed-bar"></mat-progress-bar>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-label">
+              <span class="label-text">Failed</span>
+              <span class="label-value">{{ vm.analytics.failedCount }} ({{ vm.analytics.failRate.toFixed(1) }}%)</span>
+            </div>
+            <mat-progress-bar mode="determinate" [value]="vm.analytics.failRate" class="progress-bar failed-bar"></mat-progress-bar>
+          </div>
+
+          <div class="progress-item">
+            <div class="progress-label">
+              <span class="label-text">Not Executed</span>
+              <span class="label-value">{{ vm.analytics.notExecutedCount }} ({{ getPercentage(vm.analytics.notExecutedCount, vm.analytics.totalTestCases) }}%)</span>
+            </div>
+            <mat-progress-bar mode="determinate" [value]="getPercentage(vm.analytics.notExecutedCount, vm.analytics.totalTestCases)" class="progress-bar not-executed-bar"></mat-progress-bar>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module Breakdown -->
+      <div class="module-breakdown" *ngIf="vm.analytics.byModule.length">
+        <h2 class="section-title">Module Breakdown</h2>
+        <div class="module-list">
+          <div *ngFor="let module of vm.analytics.byModule" class="module-card">
+            <div class="module-header">
+              <div class="module-info">
+                <mat-icon class="module-icon">folder</mat-icon>
+                <div>
+                  <h3>{{ module.moduleName }}</h3>
+                  <span class="project-name">{{ module.projectName }}</span>
+                </div>
               </div>
-              <div class="bar-track">
-                <div class="bar-fill" [style.width.%]="(p.count / vm.stats.total) * 100"></div>
+              <div class="module-stats">
+                <span class="stat-badge total">{{ module.totalTestCases }} Total</span>
+                <span class="stat-badge executed">{{ module.executedCount }} Executed</span>
+              </div>
+            </div>
+
+            <div class="module-progress">
+              <div class="progress-item compact">
+                <span class="label-mini">Passed: {{ module.passedCount }}</span>
+                <mat-progress-bar mode="determinate" [value]="getPercentage(module.passedCount, module.totalTestCases)" class="progress-bar passed-bar"></mat-progress-bar>
+              </div>
+              <div class="progress-item compact">
+                <span class="label-mini">Failed: {{ module.failedCount }}</span>
+                <mat-progress-bar mode="determinate" [value]="getPercentage(module.failedCount, module.totalTestCases)" class="progress-bar failed-bar"></mat-progress-bar>
+              </div>
+              <div class="progress-item compact">
+                <span class="label-mini">Not Executed: {{ module.notExecutedCount }}</span>
+                <mat-progress-bar mode="determinate" [value]="getPercentage(module.notExecutedCount, module.totalTestCases)" class="progress-bar not-executed-bar"></mat-progress-bar>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div *ngIf="vm.testCases.length; else emptyState">
-        <!-- Desktop Table View -->
-        <div class="mat-elevation-z0 table-container-styled desktop-view">
-          <table mat-table [dataSource]="vm.testCases" class="bespoke-table">
-            
-            <!-- ID Column -->
-            <ng-container matColumnDef="id">
-              <th mat-header-cell *matHeaderCellDef> ID </th>
-              <td mat-cell *matCellDef="let element"> 
-                <span class="id-badge">{{ element.testCaseId }}</span> 
-              </td>
-            </ng-container>
-
-            <!-- Title Column -->
-            <ng-container matColumnDef="title">
-              <th mat-header-cell *matHeaderCellDef> TITLE </th>
-              <td mat-cell *matCellDef="let element" class="title-cell"> 
-                <a [routerLink]="['/test-cases', element.id]" class="table-link">{{ element.title }}</a>
-              </td>
-            </ng-container>
-
-            <!-- Project Column -->
-            <ng-container matColumnDef="project">
-              <th mat-header-cell *matHeaderCellDef> PROJECT </th>
-              <td mat-cell *matCellDef="let element">
-                <span class="context-text">
-                  {{ element.projectName || element.testSuite?.testModule?.project?.name || '-' }}
-                </span>
-              </td>
-            </ng-container>
-
-            <!-- Module Column -->
-            <ng-container matColumnDef="module">
-              <th mat-header-cell *matHeaderCellDef> MODULE </th>
-              <td mat-cell *matCellDef="let element">
-                <span class="context-text">
-                  {{ element.moduleName || element.testSuite?.testModule?.name || '-' }}
-                </span>
-              </td>
-            </ng-container>
-
-            <!-- Actions Column -->
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
-              <td mat-cell *matCellDef="let element">
-                <button mat-icon-button [routerLink]="['/test-cases', element.id]" color="primary" matTooltip="View Details">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
-          </table>
-        </div>
-
-        <!-- Mobile Card View -->
-        <div class="mobile-view">
-          <div *ngFor="let element of vm.testCases" class="mobile-test-card" [routerLink]="['/test-cases', element.id]">
-            <div class="mobile-card-header">
-              <span class="id-badge">{{ element.testCaseId }}</span>
-            </div>
-            <div class="mobile-card-body">
-              <h3>{{ element.title }}</h3>
-              <div class="context-info" *ngIf="element.projectName || element.testSuite?.testModule?.project">
-                <mat-icon class="tiny-icon">folder</mat-icon> 
-                {{ element.projectName || element.testSuite?.testModule?.project?.name }} / {{ element.moduleName || element.testSuite?.testModule?.name }}
-              </div>
-            </div>
-            <div class="mobile-card-footer">
-              <mat-icon class="action-icon">visibility</mat-icon> View Details
-            </div>
+      <!-- Empty State -->
+      <div *ngIf="!vm.analytics.totalTestCases" class="empty-state">
+        <div class="empty-content">
+          <div class="empty-icon-wrapper">
+            <mat-icon class="empty-icon">analytics</mat-icon>
           </div>
+          <h2>No Test Data Available</h2>
+          <p>There are no test cases in the system yet. Create a project and module to start defining tests.</p>
+          <button mat-raised-button color="primary" routerLink="/projects">
+            <mat-icon>add</mat-icon> Create Project
+          </button>
         </div>
       </div>
-
-      <ng-template #emptyState>
-        <div class="empty-state">
-          <div class="empty-content">
-            <div class="empty-icon-wrapper">
-              <mat-icon class="empty-icon">assignment_late</mat-icon>
-            </div>
-            <h2>No Test Cases Found</h2>
-            <p>The system currently has no test definitions. Create a project and module to start defining tests.</p>
-            <button mat-raised-button color="primary" routerLink="/projects">
-              <mat-icon>arrow_forward</mat-icon> Go to Projects
-            </button>
-          </div>
-        </div>
-      </ng-template>
     </div>
 
     <!-- Error State -->
@@ -145,8 +164,8 @@
          <div class="empty-content">
            <mat-icon class="empty-icon error-icon">error_outline</mat-icon>
            <h3>System Error</h3>
-           <p>Unable to retrieve the master test case list.</p>
-           <button mat-raised-button color="warn" (click)="loadTestCases()">RETRY</button>
+           <p>Unable to retrieve analytics data.</p>
+           <button mat-raised-button color="warn" (click)="loadAnalytics()">RETRY</button>
          </div>
       </div>
     </div>

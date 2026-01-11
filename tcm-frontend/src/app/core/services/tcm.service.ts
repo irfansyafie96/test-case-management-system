@@ -205,6 +205,27 @@ export class TcmService {
   }
 
   /**
+   * Get test execution analytics
+   * @returns Observable<TestAnalytics> - Stream of analytics data
+   */
+  getTestAnalytics(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/testcases/analytics`)
+      .pipe(
+        catchError(this.handleError<any>('getTestAnalytics', {
+          totalTestCases: 0,
+          executedCount: 0,
+          passedCount: 0,
+          failedCount: 0,
+          notExecutedCount: 0,
+          passRate: 0,
+          failRate: 0,
+          byProject: [],
+          byModule: []
+        }))
+      );
+  }
+
+  /**
    * Get a single test case by ID
    * @param id - Test case ID
    * @returns Observable<TestCase> - Stream of single test case

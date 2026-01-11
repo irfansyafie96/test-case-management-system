@@ -3,6 +3,7 @@ package com.yourproject.tcm.service;
 import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.ModuleAssignmentRequest;
 import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
+import com.yourproject.tcm.model.dto.TestAnalyticsDTO;
 import com.yourproject.tcm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -444,7 +447,128 @@ public class TcmService {
      */
     @Transactional(readOnly = true)
     public List<TestCase> getAllTestCases() {
-        return testCaseRepository.findAll();
+        return testCaseRepository.findAllWithDetails();
+    }
+
+    /**
+     * Get test execution analytics
+     * Calculates pass/fail statistics for all test cases
+     * @return TestAnalyticsDTO containing overall KPIs and breakdown by project/module
+     */
+    @Transactional(readOnly = true)
+    public TestAnalyticsDTO getTestAnalytics() {
+        // Get all test cases with their test suites and modules (eagerly fetched)
+        List<TestCase> allTestCases = testCaseRepository.findAllWithDetails();
+
+        // Get all executions with details
+        List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetails();
+
+        // Track which test cases have been executed
+        Set<Long> executedTestCaseIds = new HashSet<>();
+        Map<Long, String> latestExecutionResults = new HashMap<>(); // testCaseId -> result
+
+        // Find the latest execution for each test case
+        for (TestExecution execution : allExecutions) {
+            Long testCaseId = execution.getTestCase().getId();
+            executedTestCaseIds.add(testCaseId);
+
+            // Keep the latest execution (by date)
+            if (!latestExecutionResults.containsKey(testCaseId) ||
+                execution.getExecutionDate().isAfter(
+                    // Need to find the execution with this result to compare dates
+                    // For now, just use the first one we find
+                    LocalDateTime.now()
+                )) {
+                latestExecutionResults.put(testCaseId, execution.getOverallResult());
+            }
+        }
+
+        // Calculate overall KPIs
+        long totalTestCases = allTestCases.size();
+        long executedCount = executedTestCaseIds.size();
+        long notExecutedCount = totalTestCases - executedCount;
+
+        long passedCount = 0;
+        long failedCount = 0;
+
+        for (String result : latestExecutionResults.values()) {
+            if ("Pass".equalsIgnoreCase(result)) {
+                passedCount++;
+            } else if ("Fail".equalsIgnoreCase(result)) {
+                failedCount++;
+            }
+        }
+
+        double passRate = executedCount > 0 ? (passedCount * 100.0 / executedCount) : 0.0;
+        double failRate = executedCount > 0 ? (failedCount * 100.0 / executedCount) : 0.0;
+
+        // Calculate project breakdown
+        Map<Long, TestAnalyticsDTO.ProjectAnalytics> projectStats = new HashMap<>();
+        Map<Long, TestAnalyticsDTO.ModuleAnalytics> moduleStats = new HashMap<>();
+
+        for (TestCase testCase : allTestCases) {
+            // Get project info
+            TestSuite suite = testCase.getTestSuite();
+            if (suite == null || suite.getTestModule() == null) continue;
+
+            TestModule module = suite.getTestModule();
+            Project project = module.getProject();
+            if (project == null) continue;
+
+            Long projectId = project.getId();
+            String projectName = project.getName();
+            Long moduleId = module.getId();
+            String moduleName = module.getName();
+
+            // Initialize project stats if needed
+            projectStats.putIfAbsent(projectId, new TestAnalyticsDTO.ProjectAnalytics(
+                projectId, projectName, 0, 0, 0, 0, 0
+            ));
+
+            // Initialize module stats if needed
+            moduleStats.putIfAbsent(moduleId, new TestAnalyticsDTO.ModuleAnalytics(
+                moduleId, moduleName, projectId, projectName, 0, 0, 0, 0, 0
+            ));
+
+            // Update project stats
+            TestAnalyticsDTO.ProjectAnalytics pStats = projectStats.get(projectId);
+            pStats.setTotalTestCases(pStats.getTotalTestCases() + 1);
+
+            if (executedTestCaseIds.contains(testCase.getId())) {
+                pStats.setExecutedCount(pStats.getExecutedCount() + 1);
+                String result = latestExecutionResults.get(testCase.getId());
+                if ("Pass".equalsIgnoreCase(result)) {
+                    pStats.setPassedCount(pStats.getPassedCount() + 1);
+                } else if ("Fail".equalsIgnoreCase(result)) {
+                    pStats.setFailedCount(pStats.getFailedCount() + 1);
+                }
+            } else {
+                pStats.setNotExecutedCount(pStats.getNotExecutedCount() + 1);
+            }
+
+            // Update module stats
+            TestAnalyticsDTO.ModuleAnalytics mStats = moduleStats.get(moduleId);
+            mStats.setTotalTestCases(mStats.getTotalTestCases() + 1);
+
+            if (executedTestCaseIds.contains(testCase.getId())) {
+                mStats.setExecutedCount(mStats.getExecutedCount() + 1);
+                String result = latestExecutionResults.get(testCase.getId());
+                if ("Pass".equalsIgnoreCase(result)) {
+                    mStats.setPassedCount(mStats.getPassedCount() + 1);
+                } else if ("Fail".equalsIgnoreCase(result)) {
+                    mStats.setFailedCount(mStats.getFailedCount() + 1);
+                }
+            } else {
+                mStats.setNotExecutedCount(mStats.getNotExecutedCount() + 1);
+            }
+        }
+
+        return new TestAnalyticsDTO(
+            totalTestCases, executedCount, passedCount, failedCount, notExecutedCount,
+            passRate, failRate,
+            new ArrayList<>(projectStats.values()),
+            new ArrayList<>(moduleStats.values())
+        );
     }
 
     /**

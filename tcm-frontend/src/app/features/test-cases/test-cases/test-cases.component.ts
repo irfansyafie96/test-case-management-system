@@ -3,15 +3,46 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
-import { TestCase } from '../../../core/models/project.model';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, catchError, finalize } from 'rxjs/operators';
+
+interface TestAnalytics {
+  totalTestCases: number;
+  executedCount: number;
+  passedCount: number;
+  failedCount: number;
+  notExecutedCount: number;
+  passRate: number;
+  failRate: number;
+  byProject: ProjectAnalytics[];
+  byModule: ModuleAnalytics[];
+}
+
+interface ProjectAnalytics {
+  projectId: number;
+  projectName: string;
+  totalTestCases: number;
+  executedCount: number;
+  passedCount: number;
+  failedCount: number;
+  notExecutedCount: number;
+}
+
+interface ModuleAnalytics {
+  moduleId: number;
+  moduleName: string;
+  projectId: number;
+  projectName: string;
+  totalTestCases: number;
+  executedCount: number;
+  passedCount: number;
+  failedCount: number;
+  notExecutedCount: number;
+}
 
 @Component({
   selector: 'app-test-cases',
@@ -21,9 +52,7 @@ import { map, catchError, finalize } from 'rxjs/operators';
     MatButtonModule, 
     MatCardModule, 
     MatIconModule, 
-    MatTableModule, 
-    MatChipsModule, 
-    MatTooltipModule,
+    MatProgressBarModule, 
     MatProgressSpinnerModule,
     RouterModule
   ],
@@ -31,66 +60,66 @@ import { map, catchError, finalize } from 'rxjs/operators';
   styleUrls: ['./test-cases.component.css']
 })
 export class TestCasesComponent implements OnInit {
-  displayedColumns: string[] = ['id', 'title', 'project', 'module', 'actions'];
-
   private loadingSubject = new BehaviorSubject<boolean>(true);
   private errorSubject = new BehaviorSubject<boolean>(false);
-  private testCasesSubject = new BehaviorSubject<TestCase[]>([]);
+  private analyticsSubject = new BehaviorSubject<TestAnalytics>({
+    totalTestCases: 0,
+    executedCount: 0,
+    passedCount: 0,
+    failedCount: 0,
+    notExecutedCount: 0,
+    passRate: 0,
+    failRate: 0,
+    byProject: [],
+    byModule: []
+  });
 
-  vm$: Observable<{ loading: boolean; error: boolean; testCases: TestCase[]; stats: any }>;
+  vm$: Observable<{ loading: boolean; error: boolean; analytics: TestAnalytics }>;
 
   constructor(private tcmService: TcmService) {
     this.vm$ = combineLatest({
       loading: this.loadingSubject.asObservable(),
       error: this.errorSubject.asObservable(),
-      testCases: this.testCasesSubject.asObservable()
+      analytics: this.analyticsSubject.asObservable()
     }).pipe(
-      map(({ loading, error, testCases }) => ({ 
+      map(({ loading, error, analytics }) => ({ 
         loading, 
         error, 
-        testCases,
-        stats: this.calculateStats(testCases)
+        analytics
       }))
     );
   }
 
-  calculateStats(testCases: TestCase[]) {
-    const projectCounts: {[key: string]: number} = {};
-    testCases.forEach(tc => {
-      // Use the direct property first (new backend logic), then fallback
-      const projectName = tc.projectName || tc.testSuite?.testModule?.project?.name || 'Unassigned';
-      projectCounts[projectName] = (projectCounts[projectName] || 0) + 1;
-    });
-
-    return {
-      total: testCases.length,
-      byProject: Object.entries(projectCounts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count) // Sort by count descending
-    };
-  }
-
   ngOnInit() {
-    this.loadTestCases();
+    this.loadAnalytics();
   }
 
-  loadTestCases() {
+  loadAnalytics() {
     this.loadingSubject.next(true);
-    this.tcmService.getAllTestCases().pipe(
+    this.tcmService.getTestAnalytics().pipe(
       catchError(error => {
-        console.error('Error loading test cases:', error);
+        console.error('Error loading analytics:', error);
         this.errorSubject.next(true);
-        return of([]);
+        return of({
+          totalTestCases: 0,
+          executedCount: 0,
+          passedCount: 0,
+          failedCount: 0,
+          notExecutedCount: 0,
+          passRate: 0,
+          failRate: 0,
+          byProject: [],
+          byModule: []
+        });
       }),
       finalize(() => this.loadingSubject.next(false))
-    ).subscribe(testCases => {
-      this.testCasesSubject.next(testCases);
+    ).subscribe(analytics => {
+      this.analyticsSubject.next(analytics);
     });
   }
 
-
-  getStatusClass(status: string | undefined): string {
-    if (!status) return 'draft';
-    return status.toLowerCase();
+  getPercentage(value: number, total: number): number {
+    if (total === 0) return 0;
+    return Math.round((value / total) * 100);
   }
 }
