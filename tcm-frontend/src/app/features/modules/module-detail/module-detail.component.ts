@@ -344,6 +344,70 @@ export class ModuleDetailComponent implements OnInit {
     });
   }
 
+  deleteTestSuite(suite: TestSuite): void {
+    const suiteId = suite.id as string;
+    
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Test Suite',
+        message: `Are you sure you want to delete test suite "${suite.name}"? This will also delete all test cases within this suite. This action cannot be undone.`,
+        icon: 'warning',
+        confirmButtonText: 'Delete',
+        confirmButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result) {
+        this.loadingSubject.next(true); // Show loading indicator
+        
+        try {
+          await this.tcmService.waitForAuthSync();
+          this.tcmService.deleteTestSuite(suiteId).subscribe({
+            next: () => {
+              this.refreshModuleData();
+              this.snackBar.open('Test suite deleted successfully', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar'],
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
+              });
+            },
+            error: (error) => {
+              this.loadingSubject.next(false);
+              
+              if (error.isCsrfTokenIssue) {
+                this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['warning-snackbar'],
+                  horizontalPosition: 'right',
+                  verticalPosition: 'top'
+                });
+              } else {
+                this.snackBar.open('Failed to delete test suite. Please try again.', 'CLOSE', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar'],
+                  horizontalPosition: 'right',
+                  verticalPosition: 'top'
+                });
+              }
+            }
+          });
+        } catch (syncError) {
+          console.error('Authentication sync error:', syncError);
+          this.loadingSubject.next(false);
+          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'right',
+            verticalPosition: 'top'
+          });
+        }
+      }
+    });
+  }
+
   private refreshModuleData(): void {
     const moduleId = this.route.snapshot.paramMap.get('id');
     if (moduleId) {

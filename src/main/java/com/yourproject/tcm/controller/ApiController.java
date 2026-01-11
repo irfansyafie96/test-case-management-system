@@ -259,6 +259,25 @@ public class ApiController {
         }
     }
 
+    /**
+     * DELETE /api/testsuites/{suiteId} - Delete a test suite by ID
+     * Requires ADMIN role only
+     * @param suiteId ID of the test suite to delete
+     * @return ResponseEntity with success message or error
+     */
+    @DeleteMapping("/testsuites/{suiteId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    public ResponseEntity<?> deleteTestSuite(@PathVariable Long suiteId) {
+        try {
+            tcmService.deleteTestSuite(suiteId);
+            return new ResponseEntity<>("Test suite deleted successfully", HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error deleting test suite: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // ==================== TEST CASE ENDPOINTS ====================
 
     /**

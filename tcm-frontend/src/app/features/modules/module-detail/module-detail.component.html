@@ -132,6 +132,14 @@
                   *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
                   <mat-icon>post_add</mat-icon> ADD CASE
                 </button>
+                <button
+                  mat-icon-button
+                  matTooltip="Delete test suite"
+                  (click)="deleteTestSuite(suite)"
+                  color="warn"
+                  *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+                  <mat-icon>delete</mat-icon>
+                </button>
               </div>
             </div>
             

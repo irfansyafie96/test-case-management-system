@@ -394,6 +394,48 @@ public class TcmService {
         }
     }
 
+    /**
+     * Delete a test suite by ID
+     * This will also delete all test cases in the suite (cascading)
+     * @param suiteId The ID of the test suite to delete
+     * @throws RuntimeException if suite doesn't exist
+     */
+    @Transactional
+    public void deleteTestSuite(Long suiteId) {
+        Optional<TestSuite> suiteOpt = testSuiteRepository.findById(suiteId);
+        if (suiteOpt.isPresent()) {
+            TestSuite testSuite = suiteOpt.get();
+
+            // First, delete all test cases in the suite
+            // This will cascade to delete test steps, test executions, and test step results
+            if (testSuite.getTestCases() != null) {
+                for (TestCase testCase : testSuite.getTestCases()) {
+                    // Delete all test executions for this test case
+                    List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
+                    for (TestExecution execution : executions) {
+                        testExecutionRepository.deleteById(execution.getId());
+                    }
+
+                    // Delete test step results that might still reference the test steps
+                    if (testCase.getTestSteps() != null) {
+                        for (TestStep step : testCase.getTestSteps()) {
+                            testStepResultRepository.deleteByTestStepId(step.getId());
+                        }
+                    }
+
+                    // Delete the test case
+                    testCaseRepository.deleteById(testCase.getId());
+                }
+            }
+
+            // Now delete the test suite
+            testSuiteRepository.deleteById(suiteId);
+            entityManager.flush(); // Ensure data is written to DB
+        } else {
+            throw new RuntimeException("Test Suite not found with id: " + suiteId);
+        }
+    }
+
     // ==================== TEST CASE METHODS ====================
 
     /**
