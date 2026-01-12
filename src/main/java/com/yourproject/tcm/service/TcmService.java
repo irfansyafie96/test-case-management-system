@@ -976,8 +976,18 @@ public class TcmService {
                 return new ArrayList<>(latestExecutionByTestCase.values());
             }
             
-            // Otherwise return only executions assigned to the user
-            return testExecutionRepository.findByAssignedToUserWithDetails(user);
+            // Otherwise return only executions assigned to the user for modules they're currently assigned to
+            List<TestExecution> allAssignedExecutions = testExecutionRepository.findByAssignedToUserWithDetails(user);
+            Set<Long> assignedModuleIds = user.getAssignedTestModules().stream()
+                .map(com.yourproject.tcm.model.TestModule::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+            return allAssignedExecutions.stream()
+                .filter(execution -> {
+                    Long moduleId = execution.getModuleId();
+                    return moduleId != null && assignedModuleIds.contains(moduleId);
+                })
+                .collect(java.util.stream.Collectors.toList());
         }
         throw new RuntimeException("No authenticated user found");
     }
