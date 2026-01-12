@@ -315,12 +315,13 @@ public class ApiController {
     /**
      * GET /api/testcases/analytics - Get test execution analytics
      * Returns KPIs and breakdown by project/module
+     * @param userId Optional user ID to filter executions (admin only). For non-admin users, only their own executions are shown.
      * @return ResponseEntity with analytics data or error
      */
     @GetMapping("/testcases/analytics")
-    public ResponseEntity<?> getTestAnalytics() {
+    public ResponseEntity<?> getTestAnalytics(@RequestParam(required = false) Long userId) {
         try {
-            TestAnalyticsDTO analytics = tcmService.getTestAnalytics();
+            TestAnalyticsDTO analytics = tcmService.getTestAnalytics(userId);
             return new ResponseEntity<>(analytics, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving analytics: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

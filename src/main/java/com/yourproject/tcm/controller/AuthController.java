@@ -335,4 +335,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
+
+    /**
+     * GET /api/auth/users - Get all non-admin users (QA/BA/TESTER) for admin dashboard filter
+     * Requires ADMIN role
+     * @return ResponseEntity with list of non-admin users
+     */
+    @GetMapping("/users")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<User>> getAllNonAdminUsers() {
+        List<User> users = userRepository.findAllNonAdminUsers();
+        return ResponseEntity.ok(users);
+    }
 }

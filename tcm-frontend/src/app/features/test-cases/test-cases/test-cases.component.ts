@@ -6,9 +6,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterModule } from '@angular/router';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatLabel } from '@angular/material/form-field';
 import { TcmService } from '../../../core/services/tcm.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, catchError, finalize } from 'rxjs/operators';
+import { User } from '../../../core/models/project.model';
 
 interface TestAnalytics {
   totalTestCases: number;
@@ -54,7 +59,10 @@ interface ModuleAnalytics {
     MatIconModule, 
     MatProgressBarModule, 
     MatProgressSpinnerModule,
-    RouterModule
+    RouterModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatLabel
   ],
   templateUrl: './test-cases.component.html',
   styleUrls: ['./test-cases.component.css']
@@ -75,8 +83,16 @@ export class TestCasesComponent implements OnInit {
   });
 
   vm$: Observable<{ loading: boolean; error: boolean; analytics: TestAnalytics }>;
+  
+  // User filter properties for admin
+  users: User[] = [];
+  selectedUserId: number | null = null;
+  isAdmin: boolean = false;
 
-  constructor(private tcmService: TcmService) {
+  constructor(
+    private tcmService: TcmService,
+    private authService: AuthService
+  ) {
     this.vm$ = combineLatest({
       loading: this.loadingSubject.asObservable(),
       error: this.errorSubject.asObservable(),
@@ -91,12 +107,33 @@ export class TestCasesComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Check if current user is admin
+    this.isAdmin = this.authService.hasRole('ADMIN');
+    
+    // Load users if admin
+    if (this.isAdmin) {
+      this.loadUsers();
+    }
+    
+    // Load analytics
     this.loadAnalytics();
   }
 
-  loadAnalytics() {
+  loadUsers() {
+    this.tcmService.getAllNonAdminUsers().subscribe({
+      next: (users) => {
+        this.users = users;
+        console.log('Loaded users for filter:', users);
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
+      }
+    });
+  }
+
+  loadAnalytics(userId?: number) {
     this.loadingSubject.next(true);
-    this.tcmService.getTestAnalytics().pipe(
+    this.tcmService.getTestAnalytics(userId).pipe(
       catchError(error => {
         console.error('Error loading analytics:', error);
         this.errorSubject.next(true);
@@ -123,6 +160,11 @@ export class TestCasesComponent implements OnInit {
       console.log('By Module:', analytics.byModule);
       this.analyticsSubject.next(analytics);
     });
+  }
+
+  onUserFilterChange(userId: number | null) {
+    this.selectedUserId = userId;
+    this.loadAnalytics(userId || undefined);
   }
 
   getPercentage(value: number, total: number): number {

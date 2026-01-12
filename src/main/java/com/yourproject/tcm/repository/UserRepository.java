@@ -56,4 +56,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTestModules tm WHERE tm.id = :moduleId")
     List<User> findUsersAssignedToTestModule(@Param("moduleId") Long moduleId);
+
+    // Find all non-admin users (QA/BA/TESTER) for admin dashboard filter
+    @EntityGraph(attributePaths = {"roles"})
+    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA', 'TESTER')")
+    List<User> findAllNonAdminUsers();
 }

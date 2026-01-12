@@ -206,10 +206,15 @@ export class TcmService {
 
   /**
    * Get test execution analytics
+   * @param userId Optional user ID to filter executions (admin only)
    * @returns Observable<TestAnalytics> - Stream of analytics data
    */
-  getTestAnalytics(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/testcases/analytics`)
+  getTestAnalytics(userId?: number): Observable<any> {
+    let params = '';
+    if (userId !== undefined && userId !== null) {
+      params = `?userId=${userId}`;
+    }
+    return this.http.get<any>(`${this.apiUrl}/testcases/analytics${params}`)
       .pipe(
         tap(data => console.log('Raw API Response from /testcases/analytics:', data)),
         catchError(this.handleError<any>('getTestAnalytics', {
@@ -498,6 +503,18 @@ export class TcmService {
     return this.http.post(`${this.apiUrl}/testmodules/${moduleId}/regenerate-executions`, {}, { responseType: 'text' })
       .pipe(
         catchError(this.handleError<string>('regenerateExecutions'))
+      );
+  }
+
+  /**
+   * Get all non-admin users (QA/BA/TESTER) for admin dashboard filter
+   * @returns Observable<User[]> List of non-admin users
+   */
+  getAllNonAdminUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/auth/users`)
+      .pipe(
+        map(users => users.map(user => this.transformUserRoles(user))),
+        catchError(this.handleError<User[]>('getAllNonAdminUsers', []))
       );
   }
 
