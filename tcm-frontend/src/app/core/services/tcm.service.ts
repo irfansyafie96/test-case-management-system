@@ -211,6 +211,7 @@ export class TcmService {
   getTestAnalytics(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/testcases/analytics`)
       .pipe(
+        tap(data => console.log('Raw API Response from /testcases/analytics:', data)),
         catchError(this.handleError<any>('getTestAnalytics', {
           totalTestCases: 0,
           executedCount: 0,

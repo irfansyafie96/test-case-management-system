@@ -114,6 +114,13 @@ export class TestCasesComponent implements OnInit {
       }),
       finalize(() => this.loadingSubject.next(false))
     ).subscribe(analytics => {
+      console.log('Analytics from API:', analytics);
+      console.log('Total Test Cases:', analytics.totalTestCases);
+      console.log('Executed Count:', analytics.executedCount);
+      console.log('Passed Count:', analytics.passedCount);
+      console.log('Failed Count:', analytics.failedCount);
+      console.log('By Project:', analytics.byProject);
+      console.log('By Module:', analytics.byModule);
       this.analyticsSubject.next(analytics);
     });
   }

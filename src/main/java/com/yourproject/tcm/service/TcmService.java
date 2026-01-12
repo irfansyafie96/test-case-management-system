@@ -457,14 +457,60 @@ public class TcmService {
      */
     @Transactional(readOnly = true)
     public TestAnalyticsDTO getTestAnalytics() {
+        // Get the current user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final User currentUser;
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+            String username = authentication.getName();
+            currentUser = userRepository.findByUsername(username).orElse(null);
+        } else {
+            currentUser = null;
+        }
+
         // Get all test cases with their test suites and modules (eagerly fetched)
         List<TestCase> allTestCases = testCaseRepository.findAllWithDetails();
+
+        // Filter test cases based on user assignments (unless admin)
+        List<TestCase> filteredTestCases = new ArrayList<>();
+        if (currentUser != null && isAdmin(currentUser)) {
+            // Admin sees all test cases
+            filteredTestCases = allTestCases;
+        } else if (currentUser != null) {
+            // Non-admin users only see test cases in their assigned projects/modules
+            filteredTestCases = allTestCases.stream()
+                .filter(testCase -> {
+                    TestSuite suite = testCase.getTestSuite();
+                    if (suite == null || suite.getTestModule() == null) return false;
+                    
+                    TestModule module = suite.getTestModule();
+                    Project project = module.getProject();
+                    if (project == null) return false;
+
+                    // Check if user is assigned to this project
+                    if (currentUser.getAssignedProjects().contains(project)) {
+                        return true;
+                    }
+
+                    // Check if user is assigned to this module
+                    if (currentUser.getAssignedTestModules().contains(module)) {
+                        return true;
+                    }
+
+                    return false;
+                })
+                .collect(Collectors.toList());
+        } else {
+            // No authenticated user - return empty analytics
+            return new TestAnalyticsDTO(0, 0, 0, 0, 0, 0.0, 0.0, new ArrayList<>(), new ArrayList<>());
+        }
 
         // Get all executions with details
         List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetails();
 
         // Track which test cases have been executed
         Set<Long> executedTestCaseIds = new HashSet<>();
+        Map<Long, TestExecution> latestExecutionByTestCase = new HashMap<>();
         Map<Long, String> latestExecutionResults = new HashMap<>(); // testCaseId -> result
 
         // Find the latest execution for each test case
@@ -473,18 +519,19 @@ public class TcmService {
             executedTestCaseIds.add(testCaseId);
 
             // Keep the latest execution (by date)
-            if (!latestExecutionResults.containsKey(testCaseId) ||
-                execution.getExecutionDate().isAfter(
-                    // Need to find the execution with this result to compare dates
-                    // For now, just use the first one we find
-                    LocalDateTime.now()
-                )) {
-                latestExecutionResults.put(testCaseId, execution.getOverallResult());
+            if (!latestExecutionByTestCase.containsKey(testCaseId) ||
+                execution.getExecutionDate().isAfter(latestExecutionByTestCase.get(testCaseId).getExecutionDate())) {
+                latestExecutionByTestCase.put(testCaseId, execution);
             }
         }
 
+        // Extract results from latest executions
+        for (TestExecution execution : latestExecutionByTestCase.values()) {
+            latestExecutionResults.put(execution.getTestCase().getId(), execution.getOverallResult());
+        }
+
         // Calculate overall KPIs
-        long totalTestCases = allTestCases.size();
+        long totalTestCases = filteredTestCases.size();
         long executedCount = executedTestCaseIds.size();
         long notExecutedCount = totalTestCases - executedCount;
 
@@ -506,7 +553,7 @@ public class TcmService {
         Map<Long, TestAnalyticsDTO.ProjectAnalytics> projectStats = new HashMap<>();
         Map<Long, TestAnalyticsDTO.ModuleAnalytics> moduleStats = new HashMap<>();
 
-        for (TestCase testCase : allTestCases) {
+        for (TestCase testCase : filteredTestCases) {
             // Get project info
             TestSuite suite = testCase.getTestSuite();
             if (suite == null || suite.getTestModule() == null) continue;
@@ -607,43 +654,9 @@ public class TcmService {
             TestCase savedTestCase = testCaseRepository.save(testCase);
             entityManager.flush(); // Ensure data is written to DB
 
-            // Automatically create executions for users assigned to the parent module
-            try {
-                // Get the module ID from the suite (even if proxy, getting ID is safe or we use the object)
-                Long moduleId = null;
-                if (testSuite.getTestModule() != null) {
-                    moduleId = testSuite.getTestModule().getId();
-                } else {
-                    // Fallback: try to fetch suite with module
-                    TestSuite freshSuite = testSuiteRepository.findByIdWithModule(suiteId).orElse(null);
-                    if (freshSuite != null && freshSuite.getTestModule() != null) {
-                        moduleId = freshSuite.getTestModule().getId();
-                    }
-                }
-
-                if (moduleId != null) {
-                    // Fetch module with assigned users eagerly
-                    Optional<TestModule> moduleOpt = testModuleRepository.findByIdWithAssignedUsers(moduleId);
-                    
-                    if (moduleOpt.isPresent()) {
-                        TestModule module = moduleOpt.get();
-                        Set<User> assignedUsers = module.getAssignedUsers();
-                        
-                        if (assignedUsers != null && !assignedUsers.isEmpty()) {
-                            for (User user : assignedUsers) {
-                                try {
-                                    createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
-                                } catch (Exception e) {
-                                    System.err.println("Failed to auto-generate execution for user " + user.getId() + ": " + e.getMessage());
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("Error in auto-execution generation: " + e.getMessage());
-                // Don't fail the test case creation if execution generation fails
-            }
+            // NOTE: Auto-generating executions for all module users has been disabled
+            // Executions should only be created when explicitly assigned to a specific user
+            // This allows QA/BA to create test cases without automatically getting executions
 
             return savedTestCase;
         } else {
