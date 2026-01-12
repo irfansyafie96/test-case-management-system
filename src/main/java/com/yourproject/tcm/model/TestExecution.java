@@ -110,7 +110,7 @@ public class TestExecution {
 
     // Additional getters for frontend compatibility
     public String getTestCaseId() {
-        return testCase != null ? testCase.getId().toString() : null;
+        return testCase != null ? testCase.getTestCaseId() : null;
     }
 
     public String getExecutedBy() {

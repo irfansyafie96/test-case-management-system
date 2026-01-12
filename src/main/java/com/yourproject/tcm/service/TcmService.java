@@ -947,9 +947,20 @@ public class TcmService {
             User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
 
-            // If user is ADMIN, return all executions with details
+            // If user is ADMIN, return all executions but only one per test case (latest)
             if (isAdmin(user)) {
-                return testExecutionRepository.findAllWithDetails();
+                List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetails();
+                Map<Long, TestExecution> latestExecutionByTestCase = new HashMap<>();
+                
+                for (TestExecution execution : allExecutions) {
+                    Long testCaseId = execution.getTestCase().getId();
+                    // Keep only the latest execution for each test case
+                    if (!latestExecutionByTestCase.containsKey(testCaseId) ||
+                        execution.getExecutionDate().isAfter(latestExecutionByTestCase.get(testCaseId).getExecutionDate())) {
+                        latestExecutionByTestCase.put(testCaseId, execution);
+                    }
+                }
+                return new ArrayList<>(latestExecutionByTestCase.values());
             }
             
             // Otherwise return only executions assigned to the user
