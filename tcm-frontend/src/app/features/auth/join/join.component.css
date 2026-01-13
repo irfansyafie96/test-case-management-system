@@ -1,0 +1,87 @@
+.join-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--border-thin) 1px, transparent 1px), linear-gradient(90deg, var(--border-thin) 1px, transparent 1px);
+  background-size: 40px 40px;
+  padding: 16px;
+}
+
+.join-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px !important;
+  border-radius: var(--radius-md) !important;
+  border: var(--border-medium);
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--surface) !important;
+}
+
+.join-card mat-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 !important;
+  margin-bottom: 24px;
+}
+
+.join-card mat-card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.invite-email {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #666;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.join-btn {
+  height: 40px;
+  margin-top: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  background-color: var(--ink) !important;
+  color: var(--surface) !important;
+  border: var(--border-medium) !important;
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+}
+
+.join-btn:active {
+  box-shadow: 2px 2px 0 0 var(--accent-primary) !important;
+  transform: translate(2px, 2px);
+}
+
+.loading-state, .error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 0;
+}
+
+.error-state mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}

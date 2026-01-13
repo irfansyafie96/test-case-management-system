@@ -21,6 +21,10 @@ export const routes: Routes = [
     path: 'register-org',
     loadComponent: () => import('./features/auth/register-org/register-org.component').then(m => m.RegisterOrgComponent)
   },
+  {
+    path: 'join',
+    loadComponent: () => import('./features/auth/join/join.component').then(m => m.JoinComponent)
+  },
 
   // Project routes
   {
@@ -67,6 +71,13 @@ export const routes: Routes = [
   {
     path: 'executions/workbench/:id',
     loadComponent: () => import('./features/executions/execution-workbench/execution-workbench.component').then(m => m.ExecutionWorkbenchComponent),
+    canActivate: [authGuard]
+  },
+
+  // Team routes
+  {
+    path: 'team',
+    loadComponent: () => import('./features/team/team/team.component').then(m => m.TeamComponent),
     canActivate: [authGuard]
   },
 

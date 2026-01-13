@@ -1,0 +1,145 @@
+.team-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+}
+
+.page-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  color: #666;
+  margin: 0;
+  font-size: 16px;
+}
+
+.content-wrapper {
+  background: var(--surface);
+  border: var(--border-thin);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  min-height: 400px;
+  position: relative;
+}
+
+.loading-shade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.team-table {
+  width: 100%;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--border-medium);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.username-text {
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Chip Styles */
+.mat-mdc-chip {
+  min-height: 24px !important;
+  font-size: 12px !important;
+}
+
+.qa { background-color: #e3f2fd !important; color: #1565c0 !important; }
+.ba { background-color: #e8f5e9 !important; color: #2e7d32 !important; }
+.tester { background-color: #fff3e0 !important; color: #ef6c00 !important; }
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.active {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px;
+  color: #999;
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--ink);
+}
+
+/* Button */
+button[mat-flat-button] {
+  background-color: var(--ink) !important;
+  color: var(--surface) !important;
+  border: var(--border-medium) !important;
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+button[mat-flat-button]:active {
+  box-shadow: 2px 2px 0 0 var(--accent-primary) !important;
+  transform: translate(2px, 2px);
+}

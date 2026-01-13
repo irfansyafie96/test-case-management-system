@@ -50,6 +50,10 @@ export class SidebarComponent implements OnInit {
     this.isCollapsed = !this.isCollapsed;
   }
 
+  get isAdmin(): boolean {
+    return this.currentUser?.roles?.includes('ADMIN') ?? false;
+  }
+
   loadCurrentUser() {
     if (this.isBrowser) {
       const storedUser = localStorage.getItem('currentUser');

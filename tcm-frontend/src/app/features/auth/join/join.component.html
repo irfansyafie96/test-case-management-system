@@ -1,0 +1,46 @@
+<div class="join-container">
+  <mat-card class="join-card">
+    <div *ngIf="isLoading" class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Verifying invitation...</p>
+    </div>
+
+    <div *ngIf="errorMessage && !isLoading" class="error-state">
+      <mat-icon color="warn">error</mat-icon>
+      <h3>Invitation Error</h3>
+      <p>{{ errorMessage }}</p>
+      <a mat-button routerLink="/login">Back to Login</a>
+    </div>
+
+    <div *ngIf="invitation && !isLoading && !errorMessage">
+      <mat-card-header>
+        <mat-card-title>Join {{ invitation.organization.name }}</mat-card-title>
+        <mat-card-subtitle>You've been invited as a <strong>{{ invitation.role }}</strong></mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p class="invite-email">Creating account for: <strong>{{ invitation.email }}</strong></p>
+        
+        <form [formGroup]="joinForm" (ngSubmit)="onJoin()">
+          <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+            <mat-label>Choose Username</mat-label>
+            <input matInput formControlName="username" placeholder="jdoe">
+            <mat-error *ngIf="joinForm.get('username')?.hasError('required')">Username is required</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+            <mat-label>Create Password</mat-label>
+            <input matInput formControlName="password" type="password">
+            <mat-error *ngIf="joinForm.get('password')?.hasError('required')">Password is required</mat-error>
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" class="full-width join-btn" [disabled]="joinForm.invalid || isSubmitting">
+            <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner>
+            <span *ngIf="!isSubmitting">Create Account & Join</span>
+            <span *ngIf="isSubmitting">Creating Account...</span>
+          </button>
+        </form>
+      </mat-card-content>
+    </div>
+  </mat-card>
+</div>

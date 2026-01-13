@@ -1,0 +1,39 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.error-message {
+  background-color: #fce8e6;
+  color: #d32f2f;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--ink);
+}
+
+/* Button Styles matching System */
+button[mat-flat-button] {
+  background-color: var(--ink) !important;
+  color: var(--surface) !important;
+  border: var(--border-medium) !important;
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+button[mat-flat-button]:active {
+  box-shadow: 2px 2px 0 0 var(--accent-primary) !important;
+  transform: translate(2px, 2px);
+}

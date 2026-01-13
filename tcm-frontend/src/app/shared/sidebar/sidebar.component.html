@@ -39,6 +39,11 @@
       <mat-icon>list_alt</mat-icon>
       <span *ngIf="!isCollapsed">Test Cases</span>
     </a>
+
+    <a *ngIf="isAdmin" routerLink="/team" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Team' : ''">
+      <mat-icon>group</mat-icon>
+      <span *ngIf="!isCollapsed">Team</span>
+    </a>
   </nav>
 
   <div class="sidebar-footer">
