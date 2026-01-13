@@ -517,15 +517,23 @@ public class TcmService {
         Map<Long, TestExecution> latestExecutionByTestCase = new HashMap<>();
         Map<Long, String> latestExecutionResults = new HashMap<>(); // testCaseId -> result
 
+        // Valid execution results that indicate completed execution
+        Set<String> completedResults = Set.of("PASSED", "FAILED", "BLOCKED", "PARTIALLY_PASSED");
+
         // Find the latest execution for each test case
         for (TestExecution execution : allExecutions) {
             Long testCaseId = execution.getTestCase().getId();
-            executedTestCaseIds.add(testCaseId);
+            
+            // Only count executions that have been completed (not PENDING)
+            String result = execution.getOverallResult();
+            if (result != null && completedResults.contains(result.toUpperCase())) {
+                executedTestCaseIds.add(testCaseId);
 
-            // Keep the latest execution (by date)
-            if (!latestExecutionByTestCase.containsKey(testCaseId) ||
-                execution.getExecutionDate().isAfter(latestExecutionByTestCase.get(testCaseId).getExecutionDate())) {
-                latestExecutionByTestCase.put(testCaseId, execution);
+                // Keep the latest execution (by date)
+                if (!latestExecutionByTestCase.containsKey(testCaseId) ||
+                    execution.getExecutionDate().isAfter(latestExecutionByTestCase.get(testCaseId).getExecutionDate())) {
+                    latestExecutionByTestCase.put(testCaseId, execution);
+                }
             }
         }
 
@@ -547,30 +555,14 @@ public class TcmService {
                     .collect(Collectors.toList());
             }
         } else {
-            // Non-admin users only see test cases in their assigned projects/modules
-            // AND only test cases they have executions for
+            // Non-admin users see ONLY test cases they have executions for (Assigned to them)
+            // allExecutions is already filtered to only include executions assigned to this user
+            Set<Long> userTestCaseIds = allExecutions.stream()
+                .map(ex -> ex.getTestCase().getId())
+                .collect(Collectors.toSet());
+
             filteredTestCases = allTestCases.stream()
-                .filter(testCase -> {
-                    TestSuite suite = testCase.getTestSuite();
-                    if (suite == null || suite.getTestModule() == null) return false;
-
-                    TestModule module = suite.getTestModule();
-                    Project project = module.getProject();
-                    if (project == null) return false;
-
-                    // Check if user is assigned to this project
-                    if (currentUser.getAssignedProjects().contains(project)) {
-                        return true;
-                    }
-
-                    // Check if user is assigned to this module
-                    if (currentUser.getAssignedTestModules().contains(module)) {
-                        return true;
-                    }
-
-                    return false;
-                })
-                .filter(tc -> executedTestCaseIds.contains(tc.getId())) // Only include test cases with executions
+                .filter(tc -> userTestCaseIds.contains(tc.getId()))
                 .collect(Collectors.toList());
             
             // Debug logging
@@ -586,11 +578,24 @@ public class TcmService {
         }
 
         // Calculate overall KPIs
-        // filteredTestCases now contains the correct test cases for each scenario:
+        // filteredTestCases contains:
         // - Admin (no filter): all test cases
-        // - Non-admin or Admin (with filter): only test cases with executions
+        // - Admin (with filter): only test cases that user has executed
+        // - Non-admin: all test cases in assigned modules
         long totalTestCases = filteredTestCases.size();
-        long executedCount = executedTestCaseIds.size();
+        
+        // For non-admin users, calculate executedCount from filteredTestCases that have executions
+        // For admin users, use executedTestCaseIds directly
+        long executedCount;
+        if (isAdmin(currentUser)) {
+            executedCount = executedTestCaseIds.size();
+        } else {
+            // Count how many test cases in filteredTestCases have executions
+            executedCount = filteredTestCases.stream()
+                .filter(tc -> executedTestCaseIds.contains(tc.getId()))
+                .count();
+        }
+        
         long notExecutedCount = totalTestCases - executedCount;
 
         long passedCount = 0;
@@ -635,28 +640,39 @@ public class TcmService {
                 moduleId, moduleName, projectId, projectName, 0, 0, 0, 0, 0
             ));
 
+            // Check if this test case has been executed
+            boolean isExecuted = executedTestCaseIds.contains(testCase.getId());
+
             // Update project stats
             TestAnalyticsDTO.ProjectAnalytics pStats = projectStats.get(projectId);
             pStats.setTotalTestCases(pStats.getTotalTestCases() + 1);
 
-            pStats.setExecutedCount(pStats.getExecutedCount() + 1);
-            String result = latestExecutionResults.get(testCase.getId());
-            if ("Pass".equalsIgnoreCase(result)) {
-                pStats.setPassedCount(pStats.getPassedCount() + 1);
-            } else if ("Fail".equalsIgnoreCase(result)) {
-                pStats.setFailedCount(pStats.getFailedCount() + 1);
+            if (isExecuted) {
+                pStats.setExecutedCount(pStats.getExecutedCount() + 1);
+                String result = latestExecutionResults.get(testCase.getId());
+                if ("Pass".equalsIgnoreCase(result)) {
+                    pStats.setPassedCount(pStats.getPassedCount() + 1);
+                } else if ("Fail".equalsIgnoreCase(result)) {
+                    pStats.setFailedCount(pStats.getFailedCount() + 1);
+                }
+            } else {
+                pStats.setNotExecutedCount(pStats.getNotExecutedCount() + 1);
             }
 
             // Update module stats
             TestAnalyticsDTO.ModuleAnalytics mStats = moduleStats.get(moduleId);
             mStats.setTotalTestCases(mStats.getTotalTestCases() + 1);
 
-            mStats.setExecutedCount(mStats.getExecutedCount() + 1);
-            String result2 = latestExecutionResults.get(testCase.getId());
-            if ("Pass".equalsIgnoreCase(result2)) {
-                mStats.setPassedCount(mStats.getPassedCount() + 1);
-            } else if ("Fail".equalsIgnoreCase(result2)) {
-                mStats.setFailedCount(mStats.getFailedCount() + 1);
+            if (isExecuted) {
+                mStats.setExecutedCount(mStats.getExecutedCount() + 1);
+                String result2 = latestExecutionResults.get(testCase.getId());
+                if ("Pass".equalsIgnoreCase(result2)) {
+                    mStats.setPassedCount(mStats.getPassedCount() + 1);
+                } else if ("Fail".equalsIgnoreCase(result2)) {
+                    mStats.setFailedCount(mStats.getFailedCount() + 1);
+                }
+            } else {
+                mStats.setNotExecutedCount(mStats.getNotExecutedCount() + 1);
             }
         }
 

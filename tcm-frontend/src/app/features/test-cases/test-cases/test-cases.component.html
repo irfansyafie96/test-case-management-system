@@ -13,18 +13,18 @@
       <div>
         <h1 class="page-title"><mat-icon>analytics</mat-icon> Test Analytics Dashboard</h1>
         <p class="page-subtitle">Overview of test execution results across all projects.</p>
-      </div>
-      <!-- User filter for admin -->
-      <div *ngIf="isAdmin" class="user-filter">
-        <mat-form-field appearance="outline">
-          <mat-label>Filter by User</mat-label>
-          <mat-select [(value)]="selectedUserId" (selectionChange)="onUserFilterChange($event.value)">
-            <mat-option [value]="null">All Users</mat-option>
-            <mat-option *ngFor="let user of users" [value]="user.id">
-              {{ user.username }} <span *ngFor="let role of user.roles" class="role-badge">{{ role }}</span>
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <!-- User filter for admin -->
+        <div *ngIf="isAdmin" class="user-filter">
+          <mat-form-field appearance="outline">
+            <mat-label>Filter by User</mat-label>
+            <mat-select [(value)]="selectedUserId" (selectionChange)="onUserFilterChange($event.value)">
+              <mat-option [value]="null">All Users</mat-option>
+              <mat-option *ngFor="let user of users" [value]="user.id">
+                {{ user.username }} <span *ngFor="let role of user.roles" class="role-badge">{{ role }}</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
     </div>
 

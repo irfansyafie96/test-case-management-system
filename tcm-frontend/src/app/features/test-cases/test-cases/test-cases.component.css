@@ -5,16 +5,12 @@
 }
 
 .page-header {
-  margin-bottom: 32px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
+  margin-bottom: 16px;
 }
 
 /* User Filter */
 .user-filter {
-  flex-shrink: 0;
+  margin-top: 16px;
 }
 
 .user-filter mat-form-field {
