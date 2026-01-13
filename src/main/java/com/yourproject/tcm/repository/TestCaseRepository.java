@@ -16,6 +16,14 @@ public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
            "LEFT JOIN FETCH ts.testModule tm " +
            "LEFT JOIN FETCH tm.project p")
     java.util.List<TestCase> findAllWithDetails();
+
+    @Query("SELECT DISTINCT tc FROM TestCase tc " +
+           "LEFT JOIN FETCH tc.testSteps " +
+           "LEFT JOIN FETCH tc.testSuite ts " +
+           "LEFT JOIN FETCH ts.testModule tm " +
+           "LEFT JOIN FETCH tm.project p " +
+           "WHERE p.organization.id = :organizationId")
+    java.util.List<TestCase> findAllWithDetailsByOrganizationId(@Param("organizationId") Long organizationId);
     
     @Query("SELECT tc FROM TestCase tc LEFT JOIN FETCH tc.testSteps WHERE tc.testSuite.testModule.id = :moduleId")
     java.util.List<TestCase> findByModuleIdWithSteps(@Param("moduleId") Long moduleId);

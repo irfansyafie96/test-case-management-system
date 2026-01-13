@@ -1,6 +1,7 @@
 package com.yourproject.tcm.repository;
 
 import com.yourproject.tcm.model.Project;
+import com.yourproject.tcm.model.Organization;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,8 @@ import java.util.Optional;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     Optional<Project> findByName(String name);
+    Optional<Project> findByNameAndOrganization(String name, Organization organization);
+    List<Project> findAllByOrganization(Organization organization);
 
     @Query("SELECT p FROM Project p LEFT JOIN FETCH p.modules WHERE p.id = :id")
     Optional<Project> findProjectWithModulesById(@Param("id") Long id);

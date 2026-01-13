@@ -707,7 +707,7 @@ public class ApiController {
     @GetMapping("/users/by-role/{roleName}")
     public ResponseEntity<?> getUsersByRole(@PathVariable String roleName) {
         try {
-            String organization = tcmService.getCurrentUserOrganization();
+            Organization organization = tcmService.getCurrentUserOrganizationObject();
             List<User> users = userRepository.findByRoleNameAndOrganization(roleName, organization);
             return new ResponseEntity<>(users, HttpStatus.OK);
         } catch (Exception e) {

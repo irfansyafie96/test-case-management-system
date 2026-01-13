@@ -1,0 +1,262 @@
+/* Inherit container style from login */
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--border-thin) 1px, transparent 1px), linear-gradient(90deg, var(--border-thin) 1px, transparent 1px);
+  background-size: 40px 40px;
+  overflow: hidden;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.register-card {
+  width: 100%;
+  max-width: 420px; /* Reduced from 600px to match login vibe */
+  padding: 24px !important; 
+  border-radius: var(--radius-md) !important;
+  border: var(--border-medium);
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--surface) !important;
+  position: relative;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none;
+}
+
+.register-card:hover {
+  transform: none;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.register-card::-webkit-scrollbar {
+  display: none;
+}
+
+.register-card mat-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 !important;
+  margin-bottom: 16px; 
+  border-bottom: var(--border-thin) !important;
+  width: 100%;
+  padding-bottom: 12px !important; 
+}
+
+.register-card mat-card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.register-card mat-card-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  color: #666;
+  margin-top: 4px; /* Reduced from 8px */
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Form Styles */
+.full-width {
+  width: 100%;
+  margin-bottom: 0px; /* Reduced to let subscriptSizing handle it */
+}
+
+/* Ensure form fields have space for errors without pushing next field too far */
+mat-form-field {
+  margin-top: 8px; /* Increased from 4px */
+  margin-bottom: 24px; /* Increased from 16px */
+}
+
+.step-description {
+  font-family: 'DM Sans', sans-serif;
+  color: #666;
+  margin-bottom: 16px; 
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Button Styles matching Login */
+button[mat-flat-button], button[mat-button] {
+  height: 40px;
+  font-size: 15px;
+  border-radius: 4px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Ensure content inside buttons is centered */
+::ng-deep .mdc-button__label {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1;
+}
+
+mat-spinner {
+  margin: 0 !important; /* Remove any default margins */
+}
+
+button[mat-flat-button] {
+  background-color: var(--ink) !important;
+  color: var(--surface) !important;
+  border: var(--border-medium) !important;
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+}
+
+/* Style for the 'Back' button */
+button[mat-button] {
+  height: 40px;
+  border: var(--border-thin) !important;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: var(--ink) !important;
+}
+
+button[mat-flat-button]:hover, 
+button[mat-button]:hover {
+  transform: none;
+  background-color: var(--border-thin) !important;
+  color: var(--ink) !important;
+}
+
+button[mat-flat-button]:hover {
+  background-color: var(--ink) !important;
+  color: var(--surface) !important;
+}
+
+button[mat-flat-button]:active,
+button[mat-flat-button]:disabled {
+  box-shadow: 4px 4px 0 0 var(--accent-primary) !important;
+  transform: none !important;
+}
+
+
+.actions {
+  display: flex;
+  justify-content: space-between; /* Space out Back and Next/Submit */
+  gap: 16px;
+  margin-top: 12px; /* Reduced from 24px */
+}
+
+.actions.centered {
+  justify-content: center;
+}
+
+.error-message {
+  background-color: #fce8e6;
+  color: #d32f2f;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 12px; /* Reduced from 16px */
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  border: 1px solid #fabebb;
+}
+
+mat-spinner {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.register-card mat-card-content {
+  padding-bottom: 0 !important;
+}
+
+/* Footer Links */
+.register-card mat-card-actions {
+  margin-top: 0px; /* Reduced from 8px */
+  padding: 0 !important;
+  display: flex;
+  justify-content: center;
+  border-top: none !important;
+  min-height: unset !important;
+}
+
+.register-card mat-card-actions a {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+/* Stepper Customization */
+::ng-deep .mat-step-header .mat-step-icon-selected {
+  background-color: var(--ink) !important;
+}
+::ng-deep .mat-step-header .mat-step-icon-state-edit {
+  background-color: var(--ink) !important;
+}
+
+/* Compact Vertical Stepper */
+::ng-deep .mat-vertical-content-container {
+  margin-left: 36px !important; /* Standard align with icon */
+}
+
+::ng-deep .mat-vertical-stepper-content {
+  padding-top: 0 !important;
+  padding-bottom: 12px !important;
+}
+
+::ng-deep .mat-step-header {
+  padding: 12px 24px !important; /* Reduce header height */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+  .register-container {
+    padding: 16px;
+  }
+
+  .register-card {
+    padding: 24px 16px !important;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: var(--shadow-md) !important;
+    border: var(--border-medium);
+    transform: none !important;
+  }
+
+  .register-card mat-card-title {
+    font-size: 20px;
+  }
+
+  ::ng-deep .mat-step-header {
+    padding: 12px 16px !important;
+  }
+
+  ::ng-deep .mat-vertical-content-container {
+    margin-left: 28px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .register-card {
+    padding: 16px 12px !important;
+  }
+
+  .register-card mat-card-header {
+    margin-bottom: 12px;
+  }
+
+  .step-description {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+}

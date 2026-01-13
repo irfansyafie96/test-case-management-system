@@ -29,4 +29,15 @@ public interface TestExecutionRepository extends JpaRepository<TestExecution, Lo
     List<TestExecution> findByAssignedToUser(User user);
     @Query("SELECT e FROM TestExecution e LEFT JOIN FETCH e.assignedToUser LEFT JOIN FETCH e.testCase tc LEFT JOIN FETCH tc.testSuite ts LEFT JOIN FETCH ts.testModule tm LEFT JOIN FETCH tm.project p LEFT JOIN FETCH e.stepResults sr LEFT JOIN FETCH sr.testStep")
     List<TestExecution> findAllWithDetails();
+
+    @Query("SELECT e FROM TestExecution e " +
+           "LEFT JOIN FETCH e.assignedToUser " +
+           "LEFT JOIN FETCH e.testCase tc " +
+           "LEFT JOIN FETCH tc.testSuite ts " +
+           "LEFT JOIN FETCH ts.testModule tm " +
+           "LEFT JOIN FETCH tm.project p " +
+           "LEFT JOIN FETCH e.stepResults sr " +
+           "LEFT JOIN FETCH sr.testStep " +
+           "WHERE p.organization.id = :organizationId")
+    List<TestExecution> findAllWithDetailsByOrganizationId(@Param("organizationId") Long organizationId);
 }

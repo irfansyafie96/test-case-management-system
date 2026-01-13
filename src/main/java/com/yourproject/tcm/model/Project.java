@@ -63,6 +63,10 @@ public class Project {
     @ManyToMany(mappedBy = "assignedProjects", fetch = FetchType.LAZY)
     private Set<User> assignedUsers = new HashSet<>();  // Users assigned to this project
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
@@ -127,5 +131,13 @@ public class Project {
 
     public void setCreatedBy(String createdBy) {
         this.createdBy = createdBy;
+    }
+
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
     }
 }

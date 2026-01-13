@@ -77,6 +77,108 @@ public class AuthController {
     @Autowired
     JwtUtils jwtUtils;  // Utility class for JWT token operations
 
+    @Autowired
+    com.yourproject.tcm.repository.OrganizationRepository organizationRepository;
+
+    @Autowired
+    com.yourproject.tcm.service.EmailService emailService;
+
+    @Autowired
+    com.yourproject.tcm.repository.EmailVerificationRepository emailVerificationRepository;
+
+    /**
+     * POST /api/auth/otp - Generate and send OTP for organization registration
+     * @param request Contains email address
+     * @return ResponseEntity with success/error message
+     */
+    @PostMapping("/otp")
+    public ResponseEntity<?> generateOtp(@Valid @RequestBody com.yourproject.tcm.model.dto.OtpGenerationRequest request) {
+        // Check if email is already in use
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("Error: Email is already in use!");
+        }
+
+        // Generate 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+
+        // Save to DB (expires in 15 minutes)
+        com.yourproject.tcm.model.EmailVerification verification = new com.yourproject.tcm.model.EmailVerification(
+            request.getEmail(), 
+            otp, 
+            15
+        );
+        emailVerificationRepository.save(verification);
+
+        // Send Email
+        emailService.sendOtpEmail(request.getEmail(), otp);
+
+        return ResponseEntity.ok("OTP sent to email!");
+    }
+
+    /**
+     * POST /api/auth/register-org - Register a new organization with verified OTP
+     * @param request Contains org details, admin details, and OTP
+     * @return ResponseEntity with success/error message
+     */
+    @PostMapping("/register-org")
+    public ResponseEntity<?> registerOrganization(@Valid @RequestBody com.yourproject.tcm.model.dto.OrganizationSignupRequest request) {
+        // 1. Verify OTP
+        com.yourproject.tcm.model.EmailVerification verification = emailVerificationRepository.findByEmail(request.getEmail())
+            .orElse(null);
+
+        if (verification == null) {
+            return ResponseEntity.badRequest().body("Error: No OTP found for this email. Please request a new one.");
+        }
+
+        if (verification.isExpired()) {
+            return ResponseEntity.badRequest().body("Error: OTP has expired. Please request a new one.");
+        }
+
+        if (!verification.getOtpCode().equals(request.getOtp())) {
+            return ResponseEntity.badRequest().body("Error: Invalid OTP.");
+        }
+
+        // 2. Validate Uniqueness
+        if (organizationRepository.existsByName(request.getOrganizationName())) {
+            return ResponseEntity.badRequest().body("Error: Organization name is already taken!");
+        }
+
+        if (userRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.badRequest().body("Error: Username is already taken!");
+        }
+        
+        // (Email uniqueness checked at OTP generation, but good to double check or strictly lock)
+        if (userRepository.existsByEmail(request.getEmail())) {
+             return ResponseEntity.badRequest().body("Error: Email is already in use!");
+        }
+
+        // 3. Create Organization
+        com.yourproject.tcm.model.Organization org = new com.yourproject.tcm.model.Organization(request.getOrganizationName());
+        org = organizationRepository.save(org);
+
+        // 4. Create Admin User
+        User user = new User(request.getUsername(),
+                            request.getEmail(),
+                            encoder.encode(request.getPassword()));
+        
+        Set<Role> roles = new HashSet<>();
+        Role adminRole = roleRepository.findByName("ADMIN")
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        roles.add(adminRole);
+
+        user.setRoles(roles);
+        user.setOrganization(org);
+        
+        userRepository.save(user);
+
+        // 5. Cleanup OTP
+        emailVerificationRepository.delete(verification);
+
+        return ResponseEntity.ok("Organization registered successfully! You can now login.");
+    }
+
     /**
      * POST /api/auth/login - Authenticate user and return JWT token
      *
@@ -241,7 +343,12 @@ public class AuthController {
         }
 
         user.setRoles(roles);  // Assign roles to user
-        user.setOrganization("default");  // Default organization
+        
+        // Handle organization assignment (Legacy support: default to "default" org)
+        com.yourproject.tcm.model.Organization org = organizationRepository.findByName("default")
+            .orElseGet(() -> organizationRepository.save(new com.yourproject.tcm.model.Organization("default")));
+        user.setOrganization(org);
+        
         userRepository.save(user);  // Save user to database
 
         return ResponseEntity.ok("User registered successfully!");
@@ -339,12 +446,17 @@ public class AuthController {
     /**
      * GET /api/auth/users - Get all non-admin users (QA/BA/TESTER) for admin dashboard filter
      * Requires ADMIN role
-     * @return ResponseEntity with list of non-admin users
+     * @return ResponseEntity with list of non-admin users filtered by organization
      */
     @GetMapping("/users")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllNonAdminUsers() {
-        List<User> users = userRepository.findAllNonAdminUsers();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Error: Current user not found."));
+        
+        List<User> users = userRepository.findAllNonAdminUsers(currentUser.getOrganization());
         return ResponseEntity.ok(users);
     }
 }

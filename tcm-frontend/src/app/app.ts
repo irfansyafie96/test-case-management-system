@@ -78,7 +78,11 @@ export class App implements OnInit {
    */
   private updateSidebarVisibility() {
     const currentRoute = this.router.url;
-    // Show sidebar only for authenticated routes (not login, register, etc.)
-    this.showSidebar = currentRoute !== '/login' && currentRoute !== '/register';
+    // Show sidebar only for authenticated routes (not login, register-org, etc.)
+    // Also handle query params by checking if route starts with path
+    const isAuthPage = currentRoute.startsWith('/login') || 
+                       currentRoute.startsWith('/register-org');
+    
+    this.showSidebar = !isAuthPage;
   }
 }

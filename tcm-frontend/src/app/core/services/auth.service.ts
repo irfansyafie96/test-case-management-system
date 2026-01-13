@@ -216,6 +216,24 @@ export class AuthService {
   }
 
   /**
+   * Request OTP for organization registration
+   * @param email Email address to send OTP to
+   * @returns Observable with result
+   */
+  requestOtp(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/otp`, { email }, { responseType: 'text' });
+  }
+
+  /**
+   * Register a new organization with OTP verification
+   * @param data Organization registration data including OTP
+   * @returns Observable with registration result
+   */
+  registerOrganization(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/register-org`, data, { responseType: 'text' });
+  }
+
+  /**
    * Check if user is currently authenticated
    * @returns true if user data exists (and by implication token in cookie), false otherwise
    */

@@ -25,7 +25,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Find users by specific role and organization
     @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.organization = :organization")
-    List<User> findByRoleNameAndOrganization(@Param("roleName") String roleName, @Param("organization") String organization);
+    List<User> findByRoleNameAndOrganization(@Param("roleName") String roleName, @Param("organization") com.yourproject.tcm.model.Organization organization);
 
     // Find QA users (users with QA role)
     @EntityGraph(attributePaths = {"roles"})
@@ -57,8 +57,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTestModules tm WHERE tm.id = :moduleId")
     List<User> findUsersAssignedToTestModule(@Param("moduleId") Long moduleId);
 
-    // Find all non-admin users (QA/BA/TESTER) for admin dashboard filter
+    // Find all non-admin users (QA/BA/TESTER) for admin dashboard filter, filtered by organization
     @EntityGraph(attributePaths = {"roles"})
-    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA', 'TESTER')")
-    List<User> findAllNonAdminUsers();
+    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA', 'TESTER') AND u.organization = :organization")
+    List<User> findAllNonAdminUsers(@Param("organization") com.yourproject.tcm.model.Organization organization);
 }

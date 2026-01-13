@@ -1,0 +1,91 @@
+<div class="register-container">
+  <mat-card class="register-card">
+    <mat-card-header>
+      <mat-card-title>Register Organization</mat-card-title>
+      <mat-card-subtitle>Create a new account for your company</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <mat-stepper [linear]="true" orientation="vertical" #stepper>
+        <!-- Step 1: Email Verification -->
+        <mat-step [stepControl]="emailForm" [editable]="!isOtpSent">
+          <ng-template matStepLabel>Verify Email</ng-template>
+          
+          <form [formGroup]="emailForm" (ngSubmit)="onSendOtp()">
+            <p class="step-description">
+              Enter your email address. We will send you a One-Time Password (OTP) to verify your account.
+            </p>
+
+            <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+              <mat-label>Email Address</mat-label>
+              <input matInput formControlName="email" type="email" placeholder="owner@company.com">
+              <mat-error *ngIf="emailForm.get('email')?.hasError('required')">Email is required</mat-error>
+              <mat-error *ngIf="emailForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+            </mat-form-field>
+
+                        <div class="actions centered">
+                          <button mat-flat-button color="primary" type="submit" [disabled]="emailForm.invalid || isLoading">
+                            <mat-icon *ngIf="!isLoading">send</mat-icon>
+                            <mat-spinner diameter="20" *ngIf="isLoading" color="accent"></mat-spinner>
+                            <span>{{ isLoading ? 'Sending...' : 'Send Verification Code' }}</span>
+                          </button>
+                        </div>
+                      </form>
+                    </mat-step>
+            
+                    <!-- Step 2: Organization Details -->
+                    <mat-step [stepControl]="detailsForm">
+                      <ng-template matStepLabel>Organization Details</ng-template>
+                      
+                      <form [formGroup]="detailsForm" (ngSubmit)="onRegister()">
+                        <p class="step-description">
+                          A verification code has been sent to <strong>{{ emailForm.get('email')?.value }}</strong>.
+                          Please check your email console/logs (in dev mode).
+                        </p>
+            
+                        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+                          <mat-label>Verification Code (OTP)</mat-label>
+                          <input matInput formControlName="otp" placeholder="123456" maxlength="6">
+                          <mat-error *ngIf="detailsForm.get('otp')?.hasError('required')">OTP is required</mat-error>
+                          <mat-error *ngIf="detailsForm.get('otp')?.hasError('minlength')">OTP must be 6 digits</mat-error>
+                        </mat-form-field>
+            
+                        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+                          <mat-label>Organization Name</mat-label>
+                          <input matInput formControlName="organizationName" placeholder="Acme Corp">
+                          <mat-error *ngIf="detailsForm.get('organizationName')?.hasError('required')">Organization Name is required</mat-error>
+                        </mat-form-field>
+            
+                        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+                          <mat-label>Admin Username</mat-label>
+                          <input matInput formControlName="username" placeholder="admin_acme">
+                          <mat-error *ngIf="detailsForm.get('username')?.hasError('required')">Username is required</mat-error>
+                        </mat-form-field>
+            
+                        <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+                          <mat-label>Password</mat-label>
+                          <input matInput formControlName="password" type="password">
+                          <mat-error *ngIf="detailsForm.get('password')?.hasError('required')">Password is required</mat-error>
+                        </mat-form-field>
+                        
+                        <div class="actions">
+                          <button mat-button matStepperPrevious type="button">Back</button>
+                          <button mat-flat-button color="primary" type="submit" [disabled]="detailsForm.invalid || isLoading">
+                            <mat-icon *ngIf="!isLoading">check_circle</mat-icon>
+                            <mat-spinner diameter="20" *ngIf="isLoading" color="accent"></mat-spinner>
+                            <span>{{ isLoading ? 'Registering...' : 'Complete Registration' }}</span>
+                          </button>
+                        </div>          </form>
+        </mat-step>
+      </mat-stepper>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <a mat-button routerLink="/login">Already have an account? Login</a>
+    </mat-card-actions>
+  </mat-card>
+</div>

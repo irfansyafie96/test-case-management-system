@@ -78,9 +78,13 @@ public class TcmService {
         throw new RuntimeException("No authenticated user found");
     }
 
+    public Organization getCurrentUserOrganizationObject() {
+        return getCurrentUser().getOrganization();
+    }
+
     public String getCurrentUserOrganization() {
-        String org = getCurrentUser().getOrganization();
-        return org != null ? org : "default";
+        Organization org = getCurrentUser().getOrganization();
+        return org != null ? org.getName() : "default";
     }
 
     private boolean isAdmin(User user) {
@@ -100,14 +104,14 @@ public class TcmService {
 
     /**
      * Get all projects in the system
-     * For ADMIN users: returns all projects
+     * For ADMIN users: returns all projects for their organization
      * For QA/BA/TESTER users: returns projects they have ANY access to (Direct or via Module)
      * @return List of projects based on user role and assignments
      */
     public List<Project> getAllProjects() {
         User currentUser = getCurrentUser();
         if (isAdmin(currentUser)) {
-            return projectRepository.findAll();
+            return projectRepository.findAllByOrganization(currentUser.getOrganization());
         } else {
             return projectRepository.findProjectsAssignedToUser(currentUser.getId());
         }
@@ -117,24 +121,29 @@ public class TcmService {
      * Create a new project
      * @param project The project to create
      * @return The created project
-     * @throws RuntimeException if a project with the same name already exists
+     * @throws RuntimeException if a project with the same name already exists in the organization
      */
     @Transactional
     public Project createProject(Project project) {
-        // Check if a project with the same name already exists to provide a better error message
-        Optional<Project> existingProject = projectRepository.findByName(project.getName());
+        User currentUser = getCurrentUser();
+        Organization currentOrg = currentUser.getOrganization();
+
+        // Check if a project with the same name already exists in this organization
+        Optional<Project> existingProject = projectRepository.findByNameAndOrganization(project.getName(), currentOrg);
         if (existingProject.isPresent()) {
             throw new RuntimeException("A project with name '" + project.getName() + "' already exists");
         }
+        
+        project.setOrganization(currentOrg);
         return projectRepository.save(project);
     }
 
     /**
      * Get a specific project by ID
-     * For ADMIN users: returns project if it exists
-     * For QA/BA users: returns project only if assigned to them
+     * For ADMIN users: returns project if it exists and belongs to their org
+     * For QA/BA users: returns project only if assigned to them (and implicit org check)
      * @param projectId The ID of the project to retrieve
-     * @return Optional containing the project, or empty if not found/not assigned
+     * @return Optional containing the project, or empty if not found/not assigned/wrong org
      */
     @Transactional(readOnly = true)  // Read-only transaction for better performance
     public Optional<Project> getProjectById(Long projectId) {
@@ -145,8 +154,16 @@ public class TcmService {
             return Optional.empty();
         }
 
-        // Force initialization of lazy collections
         Project project = projectOpt.get();
+        
+        // Security Check: Ensure project belongs to user's organization
+        // (Using IDs to be safe against proxy objects or detached entities)
+        if (project.getOrganization() == null || currentUser.getOrganization() == null ||
+            !project.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+             return Optional.empty(); // Treat as not found if it belongs to another org
+        }
+
+        // Force initialization of lazy collections
         if (project.getModules() != null) {
             for (TestModule module : project.getModules()) {
                 // Accessing the collection forces Hibernate to load it
@@ -442,12 +459,15 @@ public class TcmService {
     // ==================== TEST CASE METHODS ====================
 
     /**
-     * Get all test cases in the system
-     * @return List of all test cases
+     * Get all test cases in the system (filtered by organization)
+     * @return List of all test cases for the user's organization
      */
     @Transactional(readOnly = true)
     public List<TestCase> getAllTestCases() {
-        return testCaseRepository.findAllWithDetails();
+        User currentUser = getCurrentUser();
+        Organization org = currentUser.getOrganization();
+        if (org == null) return new ArrayList<>();
+        return testCaseRepository.findAllWithDetailsByOrganizationId(org.getId());
     }
 
     /**
@@ -471,8 +491,8 @@ public class TcmService {
 
         // Determine which user's executions to show
         final Long filterUserId;
-        if (currentUser == null) {
-            // No authenticated user - return empty analytics
+        if (currentUser == null || currentUser.getOrganization() == null) {
+            // No authenticated user or org - return empty analytics
             return new TestAnalyticsDTO(0, 0, 0, 0, 0, 0.0, 0.0, new ArrayList<>(), new ArrayList<>());
         } else if (isAdmin(currentUser)) {
             // Admin can filter by userId or see all
@@ -482,11 +502,13 @@ public class TcmService {
             filterUserId = currentUser.getId();
         }
 
-        // Get all test cases with their test suites and modules (eagerly fetched)
-        List<TestCase> allTestCases = testCaseRepository.findAllWithDetails();
+        Long orgId = currentUser.getOrganization().getId();
 
-        // Get all executions with details
-        List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetails();
+        // Get all test cases with their test suites and modules (eagerly fetched) - Filtered by Organization
+        List<TestCase> allTestCases = testCaseRepository.findAllWithDetailsByOrganizationId(orgId);
+
+        // Get all executions with details - Filtered by Organization
+        List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
 
         // Filter executions by user if filterUserId is set
         if (filterUserId != null) {
@@ -979,15 +1001,11 @@ public class TcmService {
             }
 
             // Check if user belongs to same organization as current user
-            String currentUserOrganization = getCurrentUser().getOrganization();
-            if (currentUserOrganization == null) {
-                currentUserOrganization = "default";
-            }
-            String userOrganization = user.getOrganization();
-            if (userOrganization == null) {
-                userOrganization = "default";
-            }
-            if (!userOrganization.equals(currentUserOrganization)) {
+            Organization currentUserOrg = getCurrentUser().getOrganization();
+            Organization userOrg = user.getOrganization();
+            
+            // If either organization is null (shouldn't happen in valid setup) or they don't match
+            if (currentUserOrg == null || userOrg == null || !currentUserOrg.getId().equals(userOrg.getId())) {
                 throw new RuntimeException("User must belong to the same organization as the assigner");
             }
 
@@ -1028,7 +1046,9 @@ public class TcmService {
 
             // If user is ADMIN, return all executions but only one per test case (latest)
             if (isAdmin(user)) {
-                List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetails();
+                // Ensure we only get executions for the user's organization
+                Long orgId = user.getOrganization() != null ? user.getOrganization().getId() : -1L;
+                List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
                 Map<Long, TestExecution> latestExecutionByTestCase = new HashMap<>();
                 
                 for (TestExecution execution : allExecutions) {
@@ -1083,15 +1103,11 @@ public class TcmService {
             }
 
             // Check if user belongs to same organization as current user
-            String currentUserOrganization = getCurrentUser().getOrganization();
-            if (currentUserOrganization == null) {
-                currentUserOrganization = "default";
-            }
-            String userOrganization = user.getOrganization();
-            if (userOrganization == null) {
-                userOrganization = "default";
-            }
-            if (!userOrganization.equals(currentUserOrganization)) {
+            Organization currentUserOrg = getCurrentUser().getOrganization();
+            Organization userOrg = user.getOrganization();
+            
+            // If either organization is null (shouldn't happen in valid setup) or they don't match
+            if (currentUserOrg == null || userOrg == null || !currentUserOrg.getId().equals(userOrg.getId())) {
                 throw new RuntimeException("User must belong to the same organization as the assigner");
             }
 
@@ -1178,15 +1194,11 @@ public class TcmService {
             }
 
             // Check if user belongs to same organization as current user
-            String currentUserOrganization = getCurrentUser().getOrganization();
-            if (currentUserOrganization == null) {
-                currentUserOrganization = "default";
-            }
-            String userOrganization = user.getOrganization();
-            if (userOrganization == null) {
-                userOrganization = "default";
-            }
-            if (!userOrganization.equals(currentUserOrganization)) {
+            Organization currentUserOrg = getCurrentUser().getOrganization();
+            Organization userOrg = user.getOrganization();
+            
+            // If either organization is null (shouldn't happen in valid setup) or they don't match
+            if (currentUserOrg == null || userOrg == null || !currentUserOrg.getId().equals(userOrg.getId())) {
                 throw new RuntimeException("User must belong to the same organization as the assigner");
             }
 

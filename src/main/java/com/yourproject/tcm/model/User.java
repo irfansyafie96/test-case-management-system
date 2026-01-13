@@ -35,7 +35,9 @@ public class User {
     private String username;  // Login username
     private String email;     // User's email address
     private String password;  // Encrypted password
-    private String organization = "default";  // User's organization
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;  // Link to the Organization entity
 
     @Column(name = "enabled")
     private boolean enabled = true;  // Account status - true means active
@@ -138,12 +140,16 @@ public class User {
         this.password = password;
     }
 
-    public String getOrganization() {
+    public Organization getOrganization() {
         return organization;
     }
 
-    public void setOrganization(String organization) {
+    public void setOrganization(Organization organization) {
         this.organization = organization;
+    }
+
+    public String getOrganizationName() {
+        return organization != null ? organization.getName() : null;
     }
 
     public boolean isEnabled() {
