@@ -113,7 +113,7 @@ public class ApiController {
         try {
             Optional<Project> projectOpt = tcmService.getProjectById(projectId);
             if (projectOpt.isPresent()) {
-                return new ResponseEntity<>(convertToDTO(projectOpt.get()), HttpStatus.OK);
+                return new ResponseEntity<>(projectOpt.get(), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Project not found with id: " + projectId, HttpStatus.NOT_FOUND);
             }
@@ -150,7 +150,7 @@ public class ApiController {
         try {
             Optional<TestModule> testModuleOpt = tcmService.getTestModuleById(testModuleId);
             if (testModuleOpt.isPresent()) {
-                return new ResponseEntity<>(convertToDTO(testModuleOpt.get()), HttpStatus.OK);
+                return new ResponseEntity<>(testModuleOpt.get(), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Test Module not found with id: " + testModuleId, HttpStatus.NOT_FOUND);
             }
@@ -205,7 +205,7 @@ public class ApiController {
         try {
             Optional<TestSuite> testSuiteOpt = tcmService.getTestSuiteById(suiteId);
             if (testSuiteOpt.isPresent()) {
-                return new ResponseEntity<>(convertToDTO(testSuiteOpt.get()), HttpStatus.OK);
+                return new ResponseEntity<>(testSuiteOpt.get(), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Test suite not found with id: " + suiteId, HttpStatus.NOT_FOUND);
             }

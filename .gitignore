@@ -140,6 +140,7 @@ Qwen.md
 GEMINI.md
 .gemini/
 .crush/
+.ai/
 
 # Environment files with secrets
 .env

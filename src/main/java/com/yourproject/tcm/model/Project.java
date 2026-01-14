@@ -1,5 +1,6 @@
 package com.yourproject.tcm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -61,11 +62,13 @@ public class Project {
      * This is the inverse side of the relationship mapped in User entity
      */
     @ManyToMany(mappedBy = "assignedProjects", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<User> assignedUsers = new HashSet<>();  // Users assigned to this project
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")
     @JsonIgnoreProperties("users")
+    @JsonIgnore
     private Organization organization;
 
     // Getters and Setters - Standard methods to access private fields

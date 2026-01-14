@@ -62,6 +62,7 @@ public class TestModule {
      * This is the inverse side of the relationship mapped in User entity
      */
     @ManyToMany(mappedBy = "assignedTestModules", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<User> assignedUsers = new HashSet<>();  // Users assigned to this module
 
     // Getters and Setters - Standard methods to access private fields
