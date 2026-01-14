@@ -1,13 +1,3 @@
-.page-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 24px;
-}
-
-.page-header {
-  margin-bottom: 16px;
-}
-
 /* User Filter */
 .user-filter {
   margin-top: 16px;

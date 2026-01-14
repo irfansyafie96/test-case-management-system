@@ -1,17 +1,6 @@
-.profile-container {
-  padding: 32px 24px;
-  max-width: 800px;
-  margin: 0 auto;
-  min-height: 80vh; /* Ensure it feels substantial */
-}
-
-.profile-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  padding-bottom: 24px;
+.profile-page-header {
   border-bottom: var(--border-thin);
+  align-items: center; /* Center logout button vertically with user info */
 }
 
 .user-info {
@@ -34,10 +23,9 @@
   justify-content: center;
 }
 
-.info-text h1 {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 28px;
-  margin: 0 0 8px 0;
+.info-text .page-title {
+  font-size: 32px;
+  margin: 0 0 4px 0;
   color: var(--ink);
 }
 
@@ -61,6 +49,9 @@
 /* Tabs & Content */
 .profile-tabs {
   margin-top: 32px;
+  max-width: 800px; /* Constrain width for readability on large screens */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .tab-content {

@@ -1,11 +1,11 @@
-<div class="profile-container">
-  <div class="profile-header">
+<div class="page-container">
+  <div class="page-header profile-page-header">
     <div class="user-info">
       <div class="avatar-large">
         {{ currentUser?.username?.charAt(0)?.toUpperCase() }}
       </div>
       <div class="info-text">
-        <h1>{{ currentUser?.username }}</h1>
+        <h1 class="page-title">{{ currentUser?.username }}</h1>
         <p class="role-badge">{{ currentUser?.roles?.join(', ') }}</p>
         <p class="email-text">{{ currentUser?.email }}</p>
       </div>
