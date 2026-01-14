@@ -1,11 +1,14 @@
 package com.yourproject.tcm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "invitations")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Invitation {
 
     @Id
@@ -23,6 +26,7 @@ public class Invitation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id", nullable = false)
+    @JsonIgnore
     private Organization organization;
 
     @Column(nullable = false)
@@ -65,4 +69,9 @@ public class Invitation {
 
     public boolean isAccepted() { return accepted; }
     public void setAccepted(boolean accepted) { this.accepted = accepted; }
+
+    // Helper for frontend since organization is ignored
+    public String getOrganizationName() {
+        return organization != null ? organization.getName() : null;
+    }
 }

@@ -138,6 +138,11 @@
   width: 100%;
 }
 
+.role-select {
+  width: 180px; /* Fixed width for role selector */
+  flex-shrink: 0;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;

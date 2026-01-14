@@ -14,7 +14,7 @@
 
     <div *ngIf="invitation && !isLoading && !errorMessage">
       <mat-card-header>
-        <mat-card-title>Join {{ invitation.organization.name }}</mat-card-title>
+        <mat-card-title>Join {{ invitation.organizationName }}</mat-card-title>
         <mat-card-subtitle>You've been invited as a <strong>{{ invitation.role }}</strong></mat-card-subtitle>
       </mat-card-header>
 

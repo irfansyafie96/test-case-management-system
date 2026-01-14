@@ -67,7 +67,19 @@
                   <input matInput formControlName="email" placeholder="colleague@company.com">
                   <mat-icon matSuffix>mail_outline</mat-icon>
                 </mat-form-field>
-                <button mat-flat-button color="primary" type="submit">Invite</button>
+                
+                <mat-form-field appearance="outline" class="role-select" subscriptSizing="dynamic">
+                  <mat-label>Role</mat-label>
+                  <mat-select formControlName="role">
+                    <mat-option value="QA">QA</mat-option>
+                    <mat-option value="BA">BA</mat-option>
+                    <mat-option value="TESTER">Tester</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <button mat-flat-button color="primary" type="submit" [disabled]="isInviting">
+                  {{ isInviting ? 'Sending...' : 'Invite' }}
+                </button>
               </form>
             </div>
 

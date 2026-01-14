@@ -78,6 +78,7 @@ public class WebSecurityConfig {
             .ignoringRequestMatchers("/api/testmodules/**")  // Temporarily ignore CSRF for testmodules endpoint // TODO: Re-enable CSRF before production
             .ignoringRequestMatchers("/api/testsuites/**")  // TODO: Re-enable CSRF before production
             .ignoringRequestMatchers("/api/executions/**")  // Temporarily ignore CSRF for executions endpoint to test 401 errors
+            .ignoringRequestMatchers("/api/invitations/**")
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
         )
@@ -87,6 +88,9 @@ public class WebSecurityConfig {
                 // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                // Invitation endpoints (Public for joining)
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/invitations/*").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/invitations/accept").permitAll()
                 // Static resources
                 .requestMatchers("/", "/index.html", "/login.html", "/*.html", "/*.css", "/*.js").permitAll()
                 // API endpoints - will be protected by method-level security

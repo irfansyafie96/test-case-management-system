@@ -6,9 +6,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { TcmService } from '../../core/services/tcm.service';
+import { TeamService } from '../../core/services/team.service';
 import { User } from '../../core/models/project.model';
 
 @Component({
@@ -22,6 +25,8 @@ import { User } from '../../core/models/project.model';
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
+    MatSnackBarModule,
     ReactiveFormsModule
   ],
   templateUrl: './profile.component.html',
@@ -35,11 +40,14 @@ export class ProfileComponent implements OnInit {
   // Forms
   passwordForm: FormGroup;
   inviteForm: FormGroup;
+  isInviting = false;
 
   constructor(
     private authService: AuthService,
     private tcmService: TcmService,
-    private fb: FormBuilder
+    private teamService: TeamService,
+    private fb: FormBuilder,
+    private snackBar: MatSnackBar
   ) {
     this.passwordForm = this.fb.group({
       currentPassword: ['', Validators.required],
@@ -49,7 +57,7 @@ export class ProfileComponent implements OnInit {
 
     this.inviteForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      role: ['TESTER', Validators.required]
+      role: ['QA', Validators.required]
     });
   }
 
@@ -63,17 +71,10 @@ export class ProfileComponent implements OnInit {
   }
 
   loadTeamMembers() {
-    // We can reuse the API call that fetches users for the org
-    // Currently relying on getAllNonAdminUsers for Admin, 
-    // or we need a new endpoint 'getTeamMembers' accessible to everyone.
-    // For now, let's use what we have or placeholder.
     if (this.isAdmin) {
       this.tcmService.getAllNonAdminUsers().subscribe(users => {
         this.teamMembers = users;
       });
-    } else {
-        // TODO: Need an endpoint for non-admins to view team
-        // For now, empty or mock
     }
   }
 
@@ -85,8 +86,32 @@ export class ProfileComponent implements OnInit {
 
   onInviteMember() {
     if (this.inviteForm.invalid) return;
-    // Implement invite logic
-    console.log('Invite member', this.inviteForm.value);
+    
+    this.isInviting = true;
+    const { email, role } = this.inviteForm.value;
+
+    this.teamService.inviteMember(email, role).subscribe({
+      next: (response) => {
+        this.isInviting = false;
+        this.inviteForm.reset({ role: 'QA' }); // Reset form but keep default role
+        this.snackBar.open('Invitation sent successfully!', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      },
+      error: (error) => {
+        this.isInviting = false;
+        console.error('Error inviting member:', error);
+        this.snackBar.open(error.error || 'Failed to send invitation.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      }
+    });
   }
 
   logout() {
