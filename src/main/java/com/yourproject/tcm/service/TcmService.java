@@ -111,7 +111,11 @@ public class TcmService {
     public List<Project> getAllProjects() {
         User currentUser = getCurrentUser();
         if (isAdmin(currentUser)) {
-            return projectRepository.findAllByOrganization(currentUser.getOrganization());
+            Organization org = currentUser.getOrganization();
+            if (org == null) {
+                return new ArrayList<>(); // Should not happen for valid users, but safety first
+            }
+            return projectRepository.findAllByOrganization(org);
         } else {
             return projectRepository.findProjectsAssignedToUser(currentUser.getId());
         }
@@ -127,6 +131,10 @@ public class TcmService {
     public Project createProject(Project project) {
         User currentUser = getCurrentUser();
         Organization currentOrg = currentUser.getOrganization();
+
+        if (currentOrg == null) {
+            throw new RuntimeException("Current user is not assigned to an organization. Please contact support.");
+        }
 
         // Check if a project with the same name already exists in this organization
         Optional<Project> existingProject = projectRepository.findByNameAndOrganization(project.getName(), currentOrg);

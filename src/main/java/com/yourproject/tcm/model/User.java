@@ -37,6 +37,7 @@ public class User {
     private String password;  // Encrypted password
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "organization_id")
+    @JsonIgnoreProperties("users")
     private Organization organization;  // Link to the Organization entity
 
     @Column(name = "enabled")

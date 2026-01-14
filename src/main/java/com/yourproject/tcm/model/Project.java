@@ -65,6 +65,7 @@ public class Project {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organization_id")
+    @JsonIgnoreProperties("users")
     private Organization organization;
 
     // Getters and Setters - Standard methods to access private fields
