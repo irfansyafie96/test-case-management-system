@@ -25,8 +25,6 @@ public class DataInitializationService {
     public void initializeDefaultData() {
         // Initialize global system roles
         initializeRoles();
-        
-        System.out.println("System roles initialized. No default users created.");
     }
 
     private void initializeRoles() {

@@ -39,16 +39,11 @@
       <mat-icon>list_alt</mat-icon>
       <span *ngIf="!isCollapsed">Test Cases</span>
     </a>
-
-    <a *ngIf="isAdmin" routerLink="/team" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Team' : ''">
-      <mat-icon>group</mat-icon>
-      <span *ngIf="!isCollapsed">Team</span>
-    </a>
   </nav>
 
   <div class="sidebar-footer">
-    <div class="user-container" *ngIf="currentUser">
-      <div class="user-avatar" [matTooltip]="isCollapsed ? currentUser.username : ''">
+    <div class="user-container" *ngIf="currentUser" routerLink="/profile" style="cursor: pointer;" matTooltip="View Profile">
+      <div class="user-avatar">
         <mat-icon *ngIf="isCollapsed">account_circle</mat-icon>
         <span *ngIf="!isCollapsed">{{ currentUser.username.charAt(0).toUpperCase() }}</span>
       </div>
@@ -59,10 +54,6 @@
           {{ role }}
         </div>
       </div>
-
-      <button class="logout-icon-btn" (click)="logout()" matTooltip="Logout">
-        <mat-icon>logout</mat-icon>
-      </button>
     </div>
   </div>
 </div>
@@ -81,12 +72,7 @@
 
   <a routerLink="/executions" routerLinkActive="active" class="mobile-nav-item">
     <mat-icon>play_circle</mat-icon>
-    <span>Executions</span>
-  </a>
-
-  <a routerLink="/modules" routerLinkActive="active" class="mobile-nav-item">
-    <mat-icon>view_module</mat-icon>
-    <span>Modules</span>
+    <span>Runs</span>
   </a>
 
   <a routerLink="/test-cases" routerLinkActive="active" class="mobile-nav-item">
@@ -94,8 +80,8 @@
     <span>Tests</span>
   </a>
 
-  <div class="mobile-nav-item" (click)="logout()" style="cursor: pointer;">
-    <mat-icon class="logout-icon">logout</mat-icon>
-    <span>Logout</span>
-  </div>
+  <a routerLink="/profile" routerLinkActive="active" class="mobile-nav-item">
+    <mat-icon>account_circle</mat-icon>
+    <span>Profile</span>
+  </a>
 </nav>

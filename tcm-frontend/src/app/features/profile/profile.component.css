@@ -1,0 +1,221 @@
+.profile-container {
+  padding: 32px 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 80vh; /* Ensure it feels substantial */
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: var(--border-thin);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background-color: var(--ink);
+  color: var(--surface);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-text h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  color: var(--ink);
+}
+
+.role-badge {
+  display: inline-block;
+  background-color: var(--border-thin);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink);
+  margin: 0 0 4px 0;
+}
+
+.email-text {
+  color: #666;
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Tabs & Content */
+.profile-tabs {
+  margin-top: 32px;
+}
+
+.tab-content {
+  padding: 32px 0;
+  display: flex;
+  justify-content: center; /* Center cards horizontally */
+}
+
+.settings-card {
+  width: 100%;
+  max-width: 500px;
+  border: var(--border-medium); /* Stronger border */
+  box-shadow: var(--shadow-sm) !important; /* Static shadow */
+  background-color: var(--surface);
+  transition: none !important; /* Disable hover movement */
+}
+
+.settings-card:hover, .team-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* Team Card matches Settings Card */
+.team-card {
+  width: 100%;
+  max-width: 600px; /* Slightly wider for list */
+  border: var(--border-medium);
+  box-shadow: var(--shadow-sm) !important;
+  background-color: var(--surface);
+  transition: none !important;
+}
+
+.invite-section {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.invite-form {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  align-items: center;
+}
+
+.invite-form button {
+  height: 56px; /* Match form field height roughly */
+}
+
+.members-divider {
+  height: 1px;
+  background-color: var(--border-thin);
+  margin: 24px 0;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: var(--border-thin);
+}
+
+.member-row:last-child {
+  border-bottom: none;
+}
+
+.member-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: var(--accent-secondary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  margin-right: 16px;
+}
+
+.member-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.member-email {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #666;
+}
+
+.member-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  background-color: var(--paper);
+  border: 1px solid var(--border-thin);
+  border-radius: 4px;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.action-btn {
+  color: #999;
+}
+
+.action-btn:hover {
+  color: var(--ink);
+}
+
+/* Remove old team styles */
+.team-header, .compact-field, .member-item {
+  display: none;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: #999;
+}
+
+/* Button overrides */
+button[mat-flat-button] {
+  background-color: var(--ink);
+  color: var(--surface);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+}
