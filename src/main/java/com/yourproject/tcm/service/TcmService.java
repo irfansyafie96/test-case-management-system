@@ -4,6 +4,7 @@ import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.ModuleAssignmentRequest;
 import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
 import com.yourproject.tcm.model.dto.TestAnalyticsDTO;
+import com.yourproject.tcm.model.dto.TestExecutionDTO;
 import com.yourproject.tcm.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -867,8 +868,11 @@ public class TcmService {
      * @return List of all executions for that test case
      */
     @Transactional(readOnly = true)
-    public List<TestExecution> getTestExecutionsByTestCaseId(Long testCaseId) {
-        return testExecutionRepository.findByTestCase_Id(testCaseId);
+    public List<TestExecutionDTO> getTestExecutionsByTestCaseId(Long testCaseId) {
+        List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCaseId);
+        return executions.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -1019,20 +1023,23 @@ public class TcmService {
      * @param userId ID of the user
      * @return List of assigned test executions
      */
-    public List<TestExecution> getTestExecutionsAssignedToUser(Long userId) {
+    public List<TestExecutionDTO> getTestExecutionsAssignedToUser(Long userId) {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            return testExecutionRepository.findByAssignedToUserWithDetails(user);
+            List<TestExecution> executions = testExecutionRepository.findByAssignedToUserWithDetails(user);
+            return executions.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
         }
         throw new RuntimeException("User not found with id: " + userId);
     }
 
     /**
      * Get all test executions assigned to the current authenticated user
-     * @return List of assigned test executions
+     * @return List of assigned test executions as DTOs
      */
-    public List<TestExecution> getTestExecutionsForCurrentUser() {
+    public List<TestExecutionDTO> getTestExecutionsForCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() &&
             !authentication.getPrincipal().equals("anonymousUser")) {
@@ -1056,7 +1063,9 @@ public class TcmService {
                         latestExecutionByTestCase.put(testCaseId, execution);
                     }
                 }
-                return new ArrayList<>(latestExecutionByTestCase.values());
+                return latestExecutionByTestCase.values().stream()
+                    .map(this::convertToDTO)
+                    .collect(java.util.stream.Collectors.toList());
             }
             
             // Otherwise return only executions assigned to the user for modules they're currently assigned to
@@ -1070,9 +1079,44 @@ public class TcmService {
                     Long moduleId = execution.getModuleId();
                     return moduleId != null && assignedModuleIds.contains(moduleId);
                 })
+                .map(this::convertToDTO)
                 .collect(java.util.stream.Collectors.toList());
         }
         throw new RuntimeException("No authenticated user found");
+    }
+
+    /**
+     * Convert TestExecution entity to TestExecutionDTO
+     * @param execution The TestExecution entity to convert
+     * @return TestExecutionDTO with flattened hierarchy data
+     */
+    private TestExecutionDTO convertToDTO(TestExecution execution) {
+        Long assignedToUserId = null;
+        String assignedToUsername = null;
+        if (execution.getAssignedToUser() != null) {
+            assignedToUserId = execution.getAssignedToUser().getId();
+            assignedToUsername = execution.getAssignedToUser().getUsername();
+        }
+        
+        return new TestExecutionDTO(
+            execution.getId(),
+            execution.getTestCaseId(),
+            execution.getTitle(),
+            execution.getExecutionDate(),
+            execution.getOverallResult(),
+            execution.getNotes(),
+            execution.getDuration(),
+            execution.getEnvironment(),
+            execution.getExecutedBy(),
+            assignedToUserId,
+            assignedToUsername,
+            execution.getTestSuiteId(),
+            execution.getTestSuiteName(),
+            execution.getModuleId(),
+            execution.getModuleName(),
+            execution.getProjectId(),
+            execution.getProjectName()
+        );
     }
 
     // ==================== PROJECT ASSIGNMENT METHODS ====================

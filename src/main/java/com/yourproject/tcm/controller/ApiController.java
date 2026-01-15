@@ -346,7 +346,7 @@ public class ApiController {
     @GetMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> getTestExecutionsByTestCaseId(@PathVariable Long testCaseId) {
         try {
-            List<TestExecution> executions = tcmService.getTestExecutionsByTestCaseId(testCaseId);
+            List<TestExecutionDTO> executions = tcmService.getTestExecutionsByTestCaseId(testCaseId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -421,7 +421,7 @@ public class ApiController {
     @GetMapping("/executions/assigned-to/{userId}")
     public ResponseEntity<?> getTestExecutionsAssignedToUser(@PathVariable Long userId) {
         try {
-            List<TestExecution> executions = tcmService.getTestExecutionsAssignedToUser(userId);
+            List<TestExecutionDTO> executions = tcmService.getTestExecutionsAssignedToUser(userId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -432,7 +432,7 @@ public class ApiController {
     @GetMapping("/executions/my-assignments")
     public ResponseEntity<?> getMyAssignedExecutions() {
         try {
-            List<TestExecution> executions = tcmService.getTestExecutionsForCurrentUser();
+            List<TestExecutionDTO> executions = tcmService.getTestExecutionsForCurrentUser();
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving your assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
