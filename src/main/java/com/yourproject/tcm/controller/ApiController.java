@@ -479,7 +479,16 @@ public class ApiController {
     public ResponseEntity<?> getUsersAssignedToProject(@PathVariable Long projectId) {
         try {
             List<User> users = userRepository.findUsersAssignedToProject(projectId);
-            return new ResponseEntity<>(users, HttpStatus.OK);
+            // Convert to DTOs to avoid serialization issues
+            List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
+                .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getOrganizationName()
+                ))
+                .collect(java.util.stream.Collectors.toList());
+            return new ResponseEntity<>(userDTOs, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving users assigned to project: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -528,7 +537,16 @@ public class ApiController {
     public ResponseEntity<?> getUsersAssignedToTestModule(@PathVariable Long moduleId) {
         try {
             List<User> users = userRepository.findUsersAssignedToTestModule(moduleId);
-            return new ResponseEntity<>(users, HttpStatus.OK);
+            // Convert to DTOs to avoid serialization issues
+            List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
+                .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getOrganizationName()
+                ))
+                .collect(java.util.stream.Collectors.toList());
+            return new ResponseEntity<>(userDTOs, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving users assigned to test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -539,9 +557,22 @@ public class ApiController {
     public ResponseEntity<?> getUsersByRole(@PathVariable String roleName) {
         try {
             Organization organization = tcmService.getCurrentUserOrganizationObject();
+            if (organization == null) {
+                return new ResponseEntity<>("Error: Current user has no organization", HttpStatus.BAD_REQUEST);
+            }
             List<User> users = userRepository.findByRoleNameAndOrganization(roleName, organization);
-            return new ResponseEntity<>(users, HttpStatus.OK);
+            // Convert to DTOs to avoid serialization issues
+            List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
+                .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getOrganizationName()
+                ))
+                .collect(java.util.stream.Collectors.toList());
+            return new ResponseEntity<>(userDTOs, HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace(); // Log full stack trace for debugging
             return new ResponseEntity<>("Error retrieving users by role: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
