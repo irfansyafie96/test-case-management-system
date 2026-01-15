@@ -1,5 +1,7 @@
 package com.yourproject.tcm.model.dto;
 
+import java.util.List;
+
 /**
  * Data Transfer Object for User information
  * Used to safely serialize user data without exposing sensitive information
@@ -10,14 +12,16 @@ public class UserDTO {
     private String username;
     private String email;
     private String organizationName;
+    private List<String> roles;
 
     public UserDTO() {}
 
-    public UserDTO(Long id, String username, String email, String organizationName) {
+    public UserDTO(Long id, String username, String email, String organizationName, List<String> roles) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.organizationName = organizationName;
+        this.roles = roles;
     }
 
     public Long getId() {
@@ -50,5 +54,13 @@ public class UserDTO {
 
     public void setOrganizationName(String organizationName) {
         this.organizationName = organizationName;
+    }
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
     }
 }

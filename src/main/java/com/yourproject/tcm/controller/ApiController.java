@@ -485,7 +485,8 @@ public class ApiController {
                     user.getId(),
                     user.getUsername(),
                     user.getEmail(),
-                    user.getOrganizationName()
+                    user.getOrganizationName(),
+                    user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
                 ))
                 .collect(java.util.stream.Collectors.toList());
             return new ResponseEntity<>(userDTOs, HttpStatus.OK);
@@ -543,7 +544,8 @@ public class ApiController {
                     user.getId(),
                     user.getUsername(),
                     user.getEmail(),
-                    user.getOrganizationName()
+                    user.getOrganizationName(),
+                    user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
                 ))
                 .collect(java.util.stream.Collectors.toList());
             return new ResponseEntity<>(userDTOs, HttpStatus.OK);
@@ -567,7 +569,8 @@ public class ApiController {
                     user.getId(),
                     user.getUsername(),
                     user.getEmail(),
-                    user.getOrganizationName()
+                    user.getOrganizationName(),
+                    user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
                 ))
                 .collect(java.util.stream.Collectors.toList());
             return new ResponseEntity<>(userDTOs, HttpStatus.OK);
