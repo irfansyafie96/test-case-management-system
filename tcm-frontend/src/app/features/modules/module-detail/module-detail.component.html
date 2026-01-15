@@ -89,7 +89,7 @@
                 <mat-label>Select User</mat-label>
                 <mat-select [(ngModel)]="selectedUserId">
                   <mat-option *ngFor="let user of availableUsers" [value]="user.id.toString()">
-                    {{ user.username }} ({{ user.email }}){{ user.roles && user.roles.length > 0 ? ' - ' + user.roles.join(', ') : '' }}
+                    {{ user.username }}{{ user.roles && user.roles.length > 0 ? ' - ' + user.roles.join(', ') : '' }}
                   </mat-option>
                 </mat-select>
               </mat-form-field>
