@@ -19,8 +19,7 @@ import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TestSuiteDialogComponent } from './test-suite-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
-import { TestCaseDialogComponent } from './test-case-dialog.component';
-import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component'; // New improved dialog
+import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component';
 import { Project, TestModule, TestSuite, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
 import { Observable, of, BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
