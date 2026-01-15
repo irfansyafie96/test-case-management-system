@@ -63,7 +63,6 @@
                 <mat-icon class="user-icon">person</mat-icon>
                 <div class="user-details">
                   <h4>{{ user.username }}</h4>
-                  <p>{{ user.email }}</p>
                   <div class="user-roles">
                     <span *ngFor="let role of user.roles || []" class="role-badge">{{ role }}</span>
                   </div>
