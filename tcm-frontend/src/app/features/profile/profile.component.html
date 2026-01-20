@@ -19,59 +19,61 @@
     <!-- SETTINGS TAB -->
     <mat-tab label="Settings">
       <div class="tab-content">
-        <mat-card class="settings-card">
-          <mat-card-header>
-            <mat-card-title>Change Password</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <form [formGroup]="passwordForm" (ngSubmit)="onUpdatePassword()">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Current Password</mat-label>
-                <input matInput formControlName="currentPassword" type="password">
-              </mat-form-field>
-              
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>New Password</mat-label>
-                <input matInput formControlName="newPassword" type="password">
-              </mat-form-field>
+        <div class="settings-row">
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>Change Password</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <form [formGroup]="passwordForm" (ngSubmit)="onUpdatePassword()">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Current Password</mat-label>
+                  <input matInput formControlName="currentPassword" type="password">
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>New Password</mat-label>
+                  <input matInput formControlName="newPassword" type="password">
+                </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Confirm New Password</mat-label>
-                <input matInput formControlName="confirmPassword" type="password">
-              </mat-form-field>
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Confirm New Password</mat-label>
+                  <input matInput formControlName="confirmPassword" type="password">
+                </mat-form-field>
 
-              <div class="form-actions">
-                <button mat-flat-button color="primary" type="submit">Update Password</button>
+                <div class="form-actions">
+                  <button mat-flat-button color="primary" type="submit">Update Password</button>
+                </div>
+              </form>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="templates-card">
+            <mat-card-header>
+              <mat-card-title>Download Templates</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="template-description">
+                Download the Excel template to import test cases and test suites into your modules.
+              </p>
+              <div class="template-actions">
+                <button mat-flat-button color="primary" (click)="downloadTemplate()">
+                  <mat-icon>download</mat-icon>
+                  Download Test Case Template
+                </button>
               </div>
-            </form>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="templates-card">
-          <mat-card-header>
-            <mat-card-title>Download Templates</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            <p class="template-description">
-              Download the Excel template to import test cases and test suites into your modules.
-            </p>
-            <div class="template-actions">
-              <button mat-flat-button color="primary" (click)="downloadTemplate()">
-                <mat-icon>download</mat-icon>
-                Download Test Case Template
-              </button>
-            </div>
-            <div class="template-instructions">
-              <h4>Instructions:</h4>
-              <ol>
-                <li>Download the template</li>
-                <li>Fill in your test cases following the format</li>
-                <li>Go to a module and click the IMPORT button</li>
-                <li>Upload your filled template</li>
-              </ol>
-            </div>
-          </mat-card-content>
-        </mat-card>
+              <div class="template-instructions">
+                <h4>Instructions:</h4>
+                <ol>
+                  <li>Download the template</li>
+                  <li>Fill in your test cases following the format</li>
+                  <li>Go to a module and click the IMPORT button</li>
+                  <li>Upload your filled template</li>
+                </ol>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
       </div>
     </mat-tab>
 

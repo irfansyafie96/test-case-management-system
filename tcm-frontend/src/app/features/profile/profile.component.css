@@ -67,7 +67,7 @@
 /* Tabs & Content */
 .profile-tabs {
   margin-top: 32px;
-  max-width: 800px; /* Constrain width for readability on large screens */
+  max-width: 1200px; /* Constrain width for readability on large screens */
   margin-left: auto;
   margin-right: auto;
 }
@@ -115,15 +115,26 @@
 }
 
 .tab-content {
-  padding: 32px 0;
+  padding: 32px 24px;
   display: flex;
   flex-direction: column;
   align-items: center; /* Center cards horizontally */
   gap: 32px; /* Consistent spacing between cards */
 }
 
-.settings-card {
+.settings-row {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
   width: 100%;
+  justify-content: center;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.settings-card {
+  flex: 1;
+  min-width: 300px;
   max-width: 600px; /* Increased to match team card for better layout */
   border: var(--border-medium); /* Stronger border */
   box-shadow: var(--shadow-sm) !important; /* Static shadow */
@@ -280,7 +291,8 @@ button[mat-flat-button] {
 
 /* Templates Card */
 .templates-card {
-  width: 100%;
+  flex: 1;
+  min-width: 300px;
   max-width: 600px; /* Consistent with settings-card */
   margin-top: 0; /* Handled by parent gap */
   border: var(--border-medium);
