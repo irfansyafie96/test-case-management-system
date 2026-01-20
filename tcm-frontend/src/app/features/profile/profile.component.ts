@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
@@ -47,7 +47,8 @@ export class ProfileComponent implements OnInit {
     private tcmService: TcmService,
     private teamService: TeamService,
     private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {
     this.passwordForm = this.fb.group({
       currentPassword: ['', Validators.required],
@@ -74,6 +75,7 @@ export class ProfileComponent implements OnInit {
     if (this.isAdmin) {
       this.tcmService.getAllNonAdminUsers().subscribe(users => {
         this.teamMembers = users;
+        this.cdr.detectChanges(); // Fix NG0100
       });
     }
   }
