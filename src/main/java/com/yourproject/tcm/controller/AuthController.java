@@ -450,13 +450,26 @@ public class AuthController {
      */
     @GetMapping("/users")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<User>> getAllNonAdminUsers() {
+    public ResponseEntity<List<com.yourproject.tcm.model.dto.UserDTO>> getAllNonAdminUsers() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Error: Current user not found."));
         
         List<User> users = userRepository.findAllNonAdminUsers(currentUser.getOrganization());
-        return ResponseEntity.ok(users);
+        
+        List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
+            .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getOrganizationName(),
+                user.getRoles().stream()
+                    .map(role -> role.getName())
+                    .collect(Collectors.toList())
+            ))
+            .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(userDTOs);
     }
 }
