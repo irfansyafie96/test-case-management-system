@@ -740,9 +740,18 @@ public class TcmService {
             TestCase savedTestCase = testCaseRepository.save(testCase);
             entityManager.flush(); // Ensure data is written to DB
 
-            // NOTE: Auto-generating executions for all module users has been disabled
-            // Executions should only be created when explicitly assigned to a specific user
-            // This allows QA/BA to create test cases without automatically getting executions
+            // Auto-generate executions for all users assigned to the module
+            TestModule module = testSuite.getTestModule();
+            if (module != null && module.getAssignedUsers() != null && !module.getAssignedUsers().isEmpty()) {
+                for (User user : module.getAssignedUsers()) {
+                    try {
+                        createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
+                    } catch (Exception e) {
+                        // Log error but continue with other users
+                        System.err.println("Error creating execution for test case " + savedTestCase.getId() + " and user " + user.getId() + ": " + e.getMessage());
+                    }
+                }
+            }
 
             return savedTestCase;
         } else {
