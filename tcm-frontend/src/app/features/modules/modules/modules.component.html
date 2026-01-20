@@ -22,12 +22,12 @@
 
           <div class="module-stats">
             <div class="stat-item">
-              <span class="stat-value">{{ module.testSuites?.length || 0 }}</span>
+              <span class="stat-value">{{ module.suitesCount || 0 }}</span>
               <span class="stat-label">Suites</span>
             </div>
             <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-value">{{ getTotalTestCases(module.testSuites) }}</span>
+              <span class="stat-value">{{ module.testCasesCount || 0 }}</span>
               <span class="stat-label">Cases</span>
             </div>
           </div>

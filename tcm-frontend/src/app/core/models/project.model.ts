@@ -19,6 +19,8 @@ export interface TestModule {
   project?: Project; // Full project information for display
   description?: string;
   testSuites?: TestSuite[];
+  suitesCount?: number; // Number of test suites in this module
+  testCasesCount?: number; // Total number of test cases across all suites
   createdDate?: string;
   updatedDate?: string;
 }

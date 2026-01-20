@@ -6,13 +6,17 @@ public class TestModuleDTO {
     private String description;
     private Long projectId;
     private String projectName;
+    private Integer suitesCount;
+    private Integer testCasesCount;
 
-    public TestModuleDTO(Long id, String name, String description, Long projectId, String projectName) {
+    public TestModuleDTO(Long id, String name, String description, Long projectId, String projectName, Integer suitesCount, Integer testCasesCount) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.projectId = projectId;
         this.projectName = projectName;
+        this.suitesCount = suitesCount;
+        this.testCasesCount = testCasesCount;
     }
 
     // Getters and Setters
@@ -30,4 +34,10 @@ public class TestModuleDTO {
 
     public String getProjectName() { return projectName; }
     public void setProjectName(String projectName) { this.projectName = projectName; }
+
+    public Integer getSuitesCount() { return suitesCount; }
+    public void setSuitesCount(Integer suitesCount) { this.suitesCount = suitesCount; }
+
+    public Integer getTestCasesCount() { return testCasesCount; }
+    public void setTestCasesCount(Integer testCasesCount) { this.testCasesCount = testCasesCount; }
 }

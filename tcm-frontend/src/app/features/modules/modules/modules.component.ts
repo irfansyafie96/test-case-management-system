@@ -8,7 +8,6 @@ import { RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { Project, TestModule, TestSuite, TestCase } from '../../../core/models/project.model';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-modules',
@@ -27,15 +26,5 @@ export class ModulesComponent implements OnInit {
   ngOnInit(): void {
     // Load modules on initialization
     this.tcmService.getTestModulesAssignedToCurrentUser().subscribe();
-  }
-
-  getTotalTestCases(testSuites: TestSuite[] | undefined): number {
-    if (!testSuites || testSuites.length === 0) {
-      return 0;
-    }
-
-    return testSuites.reduce((total, suite) => {
-      return total + (suite.testCases ? suite.testCases.length : 0);
-    }, 0);
   }
 }

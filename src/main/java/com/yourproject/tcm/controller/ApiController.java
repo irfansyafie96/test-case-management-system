@@ -73,12 +73,24 @@ public class ApiController {
     }
 
     private TestModuleDTO convertToDTO(TestModule m) {
+        int suitesCount = 0;
+        int testCasesCount = 0;
+
+        if (m.getTestSuites() != null) {
+            suitesCount = m.getTestSuites().size();
+            testCasesCount = m.getTestSuites().stream()
+                .mapToInt(suite -> suite.getTestCases() != null ? suite.getTestCases().size() : 0)
+                .sum();
+        }
+
         return new TestModuleDTO(
             m.getId(),
             m.getName(),
             m.getDescription(),
             m.getProject() != null ? m.getProject().getId() : null,
-            m.getProject() != null ? m.getProject().getName() : null
+            m.getProject() != null ? m.getProject().getName() : null,
+            suitesCount,
+            testCasesCount
         );
     }
 
