@@ -3,6 +3,11 @@ package com.yourproject.tcm.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -24,6 +29,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "projects")  // Maps to 'projects' table in database
+@EntityListeners(AuditingEntityListener.class) // Enable JPA Auditing for this entity
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Ignore Hibernate proxy properties during JSON serialization
 public class Project {
     @Id
@@ -36,13 +42,16 @@ public class Project {
     private String description;  // Optional description of the project
 
     // Additional fields for frontend compatibility
-    @Column(name = "created_date")
+    @Column(name = "created_date", updatable = false)
+    @CreatedDate
     private LocalDateTime createdDate;
 
     @Column(name = "updated_date")
+    @LastModifiedDate
     private LocalDateTime updatedDate;
 
-    @Column(name = "created_by")
+    @Column(name = "created_by", updatable = false)
+    @CreatedBy
     private String createdBy;
 
     /**
