@@ -247,14 +247,17 @@ public class ApiController {
 
     @DeleteMapping("/testsuites/{suiteId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> deleteTestSuite(@PathVariable Long suiteId) {
+    public ResponseEntity<Void> deleteTestSuite(@PathVariable Long suiteId) {
         try {
             tcmService.deleteTestSuite(suiteId);
-            return new ResponseEntity<>("Test suite deleted successfully", HttpStatus.OK);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            // Log the error but return 404 to user if not found
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            return new ResponseEntity<>("Error deleting test suite: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            // For other errors, we might want to return 500, but with Void we can't send a body
+            // ideally we should throw an exception that a global handler catches
+            throw new RuntimeException("Error deleting test suite: " + e.getMessage());
         }
     }
 
@@ -319,14 +322,14 @@ public class ApiController {
 
     @DeleteMapping("/testcases/{testCaseId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteTestCase(@PathVariable Long testCaseId) {
+    public ResponseEntity<Void> deleteTestCase(@PathVariable Long testCaseId) {
         try {
             tcmService.deleteTestCase(testCaseId);
-            return new ResponseEntity<>("Test case deleted successfully", HttpStatus.OK);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            return new ResponseEntity<>("Error deleting test case: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new RuntimeException("Error deleting test case: " + e.getMessage());
         }
     }
 

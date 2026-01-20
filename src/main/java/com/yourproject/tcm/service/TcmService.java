@@ -211,13 +211,33 @@ public class TcmService {
         if (projectOpt.isPresent()) {
             Project project = projectOpt.get();
 
+            // 1. Clear assignments: Remove this project from all users' assigned lists
+            // This is critical for ManyToMany cleanup in the junction table 'user_projects'
+            if (project.getAssignedUsers() != null) {
+                // Create a copy to avoid concurrent modification exception
+                Set<User> users = new HashSet<>(project.getAssignedUsers());
+                for (User user : users) {
+                    user.getAssignedProjects().remove(project);
+                    userRepository.save(user); // Save user to update junction table
+                }
+                project.getAssignedUsers().clear();
+            }
+            entityManager.flush(); // Ensure junction table records are gone
+
             // Delete all test modules associated with this project
-            // This will cascade to delete all related test suites, test cases, executions and step results
+            // We must manually delete each module to trigger the detailed cleanup logic in deleteTestModule
+            // Just letting CascadeType.ALL handle it might skip the manual cleanup we added there
             if (project.getModules() != null) {
-                for (TestModule module : project.getModules()) {
+                // Create a copy of the list to iterate over safely while deleting
+                List<TestModule> modulesToDelete = new ArrayList<>(project.getModules());
+                for (TestModule module : modulesToDelete) {
                     deleteTestModule(module.getId());  // Recursively delete module and its contents
                 }
+                // Clear the list in the project entity to prevent JPA trying to delete them again
+                project.getModules().clear();
             }
+            
+            entityManager.flush(); // Ensure modules are gone
 
             // Now delete the project itself
             projectRepository.deleteById(projectId);
@@ -311,62 +331,42 @@ public class TcmService {
      */
     @Transactional
     public void deleteTestModule(Long testModuleId) {
-        // Fetch the module WITHOUT its test suites to avoid orphanRemoval issues
-        // orphanRemoval=true on TestModule.testSuites causes JPA to try nullifying foreign key
-        // which violates NOT NULL constraint. We'll delete suites separately.
-        TestModule testModule = testModuleRepository.findById(testModuleId)
+        // Fetch the module with test suites (using the repository method that fetches suites)
+        // We need the suites collection to be initialized to clear it later
+        TestModule testModule = testModuleRepository.findByIdWithTestSuites(testModuleId)
                 .orElseThrow(() -> new RuntimeException("Test Module not found with id: " + testModuleId));
 
-        // Fetch test cases with their test steps for cleanup
-        // Using a separate query to avoid complex multi-level JOIN FETCH that causes JPA errors
-        List<TestCase> testCasesWithSteps = testCaseRepository.findByModuleIdWithSteps(testModuleId);
-
-        // Pre-clean up: Delete all operational data (Executions and Results) linked to these test cases.
-        // This is necessary because TestStepResult has a Foreign Key to TestStep.
-        // If we try to delete TestModule -> TestSuite -> TestCase -> TestStep directly,
-        // the DB will throw a constraint violation because TestStepResult still points to TestStep.
-        if (testCasesWithSteps != null) {
-            for (TestCase testCase : testCasesWithSteps) {
-                // 1. Delete all TestExecutions for this test case.
-                // This cascades to delete TestStepResults linked to these executions.
-                List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
-                if (!executions.isEmpty()) {
-                    testExecutionRepository.deleteAll(executions);
-                }
-
-                // 2. Safety Net: Delete any orphaned TestStepResults that might point to these steps
-                // but aren't linked to a valid execution (data integrity cleanup).
-                if (testCase.getTestSteps() != null) {
-                    for (TestStep step : testCase.getTestSteps()) {
-                        testStepResultRepository.deleteByTestStepId(step.getId());
-                    }
-                }
+        // 1. Clear assignments: Remove this module from all users' assigned lists
+        if (testModule.getAssignedUsers() != null) {
+            Set<User> users = new HashSet<>(testModule.getAssignedUsers());
+            for (User user : users) {
+                user.getAssignedTestModules().remove(testModule);
+                userRepository.save(user); 
             }
+            testModule.getAssignedUsers().clear();
+        }
+        entityManager.flush(); 
+
+        // 2. Clean up test suites deeply
+        // We iterate through a copy to perform deep cleanup (executions/results) via deleteTestSuite logic
+        // But we DO NOT delete the suite entity itself in the loop, we let orphanRemoval handle it
+        if (testModule.getTestSuites() != null) {
+            List<TestSuite> suites = new ArrayList<>(testModule.getTestSuites());
+            for (TestSuite suite : suites) {
+                // Call deleteTestSuite to clean up its children (cases/executions)
+                // But we must catch the delete call to avoid double deletion or just extract the cleanup logic
+                // Actually, since deleteTestSuite calls repository.delete(), we should just call it
+                // and NOT rely on orphanRemoval for the suites themselves, as that's safer for deep structures
+                deleteTestSuite(suite.getId());
+            }
+            
+            // Clear the collection to sync the entity state, though they are already deleted
+            testModule.getTestSuites().clear();
         }
         
-        // Flush the changes to ensure all dependent data is gone before we delete the structure
         entityManager.flush();
 
-        // Fetch test suites separately (not as part of module's collection)
-        // This avoids triggering orphanRemoval when we delete them
-        List<TestSuite> testSuites = testSuiteRepository.findByTestModule_Id(testModuleId);
-        
-        // Delete each test suite separately, which will cascade to delete its test cases and steps
-        // Using testSuiteRepository.delete() instead of entityManager.remove() to work with JPA properly
-        if (testSuites != null && !testSuites.isEmpty()) {
-            for (TestSuite suite : testSuites) {
-                testSuiteRepository.delete(suite);
-            }
-            entityManager.flush();
-            
-            // Clear the testSuites collection from the module entity if it was loaded
-            // This prevents any orphanRemoval attempts later
-            if (testModule.getTestSuites() != null) {
-                testModule.getTestSuites().clear();
-            }
-        }
-
-        // Now delete the module structure (test suites already deleted)
+        // Now delete the module structure
         testModuleRepository.delete(testModule);
         entityManager.flush(); // Final commit
     }
@@ -437,14 +437,16 @@ public class TcmService {
         if (suiteOpt.isPresent()) {
             TestSuite testSuite = suiteOpt.get();
 
-            // First, delete all test cases in the suite
-            // This will cascade to delete test steps, test executions, and test step results
+            // First, cleanup all execution data for test cases in the suite
             if (testSuite.getTestCases() != null) {
+                // We don't delete the test case entity here directly
+                // We just clean up the 'grandchildren' (Executions/Results)
+                // The test cases themselves will be deleted via orphanRemoval when we clear the list
                 for (TestCase testCase : testSuite.getTestCases()) {
                     // Delete all test executions for this test case
                     List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
-                    for (TestExecution execution : executions) {
-                        testExecutionRepository.deleteById(execution.getId());
+                    if (!executions.isEmpty()) {
+                        testExecutionRepository.deleteAll(executions);
                     }
 
                     // Delete test step results that might still reference the test steps
@@ -453,14 +455,16 @@ public class TcmService {
                             testStepResultRepository.deleteByTestStepId(step.getId());
                         }
                     }
-
-                    // Delete the test case
-                    testCaseRepository.deleteById(testCase.getId());
                 }
+                
+                // Clear the collection to trigger orphanRemoval
+                // This deletes the test cases from DB cleanly without setting FK to null
+                testSuite.getTestCases().clear();
+                entityManager.flush(); // Force the deletion of test cases
             }
 
             // Now delete the test suite
-            testSuiteRepository.deleteById(suiteId);
+            testSuiteRepository.delete(testSuite);
             entityManager.flush(); // Ensure data is written to DB
         } else {
             throw new RuntimeException("Test Suite not found with id: " + suiteId);
