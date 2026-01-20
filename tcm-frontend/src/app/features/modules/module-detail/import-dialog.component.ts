@@ -1,12 +1,13 @@
 import { Component, Inject, inject, EventEmitter, Output, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TcmService } from '../../../core/services/tcm.service';
 
 export interface ImportDialogData {
@@ -23,7 +24,9 @@ export interface ImportDialogData {
     MatIconModule,
     MatProgressSpinnerModule,
     MatCardModule,
-    MatDividerModule
+    MatDividerModule,
+    MatDialogModule,
+    MatTooltipModule
   ],
   templateUrl: './import-dialog.component.html',
   styleUrls: ['./import-dialog.component.css']

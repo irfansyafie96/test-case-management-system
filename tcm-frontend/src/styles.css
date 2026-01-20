@@ -151,6 +151,16 @@ code, .id-badge, .meta-label {
   background-color: var(--surface) !important;
 }
 
+/* Override for Import Dialog Panel - Custom Shadow & Spacing */
+.import-dialog-panel .mdc-dialog__surface {
+  box-shadow: var(--shadow-sm) !important; /* Small shadow to match profile cards */
+  border: var(--border-medium) !important;
+}
+
+.import-dialog-panel .mat-mdc-dialog-content {
+  padding: 32px !important; /* Increased padding for "breath" */
+}
+
 .mat-mdc-dialog-title {
   font-family: 'Space Grotesk', sans-serif !important;
   border-bottom: var(--border-thin);
@@ -337,4 +347,3 @@ code, .id-badge, .meta-label {
      }
   }
 }
-

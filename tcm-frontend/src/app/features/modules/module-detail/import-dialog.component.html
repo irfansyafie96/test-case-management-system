@@ -1,117 +1,140 @@
-<div class="import-dialog-container">
-  <h2 class="dialog-title">
-    <mat-icon>upload_file</mat-icon>
-    Import Test Cases
-  </h2>
+<h1 mat-dialog-title>Import Test Cases</h1>
 
-  <div class="dialog-content">
-    <!-- Upload Section -->
-    <div class="upload-section" *ngIf="!uploadResult?.success">
-      <div class="template-download">
-        <p class="template-info">
-          <mat-icon class="info-icon">info</mat-icon>
-          Download the template, fill in your test cases, and upload the file.
-        </p>
-        <button mat-stroked-button type="button" (click)="downloadTemplate()" class="download-btn">
-          <mat-icon>download</mat-icon>
-          Download Template
+<div mat-dialog-content class="dialog-content">
+  <p class="dialog-subtitle" *ngIf="!isUploading && !uploadResult">Bulk create test cases by uploading an Excel file.</p>
+
+  <!-- Upload Section (Visible when NOT uploading AND no result) -->
+  <div class="content-wrapper" *ngIf="!isUploading && !uploadResult?.success">
+    
+    <!-- Step 1: Template -->
+    <div class="form-section">
+      <h3 class="section-title">1. Prepare Data</h3>
+      <div class="template-card">
+        <div class="template-info">
+          <mat-icon class="info-icon">table_view</mat-icon>
+          <span>Download the template to format your test cases correctly.</span>
+        </div>
+        <button mat-stroked-button color="primary" (click)="downloadTemplate()">
+          <mat-icon>download</mat-icon> Download Template
         </button>
       </div>
+    </div>
 
-      <mat-divider></mat-divider>
+    <mat-divider class="bold-divider"></mat-divider>
 
-      <!-- File Upload Area -->
+    <!-- Step 2: Upload -->
+    <div class="form-section">
+      <h3 class="section-title">2. Upload File</h3>
+      
       <div class="upload-area"
            [class.drag-over]="false"
            (dragover)="onDragOver($event)"
            (dragleave)="onDragLeave($event)"
            (drop)="onDrop($event)"
-           [class.has-file]="selectedFile !== null">
+           [class.has-file]="selectedFile !== null"
+           (click)="!selectedFile && fileInput.click()">
 
+        <input #fileInput type="file" (change)="onFileSelected($event)" accept=".xlsx" style="display: none;">
+
+        <!-- Placeholder State -->
         <div *ngIf="!selectedFile" class="upload-placeholder">
-          <mat-icon class="upload-icon">cloud_upload</mat-icon>
-          <p class="upload-text">Drag & drop your Excel file here</p>
-          <p class="upload-subtext">or</p>
-          <button mat-raised-button type="button" (click)="fileInput.click()">
-            Browse Files
-          </button>
-          <input #fileInput type="file" (change)="onFileSelected($event)" accept=".xlsx" style="display: none;">
-          <p class="upload-hint">Only .xlsx files are supported (max 10MB)</p>
+          <div class="icon-circle">
+            <mat-icon>cloud_upload</mat-icon>
+          </div>
+          <p class="upload-heading">Click or drag file here to upload</p>
+          <p class="upload-subtext">Support for a single .xlsx file (max 10MB)</p>
         </div>
 
-        <div *ngIf="selectedFile" class="file-selected">
-          <mat-icon class="file-icon">description</mat-icon>
-          <div class="file-info">
-            <p class="file-name">{{ selectedFile.name }}</p>
-            <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
+        <!-- Selected State -->
+        <div *ngIf="selectedFile" class="file-selected-state">
+          <div class="file-icon-wrapper">
+             <mat-icon>description</mat-icon>
           </div>
-          <button mat-icon-button type="button" (click)="removeFile()" class="remove-btn">
+          <div class="file-details">
+            <span class="file-name-text">{{ selectedFile.name }}</span>
+            <span class="file-size-text">{{ formatFileSize(selectedFile.size) }}</span>
+          </div>
+          <button mat-icon-button color="warn" (click)="$event.stopPropagation(); removeFile()" matTooltip="Remove file">
             <mat-icon>close</mat-icon>
           </button>
         </div>
       </div>
-
-      <!-- Error Message -->
-      <div *ngIf="errorMessage" class="error-message">
-        <mat-icon>error</mat-icon>
+      
+      <div *ngIf="errorMessage" class="error-banner">
+        <mat-icon>error_outline</mat-icon>
         <span>{{ errorMessage }}</span>
       </div>
     </div>
+  </div>
 
-    <!-- Upload Progress -->
-    <div *ngIf="isUploading" class="upload-progress">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Importing test cases...</p>
+  <!-- Loading State (Swapped View) -->
+  <div *ngIf="isUploading" class="loading-view">
+    <div class="spinner-container">
+      <mat-spinner diameter="60" strokeWidth="4"></mat-spinner>
     </div>
+    <h3 class="processing-title">Processing Import...</h3>
+    <p class="processing-subtitle">Reading file structure and generating test cases.</p>
+  </div>
 
-    <!-- Import Result -->
-    <div *ngIf="uploadResult && !isUploading" class="import-result">
-      <div *ngIf="uploadResult.success" class="result-success">
-        <mat-icon class="success-icon">check_circle</mat-icon>
-        <h3>Import Successful!</h3>
-        <div class="result-stats">
-          <div class="stat-item">
-            <span class="stat-value">{{ uploadResult.suitesCreated }}</span>
-            <span class="stat-label">Suites Created</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-value">{{ uploadResult.testCasesCreated }}</span>
-            <span class="stat-label">Test Cases Created</span>
-          </div>
-          <div *ngIf="uploadResult.testCasesSkipped > 0" class="stat-item">
-            <span class="stat-value">{{ uploadResult.testCasesSkipped }}</span>
-            <span class="stat-label">Skipped (Duplicates)</span>
-          </div>
-        </div>
+  <!-- Result Section -->
+  <div *ngIf="uploadResult && !isUploading" class="result-section">
+    <!-- Success -->
+    <div *ngIf="uploadResult.success" class="success-content">
+      <div class="success-icon-wrapper">
+        <mat-icon>check</mat-icon>
       </div>
-
-      <div *ngIf="!uploadResult.success" class="result-error">
-        <mat-icon class="error-icon">error</mat-icon>
-        <h3>Import Failed</h3>
-        <p class="error-message-text">{{ uploadResult.message }}</p>
-        <div *ngIf="uploadResult.errors && uploadResult.errors.length > 0" class="error-details">
-          <h4>Error Details:</h4>
-          <ul>
-            <li *ngFor="let error of uploadResult.errors">{{ error }}</li>
-          </ul>
+      <h3>Import Complete!</h3>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-val">{{ uploadResult.suitesCreated }}</span>
+          <span class="stat-lbl">Suites</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-val">{{ uploadResult.testCasesCreated }}</span>
+          <span class="stat-lbl">Test Cases</span>
+        </div>
+         <div class="stat-card" *ngIf="uploadResult.testCasesSkipped > 0">
+          <span class="stat-val">{{ uploadResult.testCasesSkipped }}</span>
+          <span class="stat-lbl">Skipped</span>
         </div>
       </div>
     </div>
+
+    <!-- Error -->
+    <div *ngIf="!uploadResult.success" class="error-content">
+       <div class="error-header">
+         <mat-icon color="warn">error</mat-icon>
+         <h3>Import Failed</h3>
+       </div>
+       <p class="error-main-msg">{{ uploadResult.message }}</p>
+       
+       <div *ngIf="uploadResult.errors?.length" class="error-list-container">
+         <div class="error-list-header">Details:</div>
+         <ul class="error-list">
+           <li *ngFor="let err of uploadResult.errors">{{ err }}</li>
+         </ul>
+       </div>
+    </div>
   </div>
 
-  <!-- Dialog Actions -->
-  <div class="dialog-actions">
-    <button mat-button type="button" (click)="onCancel()" *ngIf="!uploadResult">
-      Cancel
-    </button>
-    <button mat-button type="button" (click)="onClose()" *ngIf="uploadResult">
-      {{ uploadResult?.success ? 'Done' : 'Close' }}
-    </button>
-    <button mat-raised-button color="primary" type="submit"
-            (click)="onSubmit()"
-            *ngIf="!uploadResult && !isUploading"
-            [disabled]="!selectedFile">
-      Import
-    </button>
-  </div>
+</div>
+
+<div mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button (click)="onCancel()" *ngIf="!uploadResult">CANCEL</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onClose()"
+    *ngIf="uploadResult">
+    {{ uploadResult.success ? 'DONE' : 'CLOSE' }}
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    *ngIf="!uploadResult && !isUploading"
+    [disabled]="!selectedFile">
+    IMPORT
+  </button>
 </div>

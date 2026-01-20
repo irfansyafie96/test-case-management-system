@@ -175,9 +175,11 @@ export class ModuleDetailComponent implements OnInit {
     }
 
     const dialogRef = this.dialog.open(ImportDialogComponent, {
-      width: '600px',
+      width: '500px',
       maxWidth: '95vw',
-      data: { moduleId: moduleId }
+      maxHeight: '90vh',
+      data: { moduleId: moduleId },
+      panelClass: 'import-dialog-panel'
     });
 
     // Subscribe to the success event from the dialog component instance
