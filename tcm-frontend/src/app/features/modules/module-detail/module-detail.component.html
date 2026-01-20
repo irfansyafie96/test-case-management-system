@@ -41,6 +41,13 @@
               <mat-icon>{{ showAssignments ? 'close' : 'group' }}</mat-icon>
               {{ showAssignments ? 'CLOSE ASSIGNMENTS' : 'MANAGE ASSIGNMENTS' }}
             </button>
+            <button 
+              mat-raised-button 
+              color="primary" 
+              (click)="openImportDialog()"
+              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+              <mat-icon>upload_file</mat-icon> IMPORT
+            </button>
           </div>
         </div>
       </div>

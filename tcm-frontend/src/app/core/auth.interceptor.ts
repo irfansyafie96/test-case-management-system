@@ -85,9 +85,13 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
 
     // For POST/PUT requests, explicitly set Content-Type to 'application/json'
     // This prevents Angular from adding 'application/json;charset=UTF-8'
-    const headers: { [key: string]: string } = {
-      'Content-Type': 'application/json'
-    };
+    // UNLESS the body is FormData (file upload), in which case we let the browser set it
+    const headers: { [key: string]: string } = {};
+    
+    // Only set JSON content type if it's NOT a file upload (FormData)
+    if (!(req.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (csrfToken) {
       headers['X-XSRF-TOKEN'] = csrfToken;

@@ -5,16 +5,22 @@ import com.yourproject.tcm.model.dto.*;
 import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.service.TcmService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Optional;
+import java.io.IOException;
+import java.util.*;
+
 import java.util.stream.Collectors;
 
 /**
@@ -600,6 +606,48 @@ public class ApiController {
             return new ResponseEntity<>("Test executions regenerated successfully for module " + moduleId, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error regenerating test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // ==================== IMPORT/EXPORT ENDPOINTS ====================
+
+    /**
+     * Import test cases and test suites from Excel file
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PostMapping("/testmodules/{moduleId}/import")
+    public ResponseEntity<?> importTestCasesFromExcel(@PathVariable Long moduleId, @RequestParam("file") MultipartFile file) {
+        try {
+            Map<String, Object> result = tcmService.importTestCasesFromExcel(moduleId, file);
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(Map.of(
+                "success", false,
+                "message", e.getMessage(),
+                "suitesCreated", 0,
+                "testCasesCreated", 0,
+                "testCasesSkipped", 0,
+                "errors", List.of(e.getMessage())
+            ), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error importing test cases: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Download Excel template for test case import
+     */
+    @GetMapping("/templates/download")
+    public ResponseEntity<byte[]> downloadExcelTemplate() {
+        try {
+            byte[] templateBytes = tcmService.downloadExcelTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", "test-case-import-template.xlsx");
+            headers.setContentLength(templateBytes.length);
+            return new ResponseEntity<>(templateBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -1,0 +1,292 @@
+.import-dialog-container {
+  padding: 24px;
+  min-width: 500px;
+  max-width: 700px;
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 24px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dialog-title mat-icon {
+  font-size: 28px;
+  color: var(--accent-primary);
+}
+
+.dialog-content {
+  margin-bottom: 24px;
+}
+
+/* Template Download Section */
+.template-download {
+  margin-bottom: 20px;
+}
+
+.template-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.info-icon {
+  font-size: 18px;
+  color: var(--accent-primary);
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Upload Area */
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  transition: var(--transition-moderate);
+  background-color: var(--paper);
+}
+
+.upload-area.drag-over {
+  border-color: var(--accent-primary);
+  background-color: rgba(67, 114, 196, 0.1);
+}
+
+.upload-area.has-file {
+  border-style: solid;
+  border-color: var(--accent-primary);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: #ccc;
+}
+
+.upload-text {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.upload-subtext {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #666;
+}
+
+.upload-hint {
+  margin: 8px 0 0 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: #999;
+}
+
+/* File Selected */
+.file-selected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background-color: var(--surface);
+  border-radius: 8px;
+}
+
+.file-icon {
+  font-size: 32px;
+  color: var(--accent-primary);
+}
+
+.file-info {
+  flex: 1;
+  text-align: left;
+}
+
+.file-name {
+  margin: 0 0 4px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.file-size {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: #666;
+}
+
+.remove-btn {
+  color: #f44336;
+}
+
+/* Error Message */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #ffebee;
+  border-radius: 4px;
+  color: #c62828;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+
+/* Upload Progress */
+.upload-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.upload-progress p {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+/* Import Result */
+.import-result {
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.result-success {
+  text-align: center;
+  padding: 30px 20px;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+}
+
+.success-icon {
+  font-size: 48px;
+  color: #4caf50;
+  margin-bottom: 12px;
+}
+
+.result-success h3 {
+  margin: 0 0 20px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.result-stats {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin-top: 20px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.stat-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.result-error {
+  padding: 20px;
+  background-color: #ffebee;
+  border-radius: 8px;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: #f44336;
+  margin-bottom: 12px;
+}
+
+.result-error h3 {
+  margin: 0 0 12px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #c62828;
+}
+
+.error-message-text {
+  margin: 0 0 16px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #c62828;
+}
+
+.error-details {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ef9a9a;
+}
+
+.error-details h4 {
+  margin: 0 0 12px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #c62828;
+}
+
+.error-details ul {
+  margin: 0;
+  padding-left: 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #c62828;
+}
+
+.error-details li {
+  margin-bottom: 4px;
+}
+
+/* Dialog Actions */
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}

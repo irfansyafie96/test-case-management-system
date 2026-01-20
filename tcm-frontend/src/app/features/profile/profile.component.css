@@ -275,3 +275,64 @@ button[mat-flat-button] {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
 }
+
+/* Templates Card */
+.templates-card {
+  width: 100%;
+  max-width: 500px;
+  margin-top: 24px;
+  border: var(--border-medium);
+  box-shadow: var(--shadow-sm) !important;
+  background-color: var(--surface);
+  transition: none !important;
+}
+
+.templates-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.template-description {
+  margin: 0 0 16px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.template-actions {
+  margin-bottom: 16px;
+}
+
+.template-actions button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.template-instructions {
+  padding: 16px;
+  background-color: var(--paper);
+  border-radius: 8px;
+}
+
+.template-instructions h4 {
+  margin: 0 0 12px 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.template-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.template-instructions li {
+  margin-bottom: 4px;
+}

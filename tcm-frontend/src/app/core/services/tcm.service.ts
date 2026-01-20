@@ -505,6 +505,34 @@ export class TcmService {
       );
   }
 
+  // ==================== IMPORT/EXPORT METHODS ====================
+
+  /**
+   * Import test cases and test suites from Excel file
+   * @param moduleId ID of the test module
+   * @param file Excel file to import
+   * @returns Observable<any> Import result with statistics
+   */
+  importTestCases(moduleId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(`${this.apiUrl}/testmodules/${moduleId}/import`, formData)
+      .pipe(
+        catchError(this.handleError<any>('importTestCases'))
+      );
+  }
+
+  /**
+   * Download Excel template for test case import
+   * @returns Observable<Blob> Excel template file
+   */
+  downloadTemplate(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/templates/download`, { responseType: 'blob' })
+      .pipe(
+        catchError(this.handleError<Blob>('downloadTemplate'))
+      );
+  }
+
   /**
    * Get all non-admin users (QA/BA/TESTER) for admin dashboard filter
    * @returns Observable<User[]> List of non-admin users

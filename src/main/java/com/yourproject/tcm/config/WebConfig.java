@@ -1,9 +1,14 @@
 package com.yourproject.tcm.config;
 
+import org.springframework.boot.web.servlet.MultipartConfigFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import jakarta.servlet.MultipartConfigElement;
 
 /**
  * Web Configuration
@@ -24,5 +29,14 @@ public class WebConfig implements WebMvcConfigurer {
             .defaultContentType(MediaType.APPLICATION_JSON)
             .mediaType("json", MediaType.APPLICATION_JSON)
             .mediaType("json;charset=UTF-8", MediaType.APPLICATION_JSON);
+    }
+
+    @Bean
+    public MultipartConfigElement multipartConfigElement() {
+        MultipartConfigFactory factory = new MultipartConfigFactory();
+        factory.setMaxFileSize(DataSize.ofMegabytes(10));
+        factory.setMaxRequestSize(DataSize.ofMegabytes(10));
+        factory.setFileSizeThreshold(DataSize.ofKilobytes(2));
+        return factory.createMultipartConfig();
     }
 }

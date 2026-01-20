@@ -117,4 +117,34 @@ export class ProfileComponent implements OnInit {
   logout() {
     this.authService.logout();
   }
+
+  downloadTemplate() {
+    this.tcmService.downloadTemplate().subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'test-case-import-template.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        this.snackBar.open('Template downloaded successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      },
+      error: (error) => {
+        console.error('Error downloading template:', error);
+        this.snackBar.open('Failed to download template. Please try again.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
 }

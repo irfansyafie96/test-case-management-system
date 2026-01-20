@@ -20,6 +20,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { TestSuiteDialogComponent } from './test-suite-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component';
+import { ImportDialogComponent } from './import-dialog.component';
 import { Project, TestModule, TestSuite, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
 import { Observable, of, BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
@@ -157,6 +158,45 @@ export class ModuleDetailComponent implements OnInit {
             verticalPosition: 'top'
           });
         }
+      }
+    });
+  }
+
+  openImportDialog(): void {
+    const moduleId = this.route.snapshot.paramMap.get('id');
+    if (!moduleId) {
+      this.snackBar.open('Module ID not found', 'Close', {
+        duration: 3000,
+        panelClass: ['error-snackbar'],
+        horizontalPosition: 'right',
+        verticalPosition: 'top'
+      });
+      return;
+    }
+
+    const dialogRef = this.dialog.open(ImportDialogComponent, {
+      width: '600px',
+      maxWidth: '95vw',
+      data: { moduleId: moduleId }
+    });
+
+    // Subscribe to the success event from the dialog component instance
+    // This allows refreshing the background list immediately while the success modal is still open
+    const subscription = dialogRef.componentInstance.importSuccess.subscribe(() => {
+      this.refreshModuleData();
+      this.snackBar.open('Test cases imported successfully', 'Close', {
+        duration: 3000,
+        panelClass: ['success-snackbar'],
+        horizontalPosition: 'right',
+        verticalPosition: 'top'
+      });
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      subscription.unsubscribe(); // Clean up subscription
+      // If we received a result via close (e.g. user clicked "Done"), refresh again just in case
+      if (result && result.success) {
+        this.refreshModuleData();
       }
     });
   }
