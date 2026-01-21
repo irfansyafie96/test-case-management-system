@@ -364,6 +364,33 @@ export class TcmService {
       );
   }
 
+  // ==================== ADMIN FILTER METHODS ====================
+
+  /**
+   * Get all users in the organization (ADMIN only)
+   * Used for filtering executions by user
+   * @returns Observable<User[]> - Stream of users in organization
+   */
+  getUsersInOrganization(): Observable<User[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/users`)
+      .pipe(
+        map(users => users.map(user => this.transformUserRoles(user))),
+        catchError(this.handleError<User[]>('getUsersInOrganization', []))
+      );
+  }
+
+  /**
+   * Get all modules in the organization (ADMIN only)
+   * Used for filtering executions by module
+   * @returns Observable<TestModule[]> - Stream of modules in organization
+   */
+  getAllModulesInOrganization(): Observable<TestModule[]> {
+    return this.http.get<TestModule[]>(`${this.apiUrl}/admin/modules`)
+      .pipe(
+        catchError(this.handleError<TestModule[]>('getAllModulesInOrganization', []))
+      );
+  }
+
   // ==================== ASSIGNMENT METHODS ====================
 
   /**

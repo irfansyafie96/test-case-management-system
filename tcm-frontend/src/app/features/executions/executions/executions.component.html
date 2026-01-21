@@ -16,6 +16,55 @@
       </div>
     </div>
 
+    <!-- Admin Filters -->
+    <div *ngIf="vm.isAdmin" class="filters-container">
+      <div class="filters-header">
+        <mat-icon>filter_list</mat-icon>
+        <h3>Filter Executions</h3>
+      </div>
+      <div class="filters-row">
+        <!-- Filter by User -->
+        <div class="filter-item">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by User</mat-label>
+            <mat-select [(value)]="selectedUser" (selectionChange)="onFilterChange()">
+              <mat-option value="all">All Users</mat-option>
+              <mat-option *ngFor="let user of vm.filterUsers" [value]="user.id.toString()">
+                {{ user.username }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Filter by Module -->
+        <div class="filter-item">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by Module</mat-label>
+            <mat-select [(value)]="selectedModule" (selectionChange)="onFilterChange()">
+              <mat-option value="all">All Modules</mat-option>
+              <mat-option *ngFor="let module of vm.filterModules" [value]="module.id.toString()">
+                {{ module.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Filter by Status -->
+        <div class="filter-item">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by Status</mat-label>
+            <mat-select [(value)]="selectedStatus" (selectionChange)="onFilterChange()">
+              <mat-option value="all">All Statuses</mat-option>
+              <mat-option value="PENDING">Pending</mat-option>
+              <mat-option value="PASSED">Passed</mat-option>
+              <mat-option value="FAILED">Failed</mat-option>
+              <mat-option value="BLOCKED">Blocked</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
     <!-- Content -->
     <div *ngIf="!vm.loading && !vm.error">
 

@@ -1419,8 +1419,70 @@ public class TcmService {
                     }
                 }
             }
-            
+
             return modules;
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    /**
+     * Get all non-admin users in the current user's organization
+     * Used for admin filtering on execution page
+     * @return List of non-admin users (QA, BA, TESTER)
+     */
+    public List<User> getUsersInOrganization() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+
+            // Only admin users can access this
+            if (!isAdmin(currentUser)) {
+                throw new RuntimeException("Only admin users can access organization users");
+            }
+
+            Organization org = currentUser.getOrganization();
+            if (org == null) {
+                throw new RuntimeException("User does not belong to any organization");
+            }
+
+            return userRepository.findAllNonAdminUsers(org);
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    /**
+     * Get all modules in the current user's organization
+     * Used for admin filtering on execution page
+     * @return List of all modules in the organization
+     */
+    public List<TestModule> getAllModulesInOrganization() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+
+            // Only admin users can access this
+            if (!isAdmin(currentUser)) {
+                throw new RuntimeException("Only admin users can access all organization modules");
+            }
+
+            Organization org = currentUser.getOrganization();
+            if (org == null) {
+                throw new RuntimeException("User does not belong to any organization");
+            }
+
+            // Get all modules in the organization
+            return testModuleRepository.findAll().stream()
+                .filter(module -> module.getProject() != null && module.getProject().getOrganization() != null)
+                .filter(module -> module.getProject().getOrganization().getId().equals(org.getId()))
+                .collect(java.util.stream.Collectors.toList());
         }
         throw new RuntimeException("No authenticated user found");
     }

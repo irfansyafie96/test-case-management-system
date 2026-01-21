@@ -7,16 +7,23 @@ import { MatTableModule } from '@angular/material/table';
 import { RouterModule } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { BehaviorSubject, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, filter } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
-import { TestExecution } from '../../../core/models/project.model';
+import { AuthService } from '../../../core/services/auth.service';
+import { TestExecution, User, TestModule } from '../../../core/models/project.model';
 
 interface ExecutionView {
   loading: boolean;
   error: boolean;
   executions: TestExecution[];
   groupedExecutions: ProjectGroup[];
+  isAdmin: boolean;
+  filterUsers: User[];
+  filterModules: TestModule[];
 }
 
 interface ProjectGroup {
@@ -48,7 +55,10 @@ interface SuiteGroup {
     MatTableModule,
     RouterModule,
     MatProgressSpinnerModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatInputModule
   ],
   templateUrl: './executions.component.html',
   styleUrls: ['./executions.component.css']
@@ -57,15 +67,27 @@ export class ExecutionsComponent implements OnInit {
   private loadingSubject = new BehaviorSubject<boolean>(true);
   private errorSubject = new BehaviorSubject<boolean>(false);
   private executionsSubject = new BehaviorSubject<TestExecution[]>([]);
+  private isAdminSubject = new BehaviorSubject<boolean>(false);
+  private filterUsersSubject = new BehaviorSubject<User[]>([]);
+  private filterModulesSubject = new BehaviorSubject<TestModule[]>([]);
+
+  // Filter state
+  selectedUser: string = 'all';
+  selectedModule: string = 'all';
+  selectedStatus: string = 'all';
 
   vm$ = this.createViewModel();
 
   displayedColumns: string[] = ['testCaseId', 'testCaseTitle', 'status', 'actions'];
 
-  constructor(private tcmService: TcmService) {}
+  constructor(
+    private tcmService: TcmService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     this.loadMyAssignedExecutions();
+    this.loadAdminFilters();
   }
 
   // Helper methods to calculate counts
@@ -82,13 +104,22 @@ export class ExecutionsComponent implements OnInit {
       loading: this.loadingSubject.asObservable(),
       error: this.errorSubject.asObservable(),
       executions: this.executionsSubject.asObservable(),
+      isAdmin: this.isAdminSubject.asObservable(),
+      filterUsers: this.filterUsersSubject.asObservable(),
+      filterModules: this.filterModulesSubject.asObservable(),
     }).pipe(
-      map(({ loading, error, executions }) => ({
-        loading,
-        error,
-        executions,
-        groupedExecutions: this.groupExecutionsByHierarchy(executions)
-      }))
+      map(({ loading, error, executions, isAdmin, filterUsers, filterModules }) => {
+        const filteredExecutions = this.applyFilters(executions);
+        return {
+          loading,
+          error,
+          executions: filteredExecutions,
+          groupedExecutions: this.groupExecutionsByHierarchy(filteredExecutions),
+          isAdmin,
+          filterUsers,
+          filterModules,
+        };
+      })
     );
   }
 
@@ -107,6 +138,59 @@ export class ExecutionsComponent implements OnInit {
         this.loadingSubject.next(false);
       }
     });
+  }
+
+  loadAdminFilters(): void {
+    const currentUser = this.authService.getCurrentUser();
+    const isAdmin = currentUser?.roles?.includes('ADMIN') || false;
+    this.isAdminSubject.next(isAdmin);
+
+    if (isAdmin) {
+      // Load users and modules for filtering
+      this.tcmService.getUsersInOrganization().subscribe({
+        next: (users) => {
+          this.filterUsersSubject.next(users);
+        },
+        error: (error) => {
+          console.error('Error loading users:', error);
+        }
+      });
+
+      this.tcmService.getAllModulesInOrganization().subscribe({
+        next: (modules) => {
+          this.filterModulesSubject.next(modules);
+        },
+        error: (error) => {
+          console.error('Error loading modules:', error);
+        }
+      });
+    }
+  }
+
+  applyFilters(executions: TestExecution[]): TestExecution[] {
+    let filtered = executions;
+
+    // Filter by user
+    if (this.selectedUser !== 'all') {
+      filtered = filtered.filter(e => e.assignedToUser?.id?.toString() === this.selectedUser);
+    }
+
+    // Filter by module
+    if (this.selectedModule !== 'all') {
+      filtered = filtered.filter(e => e.moduleId?.toString() === this.selectedModule);
+    }
+
+    // Filter by status
+    if (this.selectedStatus !== 'all') {
+      filtered = filtered.filter(e => e.overallResult === this.selectedStatus);
+    }
+
+    return filtered;
+  }
+
+  onFilterChange(): void {
+    // Trigger re-filtering by updating the executions subject
+    this.executionsSubject.next(this.executionsSubject.value);
   }
 
   groupExecutionsByHierarchy(executions: TestExecution[]): ProjectGroup[] {

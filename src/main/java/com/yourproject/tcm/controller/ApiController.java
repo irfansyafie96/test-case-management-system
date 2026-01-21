@@ -601,6 +601,43 @@ public class ApiController {
         }
     }
 
+    // ==================== ADMIN FILTER ENDPOINTS ====================
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/users")
+    public ResponseEntity<?> getUsersInOrganization() {
+        try {
+            List<User> users = tcmService.getUsersInOrganization();
+            // Convert to DTOs to avoid serialization issues
+            List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
+                .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getOrganizationName(),
+                    user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+                ))
+                .collect(java.util.stream.Collectors.toList());
+            return new ResponseEntity<>(userDTOs, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving organization users: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/modules")
+    public ResponseEntity<?> getAllModulesInOrganization() {
+        try {
+            List<TestModule> modules = tcmService.getAllModulesInOrganization();
+            List<TestModuleDTO> moduleDTOs = modules.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+            return new ResponseEntity<>(moduleDTOs, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving organization modules: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/testmodules/{moduleId}/regenerate-executions")
     public ResponseEntity<?> regenerateExecutionsForModule(@PathVariable Long moduleId) {
