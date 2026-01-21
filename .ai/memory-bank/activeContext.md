@@ -18,9 +18,12 @@
     - Filter by Module dropdown
     - Filter by Status dropdown (Pending/Passed/Failed/Blocked)
   - **Differentiation**: Admins see all executions in their organization with filtering capabilities, while QA/BA users see only their assigned executions
-- **JPA Auditing Implementation**:
-  - Enabled automatic population of `created_date`, `updated_date`, and `created_by` fields for `Project` entity.
-  - Implemented `AuditorAwareImpl` to fetch current username from Spring Security context.
+  - **Executions Page UI**:
+    - **Filter Dropdowns**: Fixed dropdown panel height (max 250px) and ensured proper width matching by resetting `min-width` on the overlay pane.
+    - **Label Positioning**: Resolved label overlapping issue by removing conflicting manual borders on `.mat-mdc-form-field-flex` and instead styling the native `.mdc-notched-outline` components globally to maintain the Neo-Brutalist look (2px thick borders) while preserving the label notch.
+    - **Styling**: Moved dropdown panel customization to global `styles.css` using `panelClass="filter-select-panel"`.
+  - **JPA Auditing Implementation**:
+    - Enabled automatic population of `created_date`, `updated_date`, and `created_by` fields for `Project` entity.  - Implemented `AuditorAwareImpl` to fetch current username from Spring Security context.
   - Configured via `JpaAuditingConfig`.
 - **Import Dialog Shadow Fix**:
   - Reverted the custom shadow override for the import dialog.

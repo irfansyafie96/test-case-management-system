@@ -27,7 +27,7 @@
         <div class="filter-item">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Filter by User</mat-label>
-            <mat-select [(value)]="selectedUser" (selectionChange)="onFilterChange()">
+            <mat-select [(value)]="selectedUser" (selectionChange)="onFilterChange()" panelClass="filter-select-panel">
               <mat-option value="all">All Users</mat-option>
               <mat-option *ngFor="let user of vm.filterUsers" [value]="user.id.toString()">
                 {{ user.username }}
@@ -40,7 +40,7 @@
         <div class="filter-item">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Filter by Module</mat-label>
-            <mat-select [(value)]="selectedModule" (selectionChange)="onFilterChange()">
+            <mat-select [(value)]="selectedModule" (selectionChange)="onFilterChange()" panelClass="filter-select-panel">
               <mat-option value="all">All Modules</mat-option>
               <mat-option *ngFor="let module of vm.filterModules" [value]="module.id.toString()">
                 {{ module.name }}
@@ -53,7 +53,7 @@
         <div class="filter-item">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Filter by Status</mat-label>
-            <mat-select [(value)]="selectedStatus" (selectionChange)="onFilterChange()">
+            <mat-select [(value)]="selectedStatus" (selectionChange)="onFilterChange()" panelClass="filter-select-panel">
               <mat-option value="all">All Statuses</mat-option>
               <mat-option value="PENDING">Pending</mat-option>
               <mat-option value="PASSED">Passed</mat-option>

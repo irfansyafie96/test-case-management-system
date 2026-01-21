@@ -50,9 +50,6 @@
 }
 
 .filter-field ::ng-deep .mat-mdc-form-field-flex {
-  background-color: var(--paper);
-  border: var(--border-medium);
-  border-radius: var(--radius-sm);
   height: 48px;
   min-height: 48px;
 }
@@ -66,11 +63,9 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--ink);
-  top: 24px;
 }
 
 .filter-field ::ng-deep .mat-mdc-form-field.mat-mdc-form-field-should-float .mat-mdc-form-field-label {
-  top: 8px;
   font-size: 11px;
   color: var(--accent-primary);
 }

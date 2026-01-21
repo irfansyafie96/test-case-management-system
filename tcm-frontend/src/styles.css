@@ -342,3 +342,27 @@ code, .id-badge, .meta-label {
      }
   }
 }
+
+/* Custom Panel for Executions Filters */
+.filter-select-panel .mat-mdc-select-panel {
+  max-height: 250px !important;
+}
+
+/* Ensure the overlay pane doesn't exceed reasonable bounds but matches trigger */
+.filter-select-panel.cdk-overlay-pane {
+  min-width: unset !important;
+}
+
+/* Correct MDC Outline Styling for Neo-Brutalist Look */
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
+  border-width: 2px !important;
+  border-color: var(--ink) !important;
+}
+
+.mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field-appearance-outline.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--accent-primary) !important;
+}
