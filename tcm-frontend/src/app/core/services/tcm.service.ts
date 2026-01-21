@@ -395,10 +395,15 @@ export class TcmService {
    * Get all executions in the organization (ADMIN only)
    * Used for filtering executions by user - returns all executions (not just latest per test case)
    * This allows admins to see all executions assigned to specific users
+   * @param userId Optional user ID to filter by - when provided, only shows executions from modules the user is currently assigned to
    * @returns Observable<TestExecution[]> - Stream of all executions in organization
    */
-  getAllExecutionsInOrganization(): Observable<TestExecution[]> {
-    return this.http.get<TestExecution[]>(`${this.apiUrl}/admin/executions`)
+  getAllExecutionsInOrganization(userId?: number): Observable<TestExecution[]> {
+    let url = `${this.apiUrl}/admin/executions`;
+    if (userId !== undefined && userId !== null) {
+      url += `?userId=${userId}`;
+    }
+    return this.http.get<TestExecution[]>(url)
       .pipe(
         catchError(this.handleError<TestExecution[]>('getAllExecutionsInOrganization', []))
       );

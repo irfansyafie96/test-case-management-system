@@ -123,7 +123,7 @@ export class ExecutionsComponent implements OnInit {
     );
   }
 
-  loadMyAssignedExecutions(): void {
+  loadMyAssignedExecutions(userId?: number): void {
     this.loadingSubject.next(true);
     this.errorSubject.next(false);
 
@@ -131,8 +131,8 @@ export class ExecutionsComponent implements OnInit {
     const isAdmin = currentUser?.roles?.includes('ADMIN') || false;
 
     if (isAdmin) {
-      // Admin: Load all executions in organization for filtering
-      this.tcmService.getAllExecutionsInOrganization().subscribe({
+      // Admin: Load executions in organization, optionally filtered by user
+      this.tcmService.getAllExecutionsInOrganization(userId).subscribe({
         next: (executions) => {
           this.executionsSubject.next(executions);
           this.loadingSubject.next(false);
@@ -189,17 +189,12 @@ export class ExecutionsComponent implements OnInit {
   applyFilters(executions: TestExecution[]): TestExecution[] {
     let filtered = executions;
 
-    // Filter by user
-    if (this.selectedUser !== 'all') {
-      filtered = filtered.filter(e => e.assignedToUserId?.toString() === this.selectedUser);
-    }
-
-    // Filter by module
+    // Filter by module (frontend filtering)
     if (this.selectedModule !== 'all') {
       filtered = filtered.filter(e => e.moduleId?.toString() === this.selectedModule);
     }
 
-    // Filter by status
+    // Filter by status (frontend filtering)
     if (this.selectedStatus !== 'all') {
       filtered = filtered.filter(e => e.overallResult === this.selectedStatus);
     }
@@ -208,8 +203,14 @@ export class ExecutionsComponent implements OnInit {
   }
 
   onFilterChange(): void {
-    // Trigger re-filtering by updating the executions subject
-    this.executionsSubject.next(this.executionsSubject.value);
+    // When user filter changes, reload data from backend to get current module assignments
+    if (this.selectedUser !== 'all') {
+      const userId = parseInt(this.selectedUser, 10);
+      this.loadMyAssignedExecutions(userId);
+    } else {
+      // When user filter is 'all', load all executions
+      this.loadMyAssignedExecutions();
+    }
   }
 
   groupExecutionsByHierarchy(executions: TestExecution[]): ProjectGroup[] {

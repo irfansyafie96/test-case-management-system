@@ -640,9 +640,9 @@ public class ApiController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/executions")
-    public ResponseEntity<?> getAllExecutionsInOrganization() {
+    public ResponseEntity<?> getAllExecutionsInOrganization(@RequestParam(required = false) Long userId) {
         try {
-            List<TestExecutionDTO> executions = tcmService.getAllExecutionsInOrganization();
+            List<TestExecutionDTO> executions = tcmService.getAllExecutionsInOrganization(userId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving organization executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

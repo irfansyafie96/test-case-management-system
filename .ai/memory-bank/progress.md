@@ -11,7 +11,8 @@
   - Admin users see all executions in their organization
   - Filter by User, Module, and Status
   - Differentiated view from QA/BA users (who only see their assigned executions)
-  - **Bug Fixed**: Filtering by assigned user now works correctly - backend returns ALL executions (not just latest per test case), frontend uses correct `assignedToUserId` field
+  - **Bug Fixed 1**: Filtering by assigned user now works correctly - backend returns ALL executions (not just latest per test case), frontend uses correct `assignedToUserId` field
+  - **Bug Fixed 2**: Module assignment filtering - when a user's module assignment is removed, executions from that module are no longer shown. Backend checks user's CURRENT module assignments.
 - **Test Cases Analytics Filtering**:
   - Admin can filter analytics by assigned user
   - Shows all test cases assigned to the user (including pending executions)
@@ -33,4 +34,4 @@
 - **Unit & Integration Tests**: Comprehensive test suite.
 
 ## Current Status
-The core lifecycle is stable and now includes automated data auditing. The UI has been refined for better usability on standard laptop screens, with a focus on maximizing horizontal space where appropriate (e.g., Profile settings). Admin filtering on the execution page and test cases analytics page provides better oversight for managers. Fixed critical bug where filtering by assigned user showed 0 results - now correctly shows all executions and test cases assigned to the filtered user. The system is ready for the development of advanced features.
+The core lifecycle is stable and now includes automated data auditing. The UI has been refined for better usability on standard laptop screens, with a focus on maximizing horizontal space where appropriate (e.g., Profile settings). Admin filtering on the execution page and test cases analytics page provides better oversight for managers. Fixed critical bugs where filtering by assigned user showed 0 results or stale data - now correctly shows executions and test cases based on user's CURRENT module assignments. The system is ready for the development of advanced features.

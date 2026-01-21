@@ -12,14 +12,15 @@
   - **Backend**: Added three new API endpoints for admin filtering:
     - `GET /api/admin/users` - Returns all non-admin users (QA/BA/TESTER) in the organization
     - `GET /api/admin/modules` - Returns all modules in the organization
-    - `GET /api/admin/executions` - Returns ALL executions in organization (not just latest per test case) for user filtering
-  - **Service Layer**: Added `getUsersInOrganization()`, `getAllModulesInOrganization()`, and `getAllExecutionsInOrganization()` methods in `TcmService.java`
+    - `GET /api/admin/executions?userId={id}` - Returns executions filtered by user's current module assignments
+  - **Service Layer**: Added `getUsersInOrganization()`, `getAllModulesInOrganization()`, and `getAllExecutionsInOrganization(userId)` methods in `TcmService.java`
   - **Frontend**: Updated executions component with filter controls (only visible to admin users):
     - Filter by User dropdown
     - Filter by Module dropdown
     - Filter by Status dropdown (Pending/Passed/Failed/Blocked)
   - **Differentiation**: Admins see all executions in their organization with filtering capabilities, while QA/BA users see only their assigned executions
-  - **Bug Fix**: Fixed filtering by assigned user - the backend now returns ALL executions (not just latest per test case) and frontend correctly filters using `assignedToUserId` field
+  - **Bug Fix 1**: Fixed filtering by assigned user - the backend now returns ALL executions (not just latest per test case) and frontend correctly filters using `assignedToUserId` field
+  - **Bug Fix 2**: Fixed module assignment filtering - when a user's module assignment is removed, executions from that module are no longer shown when filtering by that user. Backend now checks user's current module assignments before returning executions.
   - **Executions Page UI**:
     - **Filter Dropdowns**: Fixed dropdown panel height (max 250px) and ensured proper width matching by resetting `min-width` on the overlay pane.
     - **Label Positioning**: Resolved label overlapping issue by removing conflicting manual borders on `.mat-mdc-form-field-flex` and instead styling the native `.mdc-notched-outline` components globally to maintain the Neo-Brutalist look (2px thick borders) while preserving the label notch.
@@ -47,6 +48,7 @@
 
 ## Important Decisions & Considerations
 - **Admin vs QA/BA Behavior**: Admins should have full visibility into team execution progress with filtering capabilities, while QA/BA users only see their assigned executions.
+- **Module Assignment Filtering**: When filtering by user, backend must check user's CURRENT module assignments (not just the execution's assigned_to_user field) to ensure removed assignments don't show stale executions.
 - **DTO Pattern**: Backend uses `TestExecutionDTO` with flattened fields (`assignedToUserId`, `assignedToUsername`) to prevent serialization issues. Frontend must use these fields instead of nested `assignedToUser.id` for filtering.
 - **Auditing**: Always use JPA Auditing (`@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`) for tracking entity metadata instead of manual setting in services.
 - **Responsive Dialogs**: Always use `mat-dialog-content` and `maxHeight` for modals.

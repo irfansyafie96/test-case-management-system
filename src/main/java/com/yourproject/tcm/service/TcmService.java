@@ -1496,9 +1496,10 @@ public class TcmService {
      * Get all test executions in the current user's organization
      * Used for admin filtering on execution page - returns all executions (not just latest per test case)
      * This allows admins to filter by assigned user and see all executions assigned to that user
+     * @param userId Optional user ID to filter by - when provided, only shows executions from modules the user is currently assigned to
      * @return List of all executions in the organization as DTOs
      */
-    public List<TestExecutionDTO> getAllExecutionsInOrganization() {
+    public List<TestExecutionDTO> getAllExecutionsInOrganization(Long userId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated() &&
             !authentication.getPrincipal().equals("anonymousUser")) {
@@ -1521,7 +1522,26 @@ public class TcmService {
             Long orgId = org.getId();
             List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
 
-            // Return all executions as DTOs (no filtering by latest per test case)
+            // If userId is provided, filter by that user's current module assignments
+            if (userId != null) {
+                User filteredUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+                // Get the user's currently assigned module IDs
+                Set<Long> assignedModuleIds = filteredUser.getAssignedTestModules().stream()
+                    .map(com.yourproject.tcm.model.TestModule::getId)
+                    .collect(java.util.stream.Collectors.toSet());
+
+                // Filter executions to only show those from assigned modules
+                allExecutions = allExecutions.stream()
+                    .filter(execution -> {
+                        Long moduleId = execution.getModuleId();
+                        return moduleId != null && assignedModuleIds.contains(moduleId);
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+            }
+
+            // Return filtered executions as DTOs
             return allExecutions.stream()
                 .map(this::convertToDTO)
                 .collect(java.util.stream.Collectors.toList());
