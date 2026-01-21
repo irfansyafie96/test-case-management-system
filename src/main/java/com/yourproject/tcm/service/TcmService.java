@@ -586,9 +586,14 @@ public class TcmService {
                 // Admin seeing all test cases (no user filter)
                 filteredTestCases = allTestCases;
             } else {
-                // Admin filtering by specific user - only show test cases that user has executed
+                // Admin filtering by specific user - show all test cases assigned to that user
+                // (not just executed ones - includes pending executions)
+                Set<Long> userTestCaseIds = allExecutions.stream()
+                    .map(ex -> ex.getTestCase().getId())
+                    .collect(Collectors.toSet());
+                
                 filteredTestCases = allTestCases.stream()
-                    .filter(tc -> executedTestCaseIds.contains(tc.getId()))
+                    .filter(tc -> userTestCaseIds.contains(tc.getId()))
                     .collect(Collectors.toList());
             }
         } else {
@@ -1482,6 +1487,43 @@ public class TcmService {
             return testModuleRepository.findAll().stream()
                 .filter(module -> module.getProject() != null && module.getProject().getOrganization() != null)
                 .filter(module -> module.getProject().getOrganization().getId().equals(org.getId()))
+                .collect(java.util.stream.Collectors.toList());
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    /**
+     * Get all test executions in the current user's organization
+     * Used for admin filtering on execution page - returns all executions (not just latest per test case)
+     * This allows admins to filter by assigned user and see all executions assigned to that user
+     * @return List of all executions in the organization as DTOs
+     */
+    public List<TestExecutionDTO> getAllExecutionsInOrganization() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+
+            // Only admin users can access this
+            if (!isAdmin(currentUser)) {
+                throw new RuntimeException("Only admin users can access all organization executions");
+            }
+
+            Organization org = currentUser.getOrganization();
+            if (org == null) {
+                throw new RuntimeException("User does not belong to any organization");
+            }
+
+            // Get all executions in the organization (not just latest per test case)
+            Long orgId = org.getId();
+            List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
+
+            // Return all executions as DTOs (no filtering by latest per test case)
+            return allExecutions.stream()
+                .map(this::convertToDTO)
                 .collect(java.util.stream.Collectors.toList());
         }
         throw new RuntimeException("No authenticated user found");

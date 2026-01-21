@@ -9,15 +9,17 @@
 
 ## Recent Changes
 - **Admin Execution Filtering Feature**:
-  - **Backend**: Added two new API endpoints for admin filtering:
+  - **Backend**: Added three new API endpoints for admin filtering:
     - `GET /api/admin/users` - Returns all non-admin users (QA/BA/TESTER) in the organization
     - `GET /api/admin/modules` - Returns all modules in the organization
-  - **Service Layer**: Added `getUsersInOrganization()` and `getAllModulesInOrganization()` methods in `TcmService.java`
+    - `GET /api/admin/executions` - Returns ALL executions in organization (not just latest per test case) for user filtering
+  - **Service Layer**: Added `getUsersInOrganization()`, `getAllModulesInOrganization()`, and `getAllExecutionsInOrganization()` methods in `TcmService.java`
   - **Frontend**: Updated executions component with filter controls (only visible to admin users):
     - Filter by User dropdown
     - Filter by Module dropdown
     - Filter by Status dropdown (Pending/Passed/Failed/Blocked)
   - **Differentiation**: Admins see all executions in their organization with filtering capabilities, while QA/BA users see only their assigned executions
+  - **Bug Fix**: Fixed filtering by assigned user - the backend now returns ALL executions (not just latest per test case) and frontend correctly filters using `assignedToUserId` field
   - **Executions Page UI**:
     - **Filter Dropdowns**: Fixed dropdown panel height (max 250px) and ensured proper width matching by resetting `min-width` on the overlay pane.
     - **Label Positioning**: Resolved label overlapping issue by removing conflicting manual borders on `.mat-mdc-form-field-flex` and instead styling the native `.mdc-notched-outline` components globally to maintain the Neo-Brutalist look (2px thick borders) while preserving the label notch.
@@ -45,6 +47,7 @@
 
 ## Important Decisions & Considerations
 - **Admin vs QA/BA Behavior**: Admins should have full visibility into team execution progress with filtering capabilities, while QA/BA users only see their assigned executions.
+- **DTO Pattern**: Backend uses `TestExecutionDTO` with flattened fields (`assignedToUserId`, `assignedToUsername`) to prevent serialization issues. Frontend must use these fields instead of nested `assignedToUser.id` for filtering.
 - **Auditing**: Always use JPA Auditing (`@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`) for tracking entity metadata instead of manual setting in services.
 - **Responsive Dialogs**: Always use `mat-dialog-content` and `maxHeight` for modals.
 - **Design Consistency**: Stick to the established simple Neo-Brutalist theme (bold borders, consistent shadows). For side-by-side cards, always use `align-items: stretch` to maintain visual balance. Ensure all modals use the standard `--shadow-lg` for consistency.

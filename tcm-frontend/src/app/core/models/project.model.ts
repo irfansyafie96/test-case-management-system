@@ -85,6 +85,10 @@ export interface TestExecution {
   title?: string; // Added for display purposes
   assignedToUser?: User; // Added for assignment functionality
   
+  // Flattened fields from backend DTO
+  assignedToUserId?: number;
+  assignedToUsername?: string;
+  
   // Flattened hierarchy fields for easier grouping
   projectId?: number | string;
   projectName?: string;

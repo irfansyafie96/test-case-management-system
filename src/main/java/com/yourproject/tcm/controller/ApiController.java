@@ -638,6 +638,17 @@ public class ApiController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/executions")
+    public ResponseEntity<?> getAllExecutionsInOrganization() {
+        try {
+            List<TestExecutionDTO> executions = tcmService.getAllExecutionsInOrganization();
+            return new ResponseEntity<>(executions, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving organization executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/testmodules/{moduleId}/regenerate-executions")
     public ResponseEntity<?> regenerateExecutionsForModule(@PathVariable Long moduleId) {

@@ -127,17 +127,36 @@ export class ExecutionsComponent implements OnInit {
     this.loadingSubject.next(true);
     this.errorSubject.next(false);
 
-    this.tcmService.getMyAssignedExecutions().subscribe({
-      next: (executions) => {
-        this.executionsSubject.next(executions);
-        this.loadingSubject.next(false);
-      },
-      error: (error) => {
-        console.error('Error loading assigned executions:', error);
-        this.errorSubject.next(true);
-        this.loadingSubject.next(false);
-      }
-    });
+    const currentUser = this.authService.getCurrentUser();
+    const isAdmin = currentUser?.roles?.includes('ADMIN') || false;
+
+    if (isAdmin) {
+      // Admin: Load all executions in organization for filtering
+      this.tcmService.getAllExecutionsInOrganization().subscribe({
+        next: (executions) => {
+          this.executionsSubject.next(executions);
+          this.loadingSubject.next(false);
+        },
+        error: (error) => {
+          console.error('Error loading admin executions:', error);
+          this.errorSubject.next(true);
+          this.loadingSubject.next(false);
+        }
+      });
+    } else {
+      // Non-admin: Load only assigned executions
+      this.tcmService.getMyAssignedExecutions().subscribe({
+        next: (executions) => {
+          this.executionsSubject.next(executions);
+          this.loadingSubject.next(false);
+        },
+        error: (error) => {
+          console.error('Error loading assigned executions:', error);
+          this.errorSubject.next(true);
+          this.loadingSubject.next(false);
+        }
+      });
+    }
   }
 
   loadAdminFilters(): void {
@@ -172,7 +191,7 @@ export class ExecutionsComponent implements OnInit {
 
     // Filter by user
     if (this.selectedUser !== 'all') {
-      filtered = filtered.filter(e => e.assignedToUser?.id?.toString() === this.selectedUser);
+      filtered = filtered.filter(e => e.assignedToUserId?.toString() === this.selectedUser);
     }
 
     // Filter by module
