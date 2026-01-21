@@ -265,58 +265,73 @@ export class ModuleDetailComponent implements OnInit {
   }
 
   editTestCase(testCase: TestCase): void {
-    const dialogRef = this.dialog.open(TestCaseDialogImprovedComponent, {
-      width: '900px', // Wider for better layout
-      maxWidth: '95vw',
-      maxHeight: '90vh',
-      data: testCase // Pass the entire test case object for editing
-    });
+    // Fetch the test case with steps before opening the edit dialog
+    const testCaseId = testCase.id as string;
+    this.tcmService.getTestCase(testCaseId).subscribe({
+      next: (testCaseWithSteps) => {
+        const dialogRef = this.dialog.open(TestCaseDialogImprovedComponent, {
+          width: '900px', // Wider for better layout
+          maxWidth: '95vw',
+          maxHeight: '90vh',
+          data: testCaseWithSteps // Pass the test case with steps for editing
+        });
 
-    dialogRef.afterClosed().subscribe(async result => {
-      if (result) {
-        this.loadingSubject.next(true); // Show loading indicator
-        
-        // Wait for authentication to be synchronized before making the API call
-        try {
-          await this.tcmService.waitForAuthSync();
-          // Use the ID from the original test case if editing, or from the result
-          const testCaseId = testCase.id as string;
-          this.tcmService.updateTestCase(testCaseId, result).subscribe({
-            next: (updatedTestCase) => {
-              // Refresh the module data to show changes
-              this.refreshModuleData();
-            },
-            error: (error) => {
-              this.loadingSubject.next(false); // Hide loading indicator
-              
-              // Check if this is a CSRF token issue
-              if (error.isCsrfTokenIssue) {
-                this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
-                  duration: 5000,
-                  panelClass: ['warning-snackbar'],
-                  horizontalPosition: 'right',
-                  verticalPosition: 'top'
-                });
-              } else {
-                this.snackBar.open('Failed to update test case. Please try again.', 'CLOSE', {
-                  duration: 5000,
-                  panelClass: ['error-snackbar'],
-                  horizontalPosition: 'right',
-                  verticalPosition: 'top'
-                });
-              }
+        dialogRef.afterClosed().subscribe(async result => {
+          if (result) {
+            this.loadingSubject.next(true); // Show loading indicator
+            
+            // Wait for authentication to be synchronized before making the API call
+            try {
+              await this.tcmService.waitForAuthSync();
+              // Use the ID from the original test case if editing, or from the result
+              const testCaseId = testCase.id as string;
+              this.tcmService.updateTestCase(testCaseId, result).subscribe({
+                next: (updatedTestCase) => {
+                  // Refresh the module data to show changes
+                  this.refreshModuleData();
+                },
+                error: (error) => {
+                  this.loadingSubject.next(false); // Hide loading indicator
+                  
+                  // Check if this is a CSRF token issue
+                  if (error.isCsrfTokenIssue) {
+                    this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
+                      duration: 5000,
+                      panelClass: ['warning-snackbar'],
+                      horizontalPosition: 'right',
+                      verticalPosition: 'top'
+                    });
+                  } else {
+                    this.snackBar.open('Failed to update test case. Please try again.', 'CLOSE', {
+                      duration: 5000,
+                      panelClass: ['error-snackbar'],
+                      horizontalPosition: 'right',
+                      verticalPosition: 'top'
+                    });
+                  }
+                }
+              });
+            } catch (syncError) {
+              console.error('Authentication sync error:', syncError);
+              this.loadingSubject.next(false);
+              this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
+                duration: 5000,
+                panelClass: ['error-snackbar'],
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
+              });
             }
-          });
-        } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
-          this.loadingSubject.next(false);
-          this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
-            duration: 5000,
-            panelClass: ['error-snackbar'],
-            horizontalPosition: 'right',
-            verticalPosition: 'top'
-          });
-        }
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Error loading test case for editing:', error);
+        this.snackBar.open('Failed to load test case. Please try again.', 'CLOSE', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
       }
     });
   }

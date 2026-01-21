@@ -110,6 +110,18 @@ public class ApiController {
     }
 
     private TestCaseDTO convertToDTO(TestCase c) {
+        List<TestCaseDTO.TestStepDTO> stepDTOs = null;
+        if (c.getTestSteps() != null) {
+            stepDTOs = c.getTestSteps().stream()
+                .map(step -> new TestCaseDTO.TestStepDTO(
+                    step.getId(),
+                    step.getStepNumber(),
+                    step.getAction(),
+                    step.getExpectedResult()
+                ))
+                .collect(java.util.stream.Collectors.toList());
+        }
+
         return new TestCaseDTO(
             c.getId(),
             c.getTestCaseId(),
@@ -119,7 +131,8 @@ public class ApiController {
             c.getTestSuiteName(),
             c.getModuleName(),
             c.getProjectName(),
-            c.getTestSteps() != null ? c.getTestSteps().size() : 0
+            c.getTestSteps() != null ? c.getTestSteps().size() : 0,
+            stepDTOs
         );
     }
 

@@ -20,7 +20,7 @@
     - Filter by Status dropdown (Pending/Passed/Failed/Blocked)
   - **Differentiation**: Admins see all executions in their organization with filtering capabilities, while QA/BA users see only their assigned executions
   - **Bug Fix 1**: Fixed filtering by assigned user - the backend now returns ALL executions (not just latest per test case) and frontend correctly filters using `assignedToUserId` field
-  - **Bug Fix 2**: Fixed module assignment filtering - when a user's module assignment is removed, executions from that module are no longer shown when filtering by that user. Backend now checks user's current module assignments before returning executions.
+  - **Bug Fix 2**: Fixed module assignment filtering - when a user's module assignment is removed, executions from that module are no longer shown when filtering by that user. Backend now checks user's current module assignments.
   - **Executions Page UI**:
     - **Filter Dropdowns**: Fixed dropdown panel height (max 250px) and ensured proper width matching by resetting `min-width` on the overlay pane.
     - **Label Positioning**: Resolved label overlapping issue by removing conflicting manual borders on `.mat-mdc-form-field-flex` and instead styling the native `.mdc-notched-outline` components globally to maintain the Neo-Brutalist look (2px thick borders) while preserving the label notch.
@@ -28,6 +28,12 @@
   - **JPA Auditing Implementation**:
     - Enabled automatic population of `created_date`, `updated_date`, and `created_by` fields for `Project` entity.  - Implemented `AuditorAwareImpl` to fetch current username from Spring Security context.
   - Configured via `JpaAuditingConfig`.
+- **Test Case Edit Fix**:
+  - **Backend**: Added `testSteps` field to `TestCaseDTO` with inner `TestStepDTO` class to include step data in API responses
+  - **Backend**: Updated `convertToDTO()` method in `ApiController` to convert test steps to DTO format
+  - **Backend**: Added `entityManager.flush()` after saving test case during import to ensure steps are persisted to database
+  - **Frontend**: Modified `editTestCase()` in `ModuleDetailComponent` to fetch test case with steps before opening edit dialog
+  - **Bug Fixed**: Test case edit dialog now correctly displays test steps (actions and expected results) for imported test cases
 - **Import Dialog Shadow Fix**:
   - Reverted the custom shadow override for the import dialog.
   - It now uses the standard global `--shadow-lg` (12px) deep shadow, ensuring visual consistency with all other application modals.
@@ -49,7 +55,8 @@
 ## Important Decisions & Considerations
 - **Admin vs QA/BA Behavior**: Admins should have full visibility into team execution progress with filtering capabilities, while QA/BA users only see their assigned executions.
 - **Module Assignment Filtering**: When filtering by user, backend must check user's CURRENT module assignments (not just the execution's assigned_to_user field) to ensure removed assignments don't show stale executions.
-- **DTO Pattern**: Backend uses `TestExecutionDTO` with flattened fields (`assignedToUserId`, `assignedToUsername`) to prevent serialization issues. Frontend must use these fields instead of nested `assignedToUser.id` for filtering.
+- **DTO Pattern**: Backend uses DTOs with flattened fields to prevent serialization issues. `TestCaseDTO` now includes `testSteps` to ensure edit dialog displays step data.
+- **Eager Fetching**: When editing entities, always fetch related data (like test steps) from backend rather than using cached incomplete data from lists.
 - **Auditing**: Always use JPA Auditing (`@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`) for tracking entity metadata instead of manual setting in services.
 - **Responsive Dialogs**: Always use `mat-dialog-content` and `maxHeight` for modals.
 - **Design Consistency**: Stick to the established simple Neo-Brutalist theme (bold borders, consistent shadows). For side-by-side cards, always use `align-items: stretch` to maintain visual balance. Ensure all modals use the standard `--shadow-lg` for consistency.

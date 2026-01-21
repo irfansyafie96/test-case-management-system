@@ -17,6 +17,10 @@
   - Admin can filter analytics by assigned user
   - Shows all test cases assigned to the user (including pending executions)
   - **Bug Fixed**: Analytics now correctly shows test cases based on user assignments
+- **Test Case Editing**:
+  - Edit dialog correctly displays test steps (actions and expected results)
+  - **Bug Fixed**: Frontend now fetches test case with steps from backend before opening edit dialog, ensuring imported test cases show their steps
+  - Backend DTO now includes testSteps field for proper serialization
 - **Frontend Components**:
   - **Profile Page**: Polished UI with responsive side-by-side layout for settings.
   - **Import Modal**: Responsive, scrollable, and clean UI.
@@ -34,4 +38,4 @@
 - **Unit & Integration Tests**: Comprehensive test suite.
 
 ## Current Status
-The core lifecycle is stable and now includes automated data auditing. The UI has been refined for better usability on standard laptop screens, with a focus on maximizing horizontal space where appropriate (e.g., Profile settings). Admin filtering on the execution page and test cases analytics page provides better oversight for managers. Fixed critical bugs where filtering by assigned user showed 0 results or stale data - now correctly shows executions and test cases based on user's CURRENT module assignments. The system is ready for the development of advanced features.
+The core lifecycle is stable and now includes automated data auditing. The UI has been refined for better usability on standard laptop screens, with a focus on maximizing horizontal space where appropriate (e.g., Profile settings). Admin filtering on the execution page and test cases analytics page provides better oversight for managers. Fixed critical bugs where filtering by assigned user showed 0 results or stale data - now correctly shows executions and test cases based on user's CURRENT module assignments. Fixed test case editing issue where imported test cases didn't show their steps - now correctly fetches and displays test steps in edit dialog. The system is ready for the development of advanced features.

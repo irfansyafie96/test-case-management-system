@@ -1796,6 +1796,7 @@ public class TcmService {
                 testCase.setTestSteps(testSteps);
 
                 testCase = testCaseRepository.save(testCase);
+                entityManager.flush(); // Ensure steps are persisted to database
                 testCasesCreated++;
 
                 // Auto-generate executions for assigned users
