@@ -45,24 +45,27 @@
             <mat-card-title>Metadata</mat-card-title>
           </mat-card-header>
           <div class="key-value-grid">
-            <div class="kv-item">
-              <label>Status</label>
-              <span class="status-badge" [class.status-draft]="testCase.status === 'DRAFT'" [class.status-active]="testCase.status === 'ACTIVE'">
-                {{ testCase.status || 'DRAFT' }}
-              </span>
+            <!-- Hierarchy Context -->
+            <div class="kv-item" *ngIf="testCase.projectName">
+               <label>Project</label>
+               <span class="data-text">{{ testCase.projectName }}</span>
             </div>
-            <!-- Created By not yet available in API -->
-            <!-- <div class="kv-item">
-              <label>Created By</label>
-              <span class="data-text">Admin User</span>
-            </div> -->
-            <div class="kv-item">
-              <label>Date</label>
-              <span class="data-text">{{ testCase.createdDate | date:'mediumDate' }}</span>
+            <div class="kv-item" *ngIf="testCase.moduleName">
+               <label>Module</label>
+               <span class="data-text">{{ testCase.moduleName }}</span>
             </div>
-            <div class="kv-item" *ngIf="testCase.suiteId">
-               <label>Suite ID</label>
-               <span class="data-text">{{ testCase.suiteId }}</span>
+            <div class="kv-item" *ngIf="testCase.testSuiteName || testCase.suiteId">
+               <label>Suite</label>
+               <span class="data-text">{{ testCase.testSuiteName || testCase.suiteId }}</span>
+            </div>
+
+            <div class="kv-item" *ngIf="testCase.tags && testCase.tags.length > 0">
+               <label>Tags</label>
+               <div class="tags-list">
+                 <mat-chip-set>
+                   <mat-chip *ngFor="let tag of testCase.tags">{{ tag }}</mat-chip>
+                 </mat-chip-set>
+               </div>
             </div>
           </div>
         </mat-card>
@@ -70,51 +73,53 @@
 
       <!-- Right Column: Content -->
       <div class="content-column">
-         <mat-card class="spec-card">
-           <div class="section">
-             <h2>Title</h2>
-             <p class="lead-text">{{ testCase.title }}</p>
+         <mat-card class="spec-card content-spec-card">
+           <div class="spec-section">
+             <div class="spec-label">Title</div>
+             <div class="spec-value">
+               <p class="lead-text">{{ testCase.title }}</p>
+             </div>
            </div>
            
-           <mat-divider></mat-divider>
-           
-           <div class="section">
-             <h2>Description</h2>
-             <p class="body-text">
-               {{ testCase.description || 'No description provided.' }}
-             </p>
+           <div class="spec-section">
+             <div class="spec-label">Description</div>
+             <div class="spec-value">
+               <p class="body-text">
+                 {{ testCase.description || 'No description provided.' }}
+               </p>
+             </div>
            </div>
 
-           <mat-divider *ngIf="testCase.prerequisites"></mat-divider>
-
-           <div class="section" *ngIf="testCase.prerequisites">
-             <h2>Pre-conditions</h2>
-             <p class="body-text">{{ testCase.prerequisites }}</p>
+           <div class="spec-section" *ngIf="testCase.prerequisites">
+             <div class="spec-label">Pre-conditions</div>
+             <div class="spec-value">
+               <p class="body-text">{{ testCase.prerequisites }}</p>
+             </div>
            </div>
 
-           <mat-divider></mat-divider>
-
-           <div class="section">
-             <h2>Steps</h2>
-             <div class="step-list" *ngIf="testCase.testSteps && testCase.testSteps.length > 0; else noSteps">
-               <div class="step-item" *ngFor="let step of testCase.testSteps">
-                 <div class="step-number">{{ step.stepNumber | number:'2.0' }}</div>
-                 <div class="step-content">
-                   <strong>{{ step.action }}</strong>
-                   <p>{{ step.expectedResult }}</p>
+           <div class="spec-section">
+             <div class="spec-label">Test Steps</div>
+             <div class="spec-value">
+               <div class="step-list" *ngIf="testCase.testSteps && testCase.testSteps.length > 0; else noSteps">
+                 <div class="step-item" *ngFor="let step of testCase.testSteps">
+                   <div class="step-number">{{ step.stepNumber | number:'2.0' }}</div>
+                   <div class="step-content">
+                     <strong>{{ step.action }}</strong>
+                     <p>{{ step.expectedResult }}</p>
+                   </div>
                  </div>
                </div>
+               <ng-template #noSteps>
+                  <p class="no-data">No steps defined for this test case.</p>
+               </ng-template>
              </div>
-             <ng-template #noSteps>
-                <p class="no-data">No steps defined for this test case.</p>
-             </ng-template>
            </div>
 
-           <mat-divider *ngIf="testCase.expectedResult"></mat-divider>
-
-           <div class="section" *ngIf="testCase.expectedResult">
-             <h2>Expected Result</h2>
-             <p class="result-text">{{ testCase.expectedResult }}</p>
+           <div class="spec-section" *ngIf="testCase.expectedResult">
+             <div class="spec-label">Final Result</div>
+             <div class="spec-value">
+               <p class="result-text">{{ testCase.expectedResult }}</p>
+             </div>
            </div>
          </mat-card>
       </div>

@@ -8,6 +8,15 @@
 - Stabilizing the application for production-readiness.
 
 ## Recent Changes
+- **Test Case Detail Page Improvements**:
+  - **Fixed Metadata Border**: Added `overflow: hidden` to `.spec-card` to prevent the header background from clipping the border radius.
+  - **Enhanced Information Display**: Added Project, Module, and Suite names to the metadata section using flattened DTO fields (`projectName`, `moduleName`, `testSuiteName`) for better context.
+  - **Metadata Refinement**: Removed 'Status' and 'Date' fields. Added structural dividers to the metadata card for better organization.
+  - **Specification Grid Layout**: Reimagined the content card as a structured grid with a dedicated "Label" column on the left and "Value" column on the right, separated by the system's thin borders.
+  - **Typography Refinement**: Darkened the step numbers (`#888`) to ensure they are clearly legible while remaining secondary to the step content.
+  - **Visual Cleanup**: Removed orange side-borders and blue backgrounds to stick to a more professional, neutral palette that relies on typography and structural lines.
+  - **Static Cards**: Removed hover effects (transform and shadow change) from the specification cards to maintain a more stable, documentation-like feel.
+  - **Tags Support**: Added display for test case tags if available.
 - **Admin Execution Filtering Feature**:
   - **Backend**: Added three new API endpoints for admin filtering:
     - `GET /api/admin/users` - Returns all non-admin users (QA/BA/TESTER) in the organization
