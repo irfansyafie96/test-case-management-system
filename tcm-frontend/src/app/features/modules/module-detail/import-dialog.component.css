@@ -105,9 +105,9 @@ h1[mat-dialog-title] {
   background: #eee;
   border-radius: 50%;
   display: flex;
+  margin: 12px auto;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
 }
 
 .icon-circle mat-icon {
