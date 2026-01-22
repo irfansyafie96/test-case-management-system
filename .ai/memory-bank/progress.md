@@ -26,7 +26,7 @@
   - **Import Modal**: Responsive, scrollable, and clean UI.
   - **Executions Page**: Admin filtering with dropdown controls, improved label visibility and sizing.
   - **Test Cases Page**: Analytics with user filtering for admin users.
-  - **Test Case Detail Page**: Polished architectural layout using the "Specification Grid" pattern, improved metadata hierarchy, and refined typography.
+  - **Test Case Detail Page**: Polished architectural layout using the "Specification Grid" pattern, improved metadata hierarchy, and refined typography. Edit and Execute buttons are now functional - Edit opens the edit modal directly, Execute navigates to the executions page.
   - Dashboard, Project/Module details, Execution Workbench.
 - **UI/UX**: Neo-Brutalist design, responsive layouts.
 

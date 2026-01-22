@@ -56,6 +56,12 @@
   - **Visuals**: Added a "Template Card" for better visibility of the download action and a modern dashed-border upload zone with icon circles.
   - **Feedback**: Implemented a results grid for success (stats for suites/test cases) and a structured error list for failed imports.
   - **Sizing**: Maintained the optimized 500px width and 90vh maxHeight for laptop compatibility.
+- **Import Dialog CSS Consistency**:
+  - **CSS Property Reordering**: Moved `margin: 12px auto` property before `align-items` in `.icon-circle` selector and removed redundant `margin-bottom: 12px` for better CSS property organization and consistency.
+- **Test Case Detail Page Button Functionality**:
+  - **Edit Button**: Now opens the edit modal directly (using `TestCaseDialogImprovedComponent`) with full test case data including steps. After saving, the detail page refreshes to show updated data.
+  - **Execute Button**: Now navigates to the executions page (`/executions`) where users can execute test cases.
+  - **Implementation**: Added `MatDialog`, `MatSnackBar`, and `Router` imports. Added `editTestCase()` and `navigateToExecutions()` methods. Includes CSRF token synchronization and error handling with success/error snackbars.
 
 ## Next Steps
 - **Advanced Reporting**: Start planning the reporting dashboard (charts, metrics).

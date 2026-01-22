@@ -27,10 +27,10 @@
            <h1>Test Case Specification</h1>
         </div>
         <div class="header-actions">
-          <button mat-stroked-button *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+          <button mat-stroked-button *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])" (click)="editTestCase()">
             <mat-icon>edit</mat-icon> EDIT
           </button>
-          <button mat-raised-button color="primary">
+          <button mat-raised-button color="primary" (click)="navigateToExecutions()">
             <mat-icon>play_arrow</mat-icon> EXECUTE
           </button>
         </div>
