@@ -8,6 +8,15 @@
 - Stabilizing the application for production-readiness.
 
 ## Recent Changes
+- **Frontend Status Normalization Fix**:
+  - **Issue**: 400 Bad Request errors when typing in actual result field due to invalid status values ("NOT_EXECUTED") from legacy database data
+  - **Root Cause**: Backend `@Pattern` validation rejects invalid status values before normalization code runs
+  - **Fix Applied**: Added status normalization in frontend `loadExecution()` and `updateStepResult()` methods
+  - **Frontend**: Normalize invalid step status values to "PENDING" when loading executions
+  - **Frontend**: Normalize status values before sending to backend in `updateStepResult()`
+  - **Frontend**: Fixed overallResult validation to only accept valid completion statuses (PASSED, FAILED, BLOCKED, PARTIALLY_PASSED)
+  - **Frontend**: Buttons remain disabled when overallResult is empty or invalid
+  - **Backward Compatibility**: Maintains compatibility with legacy data by normalizing invalid values in frontend before API calls
 - **Step Result Update Fix**:
   - **Issue**: 400/404 errors when updating step results via `PUT /api/executions/{executionId}/steps/{stepResultId}`
   - **Root Cause**: Confusion between stepResultId and testStepId - frontend was sending stepResultId but backend expected testStepId
