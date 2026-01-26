@@ -1405,9 +1405,16 @@ public class TcmService {
                 .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
 
             List<TestModule> modules;
-            // If user is ADMIN, return all modules
+            // If user is ADMIN, return all modules in their organization
             if (isAdmin(user)) {
-                modules = testModuleRepository.findAll();
+                Organization org = user.getOrganization();
+                if (org == null) {
+                    throw new RuntimeException("User does not belong to any organization");
+                }
+                modules = testModuleRepository.findAll().stream()
+                    .filter(module -> module.getProject() != null && module.getProject().getOrganization() != null)
+                    .filter(module -> module.getProject().getOrganization().getId().equals(org.getId()))
+                    .collect(java.util.stream.Collectors.toList());
             } else {
                 // Otherwise return modules where user is assigned OR user is assigned to project
                 modules = testModuleRepository.findTestModulesAssignedToUser(user.getId());
