@@ -7,6 +7,11 @@
 - **Core Models**: Full hierarchy working with automated auditing (created/updated dates).
 - **Test Case Import**: Excel-based import with structured UI, drag-and-drop, and success/error metrics.
 - **Deletion Features**: Fully functional cascading deletions.
+- **Organization Data Isolation**:
+  - **Security Fix**: Prevented cross-organization data leakage in module listing
+  - Admin users now only see modules from their own organization
+  - Backend filters modules by organization ID in `getTestModulesAssignedToCurrentUser()` method
+  - Added null safety check for user organization
 - **Admin Execution Filtering**:
   - Admin users see all executions in their organization
   - Filter by User, Module, and Status
@@ -16,7 +21,8 @@
 - **Test Cases Analytics Filtering**:
   - Admin can filter analytics by assigned user
   - Shows all test cases assigned to the user (including pending executions)
-  - **Bug Fixed**: Analytics now correctly shows test cases based on user assignments
+  - **Bug Fixed 1**: Analytics now correctly shows test cases based on user assignments
+  - **Bug Fixed 2**: Passed/failed counts now display correctly in both main cards and project/module breakdown. Fixed result value comparison from "Pass"/"Fail" to "PASSED"/"FAILED" to match frontend/backend data format
 - **Test Case Editing**:
   - Edit dialog correctly displays test steps (actions and expected results)
   - **Bug Fixed**: Frontend now fetches test case with steps from backend before opening edit dialog, ensuring imported test cases show their steps
@@ -27,7 +33,17 @@
   - **Executions Page**: Admin filtering with dropdown controls, improved label visibility and sizing.
   - **Test Cases Page**: Analytics with user filtering for admin users.
   - **Test Case Detail Page**: Polished architectural layout using the "Specification Grid" pattern, improved metadata hierarchy, and refined typography. Edit and Execute buttons are now functional - Edit opens the edit modal directly, Execute navigates to the executions page.
-  - Dashboard, Project/Module details, Execution Workbench.
+  - **Execution Workbench**: Enhanced with hierarchical navigation, improved step display, and validation
+    - **Hierarchical Navigation**: Next Test Case button navigates by Module → Suite → Test Case order
+    - **Module Completion Notification**: Shows toast when crossing module boundaries
+    - **Completion Summary Dialog**: Displays statistics when all executions are complete
+    - **Test Suite Display**: Added test suite name to information card for better context
+    - **Bug Fixed 1**: Execution steps now correctly display action and expected result (was showing "Action not specified" and "Expected result not specified")
+    - **Bug Fixed 2**: Added client-side validation to prevent completing execution without selecting overall result - shows clear error message to users
+    - **Snackbar Positioning**: All snackbars now consistently positioned at top right
+    - **Bug Fixed 3**: Step result updates now work correctly by using `testStepId` instead of `stepResultId`
+    - **Status Normalization**: Backend automatically converts invalid status values (NOT_EXECUTED, Pass, Fail) to PENDING for backward compatibility
+  - Dashboard, Project/Module details.
 - **UI/UX**: Neo-Brutalist design, responsive layouts.
 
 ## What's Left to Build / Improvements
@@ -39,4 +55,4 @@
 - **Unit & Integration Tests**: Comprehensive test suite.
 
 ## Current Status
-The core lifecycle is stable and now includes automated data auditing. The UI has been refined for better usability on standard laptop screens, with a focus on maximizing horizontal space where appropriate (e.g., Profile settings). Admin filtering on the execution page and test cases analytics page provides better oversight for managers. Fixed critical bugs where filtering by assigned user showed 0 results or stale data - now correctly shows executions and test cases based on user's CURRENT module assignments. Fixed test case editing issue where imported test cases didn't show their steps - now correctly fetches and displays test steps in edit dialog. The system is ready for the development of advanced features.
+The core lifecycle is stable and now includes automated data auditing. The UI has been refined for better usability on standard laptop screens, with a focus on maximizing horizontal space where appropriate (e.g., Profile settings). Admin filtering on the execution page and test cases analytics page provides better oversight for managers. Fixed critical bugs where filtering by assigned user showed 0 results or stale data - now correctly shows executions and test cases based on user's CURRENT module assignments. Fixed test case editing issue where imported test cases didn't show their steps - now correctly fetches and displays test steps in edit dialog. Fixed critical security issue where admin users could see modules from other organizations - now properly isolates data by organization. Fixed analytics display issue where passed/failed counts showed 0 due to incorrect result value comparison - now correctly displays passed/failed counts in both main cards and breakdown. Enhanced execution workbench with hierarchical navigation, module completion notifications, completion summary dialog, improved step display, and validation - now provides better context, smoother workflow, and prevents user errors. Fixed step result update failures by correctly using `testStepId` instead of `stepResultId` and adding status normalization for backward compatibility with legacy data. The system is ready for the development of advanced features.

@@ -8,6 +8,55 @@
 - Stabilizing the application for production-readiness.
 
 ## Recent Changes
+- **Step Result Update Fix**:
+  - **Issue**: 400/404 errors when updating step results via `PUT /api/executions/{executionId}/steps/{stepResultId}`
+  - **Root Cause**: Confusion between stepResultId and testStepId - frontend was sending stepResultId but backend expected testStepId
+  - **Fix Applied**: Added `testStepId` field to `TestStepResultDTO` and updated backend DTO conversion
+  - **Backend**: Added `testStepId` field to `TestExecutionDTO.TestStepResultDTO` inner class
+  - **Backend**: Updated `getTestExecutionById` endpoint to include testStepId in step results
+  - **Frontend**: Updated `project.model.ts` to include `testStepId` in `TestStepResult` interface
+  - **Frontend**: Modified `execution-workbench.component.ts` to send `testStepId` instead of `stepResult.id` when updating step results
+- **Status Normalization Feature**:
+  - **Issue**: Old database data has invalid status values ("NOT_EXECUTED", "Pass", "Fail") causing validation failures
+  - **Fix Applied**: Added status normalization in backend to convert invalid values to "PENDING"
+  - **Backend**: Added normalization logic in `ApiController.java` step result update endpoint
+  - **Backend**: Added normalization logic in `ApiController.java` execution complete endpoint
+  - **Backward Compatibility**: Maintains compatibility with legacy data while ensuring new data uses correct uppercase values
+  - **Valid Status Values**: PASSED, FAILED, BLOCKED, PENDING (uppercase only)
+- **Execution Workbench Validation Fix**:
+  - **Issue**: Users could click "Complete Execution" or "Next Test Case" without selecting an overall result, causing 400 Bad Request errors
+  - **Fix Applied**: Added client-side validation to check overallResult before API call
+  - **Frontend**: Added validation in `completeExecution()` and `completeAndNextExecution()` methods
+  - **Error Messages**: Display clear error message "Please select an overall result (Pass, Fail, or Blocked) before completing the execution."
+  - **Error Handling**: Added user-friendly error message in `completeExecution()` error handler
+  - **Snackbar Positioning**: Positioned all snackbars at top right for consistency with other components
+- **Execution Workbench Enhancements**:
+  - **Hierarchical Navigation**: Implemented Next Test Case button navigation based on hierarchy (Module → Suite → Test Case ID)
+  - **Module Completion Notification**: Shows toast message "Module [Name] completed!" when crossing module boundaries
+  - **Completion Summary Dialog**: Created new dialog displaying execution statistics (total, passed, failed, blocked, pending) when all executions are done
+  - **Backend**: Added `CompletionSummaryDTO` and `getCompletionSummaryForCurrentUser()` method
+  - **Backend**: Added `GET /api/executions/summary` endpoint
+  - **Backend**: Added `TestStepResultDTO` inner class in `TestExecutionDTO` to include action and expected result fields
+  - **Backend**: Updated `getTestExecutionById` endpoint to return DTO with step results
+  - **Frontend**: Created `completion-summary-dialog.component.ts/html/css`
+  - **Frontend**: Added test suite name to information card for better context
+  - **Frontend**: Removed progress indicator card (was redundant with suite name display)
+  - **Bug Fixed**: Execution steps now correctly display action and expected result (was showing "Action not specified" and "Expected result not specified")
+- **Test Analytics Passed/Failed Count Fix**:
+  - **Issue**: Analytics cards showed executed/not executed counts correctly, but passed/failed counts remained at 0
+  - **Root Cause**: Backend was comparing execution results as "Pass"/"Fail" (title case) but frontend sends/stores them as "PASSED"/"FAILED" (uppercase)
+  - **Fix Applied**: Updated result value comparison in `getTestAnalytics()` method to use correct uppercase values
+  - **Backend**: Fixed three locations in `TcmService.java`:
+    - Overall KPIs calculation (line 636-644)
+    - Project breakdown calculation (line 684-688)
+    - Module breakdown calculation (line 697-701)
+  - **Result**: Analytics now correctly display passed/failed counts in both main cards and project/module breakdown
+- **Cross-Organization Data Leakage Fix**:
+  - **Security Issue**: Fixed critical bug where admin users could see modules from other organizations when accessing `/modules` page
+  - **Root Cause**: `getTestModulesAssignedToCurrentUser()` method returned ALL modules for admin users without organization filtering
+  - **Fix Applied**: Added organization filtering for admin users - now only returns modules from their own organization using stream filters
+  - **Backend**: Modified `TcmService.java:1415-1424` to filter modules by organization ID before returning to admin users
+  - **Safety**: Added null check for user organization to prevent NPE
 - **Test Case Detail Page Improvements**:
   - **Fixed Metadata Border**: Added `overflow: hidden` to `.spec-card` to prevent the header background from clipping the border radius.
   - **Enhanced Information Display**: Added Project, Module, and Suite names to the metadata section using flattened DTO fields (`projectName`, `moduleName`, `testSuiteName`) for better context.
@@ -75,3 +124,5 @@
 - **Auditing**: Always use JPA Auditing (`@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`) for tracking entity metadata instead of manual setting in services.
 - **Responsive Dialogs**: Always use `mat-dialog-content` and `maxHeight` for modals.
 - **Design Consistency**: Stick to the established simple Neo-Brutalist theme (bold borders, consistent shadows). For side-by-side cards, always use `align-items: stretch` to maintain visual balance. Ensure all modals use the standard `--shadow-lg` for consistency.
+- **Step Result IDs**: When updating step results, use `testStepId` (ID of the test step) not `stepResultId` (ID of the step result record). Backend endpoint is `PUT /api/executions/{executionId}/steps/{testStepId}`.
+- **Status Values**: Always use uppercase status values (PASSED, FAILED, BLOCKED, PENDING) for consistency. Normalize invalid values in backend for backward compatibility.
