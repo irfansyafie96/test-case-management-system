@@ -633,9 +633,9 @@ public class TcmService {
         long failedCount = 0;
 
         for (String result : latestExecutionResults.values()) {
-            if ("Pass".equalsIgnoreCase(result)) {
+            if ("PASSED".equalsIgnoreCase(result)) {
                 passedCount++;
-            } else if ("Fail".equalsIgnoreCase(result)) {
+            } else if ("FAILED".equalsIgnoreCase(result)) {
                 failedCount++;
             }
         }
@@ -681,9 +681,9 @@ public class TcmService {
             if (isExecuted) {
                 pStats.setExecutedCount(pStats.getExecutedCount() + 1);
                 String result = latestExecutionResults.get(testCase.getId());
-                if ("Pass".equalsIgnoreCase(result)) {
+                if ("PASSED".equalsIgnoreCase(result)) {
                     pStats.setPassedCount(pStats.getPassedCount() + 1);
-                } else if ("Fail".equalsIgnoreCase(result)) {
+                } else if ("FAILED".equalsIgnoreCase(result)) {
                     pStats.setFailedCount(pStats.getFailedCount() + 1);
                 }
             } else {
@@ -697,9 +697,9 @@ public class TcmService {
             if (isExecuted) {
                 mStats.setExecutedCount(mStats.getExecutedCount() + 1);
                 String result2 = latestExecutionResults.get(testCase.getId());
-                if ("Pass".equalsIgnoreCase(result2)) {
+                if ("PASSED".equalsIgnoreCase(result2)) {
                     mStats.setPassedCount(mStats.getPassedCount() + 1);
-                } else if ("Fail".equalsIgnoreCase(result2)) {
+                } else if ("FAILED".equalsIgnoreCase(result2)) {
                     mStats.setFailedCount(mStats.getFailedCount() + 1);
                 }
             } else {
