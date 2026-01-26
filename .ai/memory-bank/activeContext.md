@@ -1,11 +1,30 @@
 # Active Context: Test Case Management (TCM) System
 
 ## Current Work Focus
+- **Next Test Case Navigation Bug**: Investigating and fixing issue where "Next Test Case" button doesn't navigate to next execution
 - **Admin vs QA/BA Differentiation**: Implementing role-based execution views with filtering capabilities.
 - **Backend Enhancements**: Implementing automated auditing and ensuring data integrity.
 - **UI/UX Refinement**: Fine-tuning visual consistency across modals and page layouts.
 - **Deletion Feature**: Fully functional and verified.
 - Stabilizing the application for production-readiness.
+
+## Current Problem - Next Test Case Navigation Issue
+- **Issue**: When user presses "Next Test Case" button in execution workbench, execution is successfully completed and saved, but navigation to the next test case fails silently
+- **Symptoms**:
+  - Execution is completed (result saved when checking executions page)
+  - No navigation occurs (stays on current page)
+  - Sometimes shows completion summary even though there are pending executions
+- **Root Causes Identified**:
+  1. `allExecutions` array is loaded once and never refreshed after completion (stale data)
+  2. Backend returns ALL executions (including completed ones), not just pending
+  3. Navigation logic relied on finding current execution in the pending list, but after completion it's no longer there
+  4. TypeScript error: `router.navigate()` returns Promise, not Observable (used `.subscribe()` instead of `.catch()`)
+- **Fixes Applied (In Progress)**:
+  - Added refresh of `allExecutions` after completing execution
+  - Filter to only pending executions (PENDING or empty overallResult)
+  - Changed navigation logic to go to first pending execution instead of finding current in list
+  - Fixed TypeScript error: changed `.subscribe()` to `.catch()` for Promise handling
+- **Current Status**: Navigation still not working despite fixes - needs further investigation
 
 ## Recent Changes
 - **Test Case Sorting Consistency Fix**:
