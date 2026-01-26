@@ -27,10 +27,10 @@
   --container-max-width: 1600px;
 
   /* Elevation & Depth (Hard Shadows - The "Physical" Presence) */
-  --shadow-sm: 4px 4px 0px 0px var(--ink);
-  --shadow-md: 8px 8px 0px 0px var(--ink);
-  --shadow-lg: 12px 12px 0px 0px var(--ink);
-  --shadow-hover: 6px 6px 0px 0px var(--accent-primary); /* Pop on hover */
+  --shadow-sm: 3px 3px 0px 0px var(--ink);
+  --shadow-md: 6px 6px 0px 0px var(--ink);
+  --shadow-lg: 8px 8px 0px 0px var(--ink);
+  --shadow-hover: 5px 5px 0px 0px var(--accent-primary); /* Pop on hover */
   --shadow-active: 0px 0px 0px 0px var(--ink); /* Pressed state */
 
   /* Transitions */

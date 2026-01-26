@@ -81,13 +81,6 @@ h1[mat-dialog-title] {
   flex-direction: column;
   align-items: center;
   border: 1px solid #eee;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border-color: #e0e0e0;
 }
 
 .stat-val {
