@@ -1,36 +1,44 @@
-<h2 mat-dialog-title>Test Execution Complete!</h2>
-<mat-dialog-content class="summary-content">
-  <div class="summary-icon">
-    <mat-icon class="success-icon">check_circle</mat-icon>
-  </div>
-  <p class="summary-message">All assigned test cases have been completed.</p>
+<h1 mat-dialog-title>Execution Complete</h1>
 
-  <div class="summary-stats">
-    <mat-card class="stat-card total">
-      <div class="stat-value">{{ data.total }}</div>
-      <div class="stat-label">Total</div>
-    </mat-card>
-    <mat-card class="stat-card passed">
-      <div class="stat-value">{{ data.passed }}</div>
-      <div class="stat-label">Passed</div>
-    </mat-card>
-    <mat-card class="stat-card failed">
-      <div class="stat-value">{{ data.failed }}</div>
-      <div class="stat-label">Failed</div>
-    </mat-card>
-    <mat-card class="stat-card blocked">
-      <div class="stat-value">{{ data.blocked }}</div>
-      <div class="stat-label">Blocked</div>
-    </mat-card>
-    <mat-card class="stat-card pending">
-      <div class="stat-value">{{ data.pending }}</div>
-      <div class="stat-label">Pending</div>
-    </mat-card>
+<div mat-dialog-content class="dialog-content">
+  <p class="dialog-subtitle">Summary of your test execution session.</p>
+
+  <div class="success-content">
+    <div class="success-icon-wrapper">
+      <mat-icon>check</mat-icon>
+    </div>
+    
+    <h3 class="success-title">All Done!</h3>
+    <p class="success-message">You have completed all assigned test cases in this set.</p>
+
+    <div class="stats-grid">
+      <div class="stat-card total">
+        <span class="stat-val">{{ data.total }}</span>
+        <span class="stat-lbl">Total</span>
+      </div>
+      <div class="stat-card passed">
+        <span class="stat-val">{{ data.passed }}</span>
+        <span class="stat-lbl">Passed</span>
+      </div>
+      <div class="stat-card failed">
+        <span class="stat-val">{{ data.failed }}</span>
+        <span class="stat-lbl">Failed</span>
+      </div>
+      <div class="stat-card blocked">
+        <span class="stat-val">{{ data.blocked }}</span>
+        <span class="stat-lbl">Blocked</span>
+      </div>
+      <div class="stat-card pending">
+        <span class="stat-val">{{ data.pending }}</span>
+        <span class="stat-lbl">Pending</span>
+      </div>
+    </div>
   </div>
-</mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onClose()">Close</button>
+</div>
+
+<div mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-stroked-button (click)="onClose()">CLOSE</button>
   <button mat-raised-button color="primary" (click)="onBackToList()">
-    <mat-icon>list</mat-icon> Back to List
+    <mat-icon>list</mat-icon> BACK TO LIST
   </button>
-</mat-dialog-actions>
+</div>
