@@ -112,6 +112,7 @@ export interface CompletionSummary {
 // Test Step Result Model
 export interface TestStepResult {
   id: string;
+  testStepId?: string; // ID of the test step (needed for updating step results)
   executionId: string;
   stepNumber: number;
   stepDescription: string;

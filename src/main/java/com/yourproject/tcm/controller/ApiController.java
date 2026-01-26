@@ -142,6 +142,7 @@ public class ApiController {
             stepResultDTOs = e.getStepResults().stream()
                 .map(sr -> new TestExecutionDTO.TestStepResultDTO(
                     sr.getId(),
+                    sr.getTestStep() != null ? sr.getTestStep().getId() : null,
                     sr.getStepNumber(),
                     sr.getStatus(),
                     sr.getActualResult(),
@@ -441,6 +442,10 @@ public class ApiController {
         }
         try {
             String status = stepData.getStatus();
+            // Normalize invalid status values to PENDING
+            if (!status.equals("PASSED") && !status.equals("FAILED") && !status.equals("BLOCKED") && !status.equals("PENDING")) {
+                status = "PENDING";
+            }
             String actualResult = stepData.getActualResult();
             StepResultResponse updatedResult = tcmService.updateStepResult(executionId, stepId, status, actualResult);
             return new ResponseEntity<>(updatedResult, HttpStatus.OK);
@@ -466,6 +471,10 @@ public class ApiController {
         }
         try {
             String overallResult = completeData.getOverallResult();
+            // Normalize invalid overall result values to PENDING
+            if (!overallResult.equals("PASSED") && !overallResult.equals("FAILED") && !overallResult.equals("BLOCKED") && !overallResult.equals("PARTIALLY_PASSED")) {
+                overallResult = "PENDING";
+            }
             String notes = completeData.getNotes();
             TestExecution completedExecution = tcmService.completeTestExecution(executionId, overallResult, notes);
             return new ResponseEntity<>(completedExecution, HttpStatus.OK);

@@ -129,6 +129,7 @@ public class TestExecutionDTO {
      */
     public static class TestStepResultDTO {
         private Long id;
+        private Long testStepId;
         private Integer stepNumber;
         private String status;
         private String actualResult;
@@ -137,9 +138,10 @@ public class TestExecutionDTO {
         
         public TestStepResultDTO() {}
         
-        public TestStepResultDTO(Long id, Integer stepNumber, String status, String actualResult, 
+        public TestStepResultDTO(Long id, Long testStepId, Integer stepNumber, String status, String actualResult, 
                                  String action, String expectedResult) {
             this.id = id;
+            this.testStepId = testStepId;
             this.stepNumber = stepNumber;
             this.status = status;
             this.actualResult = actualResult;
@@ -150,6 +152,9 @@ public class TestExecutionDTO {
         // Getters and Setters
         public Long getId() { return id; }
         public void setId(Long id) { this.id = id; }
+        
+        public Long getTestStepId() { return testStepId; }
+        public void setTestStepId(Long testStepId) { this.testStepId = testStepId; }
         
         public Integer getStepNumber() { return stepNumber; }
         public void setStepNumber(Integer stepNumber) { this.stepNumber = stepNumber; }

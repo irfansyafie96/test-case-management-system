@@ -150,8 +150,9 @@ export class ExecutionWorkbenchComponent implements OnInit {
     }
 
     // Call the API to update the step result
-    if (stepResult.id) {
-      this.tcmService.updateStepResult(this.executionId, stepResult.id, status, actualResult || '').subscribe({
+    // Note: The backend expects testStepId, not stepResultId
+    if (stepResult.testStepId) {
+      this.tcmService.updateStepResult(this.executionId, stepResult.testStepId, status, actualResult || '').subscribe({
         next: (updatedResult) => {
 
         },
