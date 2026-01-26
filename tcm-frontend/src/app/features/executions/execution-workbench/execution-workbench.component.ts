@@ -190,22 +190,43 @@ export class ExecutionWorkbenchComponent implements OnInit {
   completeExecution(overallResult: string, notes?: string): void {
     if (!this.executionId) return;
 
-    // In a real implementation, we would call the API to complete the execution
+    // Validate that overall result is provided
+    if (!overallResult) {
+      this.snackBar.open(
+        'Please select an overall result (Pass, Fail, or Blocked) before completing the execution.',
+        'CLOSE',
+        { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+      );
+      return;
+    }
 
-
-    // For now, just navigate back to the assignments page
     this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({
       next: () => {
         this.router.navigate(['/executions']);
       },
       error: (error) => {
         console.error('Error completing execution:', error);
+        this.snackBar.open(
+          'Failed to complete execution. Please ensure all required fields are filled.',
+          'CLOSE',
+          { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+        );
       }
     });
   }
 
   completeAndNextExecution(overallResult: string, notes?: string): void {
     if (!this.executionId) return;
+
+    // Validate that overall result is provided
+    if (!overallResult) {
+      this.snackBar.open(
+        'Please select an overall result (Pass, Fail, or Blocked) before completing the execution.',
+        'CLOSE',
+        { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+      );
+      return;
+    }
 
     // Complete the current execution first
     this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({
@@ -232,7 +253,9 @@ export class ExecutionWorkbenchComponent implements OnInit {
             'DISMISS',
             {
               duration: 3000,
-              panelClass: ['success-snackbar']
+              panelClass: ['success-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
             }
           );
         }
@@ -245,7 +268,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
         this.snackBar.open(
           'Failed to complete execution. Please try again.',
           'CLOSE',
-          { panelClass: ['error-snackbar'] }
+          { panelClass: ['error-snackbar'], horizontalPosition: 'right', verticalPosition: 'top' }
         );
       }
     });
