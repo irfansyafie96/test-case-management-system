@@ -8,6 +8,20 @@
 - Stabilizing the application for production-readiness.
 
 ## Recent Changes
+- **Test Case Sorting Consistency Fix**:
+  - **Issue**: Test case order was inconsistent between modules page and executions page, and order changed after executing test cases
+  - **Root Cause**: Backend `getTestExecutionsForCurrentUser()` used string comparison for sorting test case IDs (lexicographic order: 1, 10, 11, 2, 3) instead of numeric comparison
+  - **Fix Applied**: Changed sorting logic from string comparison to numeric ID comparison in `getTestExecutionsForCurrentUser()` method
+  - **Backend**: Changed from `testCaseId.compareTo()` to `Long.compare(testCase.getId())`
+  - **Result**: Both pages now use consistent sorting: Module ID → Suite ID → Test Case ID (numeric order)
+  - **Impact**: Test cases now appear in same order on modules page and executions page, even after execution
+- **Test Case Hierarchical Sorting Fix**:
+  - **Issue**: Test case ordering was inconsistent between modules page and executions page
+  - **Fix Applied**: Added ORDER BY clause to TestSuiteRepository query for consistent suite ordering
+  - **Backend**: Added test case sorting by ID within each suite in `getTestModuleById()` method
+  - **Backend**: Added hierarchical sorting to `getAllExecutionsInOrganization()` for admin user filter
+  - **Sorting Order**: Module ID → Suite ID → Test Case ID (numeric)
+  - **Result**: Ensures test cases appear in same order on both pages
 - **Frontend Status Normalization Fix**:
   - **Issue**: 400 Bad Request errors when typing in actual result field due to invalid status values ("NOT_EXECUTED") from legacy database data
   - **Root Cause**: Backend `@Pattern` validation rejects invalid status values before normalization code runs
