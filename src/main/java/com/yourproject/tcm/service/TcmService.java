@@ -1130,11 +1130,11 @@ public class TcmService {
                     int suiteCompare = Long.compare(e1.getTestSuiteId(), e2.getTestSuiteId());
                     if (suiteCompare != 0) return suiteCompare;
 
-                    // Compare by Test Case ID (use testCaseId string comparison for consistency)
-                    String tcId1 = e1.getTestCaseId();
-                    String tcId2 = e2.getTestCaseId();
+                    // Compare by Test Case ID (use numeric ID comparison for consistency)
+                    Long tcId1 = e1.getTestCase() != null ? e1.getTestCase().getId() : null;
+                    Long tcId2 = e2.getTestCase() != null ? e2.getTestCase().getId() : null;
                     if (tcId1 != null && tcId2 != null) {
-                        return tcId1.compareTo(tcId2);
+                        return Long.compare(tcId1, tcId2);
                     }
                     return 0;
                 })
