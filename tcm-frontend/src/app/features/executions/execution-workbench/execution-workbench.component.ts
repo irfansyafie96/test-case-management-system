@@ -107,10 +107,24 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
     this.tcmService.getExecution(this.executionId!).subscribe({
       next: (execution) => {
+        // Normalize step result status values from invalid old data
+        const validStepStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PENDING'];
+        if (execution.stepResults) {
+          execution.stepResults.forEach(sr => {
+            if (sr.status && !validStepStatuses.includes(sr.status)) {
+              sr.status = 'PENDING'; // Normalize invalid values to PENDING
+            }
+          });
+        }
+
         this.executionSubject.next(execution);
         // Initialize form fields from loaded execution
         this.executionNotes = execution.notes || '';
-        this.overallResult = execution.overallResult || '';
+        // Only set overallResult if it's a valid completion status (PASSED, FAILED, BLOCKED, PARTIALLY_PASSED)
+        const validCompletionStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PARTIALLY_PASSED'];
+        this.overallResult = (execution.overallResult && validCompletionStatuses.includes(execution.overallResult))
+          ? execution.overallResult
+          : '';
 
         // Store current hierarchy info
         this.currentModuleId = execution.moduleId?.toString() || null;
@@ -143,8 +157,12 @@ export class ExecutionWorkbenchComponent implements OnInit {
   updateStepResult(stepResult: TestStepResult, status: 'PASSED' | 'FAILED' | 'BLOCKED' | 'PENDING', actualResult?: string): void {
     if (!this.executionId) return;
 
+    // Normalize status value to ensure it's valid
+    const validStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PENDING'];
+    const normalizedStatus = validStatuses.includes(status) ? status : 'PENDING';
+
     // Update the step result status and actual result
-    stepResult.status = status;
+    stepResult.status = normalizedStatus;
     if (actualResult !== undefined) {
       stepResult.actualResult = actualResult;
     }
@@ -152,9 +170,9 @@ export class ExecutionWorkbenchComponent implements OnInit {
     // Call the API to update the step result
     // Note: The backend expects testStepId, not stepResultId
     if (stepResult.testStepId) {
-      this.tcmService.updateStepResult(this.executionId, stepResult.testStepId, status, actualResult || '').subscribe({
+      this.tcmService.updateStepResult(this.executionId, stepResult.testStepId, normalizedStatus, actualResult || '').subscribe({
         next: (updatedResult) => {
-
+          // Successfully updated
         },
         error: (error) => {
           console.error('Error updating step result:', error);
@@ -191,8 +209,9 @@ export class ExecutionWorkbenchComponent implements OnInit {
   completeExecution(overallResult: string, notes?: string): void {
     if (!this.executionId) return;
 
-    // Validate that overall result is provided
-    if (!overallResult) {
+    // Validate that overall result is provided and is a valid completion status
+    const validCompletionStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PARTIALLY_PASSED'];
+    if (!overallResult || overallResult.trim() === '' || !validCompletionStatuses.includes(overallResult)) {
       this.snackBar.open(
         'Please select an overall result (Pass, Fail, or Blocked) before completing the execution.',
         'CLOSE',
@@ -219,8 +238,9 @@ export class ExecutionWorkbenchComponent implements OnInit {
   completeAndNextExecution(overallResult: string, notes?: string): void {
     if (!this.executionId) return;
 
-    // Validate that overall result is provided
-    if (!overallResult) {
+    // Validate that overall result is provided and is a valid completion status
+    const validCompletionStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PARTIALLY_PASSED'];
+    if (!overallResult || overallResult.trim() === '' || !validCompletionStatuses.includes(overallResult)) {
       this.snackBar.open(
         'Please select an overall result (Pass, Fail, or Blocked) before completing the execution.',
         'CLOSE',
