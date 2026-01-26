@@ -269,10 +269,15 @@ public class TcmService {
                 .collect(Collectors.toMap(TestSuite::getId, suite -> suite));
 
             // Update the test suites in the module with the ones that have test cases loaded
+            // Also sort test cases within each suite by ID
             if (testModule.getTestSuites() != null) {
                 for (TestSuite testSuite : testModule.getTestSuites()) {
                     TestSuite suiteWithTestCases = suiteMap.get(testSuite.getId());
                     if (suiteWithTestCases != null) {
+                        // Sort test cases by ID within the suite
+                        if (suiteWithTestCases.getTestCases() != null) {
+                            suiteWithTestCases.getTestCases().sort(Comparator.comparing(TestCase::getId));
+                        }
                         testSuite.setTestCases(suiteWithTestCases.getTestCases());
                     }
                 }
@@ -1620,8 +1625,25 @@ public class TcmService {
                     .collect(java.util.stream.Collectors.toList());
             }
 
-            // Return filtered executions as DTOs
+            // Return filtered executions as DTOs with hierarchical sorting
             return allExecutions.stream()
+                .sorted((e1, e2) -> {
+                    // Compare by Module ID
+                    int moduleCompare = Long.compare(e1.getModuleId(), e2.getModuleId());
+                    if (moduleCompare != 0) return moduleCompare;
+
+                    // Compare by Suite ID
+                    int suiteCompare = Long.compare(e1.getTestSuiteId(), e2.getTestSuiteId());
+                    if (suiteCompare != 0) return suiteCompare;
+
+                    // Compare by Test Case ID
+                    Long tcId1 = e1.getTestCase() != null ? e1.getTestCase().getId() : null;
+                    Long tcId2 = e2.getTestCase() != null ? e2.getTestCase().getId() : null;
+                    if (tcId1 != null && tcId2 != null) {
+                        return Long.compare(tcId1, tcId2);
+                    }
+                    return 0;
+                })
                 .map(this::convertToDTO)
                 .collect(java.util.stream.Collectors.toList());
         }
