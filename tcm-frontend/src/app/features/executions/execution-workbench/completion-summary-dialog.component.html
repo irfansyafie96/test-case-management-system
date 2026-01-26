@@ -1,0 +1,36 @@
+<h2 mat-dialog-title>Test Execution Complete!</h2>
+<mat-dialog-content class="summary-content">
+  <div class="summary-icon">
+    <mat-icon class="success-icon">check_circle</mat-icon>
+  </div>
+  <p class="summary-message">All assigned test cases have been completed.</p>
+
+  <div class="summary-stats">
+    <mat-card class="stat-card total">
+      <div class="stat-value">{{ data.total }}</div>
+      <div class="stat-label">Total</div>
+    </mat-card>
+    <mat-card class="stat-card passed">
+      <div class="stat-value">{{ data.passed }}</div>
+      <div class="stat-label">Passed</div>
+    </mat-card>
+    <mat-card class="stat-card failed">
+      <div class="stat-value">{{ data.failed }}</div>
+      <div class="stat-label">Failed</div>
+    </mat-card>
+    <mat-card class="stat-card blocked">
+      <div class="stat-value">{{ data.blocked }}</div>
+      <div class="stat-label">Blocked</div>
+    </mat-card>
+    <mat-card class="stat-card pending">
+      <div class="stat-value">{{ data.pending }}</div>
+      <div class="stat-label">Pending</div>
+    </mat-card>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Close</button>
+  <button mat-raised-button color="primary" (click)="onBackToList()">
+    <mat-icon>list</mat-icon> Back to List
+  </button>
+</mat-dialog-actions>

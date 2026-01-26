@@ -1,0 +1,49 @@
+.summary-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.summary-icon {
+  margin-bottom: 20px;
+}
+
+.summary-icon .success-icon {
+  font-size: 64px;
+  color: #4caf50;
+}
+
+.summary-message {
+  font-size: 18px;
+  margin-bottom: 30px;
+  color: #666;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  min-width: 100px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.stat-card.total .stat-value { color: #2196f3; }
+.stat-card.passed .stat-value { color: #4caf50; }
+.stat-card.failed .stat-value { color: #f44336; }
+.stat-card.blocked .stat-value { color: #ff9800; }
+.stat-card.pending .stat-value { color: #9e9e9e; }

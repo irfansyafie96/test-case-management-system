@@ -1,6 +1,7 @@
 package com.yourproject.tcm.service;
 
 import com.yourproject.tcm.model.*;
+import com.yourproject.tcm.model.dto.CompletionSummaryDTO;
 import com.yourproject.tcm.model.dto.ModuleAssignmentRequest;
 import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
 import com.yourproject.tcm.model.dto.TestAnalyticsDTO;
@@ -1074,7 +1075,7 @@ public class TcmService {
                 Long orgId = user.getOrganization() != null ? user.getOrganization().getId() : -1L;
                 List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
                 Map<Long, TestExecution> latestExecutionByTestCase = new HashMap<>();
-                
+
                 for (TestExecution execution : allExecutions) {
                     Long testCaseId = execution.getTestCase().getId();
                     // Keep only the latest execution for each test case
@@ -1084,10 +1085,25 @@ public class TcmService {
                     }
                 }
                 return latestExecutionByTestCase.values().stream()
+                    // Add hierarchical sorting: Module ID → Suite ID → Test Case ID
+                    .sorted((e1, e2) -> {
+                        // Compare by Module ID
+                        int moduleCompare = Long.compare(e1.getModuleId(), e2.getModuleId());
+                        if (moduleCompare != 0) return moduleCompare;
+
+                        // Compare by Suite ID
+                        int suiteCompare = Long.compare(e1.getTestSuiteId(), e2.getTestSuiteId());
+                        if (suiteCompare != 0) return suiteCompare;
+
+                        // Compare by Test Case ID (use testCase's ID)
+                        Long tcId1 = e1.getTestCase().getId();
+                        Long tcId2 = e2.getTestCase().getId();
+                        return Long.compare(tcId1, tcId2);
+                    })
                     .map(this::convertToDTO)
                     .collect(java.util.stream.Collectors.toList());
             }
-            
+
             // Otherwise return only executions assigned to the user for modules they're currently assigned to
             List<TestExecution> allAssignedExecutions = testExecutionRepository.findByAssignedToUserWithDetails(user);
             Set<Long> assignedModuleIds = user.getAssignedTestModules().stream()
@@ -1099,8 +1115,63 @@ public class TcmService {
                     Long moduleId = execution.getModuleId();
                     return moduleId != null && assignedModuleIds.contains(moduleId);
                 })
+                // Add hierarchical sorting: Module ID → Suite ID → Test Case ID
+                .sorted((e1, e2) -> {
+                    // Compare by Module ID
+                    int moduleCompare = Long.compare(e1.getModuleId(), e2.getModuleId());
+                    if (moduleCompare != 0) return moduleCompare;
+
+                    // Compare by Suite ID
+                    int suiteCompare = Long.compare(e1.getTestSuiteId(), e2.getTestSuiteId());
+                    if (suiteCompare != 0) return suiteCompare;
+
+                    // Compare by Test Case ID (use testCaseId string comparison for consistency)
+                    String tcId1 = e1.getTestCaseId();
+                    String tcId2 = e2.getTestCaseId();
+                    if (tcId1 != null && tcId2 != null) {
+                        return tcId1.compareTo(tcId2);
+                    }
+                    return 0;
+                })
                 .map(this::convertToDTO)
                 .collect(java.util.stream.Collectors.toList());
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    /**
+     * Get completion summary statistics for the current user
+     * @return CompletionSummaryDTO containing total, passed, failed, blocked, and pending counts
+     */
+    public CompletionSummaryDTO getCompletionSummaryForCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+
+            List<TestExecution> executions = testExecutionRepository.findByAssignedToUserWithDetails(user);
+            Set<Long> assignedModuleIds = user.getAssignedTestModules().stream()
+                .map(TestModule::getId)
+                .collect(java.util.stream.Collectors.toSet());
+
+            List<TestExecution> filteredExecutions = executions.stream()
+                .filter(e -> {
+                    Long moduleId = e.getModuleId();
+                    return moduleId != null && assignedModuleIds.contains(moduleId);
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+            // Calculate statistics
+            long total = filteredExecutions.size();
+            long passed = filteredExecutions.stream().filter(e -> "PASSED".equals(e.getOverallResult())).count();
+            long failed = filteredExecutions.stream().filter(e -> "FAILED".equals(e.getOverallResult())).count();
+            long blocked = filteredExecutions.stream().filter(e -> "BLOCKED".equals(e.getOverallResult())).count();
+            long pending = total - passed - failed - blocked;
+
+            return new CompletionSummaryDTO(total, passed, failed, blocked, pending);
         }
         throw new RuntimeException("No authenticated user found");
     }
@@ -1135,7 +1206,8 @@ public class TcmService {
             execution.getModuleId(),
             execution.getModuleName(),
             execution.getProjectId(),
-            execution.getProjectName()
+            execution.getProjectName(),
+            null // stepResults - not needed for this conversion
         );
     }
 

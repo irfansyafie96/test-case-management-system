@@ -3,7 +3,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { Project, TestModule, TestSuite, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest } from '../models/project.model';
+import { Project, TestModule, TestSuite, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary } from '../models/project.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -326,6 +326,23 @@ export class TcmService {
     return this.http.get<TestExecution[]>(`${this.apiUrl}/executions/my-assignments`)
       .pipe(
         catchError(this.handleError<TestExecution[]>('getMyAssignedExecutions', []))
+      );
+  }
+
+  /**
+   * Get completion summary for current user
+   * @returns Observable<CompletionSummary> - Stream of completion statistics
+   */
+  getCompletionSummary(): Observable<CompletionSummary> {
+    return this.http.get<CompletionSummary>(`${this.apiUrl}/executions/summary`)
+      .pipe(
+        catchError(this.handleError<CompletionSummary>('getCompletionSummary', {
+          total: 0,
+          passed: 0,
+          failed: 0,
+          blocked: 0,
+          pending: 0
+        }))
       );
   }
 

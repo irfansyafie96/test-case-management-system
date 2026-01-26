@@ -136,6 +136,43 @@ public class ApiController {
         );
     }
 
+    private TestExecutionDTO convertToDTOWithStepResults(TestExecution e) {
+        List<TestExecutionDTO.TestStepResultDTO> stepResultDTOs = null;
+        if (e.getStepResults() != null) {
+            stepResultDTOs = e.getStepResults().stream()
+                .map(sr -> new TestExecutionDTO.TestStepResultDTO(
+                    sr.getId(),
+                    sr.getStepNumber(),
+                    sr.getStatus(),
+                    sr.getActualResult(),
+                    sr.getTestStep() != null ? sr.getTestStep().getAction() : null,
+                    sr.getTestStep() != null ? sr.getTestStep().getExpectedResult() : null
+                ))
+                .collect(java.util.stream.Collectors.toList());
+        }
+
+        return new TestExecutionDTO(
+            e.getId(),
+            e.getTestCase() != null ? e.getTestCase().getTestCaseId() : null,
+            e.getTestCase() != null ? e.getTestCase().getTitle() : null,
+            e.getExecutionDate(),
+            e.getOverallResult(),
+            e.getNotes(),
+            e.getDuration(),
+            e.getEnvironment(),
+            e.getExecutedBy(),
+            e.getAssignedToUser() != null ? e.getAssignedToUser().getId() : null,
+            e.getAssignedToUser() != null ? e.getAssignedToUser().getUsername() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSuite() != null ? e.getTestCase().getTestSuite().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSuite() != null ? e.getTestCase().getTestSuite().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null ? e.getTestCase().getTestSuite().getTestModule().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null ? e.getTestCase().getTestSuite().getTestModule().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null && e.getTestCase().getTestSuite().getTestModule().getProject() != null ? e.getTestCase().getTestSuite().getTestModule().getProject().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null && e.getTestCase().getTestSuite().getTestModule().getProject() != null ? e.getTestCase().getTestSuite().getTestModule().getProject().getName() : null,
+            stepResultDTOs
+        );
+    }
+
     /**
      * GET /api/projects/{projectId} - Get a specific project by ID
      */
@@ -367,7 +404,8 @@ public class ApiController {
         try {
             Optional<TestExecution> executionOpt = tcmService.getTestExecutionById(executionId);
             if (executionOpt.isPresent()) {
-                return new ResponseEntity<>(executionOpt.get(), HttpStatus.OK);
+                TestExecutionDTO dto = convertToDTOWithStepResults(executionOpt.get());
+                return new ResponseEntity<>(dto, HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Test execution not found with id: " + executionId, HttpStatus.NOT_FOUND);
             }
@@ -470,6 +508,17 @@ public class ApiController {
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving your assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @GetMapping("/executions/summary")
+    public ResponseEntity<?> getCompletionSummary() {
+        try {
+            CompletionSummaryDTO summary = tcmService.getCompletionSummaryForCurrentUser();
+            return new ResponseEntity<>(summary, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving completion summary: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

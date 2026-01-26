@@ -1,6 +1,7 @@
 package com.yourproject.tcm.model.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Data Transfer Object for TestExecution information
@@ -20,6 +21,7 @@ public class TestExecutionDTO {
     private String executedBy;
     private Long assignedToUserId;
     private String assignedToUsername;
+    private List<TestStepResultDTO> stepResults;
     
     // Hierarchy information
     private Long testSuiteId;
@@ -35,7 +37,7 @@ public class TestExecutionDTO {
                            String overallResult, String notes, Long duration, String environment,
                            String executedBy, Long assignedToUserId, String assignedToUsername,
                            Long testSuiteId, String testSuiteName, Long moduleId, String moduleName,
-                           Long projectId, String projectName) {
+                           Long projectId, String projectName, List<TestStepResultDTO> stepResults) {
         this.id = id;
         this.testCaseId = testCaseId;
         this.title = title;
@@ -54,6 +56,7 @@ public class TestExecutionDTO {
         this.moduleName = moduleName;
         this.projectId = projectId;
         this.projectName = projectName;
+        this.stepResults = stepResults;
     }
     
     // Getters and Setters
@@ -99,6 +102,9 @@ public class TestExecutionDTO {
     public String getAssignedToUsername() { return assignedToUsername; }
     public void setAssignedToUsername(String assignedToUsername) { this.assignedToUsername = assignedToUsername; }
     
+    public List<TestStepResultDTO> getStepResults() { return stepResults; }
+    public void setStepResults(List<TestStepResultDTO> stepResults) { this.stepResults = stepResults; }
+    
     public Long getTestSuiteId() { return testSuiteId; }
     public void setTestSuiteId(Long testSuiteId) { this.testSuiteId = testSuiteId; }
     
@@ -116,4 +122,48 @@ public class TestExecutionDTO {
     
     public String getProjectName() { return projectName; }
     public void setProjectName(String projectName) { this.projectName = projectName; }
+    
+    /**
+     * Inner DTO for TestStepResult
+     * Contains the step result data along with the test step action and expected result
+     */
+    public static class TestStepResultDTO {
+        private Long id;
+        private Integer stepNumber;
+        private String status;
+        private String actualResult;
+        private String action; // From testStep
+        private String expectedResult; // From testStep
+        
+        public TestStepResultDTO() {}
+        
+        public TestStepResultDTO(Long id, Integer stepNumber, String status, String actualResult, 
+                                 String action, String expectedResult) {
+            this.id = id;
+            this.stepNumber = stepNumber;
+            this.status = status;
+            this.actualResult = actualResult;
+            this.action = action;
+            this.expectedResult = expectedResult;
+        }
+        
+        // Getters and Setters
+        public Long getId() { return id; }
+        public void setId(Long id) { this.id = id; }
+        
+        public Integer getStepNumber() { return stepNumber; }
+        public void setStepNumber(Integer stepNumber) { this.stepNumber = stepNumber; }
+        
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+        
+        public String getActualResult() { return actualResult; }
+        public void setActualResult(String actualResult) { this.actualResult = actualResult; }
+        
+        public String getAction() { return action; }
+        public void setAction(String action) { this.action = action; }
+        
+        public String getExpectedResult() { return expectedResult; }
+        public void setExpectedResult(String expectedResult) { this.expectedResult = expectedResult; }
+    }
 }

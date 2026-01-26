@@ -100,6 +100,15 @@ export interface TestExecution {
   testSuiteName?: string; // Backend getter might be mapped to this
 }
 
+// Completion Summary Model
+export interface CompletionSummary {
+  total: number;
+  passed: number;
+  failed: number;
+  blocked: number;
+  pending: number;
+}
+
 // Test Step Result Model
 export interface TestStepResult {
   id: string;
@@ -111,7 +120,9 @@ export interface TestStepResult {
   notes?: string;
   screenshotFileName?: string;
   attachments?: string[]; // Array of attachment file names
-  testStep?: any; // Reference to the test step details
+  testStep?: any; // Reference to the test step details (deprecated, use action and expectedResult)
+  action?: string; // Action from test step (from backend DTO)
+  expectedResult?: string; // Expected result from test step (from backend DTO)
 }
 
 // User Model

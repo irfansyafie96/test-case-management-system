@@ -11,11 +11,14 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { BehaviorSubject, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
 import { TestExecution, TestStepResult } from '../../../core/models/project.model';
+import { CompletionSummaryDialogComponent } from './completion-summary-dialog.component';
 
 interface ExecutionWorkbenchView {
   loading: boolean;
@@ -39,6 +42,8 @@ interface ExecutionWorkbenchView {
     MatProgressSpinnerModule,
     MatSlideToggleModule,
     MatTooltipModule,
+    MatSnackBarModule,
+    MatDialogModule,
     RouterModule
   ],
   templateUrl: './execution-workbench.component.html',
@@ -56,10 +61,17 @@ export class ExecutionWorkbenchComponent implements OnInit {
   executionNotes: string = '';
   overallResult: string = '';
 
+  // New properties for navigation
+  allExecutions: TestExecution[] = [];
+  currentModuleId: string | null = null;
+  currentSuiteId: string | null = null;
+
   constructor(
     private tcmService: TcmService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   get isExecutionCompleted(): boolean {
@@ -99,12 +111,31 @@ export class ExecutionWorkbenchComponent implements OnInit {
         // Initialize form fields from loaded execution
         this.executionNotes = execution.notes || '';
         this.overallResult = execution.overallResult || '';
+
+        // Store current hierarchy info
+        this.currentModuleId = execution.moduleId?.toString() || null;
+        this.currentSuiteId = execution.testSuiteId?.toString() || null;
+
+        // Load all executions for navigation
+        this.loadAllExecutions();
+
         this.loadingSubject.next(false);
       },
       error: (error) => {
         console.error('Error loading execution:', error);
         this.errorSubject.next(true);
         this.loadingSubject.next(false);
+      }
+    });
+  }
+
+  loadAllExecutions(): void {
+    this.tcmService.getMyAssignedExecutions().subscribe({
+      next: (executions) => {
+        this.allExecutions = executions;
+      },
+      error: (error) => {
+        console.error('Error loading executions:', error);
       }
     });
   }
@@ -179,33 +210,67 @@ export class ExecutionWorkbenchComponent implements OnInit {
     // Complete the current execution first
     this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({
       next: () => {
-        // Get all assigned executions to find the next one
-        this.tcmService.getMyAssignedExecutions().subscribe({
-          next: (executions) => {
-            // Sort executions by ID (convert to numbers for proper sorting)
-            const sortedExecutions = executions.sort((a, b) => Number(a.id || 0) - Number(b.id || 0));
+        // Find next execution based on hierarchical order (already sorted by backend)
+        const currentExecution = this.executionSubject.value;
+        const currentIndex = this.allExecutions.findIndex(e => e.id === currentExecution?.id);
 
-            // Find the current execution index
-            const currentExecutionId = Number(this.executionId);
-            const currentIndex = sortedExecutions.findIndex(e => Number(e.id) === currentExecutionId);
+        if (currentIndex === -1 || currentIndex >= this.allExecutions.length - 1) {
+          // All executions completed - show summary
+          this.showCompletionSummary();
+          return;
+        }
 
-            // If there's a next execution, navigate to it
-            if (currentIndex !== -1 && currentIndex < sortedExecutions.length - 1) {
-              const nextExecution = sortedExecutions[currentIndex + 1];
-              this.router.navigate(['/executions/workbench', nextExecution.id]);
-            } else {
-              // No more executions, go back to assignments page
-              this.router.navigate(['/executions']);
+        const nextExecution = this.allExecutions[currentIndex + 1];
+        const currentModuleId = currentExecution?.moduleId?.toString();
+        const nextModuleId = nextExecution.moduleId?.toString();
+
+        // Check if module changed
+        if (currentModuleId && nextModuleId && currentModuleId !== nextModuleId) {
+          // Show module completion notification
+          this.snackBar.open(
+            `Module "${currentExecution?.moduleName}" completed!`,
+            'DISMISS',
+            {
+              duration: 3000,
+              panelClass: ['success-snackbar']
             }
-          },
-          error: (error) => {
-            console.error('Error loading assigned executions:', error);
+          );
+        }
+
+        // Navigate to next execution
+        this.router.navigate(['/executions/workbench', nextExecution.id]);
+      },
+      error: (error) => {
+        console.error('Error completing execution:', error);
+        this.snackBar.open(
+          'Failed to complete execution. Please try again.',
+          'CLOSE',
+          { panelClass: ['error-snackbar'] }
+        );
+      }
+    });
+  }
+
+  showCompletionSummary(): void {
+    this.tcmService.getCompletionSummary().subscribe({
+      next: (summary) => {
+        const dialogRef = this.dialog.open(CompletionSummaryDialogComponent, {
+          width: '600px',
+          data: summary,
+          disableClose: true
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (result === 'back') {
+            this.router.navigate(['/executions']);
+          } else {
             this.router.navigate(['/executions']);
           }
         });
       },
       error: (error) => {
-        console.error('Error completing execution:', error);
+        console.error('Error loading completion summary:', error);
+        this.router.navigate(['/executions']);
       }
     });
   }

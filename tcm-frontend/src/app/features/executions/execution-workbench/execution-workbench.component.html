@@ -45,6 +45,10 @@
               <span class="info-value">{{ vm.execution.testCase?.title || vm.execution.title }}</span>
             </div>
             <div class="info-item">
+              <label>Test Suite</label>
+              <span class="info-value">{{ vm.execution.testSuiteName || 'Unknown Suite' }}</span>
+            </div>
+            <div class="info-item">
               <label>Status</label>
               <span class="info-value status-badge"
                     [ngClass]="vm.execution.overallResult ? getStatusClass(vm.execution.overallResult) : 'pending'">
@@ -76,7 +80,7 @@
               <ng-container matColumnDef="action">
                 <th mat-header-cell *matHeaderCellDef> ACTION </th>
                 <td mat-cell *matCellDef="let stepResult">
-                  <span class="action-text">{{ stepResult.testStep?.action || 'Action not specified' }}</span>
+                  <span class="action-text">{{ stepResult.action || 'Action not specified' }}</span>
                 </td>
               </ng-container>
 
@@ -84,7 +88,7 @@
               <ng-container matColumnDef="expectedResult">
                 <th mat-header-cell *matHeaderCellDef> EXPECTED RESULT </th>
                 <td mat-cell *matCellDef="let stepResult">
-                  <span class="expected-text">{{ stepResult.testStep?.expectedResult || 'Expected result not specified' }}</span>
+                  <span class="expected-text">{{ stepResult.expectedResult || 'Expected result not specified' }}</span>
                 </td>
               </ng-container>
 
