@@ -80,10 +80,12 @@ export class ExecutionWorkbenchComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.executionId = this.route.snapshot.paramMap.get('id');
-    if (this.executionId) {
-      this.loadExecution();
-    }
+    this.route.paramMap.subscribe(params => {
+      this.executionId = params.get('id');
+      if (this.executionId) {
+        this.loadExecution();
+      }
+    });
   }
 
   private createViewModel() {
@@ -252,37 +254,76 @@ export class ExecutionWorkbenchComponent implements OnInit {
     // Complete the current execution first
     this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({
       next: () => {
-        // Find next execution based on hierarchical order (already sorted by backend)
-        const currentExecution = this.executionSubject.value;
-        const currentIndex = this.allExecutions.findIndex(e => e.id === currentExecution?.id);
+        // Refresh all executions to get latest data
+        this.tcmService.getMyAssignedExecutions().subscribe({
+          next: (updatedExecutions) => {
+            this.allExecutions = updatedExecutions;
 
-        if (currentIndex === -1 || currentIndex >= this.allExecutions.length - 1) {
-          // All executions completed - show summary
-          this.showCompletionSummary();
-          return;
-        }
+            // Filter to only pending executions (not completed)
+            const validCompletionStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PARTIALLY_PASSED'];
+            const pendingExecutions = this.allExecutions.filter(e => {
+              const result = e.overallResult;
+              return !result || !validCompletionStatuses.includes(result);
+            });
 
-        const nextExecution = this.allExecutions[currentIndex + 1];
-        const currentModuleId = currentExecution?.moduleId?.toString();
-        const nextModuleId = nextExecution.moduleId?.toString();
-
-        // Check if module changed
-        if (currentModuleId && nextModuleId && currentModuleId !== nextModuleId) {
-          // Show module completion notification
-          this.snackBar.open(
-            `Module "${currentExecution?.moduleName}" completed!`,
-            'DISMISS',
-            {
-              duration: 3000,
-              panelClass: ['success-snackbar'],
-              horizontalPosition: 'right',
-              verticalPosition: 'top'
+            // If no more pending executions, show completion summary
+            if (pendingExecutions.length === 0) {
+              this.showCompletionSummary();
+              return;
             }
-          );
-        }
 
-        // Navigate to next execution
-        this.router.navigate(['/executions/workbench', nextExecution.id]);
+            // Find the logically next execution (the first pending one after the current one)
+            const currentIndex = this.allExecutions.findIndex(e => e.id.toString() === this.executionId?.toString());
+            let nextExecution = pendingExecutions.find(e => {
+              const idx = this.allExecutions.findIndex(ae => ae.id === e.id);
+              return idx > currentIndex;
+            });
+
+            // Fallback to the first pending execution if none are found after the current one
+            if (!nextExecution) {
+              nextExecution = pendingExecutions[0];
+            }
+
+            const currentExecution = this.executionSubject.value;
+            const currentModuleId = currentExecution?.moduleId?.toString();
+            const nextModuleId = nextExecution.moduleId?.toString();
+
+            // Check if module changed
+            if (currentModuleId && nextModuleId && currentModuleId !== nextModuleId) {
+              // Show module completion notification
+              this.snackBar.open(
+                `Module "${currentExecution?.moduleName}" completed!`,
+                'DISMISS',
+                {
+                  duration: 3000,
+                  panelClass: ['success-snackbar'],
+                  horizontalPosition: 'right',
+                  verticalPosition: 'top'
+                }
+              );
+            }
+
+            // Navigate to next execution
+            this.router.navigate(['/executions/workbench', nextExecution.id]).catch(navError => {
+              console.error('Navigation error:', navError);
+              this.snackBar.open(
+                'Failed to navigate to next test case. Please go back to executions page.',
+                'CLOSE',
+                { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+              );
+            });
+          },
+          error: (error) => {
+            console.error('Error loading executions after completion:', error);
+            this.snackBar.open(
+              'Execution completed but could not load next test case. Please go back to executions page.',
+              'CLOSE',
+              { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+            // Navigate back to executions page as fallback
+            this.router.navigate(['/executions']);
+          }
+        });
       },
       error: (error) => {
         console.error('Error completing execution:', error);
