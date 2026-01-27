@@ -364,6 +364,23 @@ export class TcmService {
   }
 
   /**
+   * Save execution work-in-progress (notes) without completing the execution
+   * This allows users to save their progress while navigating between test cases
+   *
+   * @param executionId - ID of the execution to save
+   * @param notes - Notes to save (can be empty)
+   * @returns Observable<TestExecution> - Stream of saved execution
+   */
+  saveExecution(executionId: string, notes: string): Observable<TestExecution> {
+    return this.http.put<TestExecution>(`${this.apiUrl}/executions/${executionId}/save`, {
+      notes
+    })
+      .pipe(
+        catchError(this.handleError<TestExecution>('saveExecution'))
+      );
+  }
+
+  /**
    * Update a step result in a test execution
    * @param executionId - ID of the execution
    * @param stepId - ID of the step to update

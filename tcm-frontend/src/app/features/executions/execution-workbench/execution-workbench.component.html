@@ -177,22 +177,19 @@
                 </mat-form-field>
 
                 <div class="action-buttons">
-                  <button mat-stroked-button type="button" (click)="goBack()">
-                    <mat-icon>arrow_back</mat-icon> BACK
+                  <button mat-stroked-button type="button" (click)="navigateToPreviousExecution()" *ngIf="!isFirstExecution">
+                    <mat-icon>navigate_before</mat-icon> PREV
                   </button>
                   <button
                     mat-raised-button
                     color="primary"
-                    [disabled]="!overallResult || isExecutionCompleted"
+                    *ngIf="!isExecutionCompleted"
+                    [disabled]="!overallResult"
                     (click)="completeExecution(overallResult, executionNotes)">
                     COMPLETE EXECUTION
                   </button>
-                  <button
-                    mat-raised-button
-                    color="accent"
-                    [disabled]="!overallResult || isExecutionCompleted"
-                    (click)="completeAndNextExecution(overallResult, executionNotes)">
-                    <mat-icon>skip_next</mat-icon> NEXT TEST CASE
+                  <button mat-raised-button color="accent" type="button" (click)="navigateSmartNext()" *ngIf="!isLastExecution">
+                    <mat-icon>navigate_next</mat-icon> NEXT
                   </button>
                 </div>
               </div>

@@ -1006,6 +1006,29 @@ public class TcmService {
     }
 
     /**
+     * Save execution work-in-progress (notes) without completing the execution
+     * This allows users to save their progress while navigating between test cases
+     *
+     * @param executionId ID of the execution to save
+     * @param notes Notes to save (can be null or empty)
+     * @return The updated test execution
+     * @throws RuntimeException if execution doesn't exist
+     */
+    @Transactional
+    public TestExecution saveExecutionWork(Long executionId, String notes) {
+        Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
+        if (executionOpt.isPresent()) {
+            TestExecution execution = executionOpt.get();
+            execution.setNotes(notes);  // Only update notes, don't change overallResult
+            TestExecution savedExecution = testExecutionRepository.save(execution);
+            entityManager.flush();
+            return savedExecution;
+        } else {
+            throw new RuntimeException("Test Execution not found with id: " + executionId);
+        }
+    }
+
+    /**
      * Assign a test execution to a specific user
      * @param executionId ID of the execution to assign
      * @param userId ID of the user to assign to

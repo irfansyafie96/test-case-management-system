@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -14,7 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { BehaviorSubject, combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
 import { TestExecution, TestStepResult } from '../../../core/models/project.model';
@@ -71,12 +71,25 @@ export class ExecutionWorkbenchComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private cdr: ChangeDetectorRef
   ) {}
 
   get isExecutionCompleted(): boolean {
     const execution = this.executionSubject.value;
     return !!execution && (execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' || execution.overallResult === 'BLOCKED');
+  }
+
+  get isFirstExecution(): boolean {
+    if (!this.executionId || this.allExecutions.length === 0) return true;
+    const currentIndex = this.allExecutions.findIndex(e => e.id.toString() === this.executionId?.toString());
+    return currentIndex === 0;
+  }
+
+  get isLastExecution(): boolean {
+    if (!this.executionId || this.allExecutions.length === 0) return true;
+    const currentIndex = this.allExecutions.findIndex(e => e.id.toString() === this.executionId?.toString());
+    return currentIndex === this.allExecutions.length - 1;
   }
 
   ngOnInit(): void {
@@ -149,6 +162,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
     this.tcmService.getMyAssignedExecutions().subscribe({
       next: (executions) => {
         this.allExecutions = executions;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error loading executions:', error);
@@ -237,102 +251,88 @@ export class ExecutionWorkbenchComponent implements OnInit {
     });
   }
 
-  completeAndNextExecution(overallResult: string, notes?: string): void {
-    if (!this.executionId) return;
-
-    // Validate that overall result is provided and is a valid completion status
-    const validCompletionStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PARTIALLY_PASSED'];
-    if (!overallResult || overallResult.trim() === '' || !validCompletionStatuses.includes(overallResult)) {
-      this.snackBar.open(
-        'Please select an overall result (Pass, Fail, or Blocked) before completing the execution.',
-        'CLOSE',
-        { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
-      );
+  /**
+   * Smart NEXT button - intelligent navigation based on execution status
+   * - If incomplete: Auto-save as PENDING → Navigate to next test case
+   * - If complete: Navigate to next test case (any status)
+   * - At very end: Show completion summary
+   */
+  navigateSmartNext(): void {
+    if (!this.executionId || this.allExecutions.length === 0) {
       return;
     }
 
-    // Complete the current execution first
-    this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({
-      next: () => {
-        // Refresh all executions to get latest data
-        this.tcmService.getMyAssignedExecutions().subscribe({
-          next: (updatedExecutions) => {
-            this.allExecutions = updatedExecutions;
+    const execution = this.executionSubject.value;
+    const validCompletionStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PARTIALLY_PASSED'];
+    const isComplete = execution?.overallResult && validCompletionStatuses.includes(execution.overallResult);
 
-            // Filter to only pending executions (not completed)
-            const validCompletionStatuses = ['PASSED', 'FAILED', 'BLOCKED', 'PARTIALLY_PASSED'];
-            const pendingExecutions = this.allExecutions.filter(e => {
-              const result = e.overallResult;
-              return !result || !validCompletionStatuses.includes(result);
-            });
+    if (isComplete) {
+      // Already complete - just navigate to next
+      this.navigateToNext();
+    } else {
+      // Incomplete - save notes then navigate to next
+      this.tcmService.saveExecution(this.executionId!, this.executionNotes).subscribe({
+        next: () => {
+          this.navigateToNext();
+        },
+        error: (error) => {
+          console.error('Error saving execution before navigation:', error);
+          this.snackBar.open(
+            'Failed to save execution. Please try again.',
+            'DISMISS',
+            { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+          );
+        }
+      });
+    }
+  }
 
-            // If no more pending executions, show completion summary
-            if (pendingExecutions.length === 0) {
-              this.showCompletionSummary();
-              return;
-            }
+  /**
+   * Navigate to next test case regardless of status
+   * Show completion summary only at the very end of ALL executions
+   */
+  private navigateToNext(): void {
+    const currentIndex = this.allExecutions.findIndex(e => e.id.toString() === this.executionId?.toString());
 
-            // Find the logically next execution (the first pending one after the current one)
-            const currentIndex = this.allExecutions.findIndex(e => e.id.toString() === this.executionId?.toString());
-            let nextExecution = pendingExecutions.find(e => {
-              const idx = this.allExecutions.findIndex(ae => ae.id === e.id);
-              return idx > currentIndex;
-            });
+    if (currentIndex < this.allExecutions.length - 1) {
+      const nextExecution = this.allExecutions[currentIndex + 1];
+      this.executeNavigation(nextExecution);
+    } else {
+      // At last execution, show completion summary
+      this.showCompletionSummary();
+    }
+  }
 
-            // Fallback to the first pending execution if none are found after the current one
-            if (!nextExecution) {
-              nextExecution = pendingExecutions[0];
-            }
+  /**
+   * Execute navigation with module notification
+   */
+  private executeNavigation(nextExecution: TestExecution): void {
+    const currentExecution = this.executionSubject.value;
+    const currentModuleId = currentExecution?.moduleId?.toString();
+    const nextModuleId = nextExecution.moduleId?.toString();
 
-            const currentExecution = this.executionSubject.value;
-            const currentModuleId = currentExecution?.moduleId?.toString();
-            const nextModuleId = nextExecution.moduleId?.toString();
+    // Check if module changed
+    if (currentModuleId && nextModuleId && currentModuleId !== nextModuleId) {
+      this.snackBar.open(
+        `Module "${currentExecution?.moduleName}" completed!`,
+        'DISMISS',
+        {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        }
+      );
+    }
 
-            // Check if module changed
-            if (currentModuleId && nextModuleId && currentModuleId !== nextModuleId) {
-              // Show module completion notification
-              this.snackBar.open(
-                `Module "${currentExecution?.moduleName}" completed!`,
-                'DISMISS',
-                {
-                  duration: 3000,
-                  panelClass: ['success-snackbar'],
-                  horizontalPosition: 'right',
-                  verticalPosition: 'top'
-                }
-              );
-            }
-
-            // Navigate to next execution
-            this.router.navigate(['/executions/workbench', nextExecution.id]).catch(navError => {
-              console.error('Navigation error:', navError);
-              this.snackBar.open(
-                'Failed to navigate to next test case. Please go back to executions page.',
-                'CLOSE',
-                { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
-              );
-            });
-          },
-          error: (error) => {
-            console.error('Error loading executions after completion:', error);
-            this.snackBar.open(
-              'Execution completed but could not load next test case. Please go back to executions page.',
-              'CLOSE',
-              { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
-            );
-            // Navigate back to executions page as fallback
-            this.router.navigate(['/executions']);
-          }
-        });
-      },
-      error: (error) => {
-        console.error('Error completing execution:', error);
-        this.snackBar.open(
-          'Failed to complete execution. Please try again.',
-          'CLOSE',
-          { panelClass: ['error-snackbar'], horizontalPosition: 'right', verticalPosition: 'top' }
-        );
-      }
+    // Navigate to next execution
+    this.router.navigate(['/executions/workbench', nextExecution.id]).catch(navError => {
+      console.error('Navigation error:', navError);
+      this.snackBar.open(
+        'Failed to navigate to next test case.',
+        'DISMISS',
+        { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+      );
     });
   }
 
@@ -363,4 +363,71 @@ export class ExecutionWorkbenchComponent implements OnInit {
   goBack(): void {
     this.router.navigate(['/executions']);
   }
-}
+
+  /**
+   * Navigate to the previous test case regardless of status
+   * Saves notes before navigating
+   */
+  navigateToPreviousExecution(): void {
+    if (!this.executionId || this.allExecutions.length === 0) {
+      return;
+    }
+
+    // Save notes before navigating
+    this.tcmService.saveExecution(this.executionId!, this.executionNotes).subscribe({
+      next: () => {
+        // Find current execution index
+        const currentIndex = this.allExecutions.findIndex(e => e.id.toString() === this.executionId?.toString());
+        
+        // Find previous execution
+        if (currentIndex > 0) {
+          const previousExecution = this.allExecutions[currentIndex - 1];
+          
+          const currentExecution = this.executionSubject.value;
+          const currentModuleId = currentExecution?.moduleId?.toString();
+          const previousModuleId = previousExecution.moduleId?.toString();
+
+          // Check if module changed
+          if (currentModuleId && previousModuleId && currentModuleId !== previousModuleId) {
+            this.snackBar.open(
+              `Entering module "${previousExecution.moduleName}"`,
+              'DISMISS',
+              {
+                duration: 3000,
+                panelClass: ['info-snackbar'],
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
+              }
+            );
+          }
+
+          // Navigate to previous execution
+          this.router.navigate(['/executions/workbench', previousExecution.id]).catch(navError => {
+            console.error('Navigation error:', navError);
+            this.snackBar.open(
+              'Failed to navigate to previous test case.',
+              'DISMISS',
+              { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          });
+        } else {
+          // At first execution, show toast
+          this.snackBar.open(
+            'No previous test case.',
+            'DISMISS',
+            { panelClass: ['info-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
+          );
+        }
+      },
+      error: (error) => {
+        console.error('Error saving execution before navigation:', error);
+        this.snackBar.open(
+          'Failed to save execution. Please try again.',
+          'DISMISS',
+          { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+        );
+      }
+    });
+  }
+
+  }

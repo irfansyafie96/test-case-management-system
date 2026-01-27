@@ -485,6 +485,34 @@ public class ApiController {
         }
     }
 
+    /**
+     * Save execution work-in-progress (notes) without completing the execution
+     * This allows users to save their progress while navigating between test cases
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PutMapping("/executions/{executionId}/save")
+    public ResponseEntity<?> saveExecutionWork(
+            @PathVariable Long executionId,
+            @Valid @RequestBody ExecutionSaveRequest saveData,
+            BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            StringBuilder errors = new StringBuilder();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.append(error.getField()).append(": ").append(error.getDefaultMessage()).append("; ");
+            }
+            return new ResponseEntity<>("Validation errors: " + errors.toString(), HttpStatus.BAD_REQUEST);
+        }
+        try {
+            String notes = saveData.getNotes();
+            TestExecution savedExecution = tcmService.saveExecutionWork(executionId, notes);
+            return new ResponseEntity<>(savedExecution, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error saving execution work: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // ==================== TEST EXECUTION ASSIGNMENT ENDPOINTS ====================
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")

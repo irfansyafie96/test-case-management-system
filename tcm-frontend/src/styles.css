@@ -288,7 +288,7 @@ code, .id-badge, .meta-label {
 
 /* Snackbars: System Alerts */
 .mat-mdc-snack-bar-container {
-  &.error-snackbar, &.success-snackbar, &.warning-snackbar {
+  &.error-snackbar, &.success-snackbar, &.warning-snackbar, &.info-snackbar {
     --mdc-snackbar-container-color: var(--surface);
     --mdc-snackbar-supporting-text-color: var(--ink);
 
@@ -329,6 +329,16 @@ code, .id-badge, .meta-label {
 
      .mat-mdc-snack-bar-action {
        color: var(--accent-success);
+     }
+  }
+
+  &.info-snackbar {
+     --mat-snack-bar-button-color: var(--accent-secondary);
+     border-color: var(--accent-secondary);
+     box-shadow: var(--shadow-sm) !important; /* Simplified shadow */
+
+     .mat-mdc-snack-bar-action {
+       color: var(--accent-secondary);
      }
   }
 
