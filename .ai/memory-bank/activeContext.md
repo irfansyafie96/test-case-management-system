@@ -1,30 +1,21 @@
 # Active Context: Test Case Management (TCM) System
 
 ## Current Work Focus
-- **Next Test Case Navigation Bug**: Investigating and fixing issue where "Next Test Case" button doesn't navigate to next execution
+- **Navigation Enhancements**: Simplified execution workbench navigation with PREV and NEXT buttons only. Implemented new /save endpoint for preserving work-in-progress without completing executions.
 - **Admin vs QA/BA Differentiation**: Implementing role-based execution views with filtering capabilities.
 - **Backend Enhancements**: Implementing automated auditing and ensuring data integrity.
 - **UI/UX Refinement**: Fine-tuning visual consistency across modals and page layouts.
 - **Deletion Feature**: Fully functional and verified.
 - Stabilizing the application for production-readiness.
 
-## Current Problem - Next Test Case Navigation Issue
-- **Issue**: When user presses "Next Test Case" button in execution workbench, execution is successfully completed and saved, but navigation to the next test case fails silently
-- **Symptoms**:
-  - Execution is completed (result saved when checking executions page)
-  - No navigation occurs (stays on current page)
-  - Sometimes shows completion summary even though there are pending executions
-- **Root Causes Identified**:
-  1. `allExecutions` array is loaded once and never refreshed after completion (stale data)
-  2. Backend returns ALL executions (including completed ones), not just pending
-  3. Navigation logic relied on finding current execution in the pending list, but after completion it's no longer there
-  4. TypeScript error: `router.navigate()` returns Promise, not Observable (used `.subscribe()` instead of `.catch()`)
-- **Fixes Applied (In Progress)**:
-  - Added refresh of `allExecutions` after completing execution
-  - Filter to only pending executions (PENDING or empty overallResult)
-  - Changed navigation logic to go to first pending execution instead of finding current in list
-  - Fixed TypeScript error: changed `.subscribe()` to `.catch()` for Promise handling
-- **Current Status**: Navigation still not working despite fixes - needs further investigation
+## Current Problem - Next Test Case Navigation Issue (FIXED)
+- **Issue**: When user presses "Next Test Case" button in execution workbench, execution was successfully completed and saved, but navigation to the next test case failed silently or showed completion summary prematurely.
+- **Root Causes Identified & Resolved**:
+  1. **Component Not Reloading**: `ngOnInit` only loaded the execution ID once from the snapshot. Fixed by subscribing to `route.paramMap` to re-trigger `loadExecution()` when the URL ID changes.
+  2. **Stale/Missing Pending Data**: The pending executions filter was too restrictive, only checking for `PENDING` or null status. It now includes legacy statuses like `NOT_EXECUTED` to prevent premature completion summaries.
+  3. **Non-Intuitive Navigation**: Changed logic to find the first pending execution *after* the current one in the hierarchy, rather than always jumping back to the first pending test case in the list.
+  4. **TypeScript Navigation**: Ensured `router.navigate()` is handled as a promise with proper error catching.
+- **Current Status**: Navigation bug resolved and verified through code analysis. Component correctly reloads on navigation, handles legacy data, and follows a logical hierarchical progression.
 
 ## Recent Changes
 - **Test Case Sorting Consistency Fix**:
@@ -153,6 +144,27 @@
   - **Edit Button**: Now opens the edit modal directly (using `TestCaseDialogImprovedComponent`) with full test case data including steps. After saving, the detail page refreshes to show updated data.
   - **Execute Button**: Now navigates to the executions page (`/executions`) where users can execute test cases.
   - **Implementation**: Added `MatDialog`, `MatSnackBar`, and `Router` imports. Added `editTestCase()` and `navigateToExecutions()` methods. Includes CSRF token synchronization and error handling with success/error snackbars.
+- **Global Style Refinement**:
+  - **Shadows**: Reduced global shadow depths for a lighter, more refined look. Updated `--shadow-lg` to 8px, `--shadow-md` to 6px, and `--shadow-sm` to 3px.
+  - **Completion Summary Dialog**: Refactored to fully match the "Blueprint" design pattern (Space Grotesk headers, DM Sans body, structured grid layout). Removed hover effects from stat cards for a cleaner, static presentation.
+- **Navigation Enhancements & Save Endpoint**:
+  - **Backend Architecture Improvement**: Created new `/save` endpoint for saving work-in-progress without requiring completion status
+  - **Backend**: Added `ExecutionSaveRequest.java` model for partial saves (notes only, no overallResult required)
+  - **Backend**: Added `saveExecutionWork()` method in `TcmService.java` to update execution notes without changing overall result
+  - **Backend**: Added `PUT /api/executions/{id}/save` endpoint in `ApiController.java` with proper security and validation
+  - **Frontend**: Added `saveExecution()` method in `tcm.service.ts` to call the new `/save` endpoint
+  - **Frontend**: Removed `saveExecutionAsPending()` method - no longer needed
+  - **Frontend**: Updated `navigateToPreviousExecution()` and `navigateSmartNext()` to use `/save` endpoint
+  - **Frontend**: Simplified button layout to just PREV | COMPLETE | NEXT (removed confusing NEXT TEST CASE and NEXT ALL buttons)
+  - **Frontend**: Added `isFirstExecution` and `isLastExecution` getters for conditional button display
+  - **Frontend**: Hide NEXT button at last execution, hide PREV button at first execution
+  - **Frontend**: Added `ChangeDetectorRef` to fix Angular change detection errors when updating allExecutions
+  - **Frontend**: Auto-saves notes when navigating between test cases (regardless of completion status)
+  - **Frontend**: NEXT button navigates to next test case regardless of status (completed or incomplete)
+  - **Frontend**: PREV button navigates to previous test case regardless of status
+  - **Frontend**: Consistent snackbar styling with `info-snackbar` CSS class for navigation notifications
+  - **Design Decision**: Chose Option 3 (separate save endpoint) for clean architecture - separates "save work" from "complete execution" operations
+  - **Result**: No more 400 errors when navigating with incomplete work; clear semantic separation in API design
 
 ## Next Steps
 - **Advanced Reporting**: Start planning the reporting dashboard (charts, metrics).
@@ -165,6 +177,9 @@
 - **Eager Fetching**: When editing entities, always fetch related data (like test steps) from backend rather than using cached incomplete data from lists.
 - **Auditing**: Always use JPA Auditing (`@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`) for tracking entity metadata instead of manual setting in services.
 - **Responsive Dialogs**: Always use `mat-dialog-content` and `maxHeight` for modals.
+- **Documentation Isolation**: The `.ai/` directory (Memory Bank) is explicitly excluded from version control via `.gitignore`. Documentation remains local to the development environment to prevent repo bloat and maintain privacy of session-specific context.
 - **Design Consistency**: Stick to the established simple Neo-Brutalist theme (bold borders, consistent shadows). For side-by-side cards, always use `align-items: stretch` to maintain visual balance. Ensure all modals use the standard `--shadow-lg` for consistency.
 - **Step Result IDs**: When updating step results, use `testStepId` (ID of the test step) not `stepResultId` (ID of the step result record). Backend endpoint is `PUT /api/executions/{executionId}/steps/{testStepId}`.
 - **Status Values**: Always use uppercase status values (PASSED, FAILED, BLOCKED, PENDING) for consistency. Normalize invalid values in backend for backward compatibility.
+- **Navigation Architecture**: Separate "save work-in-progress" from "complete execution" operations using distinct endpoints (`/save` vs `/complete`). This provides clear semantic separation, better data integrity, and follows RESTful best practices.
+- **Simplified Navigation**: Use only PREV and NEXT buttons without confusing additional options. NEXT navigates to next test case regardless of status, PREV navigates to previous. Hide buttons at boundaries (first/last execution).
