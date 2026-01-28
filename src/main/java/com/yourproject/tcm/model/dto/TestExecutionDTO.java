@@ -24,8 +24,8 @@ public class TestExecutionDTO {
     private List<TestStepResultDTO> stepResults;
     
     // Hierarchy information
-    private Long testSubmoduleId;
-    private String testSubmoduleName;
+    private Long submoduleId;
+    private String submoduleName;
     private Long moduleId;
     private String moduleName;
     private Long projectId;
@@ -36,7 +36,7 @@ public class TestExecutionDTO {
     public TestExecutionDTO(Long id, String testCaseId, String title, LocalDateTime executionDate,
                            String overallResult, String notes, Long duration, String environment,
                            String executedBy, Long assignedToUserId, String assignedToUsername,
-                           Long testSubmoduleId, String testSubmoduleName, Long moduleId, String moduleName,
+                           Long submoduleId, String submoduleName, Long moduleId, String moduleName,
                            Long projectId, String projectName, List<TestStepResultDTO> stepResults) {
         this.id = id;
         this.testCaseId = testCaseId;
@@ -50,8 +50,8 @@ public class TestExecutionDTO {
         this.executedBy = executedBy;
         this.assignedToUserId = assignedToUserId;
         this.assignedToUsername = assignedToUsername;
-        this.testSubmoduleId = testSubmoduleId;
-        this.testSubmoduleName = testSubmoduleName;
+        this.submoduleId = submoduleId;
+        this.submoduleName = submoduleName;
         this.moduleId = moduleId;
         this.moduleName = moduleName;
         this.projectId = projectId;
@@ -105,11 +105,11 @@ public class TestExecutionDTO {
     public List<TestStepResultDTO> getStepResults() { return stepResults; }
     public void setStepResults(List<TestStepResultDTO> stepResults) { this.stepResults = stepResults; }
 
-    public Long getTestSubmoduleId() { return testSubmoduleId; }
-    public void setTestSubmoduleId(Long testSubmoduleId) { this.testSubmoduleId = testSubmoduleId; }
+    public Long getSubmoduleId() { return submoduleId; }
+    public void setSubmoduleId(Long submoduleId) { this.submoduleId = submoduleId; }
 
-    public String getTestSubmoduleName() { return testSubmoduleName; }
-    public void setTestSubmoduleName(String testSubmoduleName) { this.testSubmoduleName = testSubmoduleName; }
+    public String getSubmoduleName() { return submoduleName; }
+    public void setSubmoduleName(String submoduleName) { this.submoduleName = submoduleName; }
     
     public Long getModuleId() { return moduleId; }
     public void setModuleId(Long moduleId) { this.moduleId = moduleId; }

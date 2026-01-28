@@ -13,6 +13,17 @@
 - **Current Status**: Backend started successfully. Frontend compilation errors resolved.
 
 ## Recent Changes
+- **Submodule Refactoring (IN PROGRESS)**:
+  - **Terminology**: Standardized on "Submodule" instead of "Test Submodule" or "Suite".
+  - **Backend**:
+    - Renamed all classes (`Submodule`, `SubmoduleRepository`, `SubmoduleDTO`).
+    - Updated all entity relationships and database table name to `submodules`.
+    - Updated API endpoints to use `/submodules` instead of `/testsubmodules`.
+  - **Frontend**:
+    - Updated `project.model.ts` and `tcm.service.ts`.
+    - Renamed and refactored `SubmoduleDialogComponent`.
+    - Updated core components (`module-detail`, `executions`, `workbench`).
+  - **Impact**: Simplified API surface and code readability. Cleaned up legacy "test" prefixes from internal hierarchy members.
 - **Scenario Field Removal (COMPLETED)**:
   - **Backend**: Removed `scenario` field from `TestCase` entity and `TestCaseDTO`. Removed getters/setters.
   - **Logic**: Updated `TcmService` import logic to ignore scenario column and `TestCaseService` update logic.

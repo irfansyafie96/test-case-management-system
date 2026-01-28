@@ -1,12 +1,12 @@
 package com.yourproject.tcm.model.dto;
 
-public class TestSubmoduleDTO {
+public class SubmoduleDTO {
     private Long id;
     private String name;
     private Long testModuleId;
     private String testModuleName;
 
-    public TestSubmoduleDTO(Long id, String name, Long testModuleId, String testModuleName) {
+    public SubmoduleDTO(Long id, String name, Long testModuleId, String testModuleName) {
         this.id = id;
         this.name = name;
         this.testModuleId = testModuleId;

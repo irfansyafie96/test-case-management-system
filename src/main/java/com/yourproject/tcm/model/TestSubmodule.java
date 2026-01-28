@@ -6,34 +6,33 @@ import jakarta.persistence.*;
 import java.util.List;
 
 /**
- * TestSubmodule Entity - Third level in the test case hierarchy
+ * Submodule Entity - Third level in the test case hierarchy
  *
- * TestSubmodule represents a group of related test cases that test a specific feature
- * or functionality. For example, if TestModule is "Training Market", then TestSubmodule
+ * Submodule represents a group of related test cases that test a specific feature
+ * or functionality. For example, if TestModule is "Training Market", then Submodule
  * could be "TP Registration", "TP Approval", "TP Training Management", etc.
  *
  * Relationship Structure:
- * - Many TestSubmodules belong to One TestModule (ManyToOne)
- * - One TestSubmodule contains Many TestCases (OneToMany)
- * - fetch = FetchType.EAGER for testCases: Load test cases immediately when submodule is loaded
+ * - Many Submodules belong to One TestModule (ManyToOne)
+ * - One Submodule contains Many TestCases (OneToMany)
  *
- * This creates the hierarchical structure: Project → TestModule → TestSubmodule → TestCase
+ * This creates the hierarchical structure: Project → TestModule → Submodule → TestCase
  */
 @Entity
-@Table(name = "test_submodules")  // Maps to 'test_submodules' table in database
+@Table(name = "submodules")  // Maps to 'submodules' table in database
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})  // Ignore Hibernate proxy properties during JSON serialization
-public class TestSubmodule {
+public class Submodule {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment primary key
-    private Long id;  // Unique identifier for the test submodule
+    private Long id;  // Unique identifier for the submodule
 
     @Column(nullable = false)  // Name is required
     private String name; // Submodule name (e.g., "TP Registration", "User Login")
 
     /**
-     * Many-to-One relationship: Many TestSubmodules belong to One TestModule
+     * Many-to-One relationship: Many Submodules belong to One TestModule
      * fetch = FetchType.LAZY: Only load module data when explicitly accessed
-     * @JoinColumn: Foreign key 'test_module_id' in test_submodules table points to TestModule
+     * @JoinColumn: Foreign key 'test_module_id' in submodules table points to TestModule
      * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestModuleId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many submodules can belong to one module
@@ -42,14 +41,14 @@ public class TestSubmodule {
     private TestModule testModule;  // The module this submodule belongs to
 
     /**
-     * One-to-Many relationship: One TestSubmodule can have Many TestCases
+     * One-to-Many relationship: One Submodule can have Many TestCases
      * cascade = CascadeType.ALL: Changes to submodule cascade to its test cases
      * orphanRemoval = true: If a test case is removed from this list, it's deleted
-     * fetch = FetchType.EAGER: Always load test cases when loading the submodule
-     * @JsonIgnoreProperties: Prevent circular reference back to TestSubmodule
+     * fetch = FetchType.LAZY: Load steps only when explicitly accessed (improves performance)
+     * @JsonIgnoreProperties: Prevent circular reference back to Submodule
      */
-    @OneToMany(mappedBy = "testSubmodule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"testSubmodule"})  // Prevent circular reference back to TestSubmodule
+    @OneToMany(mappedBy = "submodule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"submodule"})  // Prevent circular reference back to Submodule
     private List<TestCase> testCases;  // List of test cases in this submodule
 
     // Getters and Setters - Standard methods to access private fields

@@ -18,15 +18,15 @@ export interface TestModule {
   projectName?: string; // Added dynamically for display
   project?: Project; // Full project information for display
   description?: string;
-  testSubmodules?: TestSubmodule[];
-  submodulesCount?: number; // Number of test submodules in this module
+  submodules?: Submodule[];
+  submodulesCount?: number; // Number of submodules in this module
   testCasesCount?: number; // Total number of test cases across all submodules
   createdDate?: string;
   updatedDate?: string;
 }
 
-// Test Submodule Model
-export interface TestSubmodule {
+// Submodule Model
+export interface Submodule {
   id: number | string;
   name: string;
   moduleId: number | string;
@@ -57,7 +57,7 @@ export interface TestCase {
   testSteps?: TestStep[]; // Detailed steps from backend
   expectedResult?: string;
   submoduleId: number | string;
-  testSubmodule?: TestSubmodule; // Full submodule information for display
+  submodule?: Submodule; // Full submodule information for display
   createdDate?: string;
   updatedDate?: string;
   prerequisites?: string;
@@ -66,7 +66,7 @@ export interface TestCase {
   // Flattened hierarchy fields from backend
   projectName?: string;
   moduleName?: string;
-  testSubmoduleName?: string;
+  submoduleName?: string;
 }
 
 // Test Execution Model
@@ -96,8 +96,6 @@ export interface TestExecution {
   moduleName?: string;
   submoduleId?: number | string;
   submoduleName?: string;
-  testSubmoduleId?: number | string;
-  testSubmoduleName?: string;
 }
 
 // Completion Summary Model

@@ -9,7 +9,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-test-submodule-dialog',
+  selector: 'app-submodule-dialog',
   standalone: true,
   imports: [
     CommonModule,
@@ -20,14 +20,14 @@ import { MatIconModule } from '@angular/material/icon';
     MatDialogModule,
     MatIconModule
   ],
-  templateUrl: './test-submodule-dialog.component.html',
-  styleUrls: ['./test-submodule-dialog.component.css']
+  templateUrl: './submodule-dialog.component.html',
+  styleUrls: ['./submodule-dialog.component.css']
 })
-export class TestSubmoduleDialogComponent {
+export class SubmoduleDialogComponent {
   submoduleForm: FormGroup;
 
   constructor(
-    public dialogRef: MatDialogRef<TestSubmoduleDialogComponent>,
+    public dialogRef: MatDialogRef<SubmoduleDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private fb: FormBuilder
   ) {

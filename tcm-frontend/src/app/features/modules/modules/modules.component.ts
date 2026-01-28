@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
-import { Project, TestModule, TestSubmodule, TestCase } from '../../../core/models/project.model';
+import { Project, TestModule, Submodule, TestCase } from '../../../core/models/project.model';
 import { Observable } from 'rxjs';
 
 @Component({

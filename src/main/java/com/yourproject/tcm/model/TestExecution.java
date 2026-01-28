@@ -203,54 +203,54 @@ public class TestExecution {
     // Helper methods to flatten the hierarchy for the frontend
     // This allows the frontend to group executions without needing the full object graph
 
-    public String getTestSubmoduleName() {
-        if (testCase != null && testCase.getTestSubmodule() != null) {
-            return testCase.getTestSubmodule().getName();
+    public String getSubmoduleName() {
+        if (testCase != null && testCase.getSubmodule() != null) {
+            return testCase.getSubmodule().getName();
         }
         return null;
     }
 
-    public Long getTestSubmoduleId() {
-        if (testCase != null && testCase.getTestSubmodule() != null) {
-            return testCase.getTestSubmodule().getId();
+    public Long getSubmoduleId() {
+        if (testCase != null && testCase.getSubmodule() != null) {
+            return testCase.getSubmodule().getId();
         }
         return null;
     }
 
     public String getModuleName() {
         if (testCase != null && 
-            testCase.getTestSubmodule() != null && 
-            testCase.getTestSubmodule().getTestModule() != null) {
-            return testCase.getTestSubmodule().getTestModule().getName();
+            testCase.getSubmodule() != null && 
+            testCase.getSubmodule().getTestModule() != null) {
+            return testCase.getSubmodule().getTestModule().getName();
         }
         return null;
     }
 
     public Long getModuleId() {
         if (testCase != null && 
-            testCase.getTestSubmodule() != null && 
-            testCase.getTestSubmodule().getTestModule() != null) {
-            return testCase.getTestSubmodule().getTestModule().getId();
+            testCase.getSubmodule() != null && 
+            testCase.getSubmodule().getTestModule() != null) {
+            return testCase.getSubmodule().getTestModule().getId();
         }
         return null;
     }
 
     public String getProjectName() {
         if (testCase != null && 
-            testCase.getTestSubmodule() != null && 
-            testCase.getTestSubmodule().getTestModule() != null &&
-            testCase.getTestSubmodule().getTestModule().getProject() != null) {
-            return testCase.getTestSubmodule().getTestModule().getProject().getName();
+            testCase.getSubmodule() != null && 
+            testCase.getSubmodule().getTestModule() != null &&
+            testCase.getSubmodule().getTestModule().getProject() != null) {
+            return testCase.getSubmodule().getTestModule().getProject().getName();
         }
         return null;
     }
 
     public Long getProjectId() {
         if (testCase != null && 
-            testCase.getTestSubmodule() != null && 
-            testCase.getTestSubmodule().getTestModule() != null &&
-            testCase.getTestSubmodule().getTestModule().getProject() != null) {
-            return testCase.getTestSubmodule().getTestModule().getProject().getId();
+            testCase.getSubmodule() != null && 
+            testCase.getSubmodule().getTestModule() != null &&
+            testCase.getSubmodule().getTestModule().getProject() != null) {
+            return testCase.getSubmodule().getTestModule().getProject().getId();
         }
         return null;
     }

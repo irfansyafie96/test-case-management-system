@@ -16,9 +16,9 @@ import java.util.Set;
  *
  * Relationship Structure:
  * - Many TestModules belong to One Project (ManyToOne)
- * - One TestModule contains Many TestSubmodules (OneToMany)
+ * - One TestModule contains Many Submodules (OneToMany)
  *
- * This creates the hierarchical structure: Project → TestModule → TestSubmodule → TestCase
+ * This creates the hierarchical structure: Project → TestModule → Submodule → TestCase
  */
 @Entity
 @Table(name = "test_modules")  // Maps to 'test_modules' table in database
@@ -46,14 +46,14 @@ public class TestModule {
     private Project project;  // The project this module belongs to
 
     /**
-     * One-to-Many relationship: One TestModule can have Many TestSubmodules
+     * One-to-Many relationship: One TestModule can have Many Submodules
      * cascade = CascadeType.ALL: Changes to module cascade to its submodules
      * orphanRemoval = true: If a submodule is removed from this list, it's deleted
      * @JsonIgnoreProperties: Prevent circular reference back to TestModule
      */
     @OneToMany(mappedBy = "testModule", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties({"testModule"})  // Prevent circular reference back to TestModule
-    private List<TestSubmodule> testSubmodules;  // List of test submodules in this module
+    private List<Submodule> submodules;  // List of submodules in this module
 
     /**
      * Many-to-Many relationship with User entity (module assignments)
@@ -98,12 +98,12 @@ public class TestModule {
         this.project = project;
     }
 
-    public List<TestSubmodule> getTestSubmodules() {
-        return testSubmodules;
+    public List<Submodule> getSubmodules() {
+        return submodules;
     }
 
-    public void setTestSubmodules(List<TestSubmodule> testSubmodules) {
-        this.testSubmodules = testSubmodules;
+    public void setSubmodules(List<Submodule> submodules) {
+        this.submodules = submodules;
     }
 
     public Set<User> getAssignedUsers() {

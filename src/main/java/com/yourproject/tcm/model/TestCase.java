@@ -17,7 +17,7 @@ import java.util.List;
  * creating TestExecution records with their results.
  *
  * Relationship Structure:
- * - Many TestCases belong to One TestSubmodule (ManyToOne)
+ * - Many TestCases belong to One Submodule (ManyToOne)
  * - One TestCase contains Many TestSteps (OneToMany)
  * - One TestCase can have Many TestExecutions (OneToMany, defined in TestExecution)
  */
@@ -47,15 +47,15 @@ public class TestCase {
     private String tags;
 
     /**
-     * Many-to-One relationship: Many TestCases belong to One TestSubmodule
+     * Many-to-One relationship: Many TestCases belong to One Submodule
      * fetch = FetchType.LAZY: Only load submodule data when explicitly accessed
-     * @JoinColumn: Foreign key 'test_submodule_id' in test_cases table points to TestSubmodule
-     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestSubmoduleId() instead
+     * @JoinColumn: Foreign key 'submodule_id' in test_cases table points to Submodule
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getSubmoduleId() instead
      */
     @ManyToOne(fetch = FetchType.LAZY)  // Many test cases can belong to one submodule
-    @JoinColumn(name = "test_submodule_id", nullable = false)  // Foreign key column
+    @JoinColumn(name = "submodule_id", nullable = false)  // Foreign key column
     @JsonIgnore
-    private TestSubmodule testSubmodule;  // The submodule this test case belongs to
+    private Submodule submodule;  // The submodule this test case belongs to
 
     /**
      * One-to-Many relationship: One TestCase can have Many TestSteps
@@ -131,12 +131,12 @@ public class TestCase {
         this.tags = tags;
     }
 
-    public TestSubmodule getTestSubmodule() {
-        return testSubmodule;
+    public Submodule getSubmodule() {
+        return submodule;
     }
 
-    public void setTestSubmodule(TestSubmodule testSubmodule) {
-        this.testSubmodule = testSubmodule;
+    public void setSubmodule(Submodule submodule) {
+        this.submodule = submodule;
     }
 
     public List<TestStep> getTestSteps() {
@@ -156,36 +156,36 @@ public class TestCase {
     }
 
     /**
-     * Get the ID of the test submodule this test case belongs to.
-     * This is used by Jackson when serializing, since the testSubmodule field
+     * Get the ID of the submodule this test case belongs to.
+     * This is used by Jackson when serializing, since the submodule field
      * is marked with @JsonIgnore to prevent Hibernate proxy serialization.
      */
-    public Long getTestSubmoduleId() {
-        return testSubmodule != null ? testSubmodule.getId() : null;
+    public Long getSubmoduleId() {
+        return submodule != null ? submodule.getId() : null;
     }
 
     public TestModule getTestModule() {
-        return testSubmodule != null ? testSubmodule.getTestModule() : null;
+        return submodule != null ? submodule.getTestModule() : null;
     }
 
     // Flattened hierarchy getters for Frontend (avoids JsonIgnore/Proxy issues)
 
-    public String getTestSubmoduleName() {
-        return testSubmodule != null ? testSubmodule.getName() : null;
+    public String getSubmoduleName() {
+        return submodule != null ? submodule.getName() : null;
     }
 
     public String getModuleName() {
-        if (testSubmodule != null && testSubmodule.getTestModule() != null) {
-            return testSubmodule.getTestModule().getName();
+        if (submodule != null && submodule.getTestModule() != null) {
+            return submodule.getTestModule().getName();
         }
         return null;
     }
 
     public String getProjectName() {
-        if (testSubmodule != null &&
-            testSubmodule.getTestModule() != null &&
-            testSubmodule.getTestModule().getProject() != null) {
-            return testSubmodule.getTestModule().getProject().getName();
+        if (submodule != null &&
+            submodule.getTestModule() != null &&
+            submodule.getTestModule().getProject() != null) {
+            return submodule.getTestModule().getProject().getName();
         }
         return null;
     }

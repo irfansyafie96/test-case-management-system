@@ -1,8 +1,8 @@
 package com.yourproject.tcm.service.domain;
 
-import com.yourproject.tcm.model.TestSubmodule;
+import com.yourproject.tcm.model.Submodule;
 import com.yourproject.tcm.model.TestModule;
-import com.yourproject.tcm.repository.TestSubmoduleRepository;
+import com.yourproject.tcm.repository.SubmoduleRepository;
 import com.yourproject.tcm.repository.TestModuleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,62 +12,62 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Domain service for TestSubmodule-related operations.
+ * Domain service for Submodule-related operations.
  * Extracted from TcmService for better separation of concerns.
  */
 @Service
 public class SubmoduleService {
 
-    private final TestSubmoduleRepository testSubmoduleRepository;
+    private final SubmoduleRepository submoduleRepository;
     private final TestModuleRepository testModuleRepository;
 
     @Autowired
-    public SubmoduleService(TestSubmoduleRepository testSubmoduleRepository, TestModuleRepository testModuleRepository) {
-        this.testSubmoduleRepository = testSubmoduleRepository;
+    public SubmoduleService(SubmoduleRepository submoduleRepository, TestModuleRepository testModuleRepository) {
+        this.submoduleRepository = submoduleRepository;
         this.testModuleRepository = testModuleRepository;
     }
 
     /**
-     * Get a test submodule by ID.
+     * Get a submodule by ID.
      */
-    public Optional<TestSubmodule> getTestSubmoduleById(Long submoduleId) {
-        return testSubmoduleRepository.findByIdWithModule(submoduleId);
+    public Optional<Submodule> getSubmoduleById(Long submoduleId) {
+        return submoduleRepository.findByIdWithModule(submoduleId);
     }
 
     /**
-     * Get all test submodules for a test module.
+     * Get all submodules for a test module.
      */
-    public List<TestSubmodule> getTestSubmodulesByModuleId(Long moduleId) {
-        return testSubmoduleRepository.findByTestModuleIdWithTestCases(moduleId);
+    public List<Submodule> getSubmodulesByModuleId(Long moduleId) {
+        return submoduleRepository.findByTestModuleIdWithTestCases(moduleId);
     }
 
     /**
-     * Create a test submodule for a test module.
+     * Create a submodule for a test module.
      */
     @Transactional
-    public TestSubmodule createTestSubmoduleForTestModule(Long testModuleId, TestSubmodule testSubmodule) {
+    public Submodule createSubmoduleForTestModule(Long testModuleId, Submodule submodule) {
         return testModuleRepository.findById(testModuleId).map(testModule -> {
-            testSubmodule.setTestModule(testModule);
-            return testSubmoduleRepository.save(testSubmodule);
+            submodule.setTestModule(testModule);
+            return submoduleRepository.save(submodule);
         }).orElse(null);
     }
 
     /**
-     * Update a test submodule.
+     * Update a submodule.
      */
     @Transactional
-    public TestSubmodule updateTestSubmodule(Long submoduleId, TestSubmodule submoduleDetails) {
-        return testSubmoduleRepository.findById(submoduleId).map(submodule -> {
+    public Submodule updateSubmodule(Long submoduleId, Submodule submoduleDetails) {
+        return submoduleRepository.findById(submoduleId).map(submodule -> {
             submodule.setName(submoduleDetails.getName());
-            return testSubmoduleRepository.save(submodule);
+            return submoduleRepository.save(submodule);
         }).orElse(null);
     }
 
     /**
-     * Delete a test submodule.
+     * Delete a submodule.
      */
     @Transactional
-    public void deleteTestSubmodule(Long submoduleId) {
-        testSubmoduleRepository.deleteById(submoduleId);
+    public void deleteSubmodule(Long submoduleId) {
+        submoduleRepository.deleteById(submoduleId);
     }
 }

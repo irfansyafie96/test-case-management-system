@@ -7,22 +7,22 @@ public class TestCaseDTO {
     private String testCaseId;
     private String title;
     private String description;
-    private Long testSubmoduleId;
-    private String testSubmoduleName;
+    private Long submoduleId;
+    private String submoduleName;
     private String moduleName;
     private String projectName;
     private Integer stepCount;
     private List<TestStepDTO> testSteps;
 
     public TestCaseDTO(Long id, String testCaseId, String title, String description,
-                       Long testSubmoduleId, String testSubmoduleName, String moduleName,
+                       Long submoduleId, String submoduleName, String moduleName,
                        String projectName, Integer stepCount, List<TestStepDTO> testSteps) {
         this.id = id;
         this.testCaseId = testCaseId;
         this.title = title;
         this.description = description;
-        this.testSubmoduleId = testSubmoduleId;
-        this.testSubmoduleName = testSubmoduleName;
+        this.submoduleId = submoduleId;
+        this.submoduleName = submoduleName;
         this.moduleName = moduleName;
         this.projectName = projectName;
         this.stepCount = stepCount;
@@ -42,11 +42,11 @@ public class TestCaseDTO {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public Long getTestSubmoduleId() { return testSubmoduleId; }
-    public void setTestSubmoduleId(Long testSubmoduleId) { this.testSubmoduleId = testSubmoduleId; }
+    public Long getSubmoduleId() { return submoduleId; }
+    public void setSubmoduleId(Long submoduleId) { this.submoduleId = submoduleId; }
 
-    public String getTestSubmoduleName() { return testSubmoduleName; }
-    public void setTestSubmoduleName(String testSubmoduleName) { this.testSubmoduleName = testSubmoduleName; }
+    public String getSubmoduleName() { return submoduleName; }
+    public void setSubmoduleName(String submoduleName) { this.submoduleName = submoduleName; }
 
     public String getModuleName() { return moduleName; }
     public void setModuleName(String moduleName) { this.moduleName = moduleName; }
