@@ -57,7 +57,7 @@ public class TcmService {
     private TestModuleRepository testModuleRepository;  // Repository for TestModule operations
 
     @Autowired
-    private TestSubmoduleRepository testSubmoduleRepository;  // Repository for TestSubmodule operations
+    private SubmoduleRepository submoduleRepository;  // Repository for Submodule operations
 
     @Autowired
     private TestCaseRepository testCaseRepository;  // Repository for TestCase operations
@@ -196,9 +196,9 @@ public class TcmService {
         if (project.getModules() != null) {
             for (TestModule module : project.getModules()) {
                 // Accessing the collection forces Hibernate to load it
-                if (module.getTestSubmodules() != null) {
-                    module.getTestSubmodules().size();
-                    for (TestSubmodule suite : module.getTestSubmodules()) {
+                if (module.getSubmodules() != null) {
+                    module.getSubmodules().size();
+                    for (Submodule suite : module.getSubmodules()) {
                         if (suite.getTestCases() != null) {
                             suite.getTestCases().size();
                         }
@@ -279,23 +279,21 @@ public class TcmService {
             TestModule testModule = testModuleOpt.get();
 
             // Fetch all test submodules with their test cases for this module in a single query
-            List<TestSubmodule> submodulesWithTestCases = testSubmoduleRepository.findByTestModuleIdWithTestCases(testModuleId);
+            List<Submodule> submodulesWithTestCases = submoduleRepository.findByTestModuleIdWithTestCases(testModuleId);
 
             // Create a map for easier lookup
-            Map<Long, TestSubmodule> submoduleMap = submodulesWithTestCases.stream()
-                .collect(Collectors.toMap(TestSubmodule::getId, submodule -> submodule));
-
+            Map<Long, Submodule> submoduleMap = submodulesWithTestCases.stream()
+                        .collect(Collectors.toMap(Submodule::getId, submodule -> submodule));
             // Update the test submodules in the module with the ones that have test cases loaded
             // Also sort test cases within each submodule by ID
-            if (testModule.getTestSubmodules() != null) {
-                for (TestSubmodule testSubmodule : testModule.getTestSubmodules()) {
-                    TestSubmodule submoduleWithTestCases = submoduleMap.get(testSubmodule.getId());
+            if (testModule.getSubmodules() != null) {
+                        for (Submodule submodule : testModule.getSubmodules()) {                    Submodule submoduleWithTestCases = submoduleMap.get(submodule.getId());
                     if (submoduleWithTestCases != null) {
                         // Sort test cases by ID within the submodule
                         if (submoduleWithTestCases.getTestCases() != null) {
                             submoduleWithTestCases.getTestCases().sort(Comparator.comparing(TestCase::getId));
                         }
-                        testSubmodule.setTestCases(submoduleWithTestCases.getTestCases());
+                        submodule.setTestCases(submoduleWithTestCases.getTestCases());
                     }
                 }
             }
@@ -371,20 +369,20 @@ public class TcmService {
         entityManager.flush();
 
         // 2. Clean up test submodules deeply
-        // We iterate through a copy to perform deep cleanup (executions/results) via deleteTestSubmodule logic
+        // We iterate through a copy to perform deep cleanup (executions/results) via deleteSubmodule logic
         // But we DO NOT delete the submodule entity itself in the loop, we let orphanRemoval handle it
-        if (testModule.getTestSubmodules() != null) {
-            List<TestSubmodule> submodules = new ArrayList<>(testModule.getTestSubmodules());
-            for (TestSubmodule submodule : submodules) {
-                // Call deleteTestSubmodule to clean up its children (cases/executions)
+        if (testModule.getSubmodules() != null) {
+            List<Submodule> submodules = new ArrayList<>(testModule.getSubmodules());
+            for (Submodule submodule : submodules) {
+                // Call deleteSubmodule to clean up its children (cases/executions)
                 // But we must catch the delete call to avoid double deletion or just extract the cleanup logic
-                // Actually, since deleteTestSubmodule calls repository.delete(), we should just call it
+                // Actually, since deleteSubmodule calls repository.delete(), we should just call it
                 // and NOT rely on orphanRemoval for the submodules themselves, as that's safer for deep structures
-                deleteTestSubmodule(submodule.getId());
+                deleteSubmodule(submodule.getId());
             }
 
             // Clear the collection to sync the entity state, though they are already deleted
-            testModule.getTestSubmodules().clear();
+            testModule.getSubmodules().clear();
         }
 
         entityManager.flush();
@@ -402,26 +400,26 @@ public class TcmService {
      * @return Optional containing the test suite, or empty if not found
      */
     @Transactional(readOnly = true)
-    public Optional<TestSubmodule> getTestSubmoduleById(Long submoduleid) {
-        return testSubmoduleRepository.findByIdWithModule(submoduleid);
+    public Optional<Submodule> getSubmoduleById(Long submoduleid) {
+        return submoduleRepository.findByIdWithModule(submoduleid);
     }
 
     /**
      * Create a new test submodule within a specific test module
      * @param testModuleId The module ID to add the submodule to
-     * @param testSubmodule The test submodule to create
+     * @param submodule The test submodule to create
      * @return The created test submodule
      * @throws RuntimeException if module doesn't exist
      */
     @Transactional
-    public TestSubmodule createTestSubmoduleForTestModule(Long testModuleId, TestSubmodule testSubmodule) {
+    public Submodule createSubmoduleForTestModule(Long testModuleId, Submodule submodule) {
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
-            testSubmodule.setTestModule(testModule);  // Set the module relationship
-            TestSubmodule savedTestSubmodule = testSubmoduleRepository.save(testSubmodule);
+            submodule.setTestModule(testModule);  // Set the module relationship
+            Submodule savedSubmodule = submoduleRepository.save(submodule);
             entityManager.flush(); // Ensure data is written to DB
-            return savedTestSubmodule;
+            return savedSubmodule;
         } else {
             throw new RuntimeException("Test Module not found with id: " + testModuleId);
         }
@@ -435,14 +433,14 @@ public class TcmService {
      * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
-    public TestSubmodule updateTestSubmodule(Long submoduleid, TestSubmodule submoduleDetails) {
-        Optional<TestSubmodule> submoduleOpt = testSubmoduleRepository.findById(submoduleid);
+    public Submodule updateSubmodule(Long submoduleid, Submodule submoduleDetails) {
+        Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleid);
         if (submoduleOpt.isPresent()) {
-            TestSubmodule testSubmodule = submoduleOpt.get();
-            testSubmodule.setName(submoduleDetails.getName());  // Only update name currently
-            TestSubmodule updatedTestSubmodule = testSubmoduleRepository.save(testSubmodule);
+            Submodule submodule = submoduleOpt.get();
+            submodule.setName(submoduleDetails.getName());  // Only update name currently
+            Submodule updatedSubmodule = submoduleRepository.save(submodule);
             entityManager.flush(); // Ensure data is written to DB
-            return updatedTestSubmodule;
+            return updatedSubmodule;
         } else {
             throw new RuntimeException("Test Submodule not found with id: " + submoduleid);
         }
@@ -455,17 +453,18 @@ public class TcmService {
      * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
-    public void deleteTestSubmodule(Long submoduleid) {
-        Optional<TestSubmodule> submoduleOpt = testSubmoduleRepository.findById(submoduleid);
-        if (submoduleOpt.isPresent()) {
-            TestSubmodule testSubmodule = submoduleOpt.get();
+    public void deleteSubmodule(Long submoduleid) {
+        Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleid);
+
+                if (submoduleOpt.isPresent()) {
+                    Submodule submodule = submoduleOpt.get();
 
             // First, cleanup all execution data for test cases in the submodule
-            if (testSubmodule.getTestCases() != null) {
+            if (submodule.getTestCases() != null) {
                 // We don't delete the test case entity here directly
                 // We just clean up the 'grandchildren' (Executions/Results)
                 // The test cases themselves will be deleted via orphanRemoval when we clear the list
-                for (TestCase testCase : testSubmodule.getTestCases()) {
+                for (TestCase testCase : submodule.getTestCases()) {
                     // Delete all test executions for this test case
                     List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
                     if (!executions.isEmpty()) {
@@ -479,15 +478,15 @@ public class TcmService {
                         }
                     }
                 }
-                
+
                 // Clear the collection to trigger orphanRemoval
                 // This deletes the test cases from DB cleanly without setting FK to null
-                testSubmodule.getTestCases().clear();
+                submodule.getTestCases().clear();
                 entityManager.flush(); // Force the deletion of test cases
             }
 
             // Now delete the test submodule
-            testSubmoduleRepository.delete(testSubmodule);
+            submoduleRepository.delete(submodule);
             entityManager.flush(); // Ensure data is written to DB
         } else {
             throw new RuntimeException("Test Submodule not found with id: " + submoduleid);
@@ -672,7 +671,7 @@ public class TcmService {
 
         for (TestCase testCase : filteredTestCases) {
             // Get project info
-            TestSubmodule suite = testCase.getTestSubmodule();
+            Submodule suite = testCase.getSubmodule();
             if (suite == null || suite.getTestModule() == null) continue;
 
             TestModule module = suite.getTestModule();
@@ -758,10 +757,11 @@ public class TcmService {
      */
     @Transactional
     public TestCase createTestCaseForTestSubmodule(Long submoduleId, TestCase testCase) {
-        Optional<TestSubmodule> submoduleOpt = testSubmoduleRepository.findById(submoduleId);
-        if (submoduleOpt.isPresent()) {
-            TestSubmodule testSubmodule = submoduleOpt.get();
-            testCase.setTestSubmodule(testSubmodule);  // Set the submodule relationship
+        Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleId);
+
+                if (submoduleOpt.isPresent()) {
+                    Submodule submodule = submoduleOpt.get();
+            testCase.setSubmodule(submodule);  // Set the submodule relationship
 
             // If the test case has steps, set up the relationship and step numbers
             if (testCase.getTestSteps() != null) {
@@ -775,7 +775,7 @@ public class TcmService {
             entityManager.flush(); // Ensure data is written to DB
 
             // Auto-generate executions for all users assigned to the module
-            TestModule module = testSubmodule.getTestModule();
+            TestModule module = submodule.getTestModule();
             if (module != null && module.getAssignedUsers() != null && !module.getAssignedUsers().isEmpty()) {
                 for (User user : module.getAssignedUsers()) {
                     try {
@@ -1136,7 +1136,7 @@ public class TcmService {
                         if (moduleCompare != 0) return moduleCompare;
 
                         // Compare by Submodule ID
-                        int suiteCompare = Long.compare(e1.getTestSubmoduleId(), e2.getTestSubmoduleId());
+                        int suiteCompare = Long.compare(e1.getSubmoduleId(), e2.getSubmoduleId());
                         if (suiteCompare != 0) return suiteCompare;
 
                         // Compare by Test Case ID (use testCase's ID)
@@ -1166,7 +1166,7 @@ public class TcmService {
                     if (moduleCompare != 0) return moduleCompare;
 
                     // Compare by Submodule ID
-                    int suiteCompare = Long.compare(e1.getTestSubmoduleId(), e2.getTestSubmoduleId());
+                    int suiteCompare = Long.compare(e1.getSubmoduleId(), e2.getSubmoduleId());
                     if (suiteCompare != 0) return suiteCompare;
 
                     // Compare by Test Case ID (use numeric ID comparison for consistency)
@@ -1245,8 +1245,8 @@ public class TcmService {
             execution.getExecutedBy(),
             assignedToUserId,
             assignedToUsername,
-            execution.getTestSubmoduleId(),
-            execution.getTestSubmoduleName(),
+            execution.getSubmoduleId(),
+            execution.getSubmoduleName(),
             execution.getModuleId(),
             execution.getModuleName(),
             execution.getProjectId(),
@@ -1404,7 +1404,7 @@ public class TcmService {
      */
     private void createTestExecutionsForModuleAndUser(TestModule module, User user) {
         // Fetch all test submodules with their test cases for this module in a single query
-        List<TestSubmodule> submodules = testSubmoduleRepository.findByTestModuleIdWithTestCases(module.getId());
+        List<Submodule> submodules = submoduleRepository.findByTestModuleIdWithTestCases(module.getId());
         if (submodules == null || submodules.isEmpty()) {
             return;
         }
@@ -1413,7 +1413,7 @@ public class TcmService {
         List<TestExecution> existingExecutions = testExecutionRepository.findByAssignedToUser(user);
 
         // Iterate through all test submodules and their test cases
-        for (TestSubmodule submodule : submodules) {
+        for (Submodule submodule : submodules) {
             List<TestCase> testCases = submodule.getTestCases();
             if (testCases == null || testCases.isEmpty()) {
                 continue;
@@ -1537,9 +1537,9 @@ public class TcmService {
 
             // Force initialization of test cases for counts
             for (TestModule module : modules) {
-                if (module.getTestSubmodules() != null) {
-                    module.getTestSubmodules().size(); // Ensure submodules are loaded
-                    for (TestSubmodule submodule : module.getTestSubmodules()) {
+                if (module.getSubmodules() != null) {
+                    module.getSubmodules().size(); // Ensure submodules are loaded
+                    for (Submodule submodule : module.getSubmodules()) {
                         if (submodule.getTestCases() != null) {
                             submodule.getTestCases().size(); // Ensure cases are loaded
                         }
@@ -1671,7 +1671,7 @@ public class TcmService {
                     if (moduleCompare != 0) return moduleCompare;
 
                     // Compare by Submodule ID
-                    int suiteCompare = Long.compare(e1.getTestSubmoduleId(), e2.getTestSubmoduleId());
+                    int suiteCompare = Long.compare(e1.getSubmoduleId(), e2.getSubmoduleId());
                     if (suiteCompare != 0) return suiteCompare;
 
                     // Compare by Test Case ID
@@ -1766,7 +1766,7 @@ public class TcmService {
 
             // Get existing test case IDs in this module to check for duplicates
             Set<String> existingTestCaseIds = new HashSet<>();
-            for (TestSubmodule submodule : module.getTestSubmodules()) {
+            for (Submodule submodule : module.getSubmodules()) {
                 for (TestCase testCase : submodule.getTestCases()) {
                     existingTestCaseIds.add(testCase.getTestCaseId());
                 }
@@ -1879,7 +1879,7 @@ public class TcmService {
             }
 
             // Create test submodules and test cases
-            Map<String, TestSubmodule> submoduleMap = new HashMap<>();
+            Map<String, Submodule> submoduleMap = new HashMap<>();
             for (String key : testCaseDataMap.keySet()) {
                 List<Map<String, Object>> steps = testCaseDataMap.get(key);
                 if (steps.isEmpty()) {
@@ -1892,21 +1892,21 @@ public class TcmService {
                 String description = steps.get(0).get("description").toString();
 
                 // Find or create test submodule
-                TestSubmodule submodule;
+                Submodule submodule;
                 if (submoduleMap.containsKey(submoduleName)) {
                     submodule = submoduleMap.get(submoduleName);
                 } else {
                     // Check if submodule already exists in module
-                    submodule = module.getTestSubmodules().stream()
+                    submodule = module.getSubmodules().stream()
                         .filter(s -> s.getName().equals(submoduleName))
                         .findFirst()
                         .orElse(null);
 
                     if (submodule == null) {
-                        submodule = new TestSubmodule();
+                        submodule = new Submodule();
                         submodule.setName(submoduleName);
                         submodule.setTestModule(module);
-                        submodule = testSubmoduleRepository.save(submodule);
+                        submodule = submoduleRepository.save(submodule);
                         suitesCreated++;
                     }
                     submoduleMap.put(submoduleName, submodule);
@@ -1917,7 +1917,7 @@ public class TcmService {
                 testCase.setTestCaseId(testCaseId);
                 testCase.setTitle(title);
                 testCase.setDescription(description);
-                testCase.setTestSubmodule(submodule);
+                testCase.setSubmodule(submodule);
 
                 // Create test steps
                 List<TestStep> testSteps = new ArrayList<>();

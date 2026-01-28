@@ -2,10 +2,10 @@ package com.yourproject.tcm.service.domain;
 
 import com.yourproject.tcm.model.TestCase;
 import com.yourproject.tcm.model.TestExecution;
-import com.yourproject.tcm.model.TestSubmodule;
+import com.yourproject.tcm.model.Submodule;
 import com.yourproject.tcm.model.dto.TestExecutionDTO;
 import com.yourproject.tcm.repository.TestCaseRepository;
-import com.yourproject.tcm.repository.TestSubmoduleRepository;
+import com.yourproject.tcm.repository.SubmoduleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,12 +22,12 @@ import java.util.stream.Collectors;
 public class TestCaseService {
 
     private final TestCaseRepository testCaseRepository;
-    private final TestSubmoduleRepository testSubmoduleRepository;
+    private final SubmoduleRepository submoduleRepository;
 
     @Autowired
-    public TestCaseService(TestCaseRepository testCaseRepository, TestSubmoduleRepository testSubmoduleRepository) {
+    public TestCaseService(TestCaseRepository testCaseRepository, SubmoduleRepository submoduleRepository) {
         this.testCaseRepository = testCaseRepository;
-        this.testSubmoduleRepository = testSubmoduleRepository;
+        this.submoduleRepository = submoduleRepository;
     }
 
     /**
@@ -49,8 +49,8 @@ public class TestCaseService {
      */
     @Transactional
     public TestCase createTestCaseForTestSubmodule(Long submoduleId, TestCase testCase) {
-        return testSubmoduleRepository.findById(submoduleId).map(submodule -> {
-            testCase.setTestSubmodule(submodule);
+        return submoduleRepository.findById(submoduleId).map(submodule -> {
+            testCase.setSubmodule(submodule);
             return testCaseRepository.save(testCase);
         }).orElse(null);
     }
@@ -165,8 +165,8 @@ public class TestCaseService {
             execution.getExecutedBy(),
             execution.getAssignedToUser() != null ? execution.getAssignedToUser().getId() : null,
             execution.getAssignedToUser() != null ? execution.getAssignedToUser().getUsername() : "",
-            testCase != null ? testCase.getTestSubmoduleId() : null,
-            testCase != null ? testCase.getTestSubmoduleName() : null,
+            testCase != null ? testCase.getSubmoduleId() : null,
+            testCase != null ? testCase.getSubmoduleName() : null,
             testCase != null ? testCase.getTestModule().getId() : null,
             testCase != null ? testCase.getTestModule().getName() : "",
             testCase != null ? testCase.getTestModule().getProject().getId() : null,

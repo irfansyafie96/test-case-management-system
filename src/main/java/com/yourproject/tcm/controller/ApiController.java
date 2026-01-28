@@ -96,9 +96,9 @@ public class ApiController {
         int submodulesCount = 0;
         int testCasesCount = 0;
 
-        if (m.getTestSubmodules() != null) {
-            submodulesCount = m.getTestSubmodules().size();
-            testCasesCount = m.getTestSubmodules().stream()
+        if (m.getSubmodules() != null) {
+            submodulesCount = m.getSubmodules().size();
+            testCasesCount = m.getSubmodules().stream()
                 .mapToInt(submodule -> submodule.getTestCases() != null ? submodule.getTestCases().size() : 0)
                 .sum();
         }
@@ -114,8 +114,8 @@ public class ApiController {
         );
     }
 
-    private TestSubmoduleDTO convertToDTO(TestSubmodule s) {
-        return new TestSubmoduleDTO(
+    private SubmoduleDTO convertToDTO(Submodule s) {
+        return new SubmoduleDTO(
             s.getId(),
             s.getName(),
             s.getTestModule() != null ? s.getTestModule().getId() : null,
@@ -141,8 +141,8 @@ public class ApiController {
             c.getTestCaseId(),
             c.getTitle(),
             c.getDescription(),
-            c.getTestSubmodule() != null ? c.getTestSubmodule().getId() : null,
-            c.getTestSubmoduleName(),
+            c.getSubmodule() != null ? c.getSubmodule().getId() : null,
+            c.getSubmoduleName(),
             c.getModuleName(),
             c.getProjectName(),
             c.getTestSteps() != null ? c.getTestSteps().size() : 0,
@@ -178,12 +178,12 @@ public class ApiController {
             e.getExecutedBy(),
             e.getAssignedToUser() != null ? e.getAssignedToUser().getId() : null,
             e.getAssignedToUser() != null ? e.getAssignedToUser().getUsername() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null ? e.getTestCase().getTestSubmodule().getId() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null ? e.getTestCase().getTestSubmodule().getName() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null ? e.getTestCase().getTestSubmodule().getTestModule().getId() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null ? e.getTestCase().getTestSubmodule().getTestModule().getName() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null && e.getTestCase().getTestSubmodule().getTestModule().getProject() != null ? e.getTestCase().getTestSubmodule().getTestModule().getProject().getId() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null && e.getTestCase().getTestSubmodule().getTestModule().getProject() != null ? e.getTestCase().getTestSubmodule().getTestModule().getProject().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getSubmodule() != null ? e.getTestCase().getSubmodule().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getSubmodule() != null ? e.getTestCase().getSubmodule().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getSubmodule() != null && e.getTestCase().getSubmodule().getTestModule() != null ? e.getTestCase().getSubmodule().getTestModule().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getSubmodule() != null && e.getTestCase().getSubmodule().getTestModule() != null ? e.getTestCase().getSubmodule().getTestModule().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getSubmodule() != null && e.getTestCase().getSubmodule().getTestModule() != null && e.getTestCase().getSubmodule().getTestModule().getProject() != null ? e.getTestCase().getSubmodule().getTestModule().getProject().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getSubmodule() != null && e.getTestCase().getSubmodule().getTestModule() != null && e.getTestCase().getSubmodule().getTestModule().getProject() != null ? e.getTestCase().getSubmodule().getTestModule().getProject().getName() : null,
             stepResultDTOs
         );
     }
@@ -272,9 +272,9 @@ public class ApiController {
 
     @PostMapping("/testmodules/{testModuleId}/testsubmodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> createTestSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody TestSubmodule testSubmodule) {
+    public ResponseEntity<?> createTestSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody Submodule testSubmodule) {
         try {
-            TestSubmodule savedTestSubmodule = tcmService.createTestSubmoduleForTestModule(testModuleId, testSubmodule);
+            Submodule savedTestSubmodule = tcmService.createSubmoduleForTestModule(testModuleId, testSubmodule);
             return new ResponseEntity<>(convertToDTO(savedTestSubmodule), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -286,7 +286,7 @@ public class ApiController {
     @GetMapping("/testsubmodules/{submoduleId}")
     public ResponseEntity<?> getTestSubmoduleById(@PathVariable Long submoduleId) {
         try {
-            Optional<TestSubmodule> testSubmoduleOpt = tcmService.getTestSubmoduleById(submoduleId);
+            Optional<Submodule> testSubmoduleOpt = tcmService.getSubmoduleById(submoduleId);
             if (testSubmoduleOpt.isPresent()) {
                 return new ResponseEntity<>(testSubmoduleOpt.get(), HttpStatus.OK);
             } else {
@@ -299,9 +299,9 @@ public class ApiController {
 
     @PutMapping("/testsubmodules/{submoduleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> updateTestSubmodule(@PathVariable Long submoduleId, @RequestBody TestSubmodule submoduleDetails) {
+    public ResponseEntity<?> updateTestSubmodule(@PathVariable Long submoduleId, @RequestBody Submodule submoduleDetails) {
         try {
-            TestSubmodule updatedTestSubmodule = tcmService.updateTestSubmodule(submoduleId, submoduleDetails);
+            Submodule updatedTestSubmodule = tcmService.updateSubmodule(submoduleId, submoduleDetails);
             return new ResponseEntity<>(convertToDTO(updatedTestSubmodule), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -314,7 +314,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<Void> deleteTestSubmodule(@PathVariable Long submoduleId) {
         try {
-            tcmService.deleteTestSubmodule(submoduleId);
+            tcmService.deleteSubmodule(submoduleId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             // Log the error but return 404 to user if not found
