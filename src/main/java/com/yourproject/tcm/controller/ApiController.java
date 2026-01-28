@@ -270,7 +270,7 @@ public class ApiController {
 
     // ==================== TEST SUBMODULE ENDPOINTS ====================
 
-    @PostMapping("/testmodules/{testModuleId}/testsubmodules")
+    @PostMapping("/testmodules/{testModuleId}/submodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createTestSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody Submodule testSubmodule) {
         try {
@@ -283,7 +283,7 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/testsubmodules/{submoduleId}")
+    @GetMapping("/submodules/{submoduleId}")
     public ResponseEntity<?> getTestSubmoduleById(@PathVariable Long submoduleId) {
         try {
             Optional<Submodule> testSubmoduleOpt = tcmService.getSubmoduleById(submoduleId);
@@ -297,7 +297,7 @@ public class ApiController {
         }
     }
 
-    @PutMapping("/testsubmodules/{submoduleId}")
+    @PutMapping("/submodules/{submoduleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestSubmodule(@PathVariable Long submoduleId, @RequestBody Submodule submoduleDetails) {
         try {
@@ -310,7 +310,7 @@ public class ApiController {
         }
     }
 
-    @DeleteMapping("/testsubmodules/{submoduleId}")
+    @DeleteMapping("/submodules/{submoduleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<Void> deleteTestSubmodule(@PathVariable Long submoduleId) {
         try {
@@ -328,7 +328,7 @@ public class ApiController {
 
     // ==================== TEST CASE ENDPOINTS ====================
 
-    @PostMapping("/testsubmodules/{submoduleId}/testcases")
+    @PostMapping("/submodules/{submoduleId}/testcases")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<TestCaseDTO> createTestCaseForTestSubmodule(@PathVariable Long submoduleId, @RequestBody TestCase testCase) {
         TestCase savedTestCase = tcmService.createTestCaseForTestSubmodule(submoduleId, testCase);

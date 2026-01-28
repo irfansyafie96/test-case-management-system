@@ -17,11 +17,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { TestSubmoduleDialogComponent } from './test-submodule-dialog.component';
+import { SubmoduleDialogComponent } from './submodule-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component';
 import { ImportDialogComponent } from './import-dialog.component';
-import { Project, TestModule, TestSubmodule, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
+import { Project, TestModule, Submodule, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
 import { Observable, of, BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
 
@@ -109,7 +109,7 @@ export class ModuleDetailComponent implements OnInit {
 
   createTestSubmodule(moduleId: string | number): void {
     const idAsString = String(moduleId);
-    const dialogRef = this.dialog.open(TestSubmoduleDialogComponent, {
+    const dialogRef = this.dialog.open(SubmoduleDialogComponent, {
       width: '400px',
       data: { moduleId: idAsString }
     });
@@ -394,7 +394,7 @@ export class ModuleDetailComponent implements OnInit {
     });
   }
 
-  deleteTestSubmodule(submodule: TestSubmodule): void {
+  deleteTestSubmodule(submodule: Submodule): void {
     const submoduleId = submodule.id as string;
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {

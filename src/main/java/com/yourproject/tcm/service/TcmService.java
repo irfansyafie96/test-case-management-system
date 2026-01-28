@@ -274,7 +274,7 @@ public class TcmService {
      */
     @Transactional(readOnly = true)
     public Optional<TestModule> getTestModuleById(Long testModuleId) {
-        Optional<TestModule> testModuleOpt = testModuleRepository.findByIdWithTestSubmodules(testModuleId);
+        Optional<TestModule> testModuleOpt = testModuleRepository.findByIdWithSubmodules(testModuleId);
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
 
@@ -354,7 +354,7 @@ public class TcmService {
     public void deleteTestModule(Long testModuleId) {
         // Fetch the module with test submodules (using the repository method that fetches submodules)
         // We need the submodules collection to be initialized to clear it later
-        TestModule testModule = testModuleRepository.findByIdWithTestSubmodules(testModuleId)
+        TestModule testModule = testModuleRepository.findByIdWithSubmodules(testModuleId)
                 .orElseThrow(() -> new RuntimeException("Test Module not found with id: " + testModuleId));
 
         // 1. Clear assignments: Remove this module from all users' assigned lists

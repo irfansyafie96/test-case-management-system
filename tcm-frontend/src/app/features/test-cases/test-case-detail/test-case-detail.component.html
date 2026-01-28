@@ -54,9 +54,9 @@
                <label>Module</label>
                <span class="data-text">{{ testCase.moduleName }}</span>
             </div>
-            <div class="kv-item" *ngIf="testCase.testSubmoduleName || testCase.submoduleId">
+            <div class="kv-item" *ngIf="testCase.submoduleName || testCase.submoduleId">
                <label>Submodule</label>
-               <span class="data-text">{{ testCase.testSubmoduleName || testCase.submoduleId }}</span>
+               <span class="data-text">{{ testCase.submoduleName || testCase.submoduleId }}</span>
             </div>
 
             <div class="kv-item" *ngIf="testCase.tags && testCase.tags.length > 0">

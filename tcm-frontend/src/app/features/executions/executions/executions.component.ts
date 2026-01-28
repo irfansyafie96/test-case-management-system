@@ -220,15 +220,15 @@ export class ExecutionsComponent implements OnInit {
       let projectName = execution.projectName;
       let moduleId = execution.moduleId?.toString();
       let moduleName = execution.moduleName;
-      let submoduleId = (execution.testSubmoduleId || execution.submoduleId)?.toString();
-      let submoduleName = execution.testSubmoduleName || execution.submoduleName;
+      let submoduleId = (execution.submoduleId)?.toString();
+      let submoduleName = execution.submoduleName;
 
       // Fallback: Traverse object graph if flat fields are missing
       if (!projectId) {
         const testCase = execution.testCase;
-        if (!testCase?.testSubmodule) return;
+        if (!testCase?.submodule) return;
 
-        const submodule = testCase.testSubmodule;
+        const submodule = testCase.submodule;
         const module = submodule.testModule;
         const project = module?.project;
 

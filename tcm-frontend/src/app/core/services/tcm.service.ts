@@ -3,7 +3,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { Project, TestModule, TestSubmodule, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary } from '../models/project.model';
+import { Project, TestModule, Submodule, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary } from '../models/project.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -157,12 +157,12 @@ export class TcmService {
    * Create a new test submodule within a module
    * @param moduleId - Parent module ID
    * @param submodule - Submodule data {name}
-   * @returns Observable<TestSubmodule> - Stream of created submodule
+   * @returns Observable<Submodule> - Stream of created submodule
    */
-  createTestSubmodule(moduleId: string, submodule: { name: string }): Observable<TestSubmodule> {
-    return this.http.post<TestSubmodule>(`${this.apiUrl}/testmodules/${moduleId}/testsubmodules`, submodule)
+  createTestSubmodule(moduleId: string, submodule: { name: string }): Observable<Submodule> {
+    return this.http.post<Submodule>(`${this.apiUrl}/testmodules/${moduleId}/submodules`, submodule)
       .pipe(
-        catchError(this.handleError<TestSubmodule>('createTestSubmodule'))
+        catchError(this.handleError<Submodule>('createTestSubmodule'))
       );
   }
 
@@ -170,12 +170,12 @@ export class TcmService {
    * Update an existing test submodule
    * @param id - Submodule ID to update
    * @param updates - Updated data {name?}
-   * @returns Observable<TestSubmodule> - Stream of updated submodule
+   * @returns Observable<Submodule> - Stream of updated submodule
    */
-  updateTestSubmodule(id: string, updates: { name?: string }): Observable<TestSubmodule> {
-    return this.http.put<TestSubmodule>(`${this.apiUrl}/testsubmodules/${id}`, updates)
+  updateTestSubmodule(id: string, updates: { name?: string }): Observable<Submodule> {
+    return this.http.put<Submodule>(`${this.apiUrl}/submodules/${id}`, updates)
       .pipe(
-        catchError(this.handleError<TestSubmodule>('updateTestSubmodule'))
+        catchError(this.handleError<Submodule>('updateTestSubmodule'))
       );
   }
 
@@ -185,7 +185,7 @@ export class TcmService {
    * @returns Observable<void> - Stream indicating completion
    */
   deleteTestSubmodule(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/testsubmodules/${id}`)
+    return this.http.delete<void>(`${this.apiUrl}/submodules/${id}`)
       .pipe(
         catchError(this.handleError<void>('deleteTestSubmodule'))
       );
@@ -249,7 +249,7 @@ export class TcmService {
    * @returns Observable<TestCase> - Stream of created test case
    */
   createTestCase(submoduleId: string, testCase: any): Observable<TestCase> {
-    return this.http.post<TestCase>(`${this.apiUrl}/testsubmodules/${submoduleId}/testcases`, testCase)
+    return this.http.post<TestCase>(`${this.apiUrl}/submodules/${submoduleId}/testcases`, testCase)
       .pipe(
         catchError(this.handleError<TestCase>('createTestCase'))
       );

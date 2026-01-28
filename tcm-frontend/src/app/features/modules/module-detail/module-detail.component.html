@@ -124,7 +124,7 @@
         </div>
 
         <div class="test-suites-container">
-          <div *ngFor="let submodule of vm.module!.testSubmodules || []" class="suite-folder">
+          <div *ngFor="let submodule of vm.module!.submodules || []" class="suite-folder">
             <div class="suite-header">
               <div class="suite-title">
                 <mat-icon>folder</mat-icon>
@@ -207,7 +207,7 @@
             </div>
           </div>
 
-          <div *ngIf="!(vm.module!.testSubmodules?.length)" class="empty-state">
+          <div *ngIf="!(vm.module!.submodules?.length)" class="empty-state">
             <div class="empty-content">
               <div class="empty-icon-wrapper">
                 <mat-icon class="empty-icon">folder_open</mat-icon>

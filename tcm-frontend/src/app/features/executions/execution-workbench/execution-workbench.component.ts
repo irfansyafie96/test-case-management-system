@@ -143,7 +143,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
         // Store current hierarchy info
         this.currentModuleId = execution.moduleId?.toString() || null;
-        this.currentSubmoduleId = execution.testSubmoduleId?.toString() || null;
+        this.currentSubmoduleId = execution.submoduleId?.toString() || null;
 
         // Load all executions for navigation
         this.loadAllExecutions();
