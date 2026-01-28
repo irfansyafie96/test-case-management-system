@@ -77,6 +77,7 @@ public class WebSecurityConfig {
             .ignoringRequestMatchers("/api/projects/**")  // Ignore CSRF for projects
             .ignoringRequestMatchers("/api/testmodules/**")  // Ignore CSRF for testmodules
             .ignoringRequestMatchers("/api/testsuites/**")  // Ignore CSRF for testsuites
+            .ignoringRequestMatchers("/api/submodules/**")  // Ignore CSRF for submodules
             .ignoringRequestMatchers("/api/testcases/**")   // Ignore CSRF for testcases
             .ignoringRequestMatchers("/api/users/**")       // Ignore CSRF for user management
             .ignoringRequestMatchers("/api/executions/**")  // Ignore CSRF for executions

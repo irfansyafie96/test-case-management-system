@@ -274,29 +274,23 @@ public class TcmService {
      */
     @Transactional(readOnly = true)
     public Optional<TestModule> getTestModuleById(Long testModuleId) {
-        Optional<TestModule> testModuleOpt = testModuleRepository.findByIdWithSubmodules(testModuleId);
+        Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
 
-            // Fetch all test submodules with their test cases for this module in a single query
+            // Fetch all submodules with their test cases for this module
             List<Submodule> submodulesWithTestCases = submoduleRepository.findByTestModuleIdWithTestCases(testModuleId);
 
-            // Create a map for easier lookup
-            Map<Long, Submodule> submoduleMap = submodulesWithTestCases.stream()
-                        .collect(Collectors.toMap(Submodule::getId, submodule -> submodule));
-            // Update the test submodules in the module with the ones that have test cases loaded
-            // Also sort test cases within each submodule by ID
-            if (testModule.getSubmodules() != null) {
-                        for (Submodule submodule : testModule.getSubmodules()) {                    Submodule submoduleWithTestCases = submoduleMap.get(submodule.getId());
-                    if (submoduleWithTestCases != null) {
-                        // Sort test cases by ID within the submodule
-                        if (submoduleWithTestCases.getTestCases() != null) {
-                            submoduleWithTestCases.getTestCases().sort(Comparator.comparing(TestCase::getId));
-                        }
-                        submodule.setTestCases(submoduleWithTestCases.getTestCases());
-                    }
+            // Sort test cases within each submodule by ID
+            for (Submodule submodule : submodulesWithTestCases) {
+                if (submodule.getTestCases() != null) {
+                    submodule.getTestCases().sort(Comparator.comparing(TestCase::getId));
                 }
             }
+
+            // Set the complete submodules list with test cases
+            testModule.setSubmodules(submodulesWithTestCases);
+
             return Optional.of(testModule);
         }
         return testModuleOpt;

@@ -164,6 +164,7 @@ public class TestCase {
         return submodule != null ? submodule.getId() : null;
     }
 
+    @JsonIgnore
     public TestModule getTestModule() {
         return submodule != null ? submodule.getTestModule() : null;
     }
