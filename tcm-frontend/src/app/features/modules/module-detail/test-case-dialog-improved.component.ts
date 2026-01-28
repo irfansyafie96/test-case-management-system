@@ -44,6 +44,7 @@ export class TestCaseDialogImprovedComponent {
       testCaseId: [data?.testCaseId || '', Validators.required],
       title: [data?.title || '', Validators.required],
       description: [data?.description || ''],
+      scenario: [data?.scenario || ''],
       testSteps: this.fb.array([])
     });
 

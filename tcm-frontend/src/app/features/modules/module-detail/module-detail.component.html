@@ -26,12 +26,12 @@
             <p>{{ vm.module!.description || 'No description provided.' }}</p>
           </div>
           <div class="dossier-actions">
-            <button 
-              mat-raised-button 
-              color="primary" 
-              (click)="createTestSuite(vm.module!.id)"
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="createTestSubmodule(vm.module!.id)"
               *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
-              <mat-icon>add</mat-icon> NEW SUITE
+              <mat-icon>add</mat-icon> NEW SUBMODULE
             </button>
             <button 
               mat-raised-button 
@@ -120,37 +120,37 @@
 
       <div class="content-section">
         <div class="section-header">
-          <h2><mat-icon>folder_special</mat-icon> Test Suites</h2>
+          <h2><mat-icon>folder_special</mat-icon> Test Submodules</h2>
         </div>
 
         <div class="test-suites-container">
-          <div *ngFor="let suite of vm.module!.testSuites || []" class="suite-folder">
+          <div *ngFor="let submodule of vm.module!.testSubmodules || []" class="suite-folder">
             <div class="suite-header">
               <div class="suite-title">
                 <mat-icon>folder</mat-icon>
-                <h3>{{ suite.name }}</h3>
+                <h3>{{ submodule.name }}</h3>
               </div>
               <div class="suite-actions">
                 <button
                   mat-stroked-button
                   class="small-btn"
-                  (click)="createTestCase(suite.id)"
+                  (click)="createTestCase(submodule.id)"
                   *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
                   <mat-icon>post_add</mat-icon> ADD CASE
                 </button>
                 <button
                   mat-icon-button
-                  matTooltip="Delete test suite"
-                  (click)="deleteTestSuite(suite)"
+                  matTooltip="Delete test submodule"
+                  (click)="deleteTestSubmodule(submodule)"
                   color="warn"
                   *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>
             </div>
-            
+
             <div class="suite-content">
-              <table mat-table [dataSource]="suite.testCases || []" class="bespoke-table">
+              <table mat-table [dataSource]="submodule.testCases || []" class="bespoke-table">
                 <!-- ID Column -->
                 <ng-container matColumnDef="id">
                   <th mat-header-cell *matHeaderCellDef> ID </th>
@@ -201,20 +201,20 @@
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
               </table>
 
-              <div *ngIf="!suite.testCases?.length" class="empty-suite-msg">
-                No test cases in this suite.
+              <div *ngIf="!submodule.testCases?.length" class="empty-suite-msg">
+                No test cases in this submodule.
               </div>
             </div>
           </div>
 
-          <div *ngIf="!(vm.module!.testSuites?.length)" class="empty-state">
+          <div *ngIf="!(vm.module!.testSubmodules?.length)" class="empty-state">
             <div class="empty-content">
               <div class="empty-icon-wrapper">
                 <mat-icon class="empty-icon">folder_open</mat-icon>
               </div>
               <h2>Empty Module</h2>
-              <p *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">Create a test suite to begin organizing test cases.</p>
-              <p *ngIf="!authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">No test suites found. Contact an administrator to create test suites.</p>
+              <p *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">Create a test submodule to begin organizing test cases.</p>
+              <p *ngIf="!authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">No test submodules found. Contact an administrator to create test submodules.</p>
             </div>
           </div>
         </div>

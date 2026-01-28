@@ -7,6 +7,7 @@ import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
 import com.yourproject.tcm.model.dto.TestAnalyticsDTO;
 import com.yourproject.tcm.model.dto.TestExecutionDTO;
 import com.yourproject.tcm.repository.*;
+import com.yourproject.tcm.service.domain.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,7 @@ public class TcmService {
     private TestModuleRepository testModuleRepository;  // Repository for TestModule operations
 
     @Autowired
-    private TestSuiteRepository testSuiteRepository;  // Repository for TestSuite operations
+    private TestSubmoduleRepository testSubmoduleRepository;  // Repository for TestSubmodule operations
 
     @Autowired
     private TestCaseRepository testCaseRepository;  // Repository for TestCase operations
@@ -69,6 +70,22 @@ public class TcmService {
 
     @Autowired
     private TestStepResultRepository testStepResultRepository;  // Repository for TestStepResult operations
+
+    // Domain services for delegated operations
+    @Autowired
+    private ProjectService projectService;  // Domain service for Project operations
+
+    @Autowired
+    private ModuleService moduleService;  // Domain service for Module operations
+
+    @Autowired
+    private SubmoduleService submoduleService;  // Domain service for Submodule operations
+
+    @Autowired
+    private TestCaseService testCaseService;  // Domain service for TestCase operations
+
+    @Autowired
+    private ExecutionService executionService;  // Domain service for Execution operations
 
     // Helper methods for assignment-based filtering
     public User getCurrentUser() {
@@ -147,7 +164,7 @@ public class TcmService {
         }
         
         project.setOrganization(currentOrg);
-        return projectRepository.save(project);
+        return projectService.createProject(project);
     }
 
     /**
@@ -179,9 +196,9 @@ public class TcmService {
         if (project.getModules() != null) {
             for (TestModule module : project.getModules()) {
                 // Accessing the collection forces Hibernate to load it
-                if (module.getTestSuites() != null) {
-                    module.getTestSuites().size(); 
-                    for (TestSuite suite : module.getTestSuites()) {
+                if (module.getTestSubmodules() != null) {
+                    module.getTestSubmodules().size();
+                    for (TestSubmodule suite : module.getTestSubmodules()) {
                         if (suite.getTestCases() != null) {
                             suite.getTestCases().size();
                         }
@@ -257,28 +274,28 @@ public class TcmService {
      */
     @Transactional(readOnly = true)
     public Optional<TestModule> getTestModuleById(Long testModuleId) {
-        Optional<TestModule> testModuleOpt = testModuleRepository.findByIdWithTestSuites(testModuleId);
+        Optional<TestModule> testModuleOpt = testModuleRepository.findByIdWithTestSubmodules(testModuleId);
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
 
-            // Fetch all test suites with their test cases for this module in a single query
-            List<TestSuite> suitesWithTestCases = testSuiteRepository.findByTestModuleIdWithTestCases(testModuleId);
+            // Fetch all test submodules with their test cases for this module in a single query
+            List<TestSubmodule> submodulesWithTestCases = testSubmoduleRepository.findByTestModuleIdWithTestCases(testModuleId);
 
             // Create a map for easier lookup
-            Map<Long, TestSuite> suiteMap = suitesWithTestCases.stream()
-                .collect(Collectors.toMap(TestSuite::getId, suite -> suite));
+            Map<Long, TestSubmodule> submoduleMap = submodulesWithTestCases.stream()
+                .collect(Collectors.toMap(TestSubmodule::getId, submodule -> submodule));
 
-            // Update the test suites in the module with the ones that have test cases loaded
-            // Also sort test cases within each suite by ID
-            if (testModule.getTestSuites() != null) {
-                for (TestSuite testSuite : testModule.getTestSuites()) {
-                    TestSuite suiteWithTestCases = suiteMap.get(testSuite.getId());
-                    if (suiteWithTestCases != null) {
-                        // Sort test cases by ID within the suite
-                        if (suiteWithTestCases.getTestCases() != null) {
-                            suiteWithTestCases.getTestCases().sort(Comparator.comparing(TestCase::getId));
+            // Update the test submodules in the module with the ones that have test cases loaded
+            // Also sort test cases within each submodule by ID
+            if (testModule.getTestSubmodules() != null) {
+                for (TestSubmodule testSubmodule : testModule.getTestSubmodules()) {
+                    TestSubmodule submoduleWithTestCases = submoduleMap.get(testSubmodule.getId());
+                    if (submoduleWithTestCases != null) {
+                        // Sort test cases by ID within the submodule
+                        if (submoduleWithTestCases.getTestCases() != null) {
+                            submoduleWithTestCases.getTestCases().sort(Comparator.comparing(TestCase::getId));
                         }
-                        testSuite.setTestCases(suiteWithTestCases.getTestCases());
+                        testSubmodule.setTestCases(submoduleWithTestCases.getTestCases());
                     }
                 }
             }
@@ -337,9 +354,9 @@ public class TcmService {
      */
     @Transactional
     public void deleteTestModule(Long testModuleId) {
-        // Fetch the module with test suites (using the repository method that fetches suites)
-        // We need the suites collection to be initialized to clear it later
-        TestModule testModule = testModuleRepository.findByIdWithTestSuites(testModuleId)
+        // Fetch the module with test submodules (using the repository method that fetches submodules)
+        // We need the submodules collection to be initialized to clear it later
+        TestModule testModule = testModuleRepository.findByIdWithTestSubmodules(testModuleId)
                 .orElseThrow(() -> new RuntimeException("Test Module not found with id: " + testModuleId));
 
         // 1. Clear assignments: Remove this module from all users' assigned lists
@@ -347,29 +364,29 @@ public class TcmService {
             Set<User> users = new HashSet<>(testModule.getAssignedUsers());
             for (User user : users) {
                 user.getAssignedTestModules().remove(testModule);
-                userRepository.save(user); 
+                userRepository.save(user);
             }
             testModule.getAssignedUsers().clear();
         }
-        entityManager.flush(); 
+        entityManager.flush();
 
-        // 2. Clean up test suites deeply
-        // We iterate through a copy to perform deep cleanup (executions/results) via deleteTestSuite logic
-        // But we DO NOT delete the suite entity itself in the loop, we let orphanRemoval handle it
-        if (testModule.getTestSuites() != null) {
-            List<TestSuite> suites = new ArrayList<>(testModule.getTestSuites());
-            for (TestSuite suite : suites) {
-                // Call deleteTestSuite to clean up its children (cases/executions)
+        // 2. Clean up test submodules deeply
+        // We iterate through a copy to perform deep cleanup (executions/results) via deleteTestSubmodule logic
+        // But we DO NOT delete the submodule entity itself in the loop, we let orphanRemoval handle it
+        if (testModule.getTestSubmodules() != null) {
+            List<TestSubmodule> submodules = new ArrayList<>(testModule.getTestSubmodules());
+            for (TestSubmodule submodule : submodules) {
+                // Call deleteTestSubmodule to clean up its children (cases/executions)
                 // But we must catch the delete call to avoid double deletion or just extract the cleanup logic
-                // Actually, since deleteTestSuite calls repository.delete(), we should just call it
-                // and NOT rely on orphanRemoval for the suites themselves, as that's safer for deep structures
-                deleteTestSuite(suite.getId());
+                // Actually, since deleteTestSubmodule calls repository.delete(), we should just call it
+                // and NOT rely on orphanRemoval for the submodules themselves, as that's safer for deep structures
+                deleteTestSubmodule(submodule.getId());
             }
-            
+
             // Clear the collection to sync the entity state, though they are already deleted
-            testModule.getTestSuites().clear();
+            testModule.getTestSubmodules().clear();
         }
-        
+
         entityManager.flush();
 
         // Now delete the module structure
@@ -385,70 +402,70 @@ public class TcmService {
      * @return Optional containing the test suite, or empty if not found
      */
     @Transactional(readOnly = true)
-    public Optional<TestSuite> getTestSuiteById(Long suiteId) {
-        return testSuiteRepository.findByIdWithModule(suiteId);
+    public Optional<TestSubmodule> getTestSubmoduleById(Long submoduleid) {
+        return testSubmoduleRepository.findByIdWithModule(submoduleid);
     }
 
     /**
-     * Create a new test suite within a specific test module
-     * @param testModuleId The module ID to add the suite to
-     * @param testSuite The test suite to create
-     * @return The created test suite
+     * Create a new test submodule within a specific test module
+     * @param testModuleId The module ID to add the submodule to
+     * @param testSubmodule The test submodule to create
+     * @return The created test submodule
      * @throws RuntimeException if module doesn't exist
      */
     @Transactional
-    public TestSuite createTestSuiteForTestModule(Long testModuleId, TestSuite testSuite) {
+    public TestSubmodule createTestSubmoduleForTestModule(Long testModuleId, TestSubmodule testSubmodule) {
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
-            testSuite.setTestModule(testModule);  // Set the module relationship
-            TestSuite savedTestSuite = testSuiteRepository.save(testSuite);
+            testSubmodule.setTestModule(testModule);  // Set the module relationship
+            TestSubmodule savedTestSubmodule = testSubmoduleRepository.save(testSubmodule);
             entityManager.flush(); // Ensure data is written to DB
-            return savedTestSuite;
+            return savedTestSubmodule;
         } else {
             throw new RuntimeException("Test Module not found with id: " + testModuleId);
         }
     }
 
     /**
-     * Update an existing test suite
-     * @param suiteId The ID of the suite to update
-     * @param suiteDetails Updated suite details
-     * @return The updated test suite
-     * @throws RuntimeException if suite doesn't exist
+     * Update an existing test submodule
+     * @param submoduleid The ID of the submodule to update
+     * @param submoduleDetails Updated submodule details
+     * @return The updated test submodule
+     * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
-    public TestSuite updateTestSuite(Long suiteId, TestSuite suiteDetails) {
-        Optional<TestSuite> suiteOpt = testSuiteRepository.findById(suiteId);
-        if (suiteOpt.isPresent()) {
-            TestSuite testSuite = suiteOpt.get();
-            testSuite.setName(suiteDetails.getName());  // Only update name currently
-            TestSuite updatedTestSuite = testSuiteRepository.save(testSuite);
+    public TestSubmodule updateTestSubmodule(Long submoduleid, TestSubmodule submoduleDetails) {
+        Optional<TestSubmodule> submoduleOpt = testSubmoduleRepository.findById(submoduleid);
+        if (submoduleOpt.isPresent()) {
+            TestSubmodule testSubmodule = submoduleOpt.get();
+            testSubmodule.setName(submoduleDetails.getName());  // Only update name currently
+            TestSubmodule updatedTestSubmodule = testSubmoduleRepository.save(testSubmodule);
             entityManager.flush(); // Ensure data is written to DB
-            return updatedTestSuite;
+            return updatedTestSubmodule;
         } else {
-            throw new RuntimeException("Test Suite not found with id: " + suiteId);
+            throw new RuntimeException("Test Submodule not found with id: " + submoduleid);
         }
     }
 
     /**
-     * Delete a test suite by ID
-     * This will also delete all test cases in the suite (cascading)
-     * @param suiteId The ID of the test suite to delete
-     * @throws RuntimeException if suite doesn't exist
+     * Delete a test submodule by ID
+     * This will also delete all test cases in the submodule (cascading)
+     * @param submoduleid The ID of the test submodule to delete
+     * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
-    public void deleteTestSuite(Long suiteId) {
-        Optional<TestSuite> suiteOpt = testSuiteRepository.findById(suiteId);
-        if (suiteOpt.isPresent()) {
-            TestSuite testSuite = suiteOpt.get();
+    public void deleteTestSubmodule(Long submoduleid) {
+        Optional<TestSubmodule> submoduleOpt = testSubmoduleRepository.findById(submoduleid);
+        if (submoduleOpt.isPresent()) {
+            TestSubmodule testSubmodule = submoduleOpt.get();
 
-            // First, cleanup all execution data for test cases in the suite
-            if (testSuite.getTestCases() != null) {
+            // First, cleanup all execution data for test cases in the submodule
+            if (testSubmodule.getTestCases() != null) {
                 // We don't delete the test case entity here directly
                 // We just clean up the 'grandchildren' (Executions/Results)
                 // The test cases themselves will be deleted via orphanRemoval when we clear the list
-                for (TestCase testCase : testSuite.getTestCases()) {
+                for (TestCase testCase : testSubmodule.getTestCases()) {
                     // Delete all test executions for this test case
                     List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
                     if (!executions.isEmpty()) {
@@ -465,12 +482,12 @@ public class TcmService {
                 
                 // Clear the collection to trigger orphanRemoval
                 // This deletes the test cases from DB cleanly without setting FK to null
-                testSuite.getTestCases().clear();
+                testSubmodule.getTestCases().clear();
                 entityManager.flush(); // Force the deletion of test cases
             }
 
-            // Now delete the test suite
-            testSuiteRepository.delete(testSuite);
+            // Now delete the test submodule
+            testSubmoduleRepository.delete(testSubmodule);
             entityManager.flush(); // Ensure data is written to DB
         } else {
             throw new RuntimeException("Test Suite not found with id: " + suiteId);
@@ -655,7 +672,7 @@ public class TcmService {
 
         for (TestCase testCase : filteredTestCases) {
             // Get project info
-            TestSuite suite = testCase.getTestSuite();
+            TestSubmodule suite = testCase.getTestSubmodule();
             if (suite == null || suite.getTestModule() == null) continue;
 
             TestModule module = suite.getTestModule();
@@ -733,18 +750,18 @@ public class TcmService {
     }
 
     /**
-     * Create a new test case within a specific test suite
-     * @param suiteId The suite ID to add the test case to
+     * Create a new test case within a specific test submodule
+     * @param submoduleId The submodule ID to add the test case to
      * @param testCase The test case to create (with its test steps)
      * @return The created test case
-     * @throws RuntimeException if suite doesn't exist
+     * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
-    public TestCase createTestCaseForTestSuite(Long suiteId, TestCase testCase) {
-        Optional<TestSuite> suiteOpt = testSuiteRepository.findById(suiteId);
-        if (suiteOpt.isPresent()) {
-            TestSuite testSuite = suiteOpt.get();
-            testCase.setTestSuite(testSuite);  // Set the suite relationship
+    public TestCase createTestCaseForTestSubmodule(Long submoduleId, TestCase testCase) {
+        Optional<TestSubmodule> submoduleOpt = testSubmoduleRepository.findById(submoduleId);
+        if (submoduleOpt.isPresent()) {
+            TestSubmodule testSubmodule = submoduleOpt.get();
+            testCase.setTestSubmodule(testSubmodule);  // Set the submodule relationship
 
             // If the test case has steps, set up the relationship and step numbers
             if (testCase.getTestSteps() != null) {
@@ -758,7 +775,7 @@ public class TcmService {
             entityManager.flush(); // Ensure data is written to DB
 
             // Auto-generate executions for all users assigned to the module
-            TestModule module = testSuite.getTestModule();
+            TestModule module = testSubmodule.getTestModule();
             if (module != null && module.getAssignedUsers() != null && !module.getAssignedUsers().isEmpty()) {
                 for (User user : module.getAssignedUsers()) {
                     try {
@@ -1118,8 +1135,8 @@ public class TcmService {
                         int moduleCompare = Long.compare(e1.getModuleId(), e2.getModuleId());
                         if (moduleCompare != 0) return moduleCompare;
 
-                        // Compare by Suite ID
-                        int suiteCompare = Long.compare(e1.getTestSuiteId(), e2.getTestSuiteId());
+                        // Compare by Submodule ID
+                        int suiteCompare = Long.compare(e1.getTestSubmoduleId(), e2.getTestSubmoduleId());
                         if (suiteCompare != 0) return suiteCompare;
 
                         // Compare by Test Case ID (use testCase's ID)
@@ -1148,8 +1165,8 @@ public class TcmService {
                     int moduleCompare = Long.compare(e1.getModuleId(), e2.getModuleId());
                     if (moduleCompare != 0) return moduleCompare;
 
-                    // Compare by Suite ID
-                    int suiteCompare = Long.compare(e1.getTestSuiteId(), e2.getTestSuiteId());
+                    // Compare by Submodule ID
+                    int suiteCompare = Long.compare(e1.getTestSubmoduleId(), e2.getTestSubmoduleId());
                     if (suiteCompare != 0) return suiteCompare;
 
                     // Compare by Test Case ID (use numeric ID comparison for consistency)
@@ -1228,8 +1245,8 @@ public class TcmService {
             execution.getExecutedBy(),
             assignedToUserId,
             assignedToUsername,
-            execution.getTestSuiteId(),
-            execution.getTestSuiteName(),
+            execution.getTestSubmoduleId(),
+            execution.getTestSubmoduleName(),
             execution.getModuleId(),
             execution.getModuleName(),
             execution.getProjectId(),
@@ -1386,18 +1403,18 @@ public class TcmService {
      * @param user The user to assign executions to
      */
     private void createTestExecutionsForModuleAndUser(TestModule module, User user) {
-        // Fetch all test suites with their test cases for this module in a single query
-        List<TestSuite> suites = testSuiteRepository.findByTestModuleIdWithTestCases(module.getId());
-        if (suites == null || suites.isEmpty()) {
+        // Fetch all test submodules with their test cases for this module in a single query
+        List<TestSubmodule> submodules = testSubmoduleRepository.findByTestModuleIdWithTestCases(module.getId());
+        if (submodules == null || submodules.isEmpty()) {
             return;
         }
 
         // Get existing executions for this user to avoid duplicates
         List<TestExecution> existingExecutions = testExecutionRepository.findByAssignedToUser(user);
 
-        // Iterate through all test suites and their test cases
-        for (TestSuite suite : suites) {
-            List<TestCase> testCases = suite.getTestCases();
+        // Iterate through all test submodules and their test cases
+        for (TestSubmodule submodule : submodules) {
+            List<TestCase> testCases = submodule.getTestCases();
             if (testCases == null || testCases.isEmpty()) {
                 continue;
             }
@@ -1520,11 +1537,11 @@ public class TcmService {
 
             // Force initialization of test cases for counts
             for (TestModule module : modules) {
-                if (module.getTestSuites() != null) {
-                    module.getTestSuites().size(); // Ensure suites are loaded
-                    for (TestSuite suite : module.getTestSuites()) {
-                        if (suite.getTestCases() != null) {
-                            suite.getTestCases().size(); // Ensure cases are loaded
+                if (module.getTestSubmodules() != null) {
+                    module.getTestSubmodules().size(); // Ensure submodules are loaded
+                    for (TestSubmodule submodule : module.getTestSubmodules()) {
+                        if (submodule.getTestCases() != null) {
+                            submodule.getTestCases().size(); // Ensure cases are loaded
                         }
                     }
                 }
@@ -1653,8 +1670,8 @@ public class TcmService {
                     int moduleCompare = Long.compare(e1.getModuleId(), e2.getModuleId());
                     if (moduleCompare != 0) return moduleCompare;
 
-                    // Compare by Suite ID
-                    int suiteCompare = Long.compare(e1.getTestSuiteId(), e2.getTestSuiteId());
+                    // Compare by Submodule ID
+                    int suiteCompare = Long.compare(e1.getTestSubmoduleId(), e2.getTestSubmoduleId());
                     if (suiteCompare != 0) return suiteCompare;
 
                     // Compare by Test Case ID
@@ -1738,7 +1755,7 @@ public class TcmService {
                 throw new RuntimeException("Excel file has no header row");
             }
 
-            List<String> expectedHeaders = Arrays.asList("Suite Name", "Test Case ID", "Title", "Description", "Step Number", "Action", "Expected Result");
+            List<String> expectedHeaders = Arrays.asList("Submodule Name", "Test Case ID", "Title", "Description", "Scenario", "Step Number", "Action", "Expected Result");
             for (int i = 0; i < expectedHeaders.size(); i++) {
                 Cell cell = headerRow.getCell(i);
                 String headerValue = cell != null ? cell.getStringCellValue().trim() : "";
@@ -1749,8 +1766,8 @@ public class TcmService {
 
             // Get existing test case IDs in this module to check for duplicates
             Set<String> existingTestCaseIds = new HashSet<>();
-            for (TestSuite suite : module.getTestSuites()) {
-                for (TestCase testCase : suite.getTestCases()) {
+            for (TestSubmodule submodule : module.getTestSubmodules()) {
+                for (TestCase testCase : submodule.getTestCases()) {
                     existingTestCaseIds.add(testCase.getTestCaseId());
                 }
             }
@@ -1767,17 +1784,18 @@ public class TcmService {
 
                 try {
                     // Extract data from row
-                    String suiteName = getCellValueAsString(row.getCell(0));
+                    String submoduleName = getCellValueAsString(row.getCell(0));
                     String testCaseId = getCellValueAsString(row.getCell(1));
                     String title = getCellValueAsString(row.getCell(2));
                     String description = getCellValueAsString(row.getCell(3));
-                    String stepNumberStr = getCellValueAsString(row.getCell(4));
-                    String action = getCellValueAsString(row.getCell(5));
-                    String expectedResult = getCellValueAsString(row.getCell(6));
+                    String scenario = getCellValueAsString(row.getCell(4));
+                    String stepNumberStr = getCellValueAsString(row.getCell(5));
+                    String action = getCellValueAsString(row.getCell(6));
+                    String expectedResult = getCellValueAsString(row.getCell(7));
 
                     // Validate required fields
-                    if (suiteName == null || suiteName.trim().isEmpty()) {
-                        errors.add("Row " + (rowNum + 1) + ": Suite Name is required");
+                    if (submoduleName == null || submoduleName.trim().isEmpty()) {
+                        errors.add("Row " + (rowNum + 1) + ": Submodule Name is required");
                         rowNum++;
                         continue;
                     }
@@ -1831,16 +1849,17 @@ public class TcmService {
                     }
 
                     // Group test case data by test case ID
-                    String key = suiteName.trim() + "|" + testCaseKey;
+                    String key = submoduleName.trim() + "|" + testCaseKey;
                     if (!testCaseDataMap.containsKey(key)) {
                         testCaseDataMap.put(key, new ArrayList<>());
                     }
 
                     Map<String, Object> stepData = new HashMap<>();
-                    stepData.put("suiteName", suiteName.trim());
+                    stepData.put("submoduleName", submoduleName.trim());
                     stepData.put("testCaseId", testCaseKey);
                     stepData.put("title", title.trim());
                     stepData.put("description", description != null ? description.trim() : "");
+                    stepData.put("scenario", scenario != null ? scenario.trim() : "");
                     stepData.put("stepNumber", stepNumber);
                     stepData.put("action", action.trim());
                     stepData.put("expectedResult", expectedResult.trim());
@@ -1861,38 +1880,38 @@ public class TcmService {
                 throw new RuntimeException("Validation failed: " + String.join("; ", errors));
             }
 
-            // Create test suites and test cases
-            Map<String, TestSuite> suiteMap = new HashMap<>();
+            // Create test submodules and test cases
+            Map<String, TestSubmodule> submoduleMap = new HashMap<>();
             for (String key : testCaseDataMap.keySet()) {
                 List<Map<String, Object>> steps = testCaseDataMap.get(key);
                 if (steps.isEmpty()) {
                     continue;
                 }
 
-                String suiteName = steps.get(0).get("suiteName").toString();
+                String submoduleName = steps.get(0).get("submoduleName").toString();
                 String testCaseId = steps.get(0).get("testCaseId").toString();
                 String title = steps.get(0).get("title").toString();
                 String description = steps.get(0).get("description").toString();
 
-                // Find or create test suite
-                TestSuite suite;
-                if (suiteMap.containsKey(suiteName)) {
-                    suite = suiteMap.get(suiteName);
+                // Find or create test submodule
+                TestSubmodule submodule;
+                if (submoduleMap.containsKey(submoduleName)) {
+                    submodule = submoduleMap.get(submoduleName);
                 } else {
-                    // Check if suite already exists in module
-                    suite = module.getTestSuites().stream()
-                        .filter(s -> s.getName().equals(suiteName))
+                    // Check if submodule already exists in module
+                    submodule = module.getTestSubmodules().stream()
+                        .filter(s -> s.getName().equals(submoduleName))
                         .findFirst()
                         .orElse(null);
 
-                    if (suite == null) {
-                        suite = new TestSuite();
-                        suite.setName(suiteName);
-                        suite.setTestModule(module);
-                        suite = testSuiteRepository.save(suite);
+                    if (submodule == null) {
+                        submodule = new TestSubmodule();
+                        submodule.setName(submoduleName);
+                        submodule.setTestModule(module);
+                        submodule = testSubmoduleRepository.save(submodule);
                         suitesCreated++;
                     }
-                    suiteMap.put(suiteName, suite);
+                    submoduleMap.put(submoduleName, submodule);
                 }
 
                 // Create test case
@@ -1900,7 +1919,8 @@ public class TcmService {
                 testCase.setTestCaseId(testCaseId);
                 testCase.setTitle(title);
                 testCase.setDescription(description);
-                testCase.setTestSuite(suite);
+                testCase.setScenario(scenario != null ? scenario.trim() : "");
+                testCase.setTestSubmodule(submodule);
 
                 // Create test steps
                 List<TestStep> testSteps = new ArrayList<>();

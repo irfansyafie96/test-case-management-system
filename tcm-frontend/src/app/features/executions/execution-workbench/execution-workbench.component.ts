@@ -64,7 +64,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
   // New properties for navigation
   allExecutions: TestExecution[] = [];
   currentModuleId: string | null = null;
-  currentSuiteId: string | null = null;
+  currentSubmoduleId: string | null = null;
 
   constructor(
     private tcmService: TcmService,
@@ -143,7 +143,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
         // Store current hierarchy info
         this.currentModuleId = execution.moduleId?.toString() || null;
-        this.currentSuiteId = execution.testSuiteId?.toString() || null;
+        this.currentSubmoduleId = execution.testSubmoduleId?.toString() || null;
 
         // Load all executions for navigation
         this.loadAllExecutions();

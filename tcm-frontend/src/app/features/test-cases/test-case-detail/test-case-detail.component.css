@@ -272,6 +272,16 @@ mat-card-title {
   background-color: #fafafa; /* Very subtle grey instead of blue */
 }
 
+.scenario-text {
+  font-style: italic;
+  color: #555;
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-left: 3px solid var(--ink);
+  border-radius: var(--radius-sm);
+  margin: 0;
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;

@@ -3,7 +3,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { Project, TestModule, TestSuite, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary } from '../models/project.model';
+import { Project, TestModule, TestSubmodule, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary } from '../models/project.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -151,43 +151,43 @@ export class TcmService {
       );
   }
 
-  // ==================== TEST SUITE METHODS ====================
+  // ==================== TEST SUBMODULE METHODS ====================
 
   /**
-   * Create a new test suite within a module
+   * Create a new test submodule within a module
    * @param moduleId - Parent module ID
-   * @param suite - Suite data {name}
-   * @returns Observable<TestSuite> - Stream of created suite
+   * @param submodule - Submodule data {name}
+   * @returns Observable<TestSubmodule> - Stream of created submodule
    */
-  createTestSuite(moduleId: string, suite: { name: string }): Observable<TestSuite> {
-    return this.http.post<TestSuite>(`${this.apiUrl}/testmodules/${moduleId}/testsuites`, suite)
+  createTestSubmodule(moduleId: string, submodule: { name: string }): Observable<TestSubmodule> {
+    return this.http.post<TestSubmodule>(`${this.apiUrl}/testmodules/${moduleId}/testsubmodules`, submodule)
       .pipe(
-        catchError(this.handleError<TestSuite>('createTestSuite'))
+        catchError(this.handleError<TestSubmodule>('createTestSubmodule'))
       );
   }
 
   /**
-   * Update an existing test suite
-   * @param id - Suite ID to update
+   * Update an existing test submodule
+   * @param id - Submodule ID to update
    * @param updates - Updated data {name?}
-   * @returns Observable<TestSuite> - Stream of updated suite
+   * @returns Observable<TestSubmodule> - Stream of updated submodule
    */
-  updateTestSuite(id: string, updates: { name?: string }): Observable<TestSuite> {
-    return this.http.put<TestSuite>(`${this.apiUrl}/testsuites/${id}`, updates)
+  updateTestSubmodule(id: string, updates: { name?: string }): Observable<TestSubmodule> {
+    return this.http.put<TestSubmodule>(`${this.apiUrl}/testsubmodules/${id}`, updates)
       .pipe(
-        catchError(this.handleError<TestSuite>('updateTestSuite'))
+        catchError(this.handleError<TestSubmodule>('updateTestSubmodule'))
       );
   }
 
   /**
-   * Delete a test suite by ID
-   * @param id - Suite ID to delete
+   * Delete a test submodule by ID
+   * @param id - Submodule ID to delete
    * @returns Observable<void> - Stream indicating completion
    */
-  deleteTestSuite(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/testsuites/${id}`)
+  deleteTestSubmodule(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/testsubmodules/${id}`)
       .pipe(
-        catchError(this.handleError<void>('deleteTestSuite'))
+        catchError(this.handleError<void>('deleteTestSubmodule'))
       );
   }
 
@@ -243,13 +243,13 @@ export class TcmService {
   }
 
   /**
-   * Create a new test case within a suite
-   * @param suiteId - Parent suite ID
+   * Create a new test case within a submodule
+   * @param submoduleId - Parent submodule ID
    * @param testCase - Test case data (including steps)
    * @returns Observable<TestCase> - Stream of created test case
    */
-  createTestCase(suiteId: string, testCase: any): Observable<TestCase> {
-    return this.http.post<TestCase>(`${this.apiUrl}/testsuites/${suiteId}/testcases`, testCase)
+  createTestCase(submoduleId: string, testCase: any): Observable<TestCase> {
+    return this.http.post<TestCase>(`${this.apiUrl}/testsubmodules/${submoduleId}/testcases`, testCase)
       .pipe(
         catchError(this.handleError<TestCase>('createTestCase'))
       );

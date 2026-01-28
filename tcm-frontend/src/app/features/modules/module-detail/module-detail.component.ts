@@ -17,11 +17,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { TestSuiteDialogComponent } from './test-suite-dialog.component';
+import { TestSubmoduleDialogComponent } from './test-submodule-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component';
 import { ImportDialogComponent } from './import-dialog.component';
-import { Project, TestModule, TestSuite, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
+import { Project, TestModule, TestSubmodule, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
 import { Observable, of, BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
 
@@ -107,9 +107,9 @@ export class ModuleDetailComponent implements OnInit {
     }
   }
 
-  createTestSuite(moduleId: string | number): void {
+  createTestSubmodule(moduleId: string | number): void {
     const idAsString = String(moduleId);
-    const dialogRef = this.dialog.open(TestSuiteDialogComponent, {
+    const dialogRef = this.dialog.open(TestSubmoduleDialogComponent, {
       width: '400px',
       data: { moduleId: idAsString }
     });
@@ -117,18 +117,18 @@ export class ModuleDetailComponent implements OnInit {
     dialogRef.afterClosed().subscribe(async result => {
       if (result) {
         this.loadingSubject.next(true); // Show loading indicator
-        
+
         // Wait for authentication to be synchronized before making the API call
         try {
           await this.tcmService.waitForAuthSync();
-          this.tcmService.createTestSuite(idAsString, result).subscribe({
-            next: (createdSuite) => {
+          this.tcmService.createTestSubmodule(idAsString, result).subscribe({
+            next: (createdSubmodule) => {
               // Instead of calling ngOnInit(), refresh the module data directly
               this.refreshModuleData();
             },
             error: (error) => {
               this.loadingSubject.next(false); // Hide loading indicator
-              
+
               // Check if this is a CSRF token issue
               if (error.isCsrfTokenIssue) {
                 this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
@@ -138,7 +138,7 @@ export class ModuleDetailComponent implements OnInit {
                   verticalPosition: 'top'
                 });
               } else {
-                this.snackBar.open('Failed to create test suite. Please try again.', 'CLOSE', {
+                this.snackBar.open('Failed to create test submodule. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
                   horizontalPosition: 'right',
@@ -201,13 +201,13 @@ export class ModuleDetailComponent implements OnInit {
     });
   }
 
-  createTestCase(suiteId: string | number): void {
-    const idAsString = String(suiteId);
+  createTestCase(submoduleId: string | number): void {
+    const idAsString = String(submoduleId);
     const dialogRef = this.dialog.open(TestCaseDialogImprovedComponent, {
       width: '900px', // Wider for better layout
       maxWidth: '95vw',
       maxHeight: '90vh',
-      data: { suiteId: idAsString }
+      data: { submoduleId: idAsString }
     });
 
     dialogRef.afterClosed().subscribe(async result => {
@@ -394,14 +394,14 @@ export class ModuleDetailComponent implements OnInit {
     });
   }
 
-  deleteTestSuite(suite: TestSuite): void {
-    const suiteId = suite.id as string;
-    
+  deleteTestSubmodule(submodule: TestSubmodule): void {
+    const submoduleId = submodule.id as string;
+
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
       data: {
-        title: 'Delete Test Suite',
-        message: `Are you sure you want to delete test suite "${suite.name}"? This will also delete all test cases within this suite. This action cannot be undone.`,
+        title: 'Delete Test Submodule',
+        message: `Are you sure you want to delete test submodule "${submodule.name}"? This will also delete all test cases within this submodule. This action cannot be undone.`,
         icon: 'warning',
         confirmButtonText: 'Delete',
         confirmButtonColor: 'warn'
@@ -411,13 +411,13 @@ export class ModuleDetailComponent implements OnInit {
     dialogRef.afterClosed().subscribe(async result => {
       if (result) {
         this.loadingSubject.next(true); // Show loading indicator
-        
+
         try {
           await this.tcmService.waitForAuthSync();
-          this.tcmService.deleteTestSuite(suiteId).subscribe({
+          this.tcmService.deleteTestSubmodule(submoduleId).subscribe({
             next: () => {
               this.refreshModuleData();
-              this.snackBar.open('Test suite deleted successfully', 'Close', {
+              this.snackBar.open('Test submodule deleted successfully', 'Close', {
                 duration: 3000,
                 panelClass: ['success-snackbar'],
                 horizontalPosition: 'right',
@@ -426,7 +426,7 @@ export class ModuleDetailComponent implements OnInit {
             },
             error: (error) => {
               this.loadingSubject.next(false);
-              
+
               if (error.isCsrfTokenIssue) {
                 this.snackBar.open('Security token synchronization issue. Please try again.', 'CLOSE', {
                   duration: 5000,
@@ -435,7 +435,7 @@ export class ModuleDetailComponent implements OnInit {
                   verticalPosition: 'top'
                 });
               } else {
-                this.snackBar.open('Failed to delete test suite. Please try again.', 'CLOSE', {
+                this.snackBar.open('Failed to delete test submodule. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
                   horizontalPosition: 'right',

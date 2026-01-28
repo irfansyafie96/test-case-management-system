@@ -1,6 +1,10 @@
 # Active Context: Test Case Management (TCM) System
 
 ## Current Work Focus
+- **Scenario Field Addition**: Adding "Scenario" field to test cases for high-level scenario descriptions that help testers understand context.
+- **Suite → Submodule Renaming**: Complete terminology replacement from "Suite" to "Submodule" throughout the codebase (database, entities, APIs, UI, Excel).
+- **Service Refactoring (Phase 1)**: Refactoring TcmService.java (1,992 lines) by extracting 5 core domain services (Project, Module, Submodule, TestCase, Execution).
+- **Database Schema Update**: Using `ddl-auto=create` to automatically create new schema with renamed tables and new columns (development only - will delete all existing data).
 - **Navigation Enhancements**: Simplified execution workbench navigation with PREV and NEXT buttons only. Implemented new /save endpoint for preserving work-in-progress without completing executions.
 - **Admin vs QA/BA Differentiation**: Implementing role-based execution views with filtering capabilities.
 - **Backend Enhancements**: Implementing automated auditing and ensuring data integrity.
@@ -19,6 +23,23 @@
 - **Current Status**: Navigation bug resolved and verified through code analysis. Component correctly reloads on navigation, handles legacy data, and follows a logical hierarchical progression.
 
 ## Recent Changes
+- **Scenario Field & Submodule Renaming (In Progress)**:
+  - **Database Strategy**: Using `ddl-auto=create` to automatically create new schema with renamed tables and new columns (development only)
+  - **Backend Changes Completed**:
+    - Renamed `TestSuite.java` → `TestSubmodule.java`
+    - Updated `TestCase.java` to add `scenario` field (VARCHAR(500))
+    - Updated `TestModule.java` to change `testSuites` → `testSubmodules`
+    - Renamed `TestSuiteRepository.java` → `TestSubmoduleRepository.java`
+    - Renamed `TestSuiteDTO.java` → `TestSubmoduleDTO.java`
+    - Updated `TestCaseDTO.java` to add `scenario` and rename suite → submodule references
+    - Updated `TestExecutionDTO.java` to rename suite → submodule
+    - Updated `TestModuleDTO.java` to rename `suitesCount` → `submodulesCount`
+    - Updated `TcmService.java` with 58 changes: All `TestSuite` references renamed to `TestSubmodule`, methods renamed (`getTestSuiteById` → `getTestSubmoduleById`, `createTestSuiteForTestModule` → `createTestSubmoduleForTestModule`, `updateTestSuite` → `updateTestSubmodule`, `deleteTestSuite` → `deleteTestSubmodule`, `createTestCaseForTestSuite` → `createTestCaseForTestSubmodule`)
+    - Updated Excel import logic to use "Submodule Name" instead of "Suite Name" and added "Scenario" column support
+  - **Hierarchy Change**: Project → TestModule → TestSubmodule → TestCase → TestStep
+  - **Excel Template**: Columns will be "Submodule Name | Test Case ID | Title | Description | Scenario | Step Number | Action | Expected Result"
+  - **Frontend Changes Pending**: Update TypeScript models, components, and dialogs
+  - **Service Refactoring Pending**: Extract 5 domain services from TcmService.java
 - **Test Case Sorting Consistency Fix**:
   - **Issue**: Test case order was inconsistent between modules page and executions page, and order changed after executing test cases
   - **Root Cause**: Backend `getTestExecutionsForCurrentUser()` used string comparison for sorting test case IDs (lexicographic order: 1, 10, 11, 2, 3) instead of numeric comparison

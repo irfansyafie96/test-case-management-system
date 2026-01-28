@@ -4,6 +4,7 @@ import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.*;
 import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.service.TcmService;
+import com.yourproject.tcm.service.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -32,11 +33,24 @@ public class ApiController {
 
     private final TcmService tcmService;
     private final UserRepository userRepository;
+    private final ProjectService projectService;
+    private final ModuleService moduleService;
+    private final SubmoduleService submoduleService;
+    private final TestCaseService testCaseService;
+    private final ExecutionService executionService;
 
     @Autowired
-    public ApiController(TcmService tcmService, UserRepository userRepository) {
+    public ApiController(TcmService tcmService, UserRepository userRepository,
+                        ProjectService projectService, ModuleService moduleService,
+                        SubmoduleService submoduleService, TestCaseService testCaseService,
+                        ExecutionService executionService) {
         this.tcmService = tcmService;
         this.userRepository = userRepository;
+        this.projectService = projectService;
+        this.moduleService = moduleService;
+        this.submoduleService = submoduleService;
+        this.testCaseService = testCaseService;
+        this.executionService = executionService;
     }
 
     // ==================== PROJECT ENDPOINTS ====================
@@ -79,13 +93,13 @@ public class ApiController {
     }
 
     private TestModuleDTO convertToDTO(TestModule m) {
-        int suitesCount = 0;
+        int submodulesCount = 0;
         int testCasesCount = 0;
 
-        if (m.getTestSuites() != null) {
-            suitesCount = m.getTestSuites().size();
-            testCasesCount = m.getTestSuites().stream()
-                .mapToInt(suite -> suite.getTestCases() != null ? suite.getTestCases().size() : 0)
+        if (m.getTestSubmodules() != null) {
+            submodulesCount = m.getTestSubmodules().size();
+            testCasesCount = m.getTestSubmodules().stream()
+                .mapToInt(submodule -> submodule.getTestCases() != null ? submodule.getTestCases().size() : 0)
                 .sum();
         }
 
@@ -95,13 +109,13 @@ public class ApiController {
             m.getDescription(),
             m.getProject() != null ? m.getProject().getId() : null,
             m.getProject() != null ? m.getProject().getName() : null,
-            suitesCount,
+            submodulesCount,
             testCasesCount
         );
     }
 
-    private TestSuiteDTO convertToDTO(TestSuite s) {
-        return new TestSuiteDTO(
+    private TestSubmoduleDTO convertToDTO(TestSubmodule s) {
+        return new TestSubmoduleDTO(
             s.getId(),
             s.getName(),
             s.getTestModule() != null ? s.getTestModule().getId() : null,
@@ -127,8 +141,9 @@ public class ApiController {
             c.getTestCaseId(),
             c.getTitle(),
             c.getDescription(),
-            c.getTestSuite() != null ? c.getTestSuite().getId() : null,
-            c.getTestSuiteName(),
+            c.getScenario(),
+            c.getTestSubmodule() != null ? c.getTestSubmodule().getId() : null,
+            c.getTestSubmoduleName(),
             c.getModuleName(),
             c.getProjectName(),
             c.getTestSteps() != null ? c.getTestSteps().size() : 0,
@@ -164,12 +179,12 @@ public class ApiController {
             e.getExecutedBy(),
             e.getAssignedToUser() != null ? e.getAssignedToUser().getId() : null,
             e.getAssignedToUser() != null ? e.getAssignedToUser().getUsername() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSuite() != null ? e.getTestCase().getTestSuite().getId() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSuite() != null ? e.getTestCase().getTestSuite().getName() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null ? e.getTestCase().getTestSuite().getTestModule().getId() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null ? e.getTestCase().getTestSuite().getTestModule().getName() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null && e.getTestCase().getTestSuite().getTestModule().getProject() != null ? e.getTestCase().getTestSuite().getTestModule().getProject().getId() : null,
-            e.getTestCase() != null && e.getTestCase().getTestSuite() != null && e.getTestCase().getTestSuite().getTestModule() != null && e.getTestCase().getTestSuite().getTestModule().getProject() != null ? e.getTestCase().getTestSuite().getTestModule().getProject().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null ? e.getTestCase().getTestSubmodule().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null ? e.getTestCase().getTestSubmodule().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null ? e.getTestCase().getTestSubmodule().getTestModule().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null ? e.getTestCase().getTestSubmodule().getTestModule().getName() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null && e.getTestCase().getTestSubmodule().getTestModule().getProject() != null ? e.getTestCase().getTestSubmodule().getTestModule().getProject().getId() : null,
+            e.getTestCase() != null && e.getTestCase().getTestSubmodule() != null && e.getTestCase().getTestSubmodule().getTestModule() != null && e.getTestCase().getTestSubmodule().getTestModule().getProject() != null ? e.getTestCase().getTestSubmodule().getTestModule().getProject().getName() : null,
             stepResultDTOs
         );
     }
@@ -254,53 +269,53 @@ public class ApiController {
         }
     }
 
-    // ==================== TEST SUITE ENDPOINTS ====================
+    // ==================== TEST SUBMODULE ENDPOINTS ====================
 
-    @PostMapping("/testmodules/{testModuleId}/testsuites")
+    @PostMapping("/testmodules/{testModuleId}/testsubmodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> createTestSuiteForTestModule(@PathVariable Long testModuleId, @RequestBody TestSuite testSuite) {
+    public ResponseEntity<?> createTestSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody TestSubmodule testSubmodule) {
         try {
-            TestSuite savedTestSuite = tcmService.createTestSuiteForTestModule(testModuleId, testSuite);
-            return new ResponseEntity<>(convertToDTO(savedTestSuite), HttpStatus.CREATED);
+            TestSubmodule savedTestSubmodule = tcmService.createTestSubmoduleForTestModule(testModuleId, testSubmodule);
+            return new ResponseEntity<>(convertToDTO(savedTestSubmodule), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error creating test suite: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error creating test submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @GetMapping("/testsuites/{suiteId}")
-    public ResponseEntity<?> getTestSuiteById(@PathVariable Long suiteId) {
+    @GetMapping("/testsubmodules/{submoduleId}")
+    public ResponseEntity<?> getTestSubmoduleById(@PathVariable Long submoduleId) {
         try {
-            Optional<TestSuite> testSuiteOpt = tcmService.getTestSuiteById(suiteId);
-            if (testSuiteOpt.isPresent()) {
-                return new ResponseEntity<>(testSuiteOpt.get(), HttpStatus.OK);
+            Optional<TestSubmodule> testSubmoduleOpt = tcmService.getTestSubmoduleById(submoduleId);
+            if (testSubmoduleOpt.isPresent()) {
+                return new ResponseEntity<>(testSubmoduleOpt.get(), HttpStatus.OK);
             } else {
-                return new ResponseEntity<>("Test suite not found with id: " + suiteId, HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>("Test submodule not found with id: " + submoduleId, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("Error retrieving test suite: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error retrieving test submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PutMapping("/testsuites/{suiteId}")
+    @PutMapping("/testsubmodules/{submoduleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> updateTestSuite(@PathVariable Long suiteId, @RequestBody TestSuite suiteDetails) {
+    public ResponseEntity<?> updateTestSubmodule(@PathVariable Long submoduleId, @RequestBody TestSubmodule submoduleDetails) {
         try {
-            TestSuite updatedTestSuite = tcmService.updateTestSuite(suiteId, suiteDetails);
-            return new ResponseEntity<>(convertToDTO(updatedTestSuite), HttpStatus.OK);
+            TestSubmodule updatedTestSubmodule = tcmService.updateTestSubmodule(submoduleId, submoduleDetails);
+            return new ResponseEntity<>(convertToDTO(updatedTestSubmodule), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error updating test suite: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error updating test submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @DeleteMapping("/testsuites/{suiteId}")
+    @DeleteMapping("/testsubmodules/{submoduleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<Void> deleteTestSuite(@PathVariable Long suiteId) {
+    public ResponseEntity<Void> deleteTestSubmodule(@PathVariable Long submoduleId) {
         try {
-            tcmService.deleteTestSuite(suiteId);
+            tcmService.deleteTestSubmodule(submoduleId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             // Log the error but return 404 to user if not found
@@ -308,16 +323,16 @@ public class ApiController {
         } catch (Exception e) {
             // For other errors, we might want to return 500, but with Void we can't send a body
             // ideally we should throw an exception that a global handler catches
-            throw new RuntimeException("Error deleting test suite: " + e.getMessage());
+            throw new RuntimeException("Error deleting test submodule: " + e.getMessage());
         }
     }
 
     // ==================== TEST CASE ENDPOINTS ====================
 
-    @PostMapping("/testsuites/{suiteId}/testcases")
+    @PostMapping("/testsubmodules/{submoduleId}/testcases")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<TestCaseDTO> createTestCaseForTestSuite(@PathVariable Long suiteId, @RequestBody TestCase testCase) {
-        TestCase savedTestCase = tcmService.createTestCaseForTestSuite(suiteId, testCase);
+    public ResponseEntity<TestCaseDTO> createTestCaseForTestSubmodule(@PathVariable Long submoduleId, @RequestBody TestCase testCase) {
+        TestCase savedTestCase = tcmService.createTestCaseForTestSubmodule(submoduleId, testCase);
         return new ResponseEntity<>(convertToDTO(savedTestCase), HttpStatus.CREATED);
     }
 

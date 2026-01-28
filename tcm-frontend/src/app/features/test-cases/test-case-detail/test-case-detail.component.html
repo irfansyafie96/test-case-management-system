@@ -54,9 +54,9 @@
                <label>Module</label>
                <span class="data-text">{{ testCase.moduleName }}</span>
             </div>
-            <div class="kv-item" *ngIf="testCase.testSuiteName || testCase.suiteId">
-               <label>Suite</label>
-               <span class="data-text">{{ testCase.testSuiteName || testCase.suiteId }}</span>
+            <div class="kv-item" *ngIf="testCase.testSubmoduleName || testCase.submoduleId">
+               <label>Submodule</label>
+               <span class="data-text">{{ testCase.testSubmoduleName || testCase.submoduleId }}</span>
             </div>
 
             <div class="kv-item" *ngIf="testCase.tags && testCase.tags.length > 0">
@@ -86,6 +86,15 @@
              <div class="spec-value">
                <p class="body-text">
                  {{ testCase.description || 'No description provided.' }}
+               </p>
+             </div>
+           </div>
+
+           <div class="spec-section" *ngIf="testCase.scenario">
+             <div class="spec-label">Scenario</div>
+             <div class="spec-value">
+               <p class="body-text scenario-text">
+                 {{ testCase.scenario }}
                </p>
              </div>
            </div>

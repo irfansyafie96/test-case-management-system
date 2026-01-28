@@ -9,7 +9,7 @@ import java.util.List;
  * TestCase Entity - Fourth level in the test case hierarchy
  *
  * TestCase represents a specific test scenario with steps to execute.
- * For example, if TestSuite is "TP Registration", then TestCase could be
+ * For example, if TestSubmodule is "TP Registration", then TestCase could be
  * "TRM-TS-01 Register New Training Provider with Valid Details".
  *
  * Each test case contains multiple TestSteps that define what actions to take
@@ -17,7 +17,7 @@ import java.util.List;
  * creating TestExecution records with their results.
  *
  * Relationship Structure:
- * - Many TestCases belong to One TestSuite (ManyToOne)
+ * - Many TestCases belong to One TestSubmodule (ManyToOne)
  * - One TestCase contains Many TestSteps (OneToMany)
  * - One TestCase can have Many TestExecutions (OneToMany, defined in TestExecution)
  */
@@ -38,16 +38,19 @@ public class TestCase {
     @Column(columnDefinition = "TEXT")
     private String description; // Detailed description of the test case
 
+    @Column(columnDefinition = "VARCHAR(500)")
+    private String scenario; // High-level scenario description for the test case
+
     /**
-     * Many-to-One relationship: Many TestCases belong to One TestSuite
-     * fetch = FetchType.LAZY: Only load suite data when explicitly accessed
-     * @JoinColumn: Foreign key 'test_suite_id' in test_cases table points to TestSuite
-     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestSuiteId() instead
+     * Many-to-One relationship: Many TestCases belong to One TestSubmodule
+     * fetch = FetchType.LAZY: Only load submodule data when explicitly accessed
+     * @JoinColumn: Foreign key 'test_submodule_id' in test_cases table points to TestSubmodule
+     * @JsonIgnore: Prevent serialization of Hibernate proxy, use getTestSubmoduleId() instead
      */
-    @ManyToOne(fetch = FetchType.LAZY)  // Many test cases can belong to one suite
-    @JoinColumn(name = "test_suite_id", nullable = false)  // Foreign key column
+    @ManyToOne(fetch = FetchType.LAZY)  // Many test cases can belong to one submodule
+    @JoinColumn(name = "test_submodule_id", nullable = false)  // Foreign key column
     @JsonIgnore
-    private TestSuite testSuite;  // The suite this test case belongs to
+    private TestSubmodule testSubmodule;  // The submodule this test case belongs to
 
     /**
      * One-to-Many relationship: One TestCase can have Many TestSteps
@@ -95,12 +98,20 @@ public class TestCase {
         this.description = description;
     }
 
-    public TestSuite getTestSuite() {
-        return testSuite;
+    public String getScenario() {
+        return scenario;
     }
 
-    public void setTestSuite(TestSuite testSuite) {
-        this.testSuite = testSuite;
+    public void setScenario(String scenario) {
+        this.scenario = scenario;
+    }
+
+    public TestSubmodule getTestSubmodule() {
+        return testSubmodule;
+    }
+
+    public void setTestSubmodule(TestSubmodule testSubmodule) {
+        this.testSubmodule = testSubmodule;
     }
 
     public List<TestStep> getTestSteps() {
@@ -112,32 +123,32 @@ public class TestCase {
     }
 
     /**
-     * Get the ID of the test suite this test case belongs to.
-     * This is used by Jackson when serializing, since the testSuite field
+     * Get the ID of the test submodule this test case belongs to.
+     * This is used by Jackson when serializing, since the testSubmodule field
      * is marked with @JsonIgnore to prevent Hibernate proxy serialization.
      */
-    public Long getTestSuiteId() {
-        return testSuite != null ? testSuite.getId() : null;
+    public Long getTestSubmoduleId() {
+        return testSubmodule != null ? testSubmodule.getId() : null;
     }
 
     // Flattened hierarchy getters for Frontend (avoids JsonIgnore/Proxy issues)
 
-    public String getTestSuiteName() {
-        return testSuite != null ? testSuite.getName() : null;
+    public String getTestSubmoduleName() {
+        return testSubmodule != null ? testSubmodule.getName() : null;
     }
 
     public String getModuleName() {
-        if (testSuite != null && testSuite.getTestModule() != null) {
-            return testSuite.getTestModule().getName();
+        if (testSubmodule != null && testSubmodule.getTestModule() != null) {
+            return testSubmodule.getTestModule().getName();
         }
         return null;
     }
 
     public String getProjectName() {
-        if (testSuite != null && 
-            testSuite.getTestModule() != null && 
-            testSuite.getTestModule().getProject() != null) {
-            return testSuite.getTestModule().getProject().getName();
+        if (testSubmodule != null &&
+            testSubmodule.getTestModule() != null &&
+            testSubmodule.getTestModule().getProject() != null) {
+            return testSubmodule.getTestModule().getProject().getName();
         }
         return null;
     }

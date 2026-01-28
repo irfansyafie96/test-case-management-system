@@ -16,9 +16,9 @@ import java.util.Set;
  *
  * Relationship Structure:
  * - Many TestModules belong to One Project (ManyToOne)
- * - One TestModule contains Many TestSuites (OneToMany)
+ * - One TestModule contains Many TestSubmodules (OneToMany)
  *
- * This creates the hierarchical structure: Project → TestModule → TestSuite → TestCase
+ * This creates the hierarchical structure: Project → TestModule → TestSubmodule → TestCase
  */
 @Entity
 @Table(name = "test_modules")  // Maps to 'test_modules' table in database
@@ -46,14 +46,14 @@ public class TestModule {
     private Project project;  // The project this module belongs to
 
     /**
-     * One-to-Many relationship: One TestModule can have Many TestSuites
-     * cascade = CascadeType.ALL: Changes to module cascade to its suites
-     * orphanRemoval = true: If a suite is removed from this list, it's deleted
+     * One-to-Many relationship: One TestModule can have Many TestSubmodules
+     * cascade = CascadeType.ALL: Changes to module cascade to its submodules
+     * orphanRemoval = true: If a submodule is removed from this list, it's deleted
      * @JsonIgnoreProperties: Prevent circular reference back to TestModule
      */
     @OneToMany(mappedBy = "testModule", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties({"testModule"})  // Prevent circular reference back to TestModule
-    private List<TestSuite> testSuites;  // List of test suites in this module
+    private List<TestSubmodule> testSubmodules;  // List of test submodules in this module
 
     /**
      * Many-to-Many relationship with User entity (module assignments)
@@ -98,12 +98,12 @@ public class TestModule {
         this.project = project;
     }
 
-    public List<TestSuite> getTestSuites() {
-        return testSuites;
+    public List<TestSubmodule> getTestSubmodules() {
+        return testSubmodules;
     }
 
-    public void setTestSuites(List<TestSuite> testSuites) {
-        this.testSuites = testSuites;
+    public void setTestSubmodules(List<TestSubmodule> testSubmodules) {
+        this.testSubmodules = testSubmodules;
     }
 
     public Set<User> getAssignedUsers() {

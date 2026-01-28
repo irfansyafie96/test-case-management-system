@@ -18,15 +18,15 @@ export interface TestModule {
   projectName?: string; // Added dynamically for display
   project?: Project; // Full project information for display
   description?: string;
-  testSuites?: TestSuite[];
-  suitesCount?: number; // Number of test suites in this module
-  testCasesCount?: number; // Total number of test cases across all suites
+  testSubmodules?: TestSubmodule[];
+  submodulesCount?: number; // Number of test submodules in this module
+  testCasesCount?: number; // Total number of test cases across all submodules
   createdDate?: string;
   updatedDate?: string;
 }
 
-// Test Suite Model
-export interface TestSuite {
+// Test Submodule Model
+export interface TestSubmodule {
   id: number | string;
   name: string;
   moduleId: number | string;
@@ -52,12 +52,13 @@ export interface TestCase {
   testCaseId: string; // This is the business ID (TC-001), usually string
   title: string;
   description?: string;
+  scenario?: string; // High-level scenario description
   status?: string;
   steps?: string[]; // Legacy/Simplified steps
   testSteps?: TestStep[]; // Detailed steps from backend
   expectedResult?: string;
-  suiteId: number | string;
-  testSuite?: TestSuite; // Full suite information for display
+  submoduleId: number | string;
+  testSubmodule?: TestSubmodule; // Full submodule information for display
   createdDate?: string;
   updatedDate?: string;
   prerequisites?: string;
@@ -66,7 +67,7 @@ export interface TestCase {
   // Flattened hierarchy fields from backend
   projectName?: string;
   moduleName?: string;
-  testSuiteName?: string;
+  testSubmoduleName?: string;
 }
 
 // Test Execution Model
@@ -94,10 +95,10 @@ export interface TestExecution {
   projectName?: string;
   moduleId?: number | string;
   moduleName?: string;
-  suiteId?: number | string;
-  suiteName?: string;
-  testSuiteId?: number | string; // Backend getter might be mapped to this
-  testSuiteName?: string; // Backend getter might be mapped to this
+  submoduleId?: number | string;
+  submoduleName?: string;
+  testSubmoduleId?: number | string;
+  testSubmoduleName?: string;
 }
 
 // Completion Summary Model
