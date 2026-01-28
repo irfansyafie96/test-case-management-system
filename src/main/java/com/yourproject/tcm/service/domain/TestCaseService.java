@@ -64,7 +64,6 @@ public class TestCaseService {
             testCase.setTestCaseId(testCaseDetails.getTestCaseId());
             testCase.setTitle(testCaseDetails.getTitle());
             testCase.setDescription(testCaseDetails.getDescription());
-            testCase.setScenario(testCaseDetails.getScenario());
             testCase.setPrerequisites(testCaseDetails.getPrerequisites());
             testCase.setExpectedResult(testCaseDetails.getExpectedResult());
             testCase.setTags(testCaseDetails.getTags());
@@ -138,26 +137,41 @@ public class TestCaseService {
      */
     private TestExecutionDTO convertToDTO(TestExecution execution) {
         TestCase testCase = execution.getTestCase();
+        
+        List<TestExecutionDTO.TestStepResultDTO> stepResultDTOs = null;
+        if (execution.getStepResults() != null) {
+            stepResultDTOs = execution.getStepResults().stream()
+                .map(sr -> new TestExecutionDTO.TestStepResultDTO(
+                    sr.getId(),
+                    sr.getTestStep() != null ? sr.getTestStep().getId() : null,
+                    sr.getStepNumber(),
+                    sr.getStatus(),
+                    sr.getActualResult(),
+                    sr.getTestStep() != null ? sr.getTestStep().getAction() : null,
+                    sr.getTestStep() != null ? sr.getTestStep().getExpectedResult() : null
+                ))
+                .collect(Collectors.toList());
+        }
+
         return new TestExecutionDTO(
             execution.getId(),
             execution.getTestCaseId(),
             execution.getTestCase() != null ? execution.getTestCase().getTitle() : "",
+            execution.getExecutionDate(),
+            execution.getOverallResult(),
+            execution.getNotes(),
+            execution.getDuration(),
+            execution.getEnvironment(),
+            execution.getExecutedBy(),
+            execution.getAssignedToUser() != null ? execution.getAssignedToUser().getId() : null,
+            execution.getAssignedToUser() != null ? execution.getAssignedToUser().getUsername() : "",
             testCase != null ? testCase.getTestSubmoduleId() : null,
             testCase != null ? testCase.getTestSubmoduleName() : null,
             testCase != null ? testCase.getTestModule().getId() : null,
             testCase != null ? testCase.getTestModule().getName() : "",
             testCase != null ? testCase.getTestModule().getProject().getId() : null,
             testCase != null ? testCase.getTestModule().getProject().getName() : "",
-            execution.getAssignedUser() != null ? execution.getAssignedUser().getId() : null,
-            execution.getAssignedUser() != null ? execution.getAssignedUser().getUsername() : "",
-            execution.getAssignedUser() != null ? execution.getAssignedUser().getFullName() : "",
-            execution.getStatus(),
-            execution.getOverallResult(),
-            execution.getStartDate(),
-            execution.getCompletionDate(),
-            execution.getNotes(),
-            execution.getStepResults(),
-            testCase
+            stepResultDTOs
         );
     }
 }

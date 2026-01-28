@@ -5,80 +5,24 @@
 - **Authentication**: JWT-based login, registration, and secure logout.
 - **Organization & Team Management**: Registration, invitation flow, role-based access, and user assignment.
 - **Core Models**: Full hierarchy working with automated auditing (created/updated dates).
-- **Test Case Import**: Excel-based import with structured UI, drag-and-drop, and success/error metrics.
+- **Test Case Import**: Excel-based import updated to support "Test Submodules" and simplified schema (no scenario).
 - **Deletion Features**: Fully functional cascading deletions.
-- **Organization Data Isolation**:
-  - **Security Fix**: Prevented cross-organization data leakage in module listing
-  - Admin users now only see modules from their own organization
-  - Backend filters modules by organization ID in `getTestModulesAssignedToCurrentUser()` method
-  - Added null safety check for user organization
-- **Admin Execution Filtering**:
-  - Admin users see all executions in their organization
-  - Filter by User, Module, and Status
-  - Differentiated view from QA/BA users (who only see their assigned executions)
-  - **Bug Fixed 1**: Filtering by assigned user now works correctly - backend returns ALL executions (not just latest per test case), frontend uses correct `assignedToUserId` field
-  - **Bug Fixed 2**: Module assignment filtering - when a user's module assignment is removed, executions from that module are no longer shown. Backend checks user's CURRENT module assignments.
-- **Test Cases Analytics Filtering**:
-  - Admin can filter analytics by assigned user
-  - Shows all test cases assigned to the user (including pending executions)
-  - **Bug Fixed 1**: Analytics now correctly shows test cases based on user assignments
-  - **Bug Fixed 2**: Passed/failed counts now display correctly in both main cards and project/module breakdown. Fixed result value comparison from "Pass"/"Fail" to "PASSED"/"FAILED" to match frontend/backend data format
-- **Test Case Editing**:
-  - Edit dialog correctly displays test steps (actions and expected results)
-  - **Bug Fixed**: Frontend now fetches test case with steps from backend before opening edit dialog, ensuring imported test cases show their steps
-  - Backend DTO now includes testSteps field for proper serialization
+- **Organization Data Isolation**: Security fix implemented to prevent cross-organization data leakage.
+- **Admin Execution Filtering**: Full filtering capabilities for Admins (User, Module, Status).
+- **Test Case Editing**: Functional edit dialog with steps support.
 - **Frontend Components**:
-  - **Profile Page**: Polished UI with responsive side-by-side layout for settings.
-  - **Import Modal**: Responsive, scrollable, and clean UI.
-  - **Executions Page**: Admin filtering with dropdown controls, improved label visibility and sizing.
-  - **Test Cases Page**: Analytics with user filtering for admin users.
-  - **Test Case Detail Page**: Polished architectural layout using the "Specification Grid" pattern, improved metadata hierarchy, and refined typography. Edit and Execute buttons are now functional - Edit opens the edit modal directly, Execute navigates to the executions page.
-  - **Execution Workbench**: Enhanced with hierarchical navigation, improved step display, and validation
-    - **Hierarchical Navigation**: Next Test Case button navigates by Module → Suite → Test Case order
-    - **Module Completion Notification**: Shows toast when crossing module boundaries
-    - **Completion Summary Dialog**: Displays statistics when all executions are complete
-    - **Test Suite Display**: Added test suite name to information card for better context
-    - **Bug Fixed 1**: Execution steps now correctly display action and expected result (was showing "Action not specified" and "Expected result not specified")
-    - **Bug Fixed 2**: Added client-side validation to prevent completing execution without selecting overall result - shows clear error message to users
-    - **Bug Fixed 3**: Overall result validation now checks for valid completion statuses (PASSED, FAILED, BLOCKED, PARTIALLY_PASSED) - PENDING is not allowed for completing executions
-    - **Bug Fixed 4**: Buttons remain disabled when overallResult is empty or invalid
-    - **Snackbar Positioning**: All snackbars now consistently positioned at top right
-    - **Bug Fixed 5**: Step result updates now work correctly by using `testStepId` instead of `stepResultId`
-    - **Bug Fixed 6**: Frontend status normalization - invalid step status values (NOT_EXECUTED, Pass, Fail) are normalized to PENDING when loading executions and before sending updates to backend
-    - **Bug Fixed 7**: Fixed "Next Test Case" navigation bug in Execution Workbench.
-      - Component now reloads correctly when ID changes in URL by subscribing to `paramMap`.
-      - Pending execution filter now handles legacy status values (e.g., "NOT_EXECUTED") to prevent premature completion summaries.
-      - Navigation logic now follows a logical sequence, moving to the next pending test case in the hierarchy.
-      - Fixed TypeScript error where `router.navigate()` was treated as an Observable instead of a Promise.
-    - **Bug Fixed 8**: Test case sorting consistency - fixed string vs numeric ID comparison issue causing inconsistent ordering between modules and executions pages
-    - **Status Normalization**: Backend automatically converts invalid status values (NOT_EXECUTED, Pass, Fail) to PENDING for backward compatibility
-    - **Consistent Ordering**: Test cases now appear in same order on both modules page and executions page using numeric ID comparison
-    - **Navigation Simplification (Latest Enhancement)**:
-      - Simplified button layout to PREV | COMPLETE | NEXT (removed confusing NEXT TEST CASE and NEXT ALL buttons)
-      - Added new `/save` endpoint for saving work-in-progress without requiring completion status
-      - Auto-saves execution notes when navigating between test cases
-      - NEXT button navigates to next test case regardless of status (completed or incomplete)
-      - PREV button navigates to previous test case regardless of status
-      - Hides NEXT button at last execution, PREV button at first execution
-      - Added `isFirstExecution` and `isLastExecution` getters for conditional button display
-      - Fixed Angular change detection errors using `ChangeDetectorRef`
-      - Consistent snackbar styling with `info-snackbar` CSS class
-      - Clean architecture: separate "save work" from "complete execution" operations
-      - No more 400 errors when navigating with incomplete work
-  - **Completion Summary Dialog**: Refactored to match the "Blueprint" modal pattern (consistent typography, card styling, and layout) used elsewhere in the application.
-  - **Global Styles**: Refined shadow system to be thinner (8px/6px/3px) for a lighter visual weight, enhancing the Neo-Brutalist aesthetic without being overpowering.
-  - Dashboard, Project/Module details.
-- **Code Quality & Production Readiness**:
-  - **Console Logging Cleanup**: Removed all unnecessary console logging from codebase
-    - **Frontend**: Removed 67 console statements from 15 Angular/TypeScript files (8 console.log, 59 console.error)
-    - **Critical Security Fix**: Removed password logging in profile.component.ts that exposed sensitive user data
-    - **Backend**: Removed 4 print statements from Java files (3 System.err.println, 1 printStackTrace)
-    - **Kept**: Email simulation logs in EmailService.java as requested
-    - **Result**: Cleaner codebase, improved production readiness, and enhanced security
-- **UI/UX**: Neo-Brutalist design, responsive layouts.
+  - **Executions Page**: Refactored to use "Submodule" grouping.
+  - **Modules Page**: Displays "Submodules" count.
+  - **Project Detail**: Displays hierarchy stats correctly.
+  - **Execution Workbench**: Enhanced navigation and validation.
+- **Code Quality**:
+  - **Refactoring**: Logic extracted to Domain Services (`ProjectService`, etc.).
+  - **Terminology**: Standardized on "Test Submodule" across the stack.
+  - **Cleanup**: Console logs and unused fields ("Scenario") removed.
 
 ## What's Left to Build / Improvements
-- **Advanced Reporting**: detailed charts, quality trends, and exportable reports.
+- **Excel Template Update**: The actual `.xlsx` file resource needs to be updated to match the code changes (remove Scenario column).
+- **Advanced Reporting**: Detailed charts, quality trends, and exportable reports.
 - **File Uploads**: Ability to attach screenshots/logs to test execution results.
 - **Bulk Operations**: Bulk edit/delete for test cases.
 - **Notifications**: In-app notifications.
@@ -86,4 +30,4 @@
 - **Unit & Integration Tests**: Comprehensive test suite.
 
 ## Current Status
-The core lifecycle is stable and now includes automated data auditing. The UI has been refined for better usability on standard laptop screens, with a focus on maximizing horizontal space where appropriate (e.g., Profile settings). Admin filtering on the execution page and test cases analytics page provides better oversight for managers. Fixed critical bugs where filtering by assigned user showed 0 results or stale data - now correctly shows executions and test cases based on user's CURRENT module assignments. Fixed test case editing issue where imported test cases didn't show their steps - now correctly fetches and displays test steps in edit dialog. Fixed critical security issue where admin users could see modules from other organizations - now properly isolates data by organization. Fixed analytics display issue where passed/failed counts showed 0 due to incorrect result value comparison - now correctly displays passed/failed counts in both main cards and breakdown. Enhanced execution workbench with hierarchical navigation, module completion notifications, completion summary dialog, improved step display, and validation - now provides better context, smoother workflow, and prevents user errors. Fixed step result update failures by correctly using `testStepId` instead of `stepResultId` and adding status normalization for backward compatibility with legacy data. Added frontend status normalization to handle invalid status values from legacy database data - now normalizes invalid values (NOT_EXECUTED, Pass, Fail) to PENDING in both loadExecution and updateStepResult methods, preventing validation errors. Fixed overall result validation to only accept valid completion statuses (PASSED, FAILED, BLOCKED, PARTIALLY_PASSED) and keep buttons disabled when empty. Fixed test case sorting consistency issue where order changed after executing test cases - changed from string comparison to numeric ID comparison, ensuring consistent ordering across modules and executions pages. Removed all unnecessary console logging from the codebase (67 frontend console statements, 4 backend print statements) for improved production readiness and security, including a critical fix for password logging in profile component. The application is now ready for production deployment with clean code, proper error handling, and no console pollution.
+The application has undergone a significant refactoring to standardize terminology ("Test Submodule") and simplify the data model (removed "Scenario"). The Service layer is now better structured with Domain Services. The database schema has been reset (`ddl-auto=create`) to align with these changes. Both Backend and Frontend compile and start successfully. Codebase is clean of excessive logging. We are ready to verify the new workflow and then proceed to Advanced Reporting.

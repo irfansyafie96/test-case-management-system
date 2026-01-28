@@ -52,7 +52,6 @@ export interface TestCase {
   testCaseId: string; // This is the business ID (TC-001), usually string
   title: string;
   description?: string;
-  scenario?: string; // High-level scenario description
   status?: string;
   steps?: string[]; // Legacy/Simplified steps
   testSteps?: TestStep[]; // Detailed steps from backend

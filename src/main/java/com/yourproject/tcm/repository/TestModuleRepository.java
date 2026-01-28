@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
-    @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.testSuites WHERE tm.id = :id")
-    Optional<TestModule> findByIdWithTestSuites(@Param("id") Long id);
+    @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.testSubmodules WHERE tm.id = :id")
+    Optional<TestModule> findByIdWithTestSubmodules(@Param("id") Long id);
 
-    @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.testSuites WHERE tm.id = :id")
+    @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.testSubmodules WHERE tm.id = :id")
     Optional<TestModule> findByIdWithSuitesAndCasesAndSteps(@Param("id") Long id);
 
     @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.assignedUsers WHERE tm.id = :id")
@@ -22,7 +22,7 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     // Find test modules assigned to a specific user (Directly OR via Project assignment)
     @Query("SELECT DISTINCT tm FROM TestModule tm " +
            "JOIN FETCH tm.project p " +
-           "LEFT JOIN FETCH tm.testSuites ts " +
+           "LEFT JOIN FETCH tm.testSubmodules ts " +
            "LEFT JOIN tm.assignedUsers u " +
            "LEFT JOIN p.assignedUsers pu " +
            "WHERE u.id = :userId OR pu.id = :userId")
@@ -40,6 +40,6 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     List<TestModule> findTestModulesInProjectsAssignedToUser(@Param("userId") Long userId);
     @Query("SELECT DISTINCT tm FROM TestModule tm " +
            "JOIN FETCH tm.project " +
-           "LEFT JOIN FETCH tm.testSuites ts")
+           "LEFT JOIN FETCH tm.testSubmodules ts")
     List<TestModule> findAll();
 }

@@ -189,10 +189,10 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
-  getTotalTestCases(testSuites: any[] | undefined): number {
-    if (!testSuites) return 0;
-    return testSuites.reduce((total, suite) => {
-      return total + (suite.testCases ? suite.testCases.length : 0);
+  getTotalTestCases(testSubmodules: any[] | undefined): number {
+    if (!testSubmodules) return 0;
+    return testSubmodules.reduce((total, submodule) => {
+      return total + (submodule.testCases ? submodule.testCases.length : 0);
     }, 0);
   }
 

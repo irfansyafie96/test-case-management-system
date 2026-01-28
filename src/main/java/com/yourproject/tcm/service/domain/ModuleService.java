@@ -83,10 +83,10 @@ public class ModuleService {
      */
     @Transactional
     public User assignUserToTestModule(ModuleAssignmentRequest request) {
-        return testModuleRepository.findById(request.getModuleId()).map(testModule -> {
+        return testModuleRepository.findById(request.getTestModuleId()).map(testModule -> {
             return userRepository.findById(request.getUserId()).map(user -> {
-                if (!user.getTestModules().contains(testModule)) {
-                    user.getTestModules().add(testModule);
+                if (!user.getAssignedTestModules().contains(testModule)) {
+                    user.getAssignedTestModules().add(testModule);
                     return userRepository.save(user);
                 }
                 return user;
@@ -99,9 +99,9 @@ public class ModuleService {
      */
     @Transactional
     public User removeUserFromTestModule(ModuleAssignmentRequest request) {
-        return testModuleRepository.findById(request.getModuleId()).map(testModule -> {
+        return testModuleRepository.findById(request.getTestModuleId()).map(testModule -> {
             return userRepository.findById(request.getUserId()).map(user -> {
-                user.getTestModules().remove(testModule);
+                user.getAssignedTestModules().remove(testModule);
                 return userRepository.save(user);
             }).orElse(null);
         }).orElse(null);

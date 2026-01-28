@@ -38,8 +38,13 @@ public class TestCase {
     @Column(columnDefinition = "TEXT")
     private String description; // Detailed description of the test case
 
-    @Column(columnDefinition = "VARCHAR(500)")
-    private String scenario; // High-level scenario description for the test case
+    @Column(columnDefinition = "TEXT")
+    private String prerequisites;
+
+    @Column(columnDefinition = "TEXT")
+    private String expectedResult;
+
+    private String tags;
 
     /**
      * Many-to-One relationship: Many TestCases belong to One TestSubmodule
@@ -64,6 +69,10 @@ public class TestCase {
     @OrderBy("stepNumber ASC") // Always keep steps in sequential order (1, 2, 3, etc.)
     @JsonIgnoreProperties({"testCase"})  // Prevent circular reference back to TestCase
     private List<TestStep> testSteps;  // List of steps that make up this test case
+
+    @OneToMany(mappedBy = "testCase", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<TestExecution> testExecutions;
 
     // Getters and Setters - Standard methods to access private fields
     public Long getId() {
@@ -98,12 +107,28 @@ public class TestCase {
         this.description = description;
     }
 
-    public String getScenario() {
-        return scenario;
+    public String getPrerequisites() {
+        return prerequisites;
     }
 
-    public void setScenario(String scenario) {
-        this.scenario = scenario;
+    public void setPrerequisites(String prerequisites) {
+        this.prerequisites = prerequisites;
+    }
+
+    public String getExpectedResult() {
+        return expectedResult;
+    }
+
+    public void setExpectedResult(String expectedResult) {
+        this.expectedResult = expectedResult;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 
     public TestSubmodule getTestSubmodule() {
@@ -122,6 +147,14 @@ public class TestCase {
         this.testSteps = testSteps;
     }
 
+    public List<TestExecution> getTestExecutions() {
+        return testExecutions;
+    }
+
+    public void setTestExecutions(List<TestExecution> testExecutions) {
+        this.testExecutions = testExecutions;
+    }
+
     /**
      * Get the ID of the test submodule this test case belongs to.
      * This is used by Jackson when serializing, since the testSubmodule field
@@ -129,6 +162,10 @@ public class TestCase {
      */
     public Long getTestSubmoduleId() {
         return testSubmodule != null ? testSubmodule.getId() : null;
+    }
+
+    public TestModule getTestModule() {
+        return testSubmodule != null ? testSubmodule.getTestModule() : null;
     }
 
     // Flattened hierarchy getters for Frontend (avoids JsonIgnore/Proxy issues)

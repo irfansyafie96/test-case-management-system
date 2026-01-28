@@ -85,8 +85,8 @@ public class ProjectService {
     public User assignUserToProject(ProjectAssignmentRequest request) {
         return projectRepository.findById(request.getProjectId()).map(project -> {
             return userRepository.findById(request.getUserId()).map(user -> {
-                if (!user.getProjects().contains(project)) {
-                    user.getProjects().add(project);
+                if (!user.getAssignedProjects().contains(project)) {
+                    user.getAssignedProjects().add(project);
                     return userRepository.save(user);
                 }
                 return user;
@@ -101,7 +101,7 @@ public class ProjectService {
     public User removeUserFromProject(ProjectAssignmentRequest request) {
         return projectRepository.findById(request.getProjectId()).map(project -> {
             return userRepository.findById(request.getUserId()).map(user -> {
-                user.getProjects().remove(project);
+                user.getAssignedProjects().remove(project);
                 return userRepository.save(user);
             }).orElse(null);
         }).orElse(null);

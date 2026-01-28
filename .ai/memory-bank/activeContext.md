@@ -4,240 +4,54 @@
 - **Stabilizing the application for production-readiness**.
 - All Phase 1 and Phase 2 tasks completed.
 
-## Current Problem - Next Test Case Navigation Issue (FIXED)
-- **Issue**: When user presses "Next Test Case" button in execution workbench, execution was successfully completed and saved, but navigation to the next test case failed silently or showed completion summary prematurely.
-- **Root Causes Identified & Resolved**:
-  1. **Component Not Reloading**: `ngOnInit` only loaded the execution ID once from the snapshot. Fixed by subscribing to `route.paramMap` to re-trigger `loadExecution()` when the URL ID changes.
-  2. **Stale/Missing Pending Data**: The pending executions filter was too restrictive, only checking for `PENDING` or null status. It now includes legacy statuses like `NOT_EXECUTED` to prevent premature completion summaries.
-  3. **Non-Intuitive Navigation**: Changed logic to find the first pending execution *after* the current one in the hierarchy, rather than always jumping back to the first pending test case in the list.
-  4. **TypeScript Navigation**: Ensured `router.navigate()` is handled as a promise with proper error catching.
-- **Current Status**: Navigation bug resolved and verified through code analysis. Component correctly reloads on navigation, handles legacy data, and follows a logical hierarchical progression.
+## Current Problem - Database & Code Synchronization (RESOLVED)
+- **Issue**: Startup failures due to renaming "Test Suites" to "Test Submodules" and removing "Scenario" field. The application faced `UnknownPathException` in JPA repositories and SQL errors when `ddl-auto=create` tried to recreate an existing schema in a bad state.
+- **Resolution**:
+  1.  **Repository Fixes**: Updated `TestCaseRepository` and `TestExecutionRepository` to use the new field name `testSubmodule` instead of `testSuite` in JPQL queries.
+  2.  **Schema Reset**: Confirmed `spring.jpa.hibernate.ddl-auto=create` is active. A clean restart after fixing the queries successfully rebuilt the database schema with the correct `test_submodules` table and removed the `scenario` column.
+  3.  **Frontend Alignment**: Updated Angular models and components (`executions.component`, `modules.component`, `project-detail.component`) to use `TestSubmodule` terminology and remove references to the deleted `scenario` field.
+- **Current Status**: Backend started successfully. Frontend compilation errors resolved.
 
 ## Recent Changes
-- **Scenario Field & Submodule Renaming (COMPLETED)**:
-  - **Database Strategy**: Used `ddl-auto=create` to automatically create new schema with renamed tables and new columns (development only)
-  - **Backend Changes Completed**:
-    - Created `TestSubmodule.java` entity (renamed from `TestSuite.java`)
-    - Created `TestSubmoduleRepository.java` (renamed from `TestSuiteRepository.java`)
-    - Created `TestSubmoduleDTO.java` (renamed from `TestSuiteDTO.java`)
-    - Updated `TestCase.java` to add `scenario` field (VARCHAR(500))
-    - Updated `TestCase.java` to change `testSuite` → `testSubmodule` relationship
-    - Updated `TestModule.java` to change `testSuites` → `testSubmodules`
-    - Updated `TestCaseDTO.java` to add `scenario` and rename suite → submodule references
-    - Updated `TestExecutionDTO.java` to rename suite → submodule references
-    - Updated `TestModuleDTO.java` to rename `suitesCount` → `submodulesCount`
-    - Updated `TcmService.java` with 58 changes: All `TestSuite` references renamed to `TestSubmodule`, methods renamed (`getTestSuiteById` → `getTestSubmoduleById`, `createTestSuiteForTestModule` → `createTestSubmoduleForTestModule`, `updateTestSuite` → `updateTestSubmodule`, `deleteTestSuite` → `deleteTestSubmodule`, `createTestCaseForTestSuite` → `createTestCaseForTestSubmodule`)
-    - Updated Excel import logic to use "Submodule Name" instead of "Suite Name" and added "Scenario" column support
-    - Updated `ApiController.java` endpoints: `/testsuites` → `/testsubmodules`
-  - **Frontend Changes Completed**:
-    - Updated `project.model.ts`: `TestSuite` → `TestSubmodule` interface, added `scenario` field to `TestCase`
-    - Updated `tcm.service.ts`: renamed suite methods (`createTestSuite` → `createTestSubmodule`, `updateTestSuite` → `updateTestSubmodule`, `deleteTestSuite` → `deleteTestSubmodule`) and endpoints
-    - Updated `module-detail.component.ts/html`: submodule dialog and references throughout
-    - Created `test-submodule-dialog.component.ts/html/css` (renamed from test-suite-dialog)
-    - Updated `test-case-dialog-improved.component.ts/html`: added scenario field to form
-    - Updated `test-case-detail.component.ts/html/css`: scenario display with styling
-    - Updated `execution-workbench.component.ts/html`: submodule metadata display
-    - Updated `import-dialog.component.html`: "Suites" → "Submodules" in stats
-  - **Excel Template Completed**:
-    - Updated column headers: "Suite Name" → "Submodule Name"
-    - Added "Scenario" column between "Description" and "Step Number"
-    - New format: "Submodule Name | Test Case ID | Title | Description | Scenario | Step Number | Action | Expected Result"
-  - **Hierarchy Change**: Project → TestModule → TestSubmodule → TestCase → TestStep
+- **Scenario Field Removal (COMPLETED)**:
+  - **Backend**: Removed `scenario` field from `TestCase` entity and `TestCaseDTO`. Removed getters/setters.
+  - **Logic**: Updated `TcmService` import logic to ignore scenario column and `TestCaseService` update logic.
+  - **Frontend**: Removed `scenario` from `TestCase` interface, edit dialog, and detail view.
+  - **Impact**: Simplified test case data model. Note: Excel import templates need to be updated to remove the "Scenario" column (or just ignore it).
+- **Terminology Refactor: TestSuite -> TestSubmodule (COMPLETED)**:
+  - **Backend**:
+    - Renamed entity: `TestSuite` -> `TestSubmodule`.
+    - Renamed repository: `TestSuiteRepository` -> `TestSubmoduleRepository`.
+    - Renamed DTO: `TestSuiteDTO` -> `TestSubmoduleDTO`.
+    - Updated relationships in `TestModule`, `TestCase`, `TestExecution`.
+    - Updated all service layer logic and API endpoints (`/api/testsubmodules`).
+  - **Frontend**:
+    - Updated `project.model.ts` interfaces.
+    - Updated `executions.component` to group by `testSubmodule`.
+    - Updated `modules.component` to display `submodulesCount`.
+    - Updated `project-detail.component` to count test cases via `testSubmodules`.
+  - **Data**: Database tables renamed to `test_submodules` and foreign keys updated.
 - **Service Refactoring (COMPLETED)**:
-  - **Created Domain Services**:
-    - `ProjectService.java` - Project CRUD and user assignments
-    - `ModuleService.java` - TestModule CRUD and user assignments
-    - `SubmoduleService.java` - TestSubmodule CRUD operations
-    - `TestCaseService.java` - TestCase CRUD and execution management
-    - `ExecutionService.java` - TestExecution CRUD and result management
-  - **Updated TcmService**:
-    - Added domain service dependencies (ProjectService, ModuleService, SubmoduleService, TestCaseService, ExecutionService)
-    - Updated `createProject` method to delegate to `ProjectService`
-    - Preserved all authorization logic in TcmService
-  - **Updated ApiController**:
-    - Added domain service dependencies
-    - Ready for future direct service usage
-- **Test Case Sorting Consistency Fix**:
-  - **Issue**: Test case order was inconsistent between modules page and executions page, and order changed after executing test cases
-  - **Root Cause**: Backend `getTestExecutionsForCurrentUser()` used string comparison for sorting test case IDs (lexicographic order: 1, 10, 11, 2, 3) instead of numeric comparison
-  - **Fix Applied**: Changed sorting logic from string comparison to numeric ID comparison in `getTestExecutionsForCurrentUser()` method
-  - **Backend**: Changed from `testCaseId.compareTo()` to `Long.compare(testCase.getId())`
-  - **Result**: Both pages now use consistent sorting: Module ID → Suite ID → Test Case ID (numeric order)
-  - **Impact**: Test cases now appear in same order on modules page and executions page, even after execution
-- **Test Case Hierarchical Sorting Fix**:
-  - **Issue**: Test case ordering was inconsistent between modules page and executions page
-  - **Fix Applied**: Added ORDER BY clause to TestSuiteRepository query for consistent suite ordering
-  - **Backend**: Added test case sorting by ID within each suite in `getTestModuleById()` method
-  - **Backend**: Added hierarchical sorting to `getAllExecutionsInOrganization()` for admin user filter
-  - **Sorting Order**: Module ID → Suite ID → Test Case ID (numeric)
-  - **Result**: Ensures test cases appear in same order on both pages
-- **Frontend Status Normalization Fix**:
-  - **Issue**: 400 Bad Request errors when typing in actual result field due to invalid status values ("NOT_EXECUTED") from legacy database data
-  - **Root Cause**: Backend `@Pattern` validation rejects invalid status values before normalization code runs
-  - **Fix Applied**: Added status normalization in frontend `loadExecution()` and `updateStepResult()` methods
-  - **Frontend**: Normalize invalid step status values to "PENDING" when loading executions
-  - **Frontend**: Normalize status values before sending to backend in `updateStepResult()`
-  - **Frontend**: Fixed overallResult validation to only accept valid completion statuses (PASSED, FAILED, BLOCKED, PARTIALLY_PASSED)
-  - **Frontend**: Buttons remain disabled when overallResult is empty or invalid
-  - **Backward Compatibility**: Maintains compatibility with legacy data by normalizing invalid values in frontend before API calls
-- **Step Result Update Fix**:
-  - **Issue**: 400/404 errors when updating step results via `PUT /api/executions/{executionId}/steps/{stepResultId}`
-  - **Root Cause**: Confusion between stepResultId and testStepId - frontend was sending stepResultId but backend expected testStepId
-  - **Fix Applied**: Added `testStepId` field to `TestStepResultDTO` and updated backend DTO conversion
-  - **Backend**: Added `testStepId` field to `TestExecutionDTO.TestStepResultDTO` inner class
-  - **Backend**: Updated `getTestExecutionById` endpoint to include testStepId in step results
-  - **Frontend**: Updated `project.model.ts` to include `testStepId` in `TestStepResult` interface
-  - **Frontend**: Modified `execution-workbench.component.ts` to send `testStepId` instead of `stepResult.id` when updating step results
-- **Status Normalization Feature**:
-  - **Issue**: Old database data has invalid status values ("NOT_EXECUTED", "Pass", "Fail") causing validation failures
-  - **Fix Applied**: Added status normalization in backend to convert invalid values to "PENDING"
-  - **Backend**: Added normalization logic in `ApiController.java` step result update endpoint
-  - **Backend**: Added normalization logic in `ApiController.java` execution complete endpoint
-  - **Backward Compatibility**: Maintains compatibility with legacy data while ensuring new data uses correct uppercase values
-  - **Valid Status Values**: PASSED, FAILED, BLOCKED, PENDING (uppercase only)
-- **Execution Workbench Validation Fix**:
-  - **Issue**: Users could click "Complete Execution" or "Next Test Case" without selecting an overall result, causing 400 Bad Request errors
-  - **Fix Applied**: Added client-side validation to check overallResult before API call
-  - **Frontend**: Added validation in `completeExecution()` and `completeAndNextExecution()` methods
-  - **Error Messages**: Display clear error message "Please select an overall result (Pass, Fail, or Blocked) before completing the execution."
-  - **Error Handling**: Added user-friendly error message in `completeExecution()` error handler
-  - **Snackbar Positioning**: Positioned all snackbars at top right for consistency with other components
-- **Execution Workbench Enhancements**:
-  - **Hierarchical Navigation**: Implemented Next Test Case button navigation based on hierarchy (Module → Suite → Test Case ID)
-  - **Module Completion Notification**: Shows toast message "Module [Name] completed!" when crossing module boundaries
-  - **Completion Summary Dialog**: Created new dialog displaying execution statistics (total, passed, failed, blocked, pending) when all executions are done
-  - **Backend**: Added `CompletionSummaryDTO` and `getCompletionSummaryForCurrentUser()` method
-  - **Backend**: Added `GET /api/executions/summary` endpoint
-  - **Backend**: Added `TestStepResultDTO` inner class in `TestExecutionDTO` to include action and expected result fields
-  - **Backend**: Updated `getTestExecutionById` endpoint to return DTO with step results
-  - **Frontend**: Created `completion-summary-dialog.component.ts/html/css`
-  - **Frontend**: Added test suite name to information card for better context
-  - **Frontend**: Removed progress indicator card (was redundant with suite name display)
-  - **Bug Fixed**: Execution steps now correctly display action and expected result (was showing "Action not specified" and "Expected result not specified")
-- **Test Analytics Passed/Failed Count Fix**:
-  - **Issue**: Analytics cards showed executed/not executed counts correctly, but passed/failed counts remained at 0
-  - **Root Cause**: Backend was comparing execution results as "Pass"/"Fail" (title case) but frontend sends/stores them as "PASSED"/"FAILED" (uppercase)
-  - **Fix Applied**: Updated result value comparison in `getTestAnalytics()` method to use correct uppercase values
-  - **Backend**: Fixed three locations in `TcmService.java`:
-    - Overall KPIs calculation (line 636-644)
-    - Project breakdown calculation (line 684-688)
-    - Module breakdown calculation (line 697-701)
-  - **Result**: Analytics now correctly display passed/failed counts in both main cards and project/module breakdown
-- **Cross-Organization Data Leakage Fix**:
-  - **Security Issue**: Fixed critical bug where admin users could see modules from other organizations when accessing `/modules` page
-  - **Root Cause**: `getTestModulesAssignedToCurrentUser()` method returned ALL modules for admin users without organization filtering
-  - **Fix Applied**: Added organization filtering for admin users - now only returns modules from their own organization using stream filters
-  - **Backend**: Modified `TcmService.java:1415-1424` to filter modules by organization ID before returning to admin users
-  - **Safety**: Added null check for user organization to prevent NPE
-- **Test Case Detail Page Improvements**:
-  - **Fixed Metadata Border**: Added `overflow: hidden` to `.spec-card` to prevent the header background from clipping the border radius.
-  - **Enhanced Information Display**: Added Project, Module, and Suite names to the metadata section using flattened DTO fields (`projectName`, `moduleName`, `testSuiteName`) for better context.
-  - **Metadata Refinement**: Removed 'Status' and 'Date' fields. Added structural dividers to the metadata card for better organization.
-  - **Specification Grid Layout**: Reimagined the content card as a structured grid with a dedicated "Label" column on the left and "Value" column on the right, separated by the system's thin borders.
-  - **Typography Refinement**: Darkened the step numbers (`#888`) to ensure they are clearly legible while remaining secondary to the step content.
-  - **Visual Cleanup**: Removed orange side-borders and blue backgrounds to stick to a more professional, neutral palette that relies on typography and structural lines.
-  - **Static Cards**: Removed hover effects (transform and shadow change) from the specification cards to maintain a more stable, documentation-like feel.
-  - **Tags Support**: Added display for test case tags if available.
-- **Admin Execution Filtering Feature**:
-  - **Backend**: Added three new API endpoints for admin filtering:
-    - `GET /api/admin/users` - Returns all non-admin users (QA/BA/TESTER) in the organization
-    - `GET /api/admin/modules` - Returns all modules in the organization
-    - `GET /api/admin/executions?userId={id}` - Returns executions filtered by user's current module assignments
-  - **Service Layer**: Added `getUsersInOrganization()`, `getAllModulesInOrganization()`, and `getAllExecutionsInOrganization(userId)` methods in `TcmService.java`
-  - **Frontend**: Updated executions component with filter controls (only visible to admin users):
-    - Filter by User dropdown
-    - Filter by Module dropdown
-    - Filter by Status dropdown (Pending/Passed/Failed/Blocked)
-  - **Differentiation**: Admins see all executions in their organization with filtering capabilities, while QA/BA users see only their assigned executions
-  - **Bug Fix 1**: Fixed filtering by assigned user - the backend now returns ALL executions (not just latest per test case) and frontend correctly filters using `assignedToUserId` field
-  - **Bug Fix 2**: Fixed module assignment filtering - when a user's module assignment is removed, executions from that module are no longer shown when filtering by that user. Backend now checks user's current module assignments.
-  - **Executions Page UI**:
-    - **Filter Dropdowns**: Fixed dropdown panel height (max 250px) and ensured proper width matching by resetting `min-width` on the overlay pane.
-    - **Label Positioning**: Resolved label overlapping issue by removing conflicting manual borders on `.mat-mdc-form-field-flex` and instead styling the native `.mdc-notched-outline` components globally to maintain the Neo-Brutalist look (2px thick borders) while preserving the label notch.
-    - **Styling**: Moved dropdown panel customization to global `styles.css` using `panelClass="filter-select-panel"`.
-  - **JPA Auditing Implementation**:
-    - Enabled automatic population of `created_date`, `updated_date`, and `created_by` fields for `Project` entity.  - Implemented `AuditorAwareImpl` to fetch current username from Spring Security context.
-  - Configured via `JpaAuditingConfig`.
-- **Test Case Edit Fix**:
-  - **Backend**: Added `testSteps` field to `TestCaseDTO` with inner `TestStepDTO` class to include step data in API responses
-  - **Backend**: Updated `convertToDTO()` method in `ApiController` to convert test steps to DTO format
-  - **Backend**: Added `entityManager.flush()` after saving test case during import to ensure steps are persisted to database
-  - **Frontend**: Modified `editTestCase()` in `ModuleDetailComponent` to fetch test case with steps before opening edit dialog
-  - **Bug Fixed**: Test case edit dialog now correctly displays test steps (actions and expected results) for imported test cases
-- **Import Dialog Shadow Fix**:
-  - Reverted the custom shadow override for the import dialog.
-  - It now uses the standard global `--shadow-lg` (12px) deep shadow, ensuring visual consistency with all other application modals.
-- **Profile Page Layout Update**:
-  - Refactored "Change Password" and "Download Templates" cards to sit **side-by-side** in a responsive row layout.
-  - Implemented `flex: 1` and `align-items: stretch` to ensure equal card heights and perfectly aligned shadows.
-  - Added horizontal padding to the tab content to prevent shadow clipping on the edges.
-  - Increased `max-width` of the profile container to `1200px` to accommodate the wider layout.
-- **Import Dialog Design Overhaul**:
-  - **Structure**: Redesigned as a structured multi-step process (Prepare Data → Upload File).
-  - **Visuals**: Added a "Template Card" for better visibility of the download action and a modern dashed-border upload zone with icon circles.
-  - **Feedback**: Implemented a results grid for success (stats for suites/test cases) and a structured error list for failed imports.
-  - **Sizing**: Maintained the optimized 500px width and 90vh maxHeight for laptop compatibility.
-- **Import Dialog CSS Consistency**:
-  - **CSS Property Reordering**: Moved `margin: 12px auto` property before `align-items` in `.icon-circle` selector and removed redundant `margin-bottom: 12px` for better CSS property organization and consistency.
-- **Test Case Detail Page Button Functionality**:
-  - **Edit Button**: Now opens the edit modal directly (using `TestCaseDialogImprovedComponent`) with full test case data including steps. After saving, the detail page refreshes to show updated data.
-  - **Execute Button**: Now navigates to the executions page (`/executions`) where users can execute test cases.
-  - **Implementation**: Added `MatDialog`, `MatSnackBar`, and `Router` imports. Added `editTestCase()` and `navigateToExecutions()` methods. Includes CSRF token synchronization and error handling with success/error snackbars.
-- **Global Style Refinement**:
-  - **Shadows**: Reduced global shadow depths for a lighter, more refined look. Updated `--shadow-lg` to 8px, `--shadow-md` to 6px, and `--shadow-sm` to 3px.
-  - **Completion Summary Dialog**: Refactored to fully match the "Blueprint" design pattern (Space Grotesk headers, DM Sans body, structured grid layout). Removed hover effects from stat cards for a cleaner, static presentation.
-- **Navigation Enhancements & Save Endpoint**:
-  - **Backend Architecture Improvement**: Created new `/save` endpoint for saving work-in-progress without requiring completion status
-  - **Backend**: Added `ExecutionSaveRequest.java` model for partial saves (notes only, no overallResult required)
-  - **Backend**: Added `saveExecutionWork()` method in `TcmService.java` to update execution notes without changing overall result
-  - **Backend**: Added `PUT /api/executions/{id}/save` endpoint in `ApiController.java` with proper security and validation
-  - **Frontend**: Added `saveExecution()` method in `tcm.service.ts` to call the new `/save` endpoint
-  - **Frontend**: Removed `saveExecutionAsPending()` method - no longer needed
-  - **Frontend**: Updated `navigateToPreviousExecution()` and `navigateSmartNext()` to use `/save` endpoint
-  - **Frontend**: Simplified button layout to just PREV | COMPLETE | NEXT (removed confusing NEXT TEST CASE and NEXT ALL buttons)
-  - **Frontend**: Added `isFirstExecution` and `isLastExecution` getters for conditional button display
-  - **Frontend**: Hide NEXT button at last execution, hide PREV button at first execution
-  - **Frontend**: Added `ChangeDetectorRef` to fix Angular change detection errors when updating allExecutions
-  - **Frontend**: Auto-saves notes when navigating between test cases (regardless of completion status)
-  - **Frontend**: NEXT button navigates to next test case regardless of status (completed or incomplete)
-  - **Frontend**: PREV button navigates to previous test case regardless of status
-  - **Frontend**: Consistent snackbar styling with `info-snackbar` CSS class for navigation notifications
-  - **Design Decision**: Chose Option 3 (separate save endpoint) for clean architecture - separates "save work" from "complete execution" operations
-  - **Result**: No more 400 errors when navigating with incomplete work; clear semantic separation in API design
+  - **Domain Services**: Extracted logic into `ProjectService`, `ModuleService`, `SubmoduleService`, `TestCaseService`, `ExecutionService`.
+  - **TcmService**: Now acts as a facade/coordinator, delegating core CRUD operations to domain services while handling authorization and cross-cutting concerns.
+- **Execution Workbench Navigation Fix**:
+  - **Issue**: "Next Test Case" button failed or showed premature completion.
+  - **Fix**: Re-trigger component load on URL parameter change, include legacy status values in "pending" filter, and improve navigation logic to respect hierarchy.
 - **Console Logging Cleanup**:
-  - **Frontend Cleanup**: Removed 67 console statements from 15 Angular/TypeScript files
-    - 8 `console.log` debug statements removed
-    - 59 `console.error` error statements removed
-    - **Critical Security Fix**: Removed password logging in `profile.component.ts:86` that exposed sensitive user data
-    - Files cleaned: join.component.ts, profile.component.ts, server.ts, module-detail.component.ts, project-detail.component.ts, execution-workbench.component.ts, auth.service.ts, tcm.service.ts, executions.component.ts, import-dialog.component.ts, projects.component.ts, team.component.ts, test-case-detail.component.ts, test-cases.component.ts, main.ts
-  - **Backend Cleanup**: Removed 4 print statements from Java files
-    - 3 `System.err.println` statements removed from `TcmService.java`
-    - 1 `printStackTrace()` call removed from `ApiController.java`
-  - **Kept**: 11 `System.out.println` statements in `EmailService.java` for email simulation (as requested)
-  - **Result**: Codebase is now clean with no unnecessary console logging in browser or Java system prints, improving production readiness and security
+  - Removed excessive `console.log` and `console.error` statements from frontend.
+  - Removed `System.err.println` from backend.
+  - **Security**: Removed password logging.
 
 ## Next Steps
-- **Test the application**: Start the application to verify database schema creation with new tables (test_submodules) and new column (scenario in test_cases)
-- **Verify functionality**: Test the new scenario field in test case creation/edit
-- **Verify submodule operations**: Test all submodule CRUD operations (create, read, update, delete)
-- **Test Excel import**: Test Excel import with the new template format (Submodule Name, Scenario columns)
+- **Verify Frontend Functionality**: Manually test the "Executions" page grouping, "Modules" page counts, and "Project Detail" page stats to ensure the terminology refactor didn't break display logic.
+- **Test Excel Import**: Verify that importing an Excel file works correctly with the new `TestSubmodule` logic and without the `Scenario` field.
+- **Update Excel Template**: The downloadable template needs to be updated to match the new schema (remove "Scenario" column).
 - **Advanced Reporting**: Start planning the reporting dashboard (charts, metrics).
 - **File Uploads**: Add capability to attach screenshots to test executions.
 
 ## Important Decisions & Considerations
-- **Terminology**: The system now uses "Submodule" terminology instead of "Suite" for better clarity. All references have been updated: database tables, entities, APIs, UI labels, Excel templates.
-- **Hierarchy**: The test case hierarchy is Project → TestModule → TestSubmodule → TestCase → TestStep
-- **Scenario Field**: Test cases now include a "Scenario" field (VARCHAR(500)) for high-level scenario descriptions to help testers understand context.
-- **Domain Services**: Extracted 5 domain services (ProjectService, ModuleService, SubmoduleService, TestCaseService, ExecutionService) from TcmService for better separation of concerns. TcmService maintains authorization logic and delegates to domain services.
-- **Admin vs QA/BA Behavior**: Admins should have full visibility into team execution progress with filtering capabilities, while QA/BA users only see their assigned executions.
-- **Module Assignment Filtering**: When filtering by user, backend must check user's CURRENT module assignments (not just the execution's assigned_to_user field) to ensure removed assignments don't show stale executions.
-- **DTO Pattern**: Backend uses DTOs with flattened fields to prevent serialization issues. `TestCaseDTO` now includes `testSteps` to ensure edit dialog displays step data.
-- **Eager Fetching**: When editing entities, always fetch related data (like test steps) from backend rather than using cached incomplete data from lists.
-- **Auditing**: Always use JPA Auditing (`@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`) for tracking entity metadata instead of manual setting in services.
-- **Responsive Dialogs**: Always use `mat-dialog-content` and `maxHeight` for modals.
-- **Documentation Isolation**: The `.ai/` directory (Memory Bank) is explicitly excluded from version control via `.gitignore`. Documentation remains local to the development environment to prevent repo bloat and maintain privacy of session-specific context.
-- **Design Consistency**: Stick to the established simple Neo-Brutalist theme (bold borders, consistent shadows). For side-by-side cards, always use `align-items: stretch` to maintain visual balance. Ensure all modals use the standard `--shadow-lg` for consistency.
-- **Step Result IDs**: When updating step results, use `testStepId` (ID of the test step) not `stepResultId` (ID of the step result record). Backend endpoint is `PUT /api/executions/{executionId}/steps/{testStepId}`.
-- **Status Values**: Always use uppercase status values (PASSED, FAILED, BLOCKED, PENDING) for consistency. Normalize invalid values in backend for backward compatibility.
-- **Navigation Architecture**: Separate "save work-in-progress" from "complete execution" operations using distinct endpoints (`/save` vs `/complete`). This provides clear semantic separation, better data integrity, and follows RESTful best practices.
-- **Simplified Navigation**: Use only PREV and NEXT buttons without confusing additional options. NEXT navigates to next test case regardless of status, PREV navigates to previous. Hide buttons at boundaries (first/last execution).
+- **Database Strategy**: `ddl-auto=create` is currently used to handle the massive schema changes (renaming tables, removing columns). This wipes data on restart. Once stable, switch back to `update` to persist data.
+- **Terminology**: "Submodule" is the definitive term. "Suite" should no longer appear in the UI or code (except maybe as deprecated aliases if absolutely necessary for transition, but we aimed for a clean break).
+- **Domain Services**: Continue using the domain service pattern for new features to keep `TcmService` manageable.
+- **DTOs**: Ensure all DTOs (like `TestExecutionDTO`) match their constructors exactly when used in services. Flattened DTOs are preferred for the frontend to avoid complex object graph traversals.
+- **Frontend Models**: `project.model.ts` is the source of truth for frontend interfaces. Keep it synchronized with backend DTOs.

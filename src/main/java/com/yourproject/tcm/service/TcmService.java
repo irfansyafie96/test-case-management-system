@@ -490,7 +490,7 @@ public class TcmService {
             testSubmoduleRepository.delete(testSubmodule);
             entityManager.flush(); // Ensure data is written to DB
         } else {
-            throw new RuntimeException("Test Suite not found with id: " + suiteId);
+            throw new RuntimeException("Test Submodule not found with id: " + submoduleid);
         }
     }
 
@@ -788,7 +788,7 @@ public class TcmService {
 
             return savedTestCase;
         } else {
-            throw new RuntimeException("Test Suite not found with id: " + suiteId);
+            throw new RuntimeException("Test Suite not found with id: " + submoduleId);
         }
     }
 
@@ -1755,7 +1755,7 @@ public class TcmService {
                 throw new RuntimeException("Excel file has no header row");
             }
 
-            List<String> expectedHeaders = Arrays.asList("Submodule Name", "Test Case ID", "Title", "Description", "Scenario", "Step Number", "Action", "Expected Result");
+            List<String> expectedHeaders = Arrays.asList("Submodule Name", "Test Case ID", "Title", "Description", "Step Number", "Action", "Expected Result");
             for (int i = 0; i < expectedHeaders.size(); i++) {
                 Cell cell = headerRow.getCell(i);
                 String headerValue = cell != null ? cell.getStringCellValue().trim() : "";
@@ -1788,10 +1788,9 @@ public class TcmService {
                     String testCaseId = getCellValueAsString(row.getCell(1));
                     String title = getCellValueAsString(row.getCell(2));
                     String description = getCellValueAsString(row.getCell(3));
-                    String scenario = getCellValueAsString(row.getCell(4));
-                    String stepNumberStr = getCellValueAsString(row.getCell(5));
-                    String action = getCellValueAsString(row.getCell(6));
-                    String expectedResult = getCellValueAsString(row.getCell(7));
+                    String stepNumberStr = getCellValueAsString(row.getCell(4));
+                    String action = getCellValueAsString(row.getCell(5));
+                    String expectedResult = getCellValueAsString(row.getCell(6));
 
                     // Validate required fields
                     if (submoduleName == null || submoduleName.trim().isEmpty()) {
@@ -1859,7 +1858,6 @@ public class TcmService {
                     stepData.put("testCaseId", testCaseKey);
                     stepData.put("title", title.trim());
                     stepData.put("description", description != null ? description.trim() : "");
-                    stepData.put("scenario", scenario != null ? scenario.trim() : "");
                     stepData.put("stepNumber", stepNumber);
                     stepData.put("action", action.trim());
                     stepData.put("expectedResult", expectedResult.trim());
@@ -1919,7 +1917,6 @@ public class TcmService {
                 testCase.setTestCaseId(testCaseId);
                 testCase.setTitle(title);
                 testCase.setDescription(description);
-                testCase.setScenario(scenario != null ? scenario.trim() : "");
                 testCase.setTestSubmodule(submodule);
 
                 // Create test steps

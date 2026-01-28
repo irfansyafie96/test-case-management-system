@@ -93,18 +93,18 @@
                   </mat-panel-title>
                 </mat-expansion-panel-header>
 
-                <!-- Suites -->
+                <!-- Submodules -->
                 <div class="suites-container">
-                  <div *ngFor="let suite of module.suites" class="suite-section">
+                  <div *ngFor="let submodule of module.submodules" class="suite-section">
                     <div class="suite-header">
                       <mat-icon>description</mat-icon>
-                      <h3>{{ suite.suiteName }}</h3>
-                      <span class="badge">{{ suite.executions.length }} test cases</span>
+                      <h3>{{ submodule.submoduleName }}</h3>
+                      <span class="badge">{{ submodule.executions.length }} test cases</span>
                     </div>
 
                     <!-- Test Cases Table -->
                     <div class="mat-elevation-z0 table-container-styled">
-                      <table mat-table [dataSource]="suite.executions" class="bespoke-table">
+                      <table mat-table [dataSource]="submodule.executions" class="bespoke-table">
                         <!-- Test Case ID Column -->
                         <ng-container matColumnDef="testCaseId">
                           <th mat-header-cell *matHeaderCellDef> ID </th>

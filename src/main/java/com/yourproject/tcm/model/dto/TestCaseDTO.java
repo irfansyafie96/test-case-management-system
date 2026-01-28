@@ -7,7 +7,6 @@ public class TestCaseDTO {
     private String testCaseId;
     private String title;
     private String description;
-    private String scenario;
     private Long testSubmoduleId;
     private String testSubmoduleName;
     private String moduleName;
@@ -15,14 +14,13 @@ public class TestCaseDTO {
     private Integer stepCount;
     private List<TestStepDTO> testSteps;
 
-    public TestCaseDTO(Long id, String testCaseId, String title, String description, String scenario,
+    public TestCaseDTO(Long id, String testCaseId, String title, String description,
                        Long testSubmoduleId, String testSubmoduleName, String moduleName,
                        String projectName, Integer stepCount, List<TestStepDTO> testSteps) {
         this.id = id;
         this.testCaseId = testCaseId;
         this.title = title;
         this.description = description;
-        this.scenario = scenario;
         this.testSubmoduleId = testSubmoduleId;
         this.testSubmoduleName = testSubmoduleName;
         this.moduleName = moduleName;
@@ -43,9 +41,6 @@ public class TestCaseDTO {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
-    public String getScenario() { return scenario; }
-    public void setScenario(String scenario) { this.scenario = scenario; }
 
     public Long getTestSubmoduleId() { return testSubmoduleId; }
     public void setTestSubmoduleId(Long testSubmoduleId) { this.testSubmoduleId = testSubmoduleId; }

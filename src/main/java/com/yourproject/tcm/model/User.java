@@ -121,6 +121,10 @@ public class User {
         return username;
     }
 
+    public String getFullName() {
+        return username;
+    }
+
     public void setUsername(String username) {
         this.username = username;
     }

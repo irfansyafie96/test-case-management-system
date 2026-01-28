@@ -143,13 +143,12 @@
 
           <div class="module-stats">
             <div class="stat-item">
-              <span class="stat-value">{{ module.testSuites?.length || 0 }}</span>
-              <span class="stat-label">Suites</span>
+              <span class="stat-label">Submodules</span>
+              <span class="stat-value">{{ module.testSubmodules?.length || 0 }}</span>
             </div>
-            <div class="stat-divider"></div>
             <div class="stat-item">
-              <span class="stat-value">{{ getTotalTestCases(module.testSuites) }}</span>
-              <span class="stat-label">Cases</span>
+              <span class="stat-label">Test Cases</span>
+              <span class="stat-value">{{ getTotalTestCases(module.testSubmodules) }}</span>
             </div>
           </div>
         </div>

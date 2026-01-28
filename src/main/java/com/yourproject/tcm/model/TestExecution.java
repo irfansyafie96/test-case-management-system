@@ -47,6 +47,12 @@ public class TestExecution {
     @Column(nullable = false)  // Execution date is required
     private LocalDateTime executionDate;  // When this test was executed (timestamp)
 
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "completion_date")
+    private LocalDateTime completionDate;
+
     @Column(nullable = false)  // Overall result is required
     private String overallResult; // Overall result: "Pass", "Fail", "Incomplete", etc.
 
@@ -129,6 +135,22 @@ public class TestExecution {
         this.executionDate = executionDate;
     }
 
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDateTime getCompletionDate() {
+        return completionDate;
+    }
+
+    public void setCompletionDate(LocalDateTime completionDate) {
+        this.completionDate = completionDate;
+    }
+
     public String getOverallResult() {
         return overallResult;
     }
@@ -181,54 +203,54 @@ public class TestExecution {
     // Helper methods to flatten the hierarchy for the frontend
     // This allows the frontend to group executions without needing the full object graph
 
-    public String getTestSuiteName() {
-        if (testCase != null && testCase.getTestSuite() != null) {
-            return testCase.getTestSuite().getName();
+    public String getTestSubmoduleName() {
+        if (testCase != null && testCase.getTestSubmodule() != null) {
+            return testCase.getTestSubmodule().getName();
         }
         return null;
     }
 
-    public Long getTestSuiteId() {
-        if (testCase != null && testCase.getTestSuite() != null) {
-            return testCase.getTestSuite().getId();
+    public Long getTestSubmoduleId() {
+        if (testCase != null && testCase.getTestSubmodule() != null) {
+            return testCase.getTestSubmodule().getId();
         }
         return null;
     }
 
     public String getModuleName() {
         if (testCase != null && 
-            testCase.getTestSuite() != null && 
-            testCase.getTestSuite().getTestModule() != null) {
-            return testCase.getTestSuite().getTestModule().getName();
+            testCase.getTestSubmodule() != null && 
+            testCase.getTestSubmodule().getTestModule() != null) {
+            return testCase.getTestSubmodule().getTestModule().getName();
         }
         return null;
     }
 
     public Long getModuleId() {
         if (testCase != null && 
-            testCase.getTestSuite() != null && 
-            testCase.getTestSuite().getTestModule() != null) {
-            return testCase.getTestSuite().getTestModule().getId();
+            testCase.getTestSubmodule() != null && 
+            testCase.getTestSubmodule().getTestModule() != null) {
+            return testCase.getTestSubmodule().getTestModule().getId();
         }
         return null;
     }
 
     public String getProjectName() {
         if (testCase != null && 
-            testCase.getTestSuite() != null && 
-            testCase.getTestSuite().getTestModule() != null &&
-            testCase.getTestSuite().getTestModule().getProject() != null) {
-            return testCase.getTestSuite().getTestModule().getProject().getName();
+            testCase.getTestSubmodule() != null && 
+            testCase.getTestSubmodule().getTestModule() != null &&
+            testCase.getTestSubmodule().getTestModule().getProject() != null) {
+            return testCase.getTestSubmodule().getTestModule().getProject().getName();
         }
         return null;
     }
 
     public Long getProjectId() {
         if (testCase != null && 
-            testCase.getTestSuite() != null && 
-            testCase.getTestSuite().getTestModule() != null &&
-            testCase.getTestSuite().getTestModule().getProject() != null) {
-            return testCase.getTestSuite().getTestModule().getProject().getId();
+            testCase.getTestSubmodule() != null && 
+            testCase.getTestSubmodule().getTestModule() != null &&
+            testCase.getTestSubmodule().getTestModule().getProject() != null) {
+            return testCase.getTestSubmodule().getTestModule().getProject().getId();
         }
         return null;
     }

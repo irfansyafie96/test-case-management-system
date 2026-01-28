@@ -35,12 +35,12 @@ interface ProjectGroup {
 interface ModuleGroup {
   moduleName: string;
   moduleId: string;
-  suites: SuiteGroup[];
+  submodules: SubmoduleGroup[];
 }
 
-interface SuiteGroup {
-  suiteName: string;
-  suiteId: string;
+interface SubmoduleGroup {
+  submoduleName: string;
+  submoduleId: string;
   executions: TestExecution[];
 }
 
@@ -96,7 +96,7 @@ export class ExecutionsComponent implements OnInit {
   }
 
   getModuleTestCount(module: ModuleGroup): number {
-    return module.suites.reduce((acc, s) => acc + s.executions.length, 0);
+    return module.submodules.reduce((acc, s) => acc + s.executions.length, 0);
   }
 
   private createViewModel() {
@@ -220,16 +220,16 @@ export class ExecutionsComponent implements OnInit {
       let projectName = execution.projectName;
       let moduleId = execution.moduleId?.toString();
       let moduleName = execution.moduleName;
-      let suiteId = (execution.testSuiteId || execution.suiteId)?.toString();
-      let suiteName = execution.testSuiteName || execution.suiteName;
+      let submoduleId = (execution.testSubmoduleId || execution.submoduleId)?.toString();
+      let submoduleName = execution.testSubmoduleName || execution.submoduleName;
 
       // Fallback: Traverse object graph if flat fields are missing
       if (!projectId) {
         const testCase = execution.testCase;
-        if (!testCase?.testSuite) return;
+        if (!testCase?.testSubmodule) return;
 
-        const suite = testCase.testSuite;
-        const module = suite.testModule;
+        const submodule = testCase.testSubmodule;
+        const module = submodule.testModule;
         const project = module?.project;
 
         if (!project) return;
@@ -238,15 +238,15 @@ export class ExecutionsComponent implements OnInit {
         projectName = project.name;
         moduleId = module?.id.toString();
         moduleName = module?.name;
-        suiteId = suite.id.toString();
-        suiteName = suite.name;
+        submoduleId = submodule.id.toString();
+        submoduleName = submodule.name;
       }
 
-      if (!projectId || !moduleId || !suiteId) return;
+      if (!projectId || !moduleId || !submoduleId) return;
 
       const projectKey = projectId;
       const moduleKey = `${projectKey}-${moduleId}`;
-      const suiteKey = `${moduleKey}-${suiteId}`;
+      const submoduleKey = `${moduleKey}-${submoduleId}`;
 
       // Get or create project group
       if (!projectMap.has(projectKey)) {
@@ -265,23 +265,23 @@ export class ExecutionsComponent implements OnInit {
         moduleGroup = {
           moduleName: moduleName || 'Unknown Module',
           moduleId: moduleKey,
-          suites: []
+          submodules: []
         };
         projectGroup.modules.push(moduleGroup);
       }
 
-      // Get or create suite group
-      let suiteGroup = moduleGroup.suites.find(s => s.suiteId === suiteKey);
-      if (!suiteGroup) {
-        suiteGroup = {
-          suiteName: suiteName || 'Unknown Suite',
-          suiteId: suiteKey,
+      // Get or create submodule group
+      let submoduleGroup = moduleGroup.submodules.find(s => s.submoduleId === submoduleKey);
+      if (!submoduleGroup) {
+        submoduleGroup = {
+          submoduleName: submoduleName || 'Unknown Submodule',
+          submoduleId: submoduleKey,
           executions: []
         };
-        moduleGroup.suites.push(suiteGroup);
+        moduleGroup.submodules.push(submoduleGroup);
       }
 
-      suiteGroup.executions.push(execution);
+      submoduleGroup.executions.push(execution);
     });
 
     return Array.from(projectMap.values());

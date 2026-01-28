@@ -53,7 +53,7 @@ public class ExecutionService {
      */
     public List<TestExecutionDTO> getTestExecutionsAssignedToUser(Long userId) {
         return userRepository.findById(userId)
-            .map(User::getAssignedExecutions)
+            .map(User::getTestExecutions)
             .map(executions -> executions.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList()))
@@ -102,7 +102,7 @@ public class ExecutionService {
     public TestExecution assignTestExecutionToUser(Long executionId, Long userId) {
         return testExecutionRepository.findById(executionId).map(execution -> {
             return userRepository.findById(userId).map(user -> {
-                execution.setAssignedUser(user);
+                execution.setAssignedToUser(user);
                 execution.setStatus("IN_PROGRESS");
                 if (execution.getStartDate() == null) {
                     execution.setStartDate(LocalDateTime.now());
@@ -124,7 +124,15 @@ public class ExecutionService {
                         stepResult.setStatus(status);
                         stepResult.setActualResult(actualResult);
                         testExecutionRepository.save(execution);
-                        return new StepResultResponse(stepResult, execution);
+                        return new StepResultResponse(
+                            stepResult.getId(),
+                            stepResult.getTestStep() != null ? stepResult.getTestStep().getId() : null,
+                            stepResult.getStepNumber(),
+                            stepResult.getActualResult(),
+                            stepResult.getStatus(),
+                            stepResult.getTestStep().getAction(),
+                            stepResult.getTestStep().getExpectedResult()
+                        );
                     }
                 }
             }
@@ -143,26 +151,40 @@ public class ExecutionService {
         var testCase = execution.getTestCase();
         var testModule = testCase.getTestModule();
         
+        List<TestExecutionDTO.TestStepResultDTO> stepResultDTOs = null;
+        if (execution.getStepResults() != null) {
+            stepResultDTOs = execution.getStepResults().stream()
+                .map(sr -> new TestExecutionDTO.TestStepResultDTO(
+                    sr.getId(),
+                    sr.getTestStep() != null ? sr.getTestStep().getId() : null,
+                    sr.getStepNumber(),
+                    sr.getStatus(),
+                    sr.getActualResult(),
+                    sr.getTestStep() != null ? sr.getTestStep().getAction() : null,
+                    sr.getTestStep() != null ? sr.getTestStep().getExpectedResult() : null
+                ))
+                .collect(Collectors.toList());
+        }
+        
         return new TestExecutionDTO(
             execution.getId(),
             execution.getTestCaseId(),
             testCase.getTitle(),
+            execution.getExecutionDate(),
+            execution.getOverallResult(),
+            execution.getNotes(),
+            execution.getDuration(),
+            execution.getEnvironment(),
+            execution.getExecutedBy(),
+            execution.getAssignedToUser() != null ? execution.getAssignedToUser().getId() : null,
+            execution.getAssignedToUser() != null ? execution.getAssignedToUser().getUsername() : "",
             testCase.getTestSubmoduleId(),
             testCase.getTestSubmoduleName(),
             testModule.getId(),
             testModule.getName(),
             testModule.getProject().getId(),
             testModule.getProject().getName(),
-            execution.getAssignedUser() != null ? execution.getAssignedUser().getId() : null,
-            execution.getAssignedUser() != null ? execution.getAssignedUser().getUsername() : "",
-            execution.getAssignedUser() != null ? execution.getAssignedUser().getFullName() : "",
-            execution.getStatus(),
-            execution.getOverallResult(),
-            execution.getStartDate(),
-            execution.getCompletionDate(),
-            execution.getNotes(),
-            execution.getStepResults(),
-            testCase
+            stepResultDTOs
         );
     }
 }

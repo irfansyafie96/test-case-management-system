@@ -141,7 +141,6 @@ public class ApiController {
             c.getTestCaseId(),
             c.getTitle(),
             c.getDescription(),
-            c.getScenario(),
             c.getTestSubmodule() != null ? c.getTestSubmodule().getId() : null,
             c.getTestSubmoduleName(),
             c.getModuleName(),
