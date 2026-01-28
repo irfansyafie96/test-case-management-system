@@ -49,7 +49,6 @@ export class TeamComponent implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Failed to load team:', err);
         this.isLoading = false;
       }
     });

@@ -695,7 +695,6 @@ public class ApiController {
                 .collect(java.util.stream.Collectors.toList());
             return new ResponseEntity<>(userDTOs, HttpStatus.OK);
         } catch (Exception e) {
-            e.printStackTrace(); // Log full stack trace for debugging
             return new ResponseEntity<>("Error retrieving users by role: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

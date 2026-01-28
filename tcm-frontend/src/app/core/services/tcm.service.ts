@@ -642,12 +642,8 @@ export class TcmService {
    */
   private handleError<T>(operation = 'operation', result?: T) {
     return (error: any): Observable<T> => {
-      // Log essential error information without excessive detail
-      console.error(`${operation} failed:`, error.status, error.statusText, error.message);
-
       // Handle 409 Conflict errors specifically for duplicate projects
       if (error.status === 409) {
-        console.error('Conflict error (likely duplicate project name)');
         throw error;
       }
 

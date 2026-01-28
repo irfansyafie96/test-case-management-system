@@ -67,7 +67,6 @@ export class ProjectDetailComponent implements OnInit {
         data: { projectId: idAsString }
       });
     } catch (dialogError) {
-      console.error('Failed to open dialog:', dialogError);
       this.snackBar.open('Failed to open module dialog. Please refresh the page.', 'Close', {
         duration: 5000,
         panelClass: ['error-snackbar'],
@@ -100,7 +99,6 @@ export class ProjectDetailComponent implements OnInit {
               });
             },
             error: (error) => {
-              console.error('Error creating test module:', error);
               this.creatingModule$.next(false);
               this.loading$.next(false);
               
@@ -123,7 +121,6 @@ export class ProjectDetailComponent implements OnInit {
             }
           });
         } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
           this.creatingModule$.next(false);
           this.loading$.next(false);
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'Close', {
@@ -177,7 +174,6 @@ export class ProjectDetailComponent implements OnInit {
             });
           },
           error => {
-            console.error('Error deleting module:', error);
             this.snackBar.open('Failed to delete module. Please try again.', 'Close', {
               duration: 5000,
               panelClass: ['error-snackbar'],
@@ -208,8 +204,6 @@ export class ProjectDetailComponent implements OnInit {
       const projectId = this.route.snapshot.paramMap.get('id');
       if (projectId) {
         this.loadAssignmentData(projectId);
-      } else {
-        console.error('No project ID found in route');
       }
     }
   }
@@ -247,7 +241,6 @@ export class ProjectDetailComponent implements OnInit {
             }, 0);
           },
           error: (error: any) => {
-            console.error('Error loading available users:', error);
             setTimeout(() => {
               this.loadingAssignments = false;
               this.cdr.detectChanges(); // Update template even on error
@@ -256,7 +249,6 @@ export class ProjectDetailComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error loading assigned users:', error);
         setTimeout(() => {
           this.loadingAssignments = false;
           this.cdr.detectChanges(); // Update template even on error
@@ -276,7 +268,7 @@ export class ProjectDetailComponent implements OnInit {
         }, 0);
       },
       error: (error: any) => {
-        console.error('Error refreshing assigned users:', error);
+        // Error refreshing assigned users
       }
     });
   }
@@ -299,7 +291,7 @@ export class ProjectDetailComponent implements OnInit {
         }, 0);
       },
       error: (error: any) => {
-        console.error('Error refreshing available users:', error);
+        // Error refreshing available users
       }
     });
   }
@@ -335,7 +327,6 @@ export class ProjectDetailComponent implements OnInit {
         });
       },
       (error: any) => {
-        console.error('Error assigning user:', error);
         this.snackBar.open('Failed to assign user. Please try again.', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],
@@ -381,7 +372,6 @@ export class ProjectDetailComponent implements OnInit {
             });
           },
           (error: any) => {
-            console.error('Error removing user:', error);
             this.snackBar.open('Failed to remove user. Please try again.', 'Close', {
               duration: 5000,
               panelClass: ['error-snackbar'],

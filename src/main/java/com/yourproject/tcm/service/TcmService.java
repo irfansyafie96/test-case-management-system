@@ -765,7 +765,6 @@ public class TcmService {
                         createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
                     } catch (Exception e) {
                         // Log error but continue with other users
-                        System.err.println("Error creating execution for test case " + savedTestCase.getId() + " and user " + user.getId() + ": " + e.getMessage());
                     }
                 }
             }
@@ -1414,7 +1413,6 @@ public class TcmService {
                         createTestExecutionForTestCaseAndUser(testCase.getId(), user.getId());
                     } catch (Exception e) {
                         // Log error but continue with other test cases
-                        System.err.println("Error creating execution for test case " + testCase.getId() + ": " + e.getMessage());
                     }
                 }
             }
@@ -1930,7 +1928,6 @@ public class TcmService {
                             createTestExecutionForTestCaseAndUser(testCase.getId(), user.getId());
                         } catch (Exception e) {
                             // Log error but continue
-                            System.err.println("Error creating execution for test case " + testCase.getId() + " and user " + user.getId() + ": " + e.getMessage());
                         }
                     }
                 }

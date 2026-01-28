@@ -83,7 +83,6 @@ export class ProfileComponent implements OnInit {
   onUpdatePassword() {
     if (this.passwordForm.invalid) return;
     // Implement password update logic
-    console.log('Update password', this.passwordForm.value);
   }
 
   onInviteMember() {
@@ -105,7 +104,6 @@ export class ProfileComponent implements OnInit {
       },
       error: (error) => {
         this.isInviting = false;
-        console.error('Error inviting member:', error);
         this.snackBar.open(error.error || 'Failed to send invitation.', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],
@@ -139,7 +137,6 @@ export class ProfileComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error downloading template:', error);
         this.snackBar.open('Failed to download template. Please try again.', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],

@@ -63,7 +63,6 @@ export class JoinComponent implements OnInit {
   }
 
   loadInvitation() {
-    console.log('Loading invitation for token:', this.token);
     // Clear any previous error message
     this.errorMessage = '';
     this.cdRef.detectChanges();
@@ -71,7 +70,6 @@ export class JoinComponent implements OnInit {
     this.teamService.getInvitation(this.token).pipe(
       timeout(10000), // 10 second timeout
       catchError(error => {
-        console.error('Error in invitation request:', error);
         // Convert timeout error to a more user-friendly message
         if (error.name === 'TimeoutError') {
           return throwError(() => ({ status: 0, error: 'Request timed out. Please try again.' }));
@@ -80,16 +78,12 @@ export class JoinComponent implements OnInit {
       })
     ).subscribe({
       next: (invite) => {
-        console.log('Invitation loaded:', invite);
-        console.log('Setting invitation and isLoading to false');
         this.invitation = invite;
         this.isLoading = false;
         this.errorMessage = ''; // Clear any error message on success
         this.cdRef.detectChanges(); // Force change detection
-        console.log('State updated - invitation:', this.invitation, 'isLoading:', this.isLoading, 'errorMessage:', this.errorMessage);
       },
       error: (err) => {
-        console.error('Error loading invitation:', err);
         // Handle different error types
         if (err.status === 0) {
           this.errorMessage = err.error || 'Cannot connect to server. Please check your connection.';

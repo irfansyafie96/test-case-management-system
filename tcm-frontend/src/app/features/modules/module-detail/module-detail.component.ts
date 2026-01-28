@@ -91,7 +91,6 @@ export class ModuleDetailComponent implements OnInit {
     if (moduleId) {
       this.tcmService.getModule(moduleId).pipe(
         catchError(error => {
-          console.error('Error loading module:', error);
           this.errorSubject.next(true);
           this.loadingSubject.next(false); // Stop loading on error
           return of(null);
@@ -149,7 +148,6 @@ export class ModuleDetailComponent implements OnInit {
             }
           });
         } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
           this.loadingSubject.next(false);
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
@@ -246,7 +244,6 @@ export class ModuleDetailComponent implements OnInit {
             }
           });
         } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
           this.loadingSubject.next(false);
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
@@ -312,7 +309,6 @@ export class ModuleDetailComponent implements OnInit {
                 }
               });
             } catch (syncError) {
-              console.error('Authentication sync error:', syncError);
               this.loadingSubject.next(false);
               this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
                 duration: 5000,
@@ -325,7 +321,6 @@ export class ModuleDetailComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error loading test case for editing:', error);
         this.snackBar.open('Failed to load test case. Please try again.', 'CLOSE', {
           duration: 5000,
           panelClass: ['error-snackbar'],
@@ -387,7 +382,6 @@ export class ModuleDetailComponent implements OnInit {
             }
           });
         } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
           this.loadingSubject.next(false);
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
@@ -469,7 +463,6 @@ export class ModuleDetailComponent implements OnInit {
     if (moduleId) {
       this.tcmService.getModule(moduleId).pipe(
         catchError(error => {
-          console.error('Error refreshing module:', error);
           this.errorSubject.next(true);
           return of(null);
         }),
@@ -491,14 +484,11 @@ export class ModuleDetailComponent implements OnInit {
   toggleAssignments(): void {
     this.showAssignments = !this.showAssignments;
     if (this.showAssignments) {
-      const moduleId = this.route.snapshot.paramMap.get('id');
-      if (moduleId) {
-        this.loadAssignmentData(moduleId);
-      } else {
-        console.error('No module ID found in route');
-      }
-    }
-  }
+            const moduleId = this.route.snapshot.paramMap.get('id');
+            if (moduleId) {
+              this.loadAssignmentData(moduleId);
+            }
+          }  }
 
   loadAssignmentData(moduleId: string): void {
     this.loadingAssignments = true;
@@ -534,7 +524,6 @@ export class ModuleDetailComponent implements OnInit {
             }, 0);
           },
           error: (error: any) => {
-            console.error('Error loading available users:', error);
             setTimeout(() => {
               this.loadingAssignments = false;
               this.cdr.detectChanges(); // Update template even on error
@@ -543,7 +532,6 @@ export class ModuleDetailComponent implements OnInit {
         });
       },
       error: (error: any) => {
-        console.error('Error loading assigned users:', error);
         setTimeout(() => {
           this.loadingAssignments = false;
           this.cdr.detectChanges(); // Update template even on error
@@ -564,7 +552,7 @@ export class ModuleDetailComponent implements OnInit {
         }, 0);
       },
       error: (error: any) => {
-        console.error('Error refreshing assigned users:', error);
+        // Error refreshing assigned users
       }
     });
   }
@@ -590,7 +578,7 @@ export class ModuleDetailComponent implements OnInit {
         }, 0);
       },
       error: (error: any) => {
-        console.error('Error refreshing available users:', error);
+        // Error refreshing available users
       }
     });
   }
@@ -626,7 +614,6 @@ export class ModuleDetailComponent implements OnInit {
         });
       },
       (error: any) => {
-        console.error('Error assigning user:', error);
         this.snackBar.open('Failed to assign user. Please try again.', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],
@@ -672,7 +659,6 @@ export class ModuleDetailComponent implements OnInit {
             });
           },
           (error: any) => {
-            console.error('Error removing user:', error);
             this.snackBar.open('Failed to remove user. Please try again.', 'Close', {
               duration: 5000,
               panelClass: ['error-snackbar'],
@@ -702,7 +688,6 @@ export class ModuleDetailComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error regenerating executions:', error);
         this.loadingSubject.next(false);
         this.snackBar.open('Failed to regenerate test executions. Please try again.', 'Close', {
           duration: 5000,

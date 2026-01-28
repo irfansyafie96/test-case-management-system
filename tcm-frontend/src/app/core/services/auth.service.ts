@@ -209,7 +209,6 @@ export class AuthService {
         // Could auto-login after registration or just navigate to login
       }),
       catchError(error => {
-        console.error('Registration failed:', error);
         throw error;
       })
     );
@@ -315,7 +314,6 @@ export class AuthService {
           this.currentUserSubject.next(user);
           return user;
         } catch (error) {
-          console.error('Error parsing current user:', error);
           return null;
         }
       }
@@ -348,7 +346,6 @@ export class AuthService {
 
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('Error decoding token:', error);
       return null;
     }
   }
@@ -408,7 +405,6 @@ export class AuthService {
         this.currentUserSubject.next(user);  // Update memory state
       }),
       catchError(error => {
-        console.error('Failed to refresh user data:', error);
         // If refresh fails, assume token is invalid and logout user
         this.logout();
         throw error;

@@ -138,7 +138,6 @@ export class ExecutionsComponent implements OnInit {
           this.loadingSubject.next(false);
         },
         error: (error) => {
-          console.error('Error loading admin executions:', error);
           this.errorSubject.next(true);
           this.loadingSubject.next(false);
         }
@@ -151,7 +150,6 @@ export class ExecutionsComponent implements OnInit {
           this.loadingSubject.next(false);
         },
         error: (error) => {
-          console.error('Error loading assigned executions:', error);
           this.errorSubject.next(true);
           this.loadingSubject.next(false);
         }
@@ -171,7 +169,7 @@ export class ExecutionsComponent implements OnInit {
           this.filterUsersSubject.next(users);
         },
         error: (error) => {
-          console.error('Error loading users:', error);
+          // Error loading users
         }
       });
 
@@ -180,7 +178,7 @@ export class ExecutionsComponent implements OnInit {
           this.filterModulesSubject.next(modules);
         },
         error: (error) => {
-          console.error('Error loading modules:', error);
+          // Error loading modules
         }
       });
     }

@@ -125,7 +125,7 @@ export class TestCasesComponent implements OnInit {
         this.users = users;
       },
       error: (error) => {
-        console.error('Error loading users:', error);
+        // Error loading users
       }
     });
   }
@@ -134,7 +134,6 @@ export class TestCasesComponent implements OnInit {
     this.loadingSubject.next(true);
     this.tcmService.getTestAnalytics(userId).pipe(
       catchError(error => {
-        console.error('Error loading analytics:', error);
         this.errorSubject.next(true);
         return of({
           totalTestCases: 0,

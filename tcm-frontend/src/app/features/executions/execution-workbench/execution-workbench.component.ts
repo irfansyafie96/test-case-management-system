@@ -151,7 +151,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
         this.loadingSubject.next(false);
       },
       error: (error) => {
-        console.error('Error loading execution:', error);
         this.errorSubject.next(true);
         this.loadingSubject.next(false);
       }
@@ -165,7 +164,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('Error loading executions:', error);
+        // Error loading executions
       }
     });
   }
@@ -191,7 +190,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
           // Successfully updated
         },
         error: (error) => {
-          console.error('Error updating step result:', error);
           // Revert the change if the API call fails
           stepResult.status = stepResult.status; // This doesn't actually revert, but shows the intent
         }
@@ -241,7 +239,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
         this.router.navigate(['/executions']);
       },
       error: (error) => {
-        console.error('Error completing execution:', error);
         this.snackBar.open(
           'Failed to complete execution. Please ensure all required fields are filled.',
           'CLOSE',
@@ -276,7 +273,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
           this.navigateToNext();
         },
         error: (error) => {
-          console.error('Error saving execution before navigation:', error);
           this.snackBar.open(
             'Failed to save execution. Please try again.',
             'DISMISS',
@@ -327,7 +323,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
     // Navigate to next execution
     this.router.navigate(['/executions/workbench', nextExecution.id]).catch(navError => {
-      console.error('Navigation error:', navError);
       this.snackBar.open(
         'Failed to navigate to next test case.',
         'DISMISS',
@@ -354,7 +349,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('Error loading completion summary:', error);
         this.router.navigate(['/executions']);
       }
     });
@@ -403,7 +397,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
           // Navigate to previous execution
           this.router.navigate(['/executions/workbench', previousExecution.id]).catch(navError => {
-            console.error('Navigation error:', navError);
             this.snackBar.open(
               'Failed to navigate to previous test case.',
               'DISMISS',
@@ -420,7 +413,6 @@ export class ExecutionWorkbenchComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error saving execution before navigation:', error);
         this.snackBar.open(
           'Failed to save execution. Please try again.',
           'DISMISS',

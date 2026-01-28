@@ -93,7 +93,6 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges(); // Force UI update
       },
       error: (err) => {
-        console.error('Error loading test case:', err);
         this.error = 'Failed to load test case details.';
         this.isLoading = false;
         this.cdr.detectChanges(); // Force UI update
@@ -148,7 +147,6 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
             }
           });
         } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],

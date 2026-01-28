@@ -118,7 +118,6 @@ export class ImportDialogComponent {
         document.body.removeChild(a);
       },
       error: (err) => {
-        console.error('Error downloading template:', err);
         this.errorMessage = 'Failed to download template. Please try again.';
       }
     });
@@ -149,7 +148,6 @@ export class ImportDialogComponent {
       error: (err) => {
         this.isUploading = false;
         this.errorMessage = err.error?.message || err.message || 'Import failed. Please try again.';
-        console.error('Import error:', err);
         this.cdr.detectChanges(); // Force update on error too
       }
     });

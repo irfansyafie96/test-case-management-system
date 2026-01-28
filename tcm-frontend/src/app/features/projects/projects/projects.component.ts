@@ -141,7 +141,6 @@ export class ProjectsComponent implements OnInit {
                     }
                   });
                 } catch (syncError) {
-                  console.error('Authentication sync error on retry:', syncError);
                   this.snackBar.open('Authentication synchronization failed on retry. Please refresh and try again.', 'CLOSE', {
                     duration: 5000,
                     panelClass: ['error-snackbar'],
@@ -171,7 +170,6 @@ export class ProjectsComponent implements OnInit {
           }
         });
         } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],
@@ -235,7 +233,6 @@ export class ProjectsComponent implements OnInit {
             }
           );
         } catch (syncError) {
-          console.error('Authentication sync error:', syncError);
           this.snackBar.open('Authentication synchronization failed. Please refresh and try again.', 'CLOSE', {
             duration: 5000,
             panelClass: ['error-snackbar'],
