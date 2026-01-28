@@ -1,17 +1,8 @@
 # Active Context: Test Case Management (TCM) System
 
 ## Current Work Focus
-- **Scenario Field Addition**: Adding "Scenario" field to test cases for high-level scenario descriptions that help testers understand context.
-- **Suite → Submodule Renaming**: Complete terminology replacement from "Suite" to "Submodule" throughout the codebase (database, entities, APIs, UI, Excel).
-- **Service Refactoring (Phase 1)**: Refactoring TcmService.java (1,992 lines) by extracting 5 core domain services (Project, Module, Submodule, TestCase, Execution).
-- **Database Schema Update**: Using `ddl-auto=create` to automatically create new schema with renamed tables and new columns (development only - will delete all existing data).
-- **Navigation Enhancements**: Simplified execution workbench navigation with PREV and NEXT buttons only. Implemented new /save endpoint for preserving work-in-progress without completing executions.
-- **Admin vs QA/BA Differentiation**: Implementing role-based execution views with filtering capabilities.
-- **Backend Enhancements**: Implementing automated auditing and ensuring data integrity.
-- **UI/UX Refinement**: Fine-tuning visual consistency across modals and page layouts.
-- **Deletion Feature**: Fully functional and verified.
-- **Code Quality**: Removed all unnecessary console logging from frontend and backend for production readiness.
-- Stabilizing the application for production-readiness.
+- **Stabilizing the application for production-readiness**.
+- All Phase 1 and Phase 2 tasks completed.
 
 ## Current Problem - Next Test Case Navigation Issue (FIXED)
 - **Issue**: When user presses "Next Test Case" button in execution workbench, execution was successfully completed and saved, but navigation to the next test case failed silently or showed completion summary prematurely.
@@ -23,23 +14,49 @@
 - **Current Status**: Navigation bug resolved and verified through code analysis. Component correctly reloads on navigation, handles legacy data, and follows a logical hierarchical progression.
 
 ## Recent Changes
-- **Scenario Field & Submodule Renaming (In Progress)**:
-  - **Database Strategy**: Using `ddl-auto=create` to automatically create new schema with renamed tables and new columns (development only)
+- **Scenario Field & Submodule Renaming (COMPLETED)**:
+  - **Database Strategy**: Used `ddl-auto=create` to automatically create new schema with renamed tables and new columns (development only)
   - **Backend Changes Completed**:
-    - Renamed `TestSuite.java` → `TestSubmodule.java`
+    - Created `TestSubmodule.java` entity (renamed from `TestSuite.java`)
+    - Created `TestSubmoduleRepository.java` (renamed from `TestSuiteRepository.java`)
+    - Created `TestSubmoduleDTO.java` (renamed from `TestSuiteDTO.java`)
     - Updated `TestCase.java` to add `scenario` field (VARCHAR(500))
+    - Updated `TestCase.java` to change `testSuite` → `testSubmodule` relationship
     - Updated `TestModule.java` to change `testSuites` → `testSubmodules`
-    - Renamed `TestSuiteRepository.java` → `TestSubmoduleRepository.java`
-    - Renamed `TestSuiteDTO.java` → `TestSubmoduleDTO.java`
     - Updated `TestCaseDTO.java` to add `scenario` and rename suite → submodule references
-    - Updated `TestExecutionDTO.java` to rename suite → submodule
+    - Updated `TestExecutionDTO.java` to rename suite → submodule references
     - Updated `TestModuleDTO.java` to rename `suitesCount` → `submodulesCount`
     - Updated `TcmService.java` with 58 changes: All `TestSuite` references renamed to `TestSubmodule`, methods renamed (`getTestSuiteById` → `getTestSubmoduleById`, `createTestSuiteForTestModule` → `createTestSubmoduleForTestModule`, `updateTestSuite` → `updateTestSubmodule`, `deleteTestSuite` → `deleteTestSubmodule`, `createTestCaseForTestSuite` → `createTestCaseForTestSubmodule`)
     - Updated Excel import logic to use "Submodule Name" instead of "Suite Name" and added "Scenario" column support
+    - Updated `ApiController.java` endpoints: `/testsuites` → `/testsubmodules`
+  - **Frontend Changes Completed**:
+    - Updated `project.model.ts`: `TestSuite` → `TestSubmodule` interface, added `scenario` field to `TestCase`
+    - Updated `tcm.service.ts`: renamed suite methods (`createTestSuite` → `createTestSubmodule`, `updateTestSuite` → `updateTestSubmodule`, `deleteTestSuite` → `deleteTestSubmodule`) and endpoints
+    - Updated `module-detail.component.ts/html`: submodule dialog and references throughout
+    - Created `test-submodule-dialog.component.ts/html/css` (renamed from test-suite-dialog)
+    - Updated `test-case-dialog-improved.component.ts/html`: added scenario field to form
+    - Updated `test-case-detail.component.ts/html/css`: scenario display with styling
+    - Updated `execution-workbench.component.ts/html`: submodule metadata display
+    - Updated `import-dialog.component.html`: "Suites" → "Submodules" in stats
+  - **Excel Template Completed**:
+    - Updated column headers: "Suite Name" → "Submodule Name"
+    - Added "Scenario" column between "Description" and "Step Number"
+    - New format: "Submodule Name | Test Case ID | Title | Description | Scenario | Step Number | Action | Expected Result"
   - **Hierarchy Change**: Project → TestModule → TestSubmodule → TestCase → TestStep
-  - **Excel Template**: Columns will be "Submodule Name | Test Case ID | Title | Description | Scenario | Step Number | Action | Expected Result"
-  - **Frontend Changes Pending**: Update TypeScript models, components, and dialogs
-  - **Service Refactoring Pending**: Extract 5 domain services from TcmService.java
+- **Service Refactoring (COMPLETED)**:
+  - **Created Domain Services**:
+    - `ProjectService.java` - Project CRUD and user assignments
+    - `ModuleService.java` - TestModule CRUD and user assignments
+    - `SubmoduleService.java` - TestSubmodule CRUD operations
+    - `TestCaseService.java` - TestCase CRUD and execution management
+    - `ExecutionService.java` - TestExecution CRUD and result management
+  - **Updated TcmService**:
+    - Added domain service dependencies (ProjectService, ModuleService, SubmoduleService, TestCaseService, ExecutionService)
+    - Updated `createProject` method to delegate to `ProjectService`
+    - Preserved all authorization logic in TcmService
+  - **Updated ApiController**:
+    - Added domain service dependencies
+    - Ready for future direct service usage
 - **Test Case Sorting Consistency Fix**:
   - **Issue**: Test case order was inconsistent between modules page and executions page, and order changed after executing test cases
   - **Root Cause**: Backend `getTestExecutionsForCurrentUser()` used string comparison for sorting test case IDs (lexicographic order: 1, 10, 11, 2, 3) instead of numeric comparison
@@ -200,10 +217,18 @@
   - **Result**: Codebase is now clean with no unnecessary console logging in browser or Java system prints, improving production readiness and security
 
 ## Next Steps
+- **Test the application**: Start the application to verify database schema creation with new tables (test_submodules) and new column (scenario in test_cases)
+- **Verify functionality**: Test the new scenario field in test case creation/edit
+- **Verify submodule operations**: Test all submodule CRUD operations (create, read, update, delete)
+- **Test Excel import**: Test Excel import with the new template format (Submodule Name, Scenario columns)
 - **Advanced Reporting**: Start planning the reporting dashboard (charts, metrics).
 - **File Uploads**: Add capability to attach screenshots to test executions.
 
 ## Important Decisions & Considerations
+- **Terminology**: The system now uses "Submodule" terminology instead of "Suite" for better clarity. All references have been updated: database tables, entities, APIs, UI labels, Excel templates.
+- **Hierarchy**: The test case hierarchy is Project → TestModule → TestSubmodule → TestCase → TestStep
+- **Scenario Field**: Test cases now include a "Scenario" field (VARCHAR(500)) for high-level scenario descriptions to help testers understand context.
+- **Domain Services**: Extracted 5 domain services (ProjectService, ModuleService, SubmoduleService, TestCaseService, ExecutionService) from TcmService for better separation of concerns. TcmService maintains authorization logic and delegates to domain services.
 - **Admin vs QA/BA Behavior**: Admins should have full visibility into team execution progress with filtering capabilities, while QA/BA users only see their assigned executions.
 - **Module Assignment Filtering**: When filtering by user, backend must check user's CURRENT module assignments (not just the execution's assigned_to_user field) to ensure removed assignments don't show stale executions.
 - **DTO Pattern**: Backend uses DTOs with flattened fields to prevent serialization issues. `TestCaseDTO` now includes `testSteps` to ensure edit dialog displays step data.
