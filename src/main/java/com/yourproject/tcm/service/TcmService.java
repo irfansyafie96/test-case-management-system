@@ -113,7 +113,7 @@ public class TcmService {
     }
 
     private boolean isQaOrBa(User user) {
-        return user.getRoles().stream().anyMatch(role -> 
+        return user.getRoles().stream().anyMatch(role ->
             role.getName().equals("QA") || role.getName().equals("BA"));
     }
 
@@ -162,7 +162,7 @@ public class TcmService {
         if (existingProject.isPresent()) {
             throw new RuntimeException("A project with name '" + project.getName() + "' already exists");
         }
-        
+
         project.setOrganization(currentOrg);
         return projectService.createProject(project);
     }
@@ -178,13 +178,13 @@ public class TcmService {
     public Optional<Project> getProjectById(Long projectId) {
         User currentUser = getCurrentUser();
         Optional<Project> projectOpt = projectRepository.findProjectWithModulesById(projectId);
-        
+
         if (!projectOpt.isPresent()) {
             return Optional.empty();
         }
 
         Project project = projectOpt.get();
-        
+
         // Security Check: Ensure project belongs to user's organization
         // (Using IDs to be safe against proxy objects or detached entities)
         if (project.getOrganization() == null || currentUser.getOrganization() == null ||
@@ -206,7 +206,7 @@ public class TcmService {
                 }
             }
         }
-        
+
         if (isAdmin(currentUser)) {
             return projectOpt;
         } else {
@@ -254,7 +254,7 @@ public class TcmService {
                 // Clear the list in the project entity to prevent JPA trying to delete them again
                 project.getModules().clear();
             }
-            
+
             entityManager.flush(); // Ensure modules are gone
 
             // Now delete the project itself
@@ -346,7 +346,7 @@ public class TcmService {
      */
     @Transactional
     public void deleteTestModule(Long testModuleId) {
-        // Fetch the module with test submodules (using the repository method that fetches submodules)
+        // Fetch the module with submodules (using the repository method that fetches submodules)
         // We need the submodules collection to be initialized to clear it later
         TestModule testModule = testModuleRepository.findByIdWithSubmodules(testModuleId)
                 .orElseThrow(() -> new RuntimeException("Test Module not found with id: " + testModuleId));
@@ -362,7 +362,7 @@ public class TcmService {
         }
         entityManager.flush();
 
-        // 2. Clean up test submodules deeply
+        // 2. Clean up submodules deeply
         // We iterate through a copy to perform deep cleanup (executions/results) via deleteSubmodule logic
         // But we DO NOT delete the submodule entity itself in the loop, we let orphanRemoval handle it
         if (testModule.getSubmodules() != null) {
@@ -399,10 +399,10 @@ public class TcmService {
     }
 
     /**
-     * Create a new test submodule within a specific test module
+     * Create a new submodule within a specific test module
      * @param testModuleId The module ID to add the submodule to
-     * @param submodule The test submodule to create
-     * @return The created test submodule
+     * @param submodule The submodule to create
+     * @return The created submodule
      * @throws RuntimeException if module doesn't exist
      */
     @Transactional
@@ -420,10 +420,10 @@ public class TcmService {
     }
 
     /**
-     * Update an existing test submodule
+     * Update an existing submodule
      * @param submoduleid The ID of the submodule to update
      * @param submoduleDetails Updated submodule details
-     * @return The updated test submodule
+     * @return The updated submodule
      * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
@@ -436,14 +436,14 @@ public class TcmService {
             entityManager.flush(); // Ensure data is written to DB
             return updatedSubmodule;
         } else {
-            throw new RuntimeException("Test Submodule not found with id: " + submoduleid);
+            throw new RuntimeException("Submodule not found with id: " + submoduleid);
         }
     }
 
     /**
-     * Delete a test submodule by ID
+     * Delete a submodule by ID
      * This will also delete all test cases in the submodule (cascading)
-     * @param submoduleid The ID of the test submodule to delete
+     * @param submoduleid The ID of the submodule to delete
      * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
@@ -479,11 +479,11 @@ public class TcmService {
                 entityManager.flush(); // Force the deletion of test cases
             }
 
-            // Now delete the test submodule
+            // Now delete the submodule
             submoduleRepository.delete(submodule);
             entityManager.flush(); // Ensure data is written to DB
         } else {
-            throw new RuntimeException("Test Submodule not found with id: " + submoduleid);
+            throw new RuntimeException("Submodule not found with id: " + submoduleid);
         }
     }
 
@@ -549,13 +549,13 @@ public class TcmService {
                     return assignedUser != null && assignedUser.getId().equals(filterUserId);
                 })
                 .collect(Collectors.toList());
-            
+
             // For non-admin users, also filter by assigned modules (match execution page logic)
             if (!isAdmin(currentUser)) {
                 Set<Long> assignedModuleIds = currentUser.getAssignedTestModules().stream()
                     .map(TestModule::getId)
                     .collect(Collectors.toSet());
-                
+
                 allExecutions = allExecutions.stream()
                     .filter(execution -> {
                         Long moduleId = execution.getModuleId();
@@ -576,7 +576,7 @@ public class TcmService {
         // Find the latest execution for each test case
         for (TestExecution execution : allExecutions) {
             Long testCaseId = execution.getTestCase().getId();
-            
+
             // Only count executions that have been completed (not PENDING)
             String result = execution.getOverallResult();
             if (result != null && completedResults.contains(result.toUpperCase())) {
@@ -607,7 +607,7 @@ public class TcmService {
                 Set<Long> userTestCaseIds = allExecutions.stream()
                     .map(ex -> ex.getTestCase().getId())
                     .collect(Collectors.toSet());
-                
+
                 filteredTestCases = allTestCases.stream()
                     .filter(tc -> userTestCaseIds.contains(tc.getId()))
                     .collect(Collectors.toList());
@@ -630,7 +630,7 @@ public class TcmService {
         // - Admin (with filter): only test cases that user has executed
         // - Non-admin: all test cases in assigned modules
         long totalTestCases = filteredTestCases.size();
-        
+
         // For non-admin users, calculate executedCount from filteredTestCases that have executions
         // For admin users, use executedTestCaseIds directly
         long executedCount;
@@ -642,7 +642,7 @@ public class TcmService {
                 .filter(tc -> executedTestCaseIds.contains(tc.getId()))
                 .count();
         }
-        
+
         long notExecutedCount = totalTestCases - executedCount;
 
         long passedCount = 0;
@@ -743,14 +743,14 @@ public class TcmService {
     }
 
     /**
-     * Create a new test case within a specific test submodule
+     * Create a new test case within a specific submodule
      * @param submoduleId The submodule ID to add the test case to
      * @param testCase The test case to create (with its test steps)
      * @return The created test case
      * @throws RuntimeException if submodule doesn't exist
      */
     @Transactional
-    public TestCase createTestCaseForTestSubmodule(Long submoduleId, TestCase testCase) {
+    public TestCase createTestCaseForSubmodule(Long submoduleId, TestCase testCase) {
         Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleId);
 
                 if (submoduleOpt.isPresent()) {
@@ -1063,7 +1063,7 @@ public class TcmService {
             // Check if user belongs to same organization as current user
             Organization currentUserOrg = getCurrentUser().getOrganization();
             Organization userOrg = user.getOrganization();
-            
+
             // If either organization is null (shouldn't happen in valid setup) or they don't match
             if (currentUserOrg == null || userOrg == null || !currentUserOrg.getId().equals(userOrg.getId())) {
                 throw new RuntimeException("User must belong to the same organization as the assigner");
@@ -1226,7 +1226,7 @@ public class TcmService {
             assignedToUserId = execution.getAssignedToUser().getId();
             assignedToUsername = execution.getAssignedToUser().getUsername();
         }
-        
+
         return new TestExecutionDTO(
             execution.getId(),
             execution.getTestCaseId(),
@@ -1268,7 +1268,7 @@ public class TcmService {
             // Check if user has QA or BA role
             boolean hasQaOrBaRole = user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals("QA") || role.getName().equals("BA"));
-            
+
             if (!hasQaOrBaRole) {
                 throw new RuntimeException("User must have QA or BA role to be assigned to projects");
             }
@@ -1276,7 +1276,7 @@ public class TcmService {
             // Check if user belongs to same organization as current user
             Organization currentUserOrg = getCurrentUser().getOrganization();
             Organization userOrg = user.getOrganization();
-            
+
             // If either organization is null (shouldn't happen in valid setup) or they don't match
             if (currentUserOrg == null || userOrg == null || !currentUserOrg.getId().equals(userOrg.getId())) {
                 throw new RuntimeException("User must belong to the same organization as the assigner");
@@ -1367,7 +1367,7 @@ public class TcmService {
             // Check if user belongs to same organization as current user
             Organization currentUserOrg = getCurrentUser().getOrganization();
             Organization userOrg = user.getOrganization();
-            
+
             // If either organization is null (shouldn't happen in valid setup) or they don't match
             if (currentUserOrg == null || userOrg == null || !currentUserOrg.getId().equals(userOrg.getId())) {
                 throw new RuntimeException("User must belong to the same organization as the assigner");
@@ -1397,7 +1397,7 @@ public class TcmService {
      * @param user The user to assign executions to
      */
     private void createTestExecutionsForModuleAndUser(TestModule module, User user) {
-        // Fetch all test submodules with their test cases for this module in a single query
+        // Fetch all submodules with their test cases for this module in a single query
         List<Submodule> submodules = submoduleRepository.findByTestModuleIdWithTestCases(module.getId());
         if (submodules == null || submodules.isEmpty()) {
             return;
@@ -1406,7 +1406,7 @@ public class TcmService {
         // Get existing executions for this user to avoid duplicates
         List<TestExecution> existingExecutions = testExecutionRepository.findByAssignedToUser(user);
 
-        // Iterate through all test submodules and their test cases
+        // Iterate through all submodules and their test cases
         for (Submodule submodule : submodules) {
             List<TestCase> testCases = submodule.getTestCases();
             if (testCases == null || testCases.isEmpty()) {
@@ -1872,7 +1872,7 @@ public class TcmService {
                 throw new RuntimeException("Validation failed: " + String.join("; ", errors));
             }
 
-            // Create test submodules and test cases
+            // Create submodules and test cases
             Map<String, Submodule> submoduleMap = new HashMap<>();
             for (String key : testCaseDataMap.keySet()) {
                 List<Map<String, Object>> steps = testCaseDataMap.get(key);
@@ -1885,7 +1885,7 @@ public class TcmService {
                 String title = steps.get(0).get("title").toString();
                 String description = steps.get(0).get("description").toString();
 
-                // Find or create test submodule
+                // Find or create submodule
                 Submodule submodule;
                 if (submoduleMap.containsKey(submoduleName)) {
                     submodule = submoduleMap.get(submoduleName);

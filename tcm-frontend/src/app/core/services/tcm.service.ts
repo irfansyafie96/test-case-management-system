@@ -151,43 +151,43 @@ export class TcmService {
       );
   }
 
-  // ==================== TEST SUBMODULE METHODS ====================
+  // ==================== SUBMODULE METHODS ====================
 
   /**
-   * Create a new test submodule within a module
+   * Create a new submodule within a module
    * @param moduleId - Parent module ID
    * @param submodule - Submodule data {name}
    * @returns Observable<Submodule> - Stream of created submodule
    */
-  createTestSubmodule(moduleId: string, submodule: { name: string }): Observable<Submodule> {
+  createSubmodule(moduleId: string, submodule: { name: string }): Observable<Submodule> {
     return this.http.post<Submodule>(`${this.apiUrl}/testmodules/${moduleId}/submodules`, submodule)
       .pipe(
-        catchError(this.handleError<Submodule>('createTestSubmodule'))
+        catchError(this.handleError<Submodule>('createSubmodule'))
       );
   }
 
   /**
-   * Update an existing test submodule
+   * Update an existing submodule
    * @param id - Submodule ID to update
    * @param updates - Updated data {name?}
    * @returns Observable<Submodule> - Stream of updated submodule
    */
-  updateTestSubmodule(id: string, updates: { name?: string }): Observable<Submodule> {
+  updateSubmodule(id: string, updates: { name?: string }): Observable<Submodule> {
     return this.http.put<Submodule>(`${this.apiUrl}/submodules/${id}`, updates)
       .pipe(
-        catchError(this.handleError<Submodule>('updateTestSubmodule'))
+        catchError(this.handleError<Submodule>('updateSubmodule'))
       );
   }
 
   /**
-   * Delete a test submodule by ID
+   * Delete a submodule by ID
    * @param id - Submodule ID to delete
    * @returns Observable<void> - Stream indicating completion
    */
-  deleteTestSubmodule(id: string): Observable<void> {
+  deleteSubmodule(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/submodules/${id}`)
       .pipe(
-        catchError(this.handleError<void>('deleteTestSubmodule'))
+        catchError(this.handleError<void>('deleteSubmodule'))
       );
   }
 

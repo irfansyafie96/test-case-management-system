@@ -29,7 +29,7 @@
             <button
               mat-raised-button
               color="primary"
-              (click)="createTestSubmodule(vm.module!.id)"
+              (click)="createSubmodule(vm.module!.id)"
               *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
               <mat-icon>add</mat-icon> NEW SUBMODULE
             </button>
@@ -140,8 +140,8 @@
                 </button>
                 <button
                   mat-icon-button
-                  matTooltip="Delete test submodule"
-                  (click)="deleteTestSubmodule(submodule)"
+                  matTooltip="Delete submodule"
+                  (click)="deleteSubmodule(submodule)"
                   color="warn"
                   *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
                   <mat-icon>delete</mat-icon>
@@ -213,7 +213,7 @@
                 <mat-icon class="empty-icon">folder_open</mat-icon>
               </div>
               <h2>Empty Module</h2>
-              <p *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">Create a test submodule to begin organizing test cases.</p>
+              <p *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">Create a submodule to begin organizing test cases.</p>
               <p *ngIf="!authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">No submodules found. Contact an administrator to create submodules.</p>
             </div>
           </div>

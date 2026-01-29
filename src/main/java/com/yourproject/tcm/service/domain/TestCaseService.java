@@ -45,10 +45,10 @@ public class TestCaseService {
     }
 
     /**
-     * Create a test case for a test submodule.
+     * Create a test case for a submodule.
      */
     @Transactional
-    public TestCase createTestCaseForTestSubmodule(Long submoduleId, TestCase testCase) {
+    public TestCase createTestCaseForSubmodule(Long submoduleId, TestCase testCase) {
         return submoduleRepository.findById(submoduleId).map(submodule -> {
             testCase.setSubmodule(submodule);
             return testCaseRepository.save(testCase);

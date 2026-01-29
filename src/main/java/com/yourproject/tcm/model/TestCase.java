@@ -9,7 +9,7 @@ import java.util.List;
  * TestCase Entity - Fourth level in the test case hierarchy
  *
  * TestCase represents a specific test scenario with steps to execute.
- * For example, if TestSubmodule is "TP Registration", then TestCase could be
+ * For example, if Submodule is "TP Registration", then TestCase could be
  * "TRM-TS-01 Register New Training Provider with Valid Details".
  *
  * Each test case contains multiple TestSteps that define what actions to take

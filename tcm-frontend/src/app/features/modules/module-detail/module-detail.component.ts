@@ -107,7 +107,7 @@ export class ModuleDetailComponent implements OnInit {
     }
   }
 
-  createTestSubmodule(moduleId: string | number): void {
+  createSubmodule(moduleId: string | number): void {
     const idAsString = String(moduleId);
     const dialogRef = this.dialog.open(SubmoduleDialogComponent, {
       width: '400px',
@@ -121,7 +121,7 @@ export class ModuleDetailComponent implements OnInit {
         // Wait for authentication to be synchronized before making the API call
         try {
           await this.tcmService.waitForAuthSync();
-          this.tcmService.createTestSubmodule(idAsString, result).subscribe({
+          this.tcmService.createSubmodule(idAsString, result).subscribe({
             next: (createdSubmodule) => {
               // Instead of calling ngOnInit(), refresh the module data directly
               this.refreshModuleData();
@@ -138,7 +138,7 @@ export class ModuleDetailComponent implements OnInit {
                   verticalPosition: 'top'
                 });
               } else {
-                this.snackBar.open('Failed to create test submodule. Please try again.', 'CLOSE', {
+                this.snackBar.open('Failed to create submodule. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
                   horizontalPosition: 'right',
@@ -394,14 +394,14 @@ export class ModuleDetailComponent implements OnInit {
     });
   }
 
-  deleteTestSubmodule(submodule: Submodule): void {
+  deleteSubmodule(submodule: Submodule): void {
     const submoduleId = submodule.id as string;
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
       data: {
-        title: 'Delete Test Submodule',
-        message: `Are you sure you want to delete test submodule "${submodule.name}"? This will also delete all test cases within this submodule. This action cannot be undone.`,
+        title: 'Delete Submodule',
+        message: `Are you sure you want to delete submodule "${submodule.name}"? This will also delete all test cases within this submodule. This action cannot be undone.`,
         icon: 'warning',
         confirmButtonText: 'Delete',
         confirmButtonColor: 'warn'
@@ -414,10 +414,10 @@ export class ModuleDetailComponent implements OnInit {
 
         try {
           await this.tcmService.waitForAuthSync();
-          this.tcmService.deleteTestSubmodule(submoduleId).subscribe({
+          this.tcmService.deleteSubmodule(submoduleId).subscribe({
             next: () => {
               this.refreshModuleData();
-              this.snackBar.open('Test submodule deleted successfully', 'Close', {
+              this.snackBar.open('Submodule deleted successfully', 'Close', {
                 duration: 3000,
                 panelClass: ['success-snackbar'],
                 horizontalPosition: 'right',
@@ -435,7 +435,7 @@ export class ModuleDetailComponent implements OnInit {
                   verticalPosition: 'top'
                 });
               } else {
-                this.snackBar.open('Failed to delete test submodule. Please try again.', 'CLOSE', {
+                this.snackBar.open('Failed to delete submodule. Please try again.', 'CLOSE', {
                   duration: 5000,
                   panelClass: ['error-snackbar'],
                   horizontalPosition: 'right',

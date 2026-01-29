@@ -4,26 +4,32 @@
 - **Stabilizing the application for production-readiness**.
 - All Phase 1 and Phase 2 tasks completed.
 
-## Current Problem - Database & Code Synchronization (RESOLVED)
-- **Issue**: Startup failures due to renaming "Test Suites" to "Test Submodules" and removing "Scenario" field. The application faced `UnknownPathException` in JPA repositories and SQL errors when `ddl-auto=create` tried to recreate an existing schema in a bad state.
-- **Resolution**:
-  1.  **Repository Fixes**: Updated `TestCaseRepository` and `TestExecutionRepository` to use the new field name `testSubmodule` instead of `testSuite` in JPQL queries.
-  2.  **Schema Reset**: Confirmed `spring.jpa.hibernate.ddl-auto=create` is active. A clean restart after fixing the queries successfully rebuilt the database schema with the correct `test_submodules` table and removed the `scenario` column.
-  3.  **Frontend Alignment**: Updated Angular models and components (`executions.component`, `modules.component`, `project-detail.component`) to use `TestSubmodule` terminology and remove references to the deleted `scenario` field.
-- **Current Status**: Backend started successfully. Frontend compilation errors resolved.
-
 ## Recent Changes
-- **Submodule Refactoring (IN PROGRESS)**:
+- **Submodule Refactoring (COMPLETED)**:
   - **Terminology**: Standardized on "Submodule" instead of "Test Submodule" or "Suite".
   - **Backend**:
     - Renamed all classes (`Submodule`, `SubmoduleRepository`, `SubmoduleDTO`).
     - Updated all entity relationships and database table name to `submodules`.
+    - Updated all JPQL queries to use `submodules` instead of `testSubmodules` in:
+      - TestModuleRepository: findByIdWithSubmodules, findAll, findTestModulesAssignedToUser
+      - TestExecutionRepository: findByAssignedToUserWithDetails, findAllWithDetails, findAllWithDetailsByOrganizationId
+      - TestCaseRepository: findAllWithDetails, findAllWithDetailsByOrganizationId, findByModuleIdWithSteps
     - Updated API endpoints to use `/submodules` instead of `/testsubmodules`.
   - **Frontend**:
-    - Updated `project.model.ts` and `tcm.service.ts`.
-    - Renamed and refactored `SubmoduleDialogComponent`.
-    - Updated core components (`module-detail`, `executions`, `workbench`).
+    - Updated `project.model.ts` and `tcm.service.ts` (imports and API endpoints).
+    - Renamed `TestSubmoduleDialogComponent` to `SubmoduleDialogComponent` (all files).
+    - Fixed property references across all components:
+      - `testSubmoduleId` → `submoduleId`
+      - `testSubmoduleName` → `submoduleName`
+      - `testSubmodules` → `submodules`
+    - Updated core components (`module-detail`, `executions`, `workbench`, `project-detail`, `test-case-detail`).
   - **Impact**: Simplified API surface and code readability. Cleaned up legacy "test" prefixes from internal hierarchy members.
+
+- **Bug Fixes (COMPLETED)**:
+  - **Submodule Display Issue**: Fixed `getTestModuleById()` in TcmService.java to use `submodulesWithTestCases` as source of truth, preventing incomplete submodule lists on module detail page
+  - **JSON Circular Reference**: Added `@JsonIgnore` to `TestCase.getTestModule()` to prevent StackOverflowError during JSON serialization
+  - **CSRF 401 Errors**: Added `/api/submodules/**` to CSRF ignore list in WebSecurityConfig
+  - **UI Text Updates**: Changed "Test Submodules" to "Submodules" in module-detail component
 - **Scenario Field Removal (COMPLETED)**:
   - **Backend**: Removed `scenario` field from `TestCase` entity and `TestCaseDTO`. Removed getters/setters.
   - **Logic**: Updated `TcmService` import logic to ignore scenario column and `TestCaseService` update logic.

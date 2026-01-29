@@ -268,51 +268,51 @@ public class ApiController {
         }
     }
 
-    // ==================== TEST SUBMODULE ENDPOINTS ====================
+    // ==================== SUBMODULE ENDPOINTS ====================
 
     @PostMapping("/testmodules/{testModuleId}/submodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> createTestSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody Submodule testSubmodule) {
+    public ResponseEntity<?> createSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody Submodule submodule) {
         try {
-            Submodule savedTestSubmodule = tcmService.createSubmoduleForTestModule(testModuleId, testSubmodule);
-            return new ResponseEntity<>(convertToDTO(savedTestSubmodule), HttpStatus.CREATED);
+            Submodule savedSubmodule = tcmService.createSubmoduleForTestModule(testModuleId, submodule);
+            return new ResponseEntity<>(convertToDTO(savedSubmodule), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error creating test submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error creating submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/submodules/{submoduleId}")
-    public ResponseEntity<?> getTestSubmoduleById(@PathVariable Long submoduleId) {
+    public ResponseEntity<?> getSubmoduleById(@PathVariable Long submoduleId) {
         try {
-            Optional<Submodule> testSubmoduleOpt = tcmService.getSubmoduleById(submoduleId);
-            if (testSubmoduleOpt.isPresent()) {
-                return new ResponseEntity<>(testSubmoduleOpt.get(), HttpStatus.OK);
+            Optional<Submodule> submoduleOpt = tcmService.getSubmoduleById(submoduleId);
+            if (submoduleOpt.isPresent()) {
+                return new ResponseEntity<>(submoduleOpt.get(), HttpStatus.OK);
             } else {
-                return new ResponseEntity<>("Test submodule not found with id: " + submoduleId, HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>("Submodule not found with id: " + submoduleId, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("Error retrieving test submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error retrieving submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PutMapping("/submodules/{submoduleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<?> updateTestSubmodule(@PathVariable Long submoduleId, @RequestBody Submodule submoduleDetails) {
+    public ResponseEntity<?> updateSubmodule(@PathVariable Long submoduleId, @RequestBody Submodule submoduleDetails) {
         try {
-            Submodule updatedTestSubmodule = tcmService.updateSubmodule(submoduleId, submoduleDetails);
-            return new ResponseEntity<>(convertToDTO(updatedTestSubmodule), HttpStatus.OK);
+            Submodule updatedSubmodule = tcmService.updateSubmodule(submoduleId, submoduleDetails);
+            return new ResponseEntity<>(convertToDTO(updatedSubmodule), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error updating test submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error updating submodule: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/submodules/{submoduleId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<Void> deleteTestSubmodule(@PathVariable Long submoduleId) {
+    public ResponseEntity<Void> deleteSubmodule(@PathVariable Long submoduleId) {
         try {
             tcmService.deleteSubmodule(submoduleId);
             return ResponseEntity.noContent().build();
@@ -322,7 +322,7 @@ public class ApiController {
         } catch (Exception e) {
             // For other errors, we might want to return 500, but with Void we can't send a body
             // ideally we should throw an exception that a global handler catches
-            throw new RuntimeException("Error deleting test submodule: " + e.getMessage());
+            throw new RuntimeException("Error deleting submodule: " + e.getMessage());
         }
     }
 
@@ -330,8 +330,8 @@ public class ApiController {
 
     @PostMapping("/submodules/{submoduleId}/testcases")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
-    public ResponseEntity<TestCaseDTO> createTestCaseForTestSubmodule(@PathVariable Long submoduleId, @RequestBody TestCase testCase) {
-        TestCase savedTestCase = tcmService.createTestCaseForTestSubmodule(submoduleId, testCase);
+    public ResponseEntity<TestCaseDTO> createTestCaseForSubmodule(@PathVariable Long submoduleId, @RequestBody TestCase testCase) {
+        TestCase savedTestCase = tcmService.createTestCaseForSubmodule(submoduleId, testCase);
         return new ResponseEntity<>(convertToDTO(savedTestCase), HttpStatus.CREATED);
     }
 
