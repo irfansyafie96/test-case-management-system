@@ -7,6 +7,7 @@
 ## Recent Changes
 - **Submodule Refactoring (COMPLETED)**:
   - **Terminology**: Standardized on "Submodule" instead of "Test Submodule" or "Suite".
+  - **Final Completion**: Renamed all remaining 'test submodule' references in UI labels, method names, comments, and error messages across both frontend and backend.
   - **Backend**:
     - Renamed all classes (`Submodule`, `SubmoduleRepository`, `SubmoduleDTO`).
     - Updated all entity relationships and database table name to `submodules`.
