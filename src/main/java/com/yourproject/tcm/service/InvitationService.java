@@ -35,10 +35,10 @@ public class InvitationService {
     private PasswordEncoder encoder;
 
     @Autowired
-    private TcmService tcmService; // To get current user
+    private UserContextService userContextService; // To get current user
 
     public Invitation createInvitation(String email, String roleName) {
-        User currentUser = tcmService.getCurrentUser();
+        User currentUser = userContextService.getCurrentUser();
         Organization org = currentUser.getOrganization();
 
         if (org == null) {

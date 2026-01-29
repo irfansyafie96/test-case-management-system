@@ -3,7 +3,7 @@ package com.yourproject.tcm.controller;
 import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.*;
 import com.yourproject.tcm.repository.UserRepository;
-import com.yourproject.tcm.service.TcmService;
+import com.yourproject.tcm.service.UserContextService;
 import com.yourproject.tcm.service.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -31,26 +31,34 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 public class ApiController {
 
-    private final TcmService tcmService;
     private final UserRepository userRepository;
     private final ProjectService projectService;
     private final ModuleService moduleService;
     private final SubmoduleService submoduleService;
     private final TestCaseService testCaseService;
     private final ExecutionService executionService;
+    private final AnalyticsService analyticsService;
+    private final ImportExportService importExportService;
+    private final UserService userService;
+    private final UserContextService userContextService;
 
     @Autowired
-    public ApiController(TcmService tcmService, UserRepository userRepository,
+    public ApiController(UserRepository userRepository,
                         ProjectService projectService, ModuleService moduleService,
                         SubmoduleService submoduleService, TestCaseService testCaseService,
-                        ExecutionService executionService) {
-        this.tcmService = tcmService;
+                        ExecutionService executionService, AnalyticsService analyticsService,
+                        ImportExportService importExportService, UserService userService,
+                        UserContextService userContextService) {
         this.userRepository = userRepository;
         this.projectService = projectService;
         this.moduleService = moduleService;
         this.submoduleService = submoduleService;
         this.testCaseService = testCaseService;
         this.executionService = executionService;
+        this.analyticsService = analyticsService;
+        this.importExportService = importExportService;
+        this.userService = userService;
+        this.userContextService = userContextService;
     }
 
     // ==================== PROJECT ENDPOINTS ====================
@@ -60,7 +68,7 @@ public class ApiController {
      */
     @GetMapping("/projects")
     public ResponseEntity<List<ProjectDTO>> getAllProjects() {
-        List<Project> projects = tcmService.getAllProjects();
+        List<Project> projects = projectService.getAllProjects();
         List<ProjectDTO> projectDTOs = projects.stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());
@@ -73,7 +81,7 @@ public class ApiController {
     @PostMapping("/projects")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProjectDTO> createProject(@RequestBody Project project) {
-        Project savedProject = tcmService.createProject(project);
+        Project savedProject = projectService.createProject(project);
         return new ResponseEntity<>(convertToDTO(savedProject), HttpStatus.CREATED);
     }
 
@@ -194,7 +202,7 @@ public class ApiController {
     @GetMapping("/projects/{projectId}")
     public ResponseEntity<?> getProjectById(@PathVariable Long projectId) {
         try {
-            Optional<Project> projectOpt = tcmService.getProjectById(projectId);
+            Optional<Project> projectOpt = projectService.getProjectById(projectId);
             if (projectOpt.isPresent()) {
                 return new ResponseEntity<>(projectOpt.get(), HttpStatus.OK);
             } else {
@@ -211,11 +219,11 @@ public class ApiController {
     @DeleteMapping("/projects/{projectId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProject(@PathVariable Long projectId) {
-        Optional<Project> projectOpt = tcmService.getProjectById(projectId);
+        Optional<Project> projectOpt = projectService.getProjectById(projectId);
         if (!projectOpt.isPresent()) {
             throw new RuntimeException("Project not found with id: " + projectId);
         }
-        tcmService.deleteProject(projectId);
+        projectService.deleteProject(projectId);
         return ResponseEntity.noContent().build();
     }
 
@@ -224,14 +232,14 @@ public class ApiController {
     @PostMapping("/projects/{projectId}/testmodules")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<TestModuleDTO> createTestModuleForProject(@PathVariable Long projectId, @RequestBody TestModule testModule) {
-        TestModule savedTestModule = tcmService.createTestModuleForProject(projectId, testModule);
+        TestModule savedTestModule = moduleService.createTestModuleForProject(projectId, testModule);
         return new ResponseEntity<>(convertToDTO(savedTestModule), HttpStatus.CREATED);
     }
 
     @GetMapping("/testmodules/{testModuleId}")
     public ResponseEntity<?> getTestModuleById(@PathVariable Long testModuleId) {
         try {
-            Optional<TestModule> testModuleOpt = tcmService.getTestModuleById(testModuleId);
+            Optional<TestModule> testModuleOpt = moduleService.getTestModuleById(testModuleId);
             if (testModuleOpt.isPresent()) {
                 return new ResponseEntity<>(testModuleOpt.get(), HttpStatus.OK);
             } else {
@@ -246,7 +254,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestModule(@PathVariable Long testModuleId, @RequestBody TestModule testModuleDetails) {
         try {
-            TestModule updatedTestModule = tcmService.updateTestModule(testModuleId, testModuleDetails);
+            TestModule updatedTestModule = moduleService.updateTestModule(testModuleId, testModuleDetails);
             return new ResponseEntity<>(convertToDTO(updatedTestModule), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -259,7 +267,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteTestModule(@PathVariable Long testModuleId) {
         try {
-            tcmService.deleteTestModule(testModuleId);
+            moduleService.deleteTestModule(testModuleId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -274,7 +282,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody Submodule submodule) {
         try {
-            Submodule savedSubmodule = tcmService.createSubmoduleForTestModule(testModuleId, submodule);
+            Submodule savedSubmodule = submoduleService.createSubmoduleForTestModule(testModuleId, submodule);
             return new ResponseEntity<>(convertToDTO(savedSubmodule), HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -286,7 +294,7 @@ public class ApiController {
     @GetMapping("/submodules/{submoduleId}")
     public ResponseEntity<?> getSubmoduleById(@PathVariable Long submoduleId) {
         try {
-            Optional<Submodule> submoduleOpt = tcmService.getSubmoduleById(submoduleId);
+            Optional<Submodule> submoduleOpt = submoduleService.getSubmoduleById(submoduleId);
             if (submoduleOpt.isPresent()) {
                 return new ResponseEntity<>(submoduleOpt.get(), HttpStatus.OK);
             } else {
@@ -301,7 +309,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateSubmodule(@PathVariable Long submoduleId, @RequestBody Submodule submoduleDetails) {
         try {
-            Submodule updatedSubmodule = tcmService.updateSubmodule(submoduleId, submoduleDetails);
+            Submodule updatedSubmodule = submoduleService.updateSubmodule(submoduleId, submoduleDetails);
             return new ResponseEntity<>(convertToDTO(updatedSubmodule), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -314,7 +322,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<Void> deleteSubmodule(@PathVariable Long submoduleId) {
         try {
-            tcmService.deleteSubmodule(submoduleId);
+            submoduleService.deleteSubmodule(submoduleId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             // Log the error but return 404 to user if not found
@@ -331,14 +339,14 @@ public class ApiController {
     @PostMapping("/submodules/{submoduleId}/testcases")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<TestCaseDTO> createTestCaseForSubmodule(@PathVariable Long submoduleId, @RequestBody TestCase testCase) {
-        TestCase savedTestCase = tcmService.createTestCaseForSubmodule(submoduleId, testCase);
+        TestCase savedTestCase = testCaseService.createTestCaseForSubmodule(submoduleId, testCase);
         return new ResponseEntity<>(convertToDTO(savedTestCase), HttpStatus.CREATED);
     }
 
     @GetMapping("/testcases")
     public ResponseEntity<List<TestCaseDTO>> getAllTestCases() {
         try {
-            List<TestCase> testCases = tcmService.getAllTestCases();
+            List<TestCase> testCases = testCaseService.getAllTestCases();
             List<TestCaseDTO> testCaseDTOs = testCases.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -351,7 +359,7 @@ public class ApiController {
     @GetMapping("/testcases/analytics")
     public ResponseEntity<?> getTestAnalytics(@RequestParam(required = false) Long userId) {
         try {
-            TestAnalyticsDTO analytics = tcmService.getTestAnalytics(userId);
+            TestAnalyticsDTO analytics = analyticsService.getTestAnalytics(userId);
             return new ResponseEntity<>(analytics, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving analytics: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -361,7 +369,7 @@ public class ApiController {
     @GetMapping("/testcases/{testCaseId}")
     public ResponseEntity<?> getTestCaseById(@PathVariable Long testCaseId) {
         try {
-            Optional<TestCase> testCaseOpt = tcmService.getTestCaseById(testCaseId);
+            Optional<TestCase> testCaseOpt = testCaseService.getTestCaseById(testCaseId);
             if (testCaseOpt.isPresent()) {
                 return new ResponseEntity<>(convertToDTO(testCaseOpt.get()), HttpStatus.OK);
             } else {
@@ -376,7 +384,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestCase(@PathVariable Long testCaseId, @RequestBody TestCase testCaseDetails) {
         try {
-            TestCase updatedTestCase = tcmService.updateTestCase(testCaseId, testCaseDetails);
+            TestCase updatedTestCase = testCaseService.updateTestCase(testCaseId, testCaseDetails);
             return new ResponseEntity<>(convertToDTO(updatedTestCase), HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -389,7 +397,7 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteTestCase(@PathVariable Long testCaseId) {
         try {
-            tcmService.deleteTestCase(testCaseId);
+            testCaseService.deleteTestCase(testCaseId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -404,7 +412,7 @@ public class ApiController {
     @PostMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> createTestExecutionForTestCase(@PathVariable Long testCaseId) {
         try {
-            TestExecution execution = tcmService.createTestExecutionForTestCase(testCaseId);
+            TestExecution execution = testCaseService.createTestExecutionForTestCase(testCaseId);
             return new ResponseEntity<>(execution, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -417,7 +425,7 @@ public class ApiController {
     @GetMapping("/executions/{executionId}")
     public ResponseEntity<?> getTestExecutionById(@PathVariable Long executionId) {
         try {
-            Optional<TestExecution> executionOpt = tcmService.getTestExecutionById(executionId);
+            Optional<TestExecution> executionOpt = executionService.getTestExecutionById(executionId);
             if (executionOpt.isPresent()) {
                 TestExecutionDTO dto = convertToDTOWithStepResults(executionOpt.get());
                 return new ResponseEntity<>(dto, HttpStatus.OK);
@@ -433,7 +441,7 @@ public class ApiController {
     @GetMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> getTestExecutionsByTestCaseId(@PathVariable Long testCaseId) {
         try {
-            List<TestExecutionDTO> executions = tcmService.getTestExecutionsByTestCaseId(testCaseId);
+            List<TestExecutionDTO> executions = testCaseService.getTestExecutionsByTestCaseId(testCaseId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -461,7 +469,7 @@ public class ApiController {
                 status = "PENDING";
             }
             String actualResult = stepData.getActualResult();
-            StepResultResponse updatedResult = tcmService.updateStepResult(executionId, stepId, status, actualResult);
+            StepResultResponse updatedResult = executionService.updateStepResult(executionId, stepId, status, actualResult);
             return new ResponseEntity<>(updatedResult, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -490,7 +498,7 @@ public class ApiController {
                 overallResult = "PENDING";
             }
             String notes = completeData.getNotes();
-            TestExecution completedExecution = tcmService.completeTestExecution(executionId, overallResult, notes);
+            TestExecution completedExecution = executionService.completeTestExecution(executionId, overallResult, notes);
             return new ResponseEntity<>(completedExecution, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -518,7 +526,7 @@ public class ApiController {
         }
         try {
             String notes = saveData.getNotes();
-            TestExecution savedExecution = tcmService.saveExecutionWork(executionId, notes);
+            TestExecution savedExecution = executionService.saveExecutionWork(executionId, notes);
             return new ResponseEntity<>(savedExecution, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
@@ -533,7 +541,7 @@ public class ApiController {
     @PostMapping("/executions/{executionId}/assign")
     public ResponseEntity<?> assignTestExecution(@PathVariable Long executionId, @RequestParam Long userId) {
         try {
-            TestExecution assignedExecution = tcmService.assignTestExecutionToUser(executionId, userId);
+            TestExecution assignedExecution = executionService.assignTestExecutionToUser(executionId, userId);
             return new ResponseEntity<>(assignedExecution, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error assigning test execution: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -544,7 +552,7 @@ public class ApiController {
     @GetMapping("/executions/assigned-to/{userId}")
     public ResponseEntity<?> getTestExecutionsAssignedToUser(@PathVariable Long userId) {
         try {
-            List<TestExecutionDTO> executions = tcmService.getTestExecutionsAssignedToUser(userId);
+            List<TestExecutionDTO> executions = executionService.getTestExecutionsAssignedToUser(userId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -555,7 +563,7 @@ public class ApiController {
     @GetMapping("/executions/my-assignments")
     public ResponseEntity<?> getMyAssignedExecutions() {
         try {
-            List<TestExecutionDTO> executions = tcmService.getTestExecutionsForCurrentUser();
+            List<TestExecutionDTO> executions = executionService.getTestExecutionsForCurrentUser();
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving your assigned test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -566,7 +574,7 @@ public class ApiController {
     @GetMapping("/executions/summary")
     public ResponseEntity<?> getCompletionSummary() {
         try {
-            CompletionSummaryDTO summary = tcmService.getCompletionSummaryForCurrentUser();
+            CompletionSummaryDTO summary = analyticsService.getCompletionSummaryForCurrentUser();
             return new ResponseEntity<>(summary, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving completion summary: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -579,7 +587,7 @@ public class ApiController {
     @PostMapping("/projects/assign")
     public ResponseEntity<?> assignUserToProject(@Valid @RequestBody ProjectAssignmentRequest request) {
         try {
-            User updatedUser = tcmService.assignUserToProject(request);
+            User updatedUser = projectService.assignUserToProject(request);
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error assigning user to project: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -590,7 +598,7 @@ public class ApiController {
     @DeleteMapping("/projects/assign")
     public ResponseEntity<?> removeUserFromProject(@Valid @RequestBody ProjectAssignmentRequest request) {
         try {
-            User updatedUser = tcmService.removeUserFromProject(request);
+            User updatedUser = projectService.removeUserFromProject(request);
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error removing user from project: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -601,7 +609,7 @@ public class ApiController {
     @GetMapping("/projects/assigned-to-me")
     public ResponseEntity<?> getProjectsAssignedToCurrentUser() {
         try {
-            List<Project> projects = tcmService.getProjectsAssignedToCurrentUser();
+            List<Project> projects = projectService.getProjectsAssignedToCurrentUser();
             return new ResponseEntity<>(projects, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving assigned projects: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -635,7 +643,7 @@ public class ApiController {
     @PostMapping("/testmodules/assign")
     public ResponseEntity<?> assignUserToTestModule(@Valid @RequestBody ModuleAssignmentRequest request) {
         try {
-            User updatedUser = tcmService.assignUserToTestModule(request);
+            User updatedUser = moduleService.assignUserToTestModule(request);
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error assigning user to test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -646,7 +654,7 @@ public class ApiController {
     @DeleteMapping("/testmodules/assign")
     public ResponseEntity<?> removeUserFromTestModule(@Valid @RequestBody ModuleAssignmentRequest request) {
         try {
-            User updatedUser = tcmService.removeUserFromTestModule(request);
+            User updatedUser = moduleService.removeUserFromTestModule(request);
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error removing user from test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -657,7 +665,7 @@ public class ApiController {
     @GetMapping("/testmodules/assigned-to-me")
     public ResponseEntity<?> getTestModulesAssignedToCurrentUser() {
         try {
-            List<TestModule> testModules = tcmService.getTestModulesAssignedToCurrentUser();
+            List<TestModule> testModules = moduleService.getTestModulesAssignedToCurrentUser();
             List<TestModuleDTO> testModuleDTOs = testModules.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -692,7 +700,7 @@ public class ApiController {
     @GetMapping("/users/by-role/{roleName}")
     public ResponseEntity<?> getUsersByRole(@PathVariable String roleName) {
         try {
-            Organization organization = tcmService.getCurrentUserOrganizationObject();
+            Organization organization = userContextService.getCurrentUserOrganizationObject();
             if (organization == null) {
                 return new ResponseEntity<>("Error: Current user has no organization", HttpStatus.BAD_REQUEST);
             }
@@ -719,7 +727,7 @@ public class ApiController {
     @GetMapping("/admin/users")
     public ResponseEntity<?> getUsersInOrganization() {
         try {
-            List<User> users = tcmService.getUsersInOrganization();
+            List<User> users = userService.getUsersInOrganization();
             // Convert to DTOs to avoid serialization issues
             List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
                 .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
@@ -740,7 +748,7 @@ public class ApiController {
     @GetMapping("/admin/modules")
     public ResponseEntity<?> getAllModulesInOrganization() {
         try {
-            List<TestModule> modules = tcmService.getAllModulesInOrganization();
+            List<TestModule> modules = moduleService.getAllModulesInOrganization();
             List<TestModuleDTO> moduleDTOs = modules.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -754,7 +762,7 @@ public class ApiController {
     @GetMapping("/admin/executions")
     public ResponseEntity<?> getAllExecutionsInOrganization(@RequestParam(required = false) Long userId) {
         try {
-            List<TestExecutionDTO> executions = tcmService.getAllExecutionsInOrganization(userId);
+            List<TestExecutionDTO> executions = executionService.getAllExecutionsInOrganization(userId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving organization executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -765,7 +773,7 @@ public class ApiController {
     @PostMapping("/testmodules/{moduleId}/regenerate-executions")
     public ResponseEntity<?> regenerateExecutionsForModule(@PathVariable Long moduleId) {
         try {
-            tcmService.regenerateExecutionsForModule(moduleId);
+            executionService.regenerateExecutionsForModule(moduleId);
             return new ResponseEntity<>("Test executions regenerated successfully for module " + moduleId, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error regenerating test executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -781,7 +789,7 @@ public class ApiController {
     @PostMapping("/testmodules/{moduleId}/import")
     public ResponseEntity<?> importTestCasesFromExcel(@PathVariable Long moduleId, @RequestParam("file") MultipartFile file) {
         try {
-            Map<String, Object> result = tcmService.importTestCasesFromExcel(moduleId, file);
+            Map<String, Object> result = importExportService.importTestCasesFromExcel(moduleId, file);
             return new ResponseEntity<>(result, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(Map.of(
@@ -803,7 +811,7 @@ public class ApiController {
     @GetMapping("/templates/download")
     public ResponseEntity<byte[]> downloadExcelTemplate() {
         try {
-            byte[] templateBytes = tcmService.downloadExcelTemplate();
+            byte[] templateBytes = importExportService.downloadExcelTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
             headers.setContentDispositionFormData("attachment", "test-case-import-template.xlsx");
