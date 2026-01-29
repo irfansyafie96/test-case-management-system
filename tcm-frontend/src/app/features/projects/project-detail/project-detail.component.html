@@ -144,11 +144,11 @@
           <div class="module-stats">
             <div class="stat-item">
               <span class="stat-label">Submodules</span>
-              <span class="stat-value">{{ module.submodules?.length || 0 }}</span>
+              <span class="stat-value">{{ module.submodulesCount || 0 }}</span>
             </div>
             <div class="stat-item">
               <span class="stat-label">Test Cases</span>
-              <span class="stat-value">{{ getTotalTestCases(module.submodules) }}</span>
+              <span class="stat-value">{{ module.testCasesCount || 0 }}</span>
             </div>
           </div>
         </div>

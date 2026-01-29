@@ -17,14 +17,12 @@ import { Observable } from 'rxjs';
   styleUrls: ['./modules.component.css']
 })
 export class ModulesComponent implements OnInit {
-  modules$: Observable<TestModule[]>;
+  modules$!: Observable<TestModule[]>;
 
-  constructor(private tcmService: TcmService) {
-    this.modules$ = this.tcmService.getTestModulesAssignedToCurrentUser();
-  }
+  constructor(private tcmService: TcmService) {}
 
   ngOnInit(): void {
     // Load modules on initialization
-    this.tcmService.getTestModulesAssignedToCurrentUser().subscribe();
+    this.modules$ = this.tcmService.getTestModulesAssignedToCurrentUser();
   }
 }

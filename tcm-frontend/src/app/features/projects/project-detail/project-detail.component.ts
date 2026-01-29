@@ -189,12 +189,7 @@ export class ProjectDetailComponent implements OnInit {
     });
   }
 
-  getTotalTestCases(submodules: any[] | undefined): number {
-    if (!submodules) return 0;
-    return submodules.reduce((total, submodule) => {
-      return total + (submodule.testCases ? submodule.testCases.length : 0);
-    }, 0);
-  }
+  
 
   // ==================== ASSIGNMENT METHODS ====================
 

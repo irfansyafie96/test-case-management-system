@@ -89,14 +89,21 @@ public class ApiController {
      * Helper to map Entity to DTO
      */
     private ProjectDTO convertToDTO(Project p) {
+        List<TestModuleDTO> moduleDTOs = null;
+        if (p.getModules() != null) {
+            moduleDTOs = p.getModules().stream()
+                .map(this::convertToDTO)
+                .collect(java.util.stream.Collectors.toList());
+        }
         return new ProjectDTO(
-            p.getId(), 
-            p.getName(), 
-            p.getDescription(), 
+            p.getId(),
+            p.getName(),
+            p.getDescription(),
             p.getOrganization() != null ? p.getOrganization().getName() : null,
             p.getCreatedDate(),
             p.getUpdatedDate(),
-            p.getCreatedBy()
+            p.getCreatedBy(),
+            moduleDTOs
         );
     }
 
@@ -197,14 +204,14 @@ public class ApiController {
     }
 
     /**
-     * GET /api/projects/{projectId} - Get a specific project by ID
+     * GET /api/projects/{projectId} - Get a specific project by ID with modules
      */
     @GetMapping("/projects/{projectId}")
     public ResponseEntity<?> getProjectById(@PathVariable Long projectId) {
         try {
-            Optional<Project> projectOpt = projectService.getProjectById(projectId);
+            Optional<Project> projectOpt = projectService.getProjectWithModulesById(projectId);
             if (projectOpt.isPresent()) {
-                return new ResponseEntity<>(projectOpt.get(), HttpStatus.OK);
+                return new ResponseEntity<>(convertToDTO(projectOpt.get()), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Project not found with id: " + projectId, HttpStatus.NOT_FOUND);
             }

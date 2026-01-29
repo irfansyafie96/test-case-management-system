@@ -79,9 +79,23 @@ public class ModuleService {
 
     /**
      * Get test modules assigned to the current user.
+     * Updated: If user is ADMIN, return all modules in the organization.
      */
     public List<TestModule> getTestModulesAssignedToCurrentUser() {
         User currentUser = userContextService.getCurrentUser();
+        if (userContextService.isAdmin(currentUser)) {
+            Organization org = currentUser.getOrganization();
+            if (org == null) {
+                return List.of();
+            }
+            // Get all projects in organization, then get their modules
+            List<Project> orgProjects = projectRepository.findAllByOrganization(org);
+            List<TestModule> allModules = new ArrayList<>();
+            for (Project project : orgProjects) {
+                allModules.addAll(project.getModules());
+            }
+            return allModules;
+        }
         return testModuleRepository.findTestModulesAssignedToUser(currentUser.getId());
     }
 

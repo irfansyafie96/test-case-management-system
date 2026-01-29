@@ -1,6 +1,7 @@
 package com.yourproject.tcm.model.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ProjectDTO {
     private Long id;
@@ -10,8 +11,9 @@ public class ProjectDTO {
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
     private String createdBy;
+    private List<TestModuleDTO> modules;
 
-    public ProjectDTO(Long id, String name, String description, String organizationName, LocalDateTime createdDate, LocalDateTime updatedDate, String createdBy) {
+    public ProjectDTO(Long id, String name, String description, String organizationName, LocalDateTime createdDate, LocalDateTime updatedDate, String createdBy, List<TestModuleDTO> modules) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -19,6 +21,7 @@ public class ProjectDTO {
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
         this.createdBy = createdBy;
+        this.modules = modules;
     }
 
     // Getters and Setters
@@ -42,4 +45,7 @@ public class ProjectDTO {
 
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public List<TestModuleDTO> getModules() { return modules; }
+    public void setModules(List<TestModuleDTO> modules) { this.modules = modules; }
 }

@@ -58,9 +58,17 @@ public class ProjectService {
 
     /**
      * Get projects assigned to the current user.
+     * Updated: If user is ADMIN, return all projects in the organization.
      */
     public List<Project> getProjectsAssignedToCurrentUser() {
         User currentUser = userContextService.getCurrentUser();
+        if (userContextService.isAdmin(currentUser)) {
+            Organization org = currentUser.getOrganization();
+            if (org == null) {
+                return List.of();
+            }
+            return projectRepository.findAllByOrganization(org);
+        }
         return projectRepository.findProjectsAssignedToUser(currentUser.getId());
     }
 
@@ -97,28 +105,62 @@ public class ProjectService {
     public Optional<Project> getProjectById(Long projectId) {
         User currentUser = userContextService.getCurrentUser();
         Optional<Project> projectOpt = projectRepository.findById(projectId);
-        
+
         if (projectOpt.isEmpty()) {
             return Optional.empty();
         }
-        
+
         Project project = projectOpt.get();
-        
+
         // Check organization boundary
         if (!project.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
             throw new RuntimeException("Project not found or access denied");
         }
-        
+
         // ADMIN users can access any project in their organization
         if (userContextService.isAdmin(currentUser)) {
             return projectOpt;
         }
-        
+
         // Non-ADMIN users can only access projects they are assigned to
         if (currentUser.getAssignedProjects().contains(project)) {
             return projectOpt;
         }
-        
+
+        throw new RuntimeException("Access denied: You are not assigned to this project");
+    }
+
+    /**
+     * Get a project by ID with its modules for the project detail page.
+     * This uses JOIN FETCH to ensure modules are loaded.
+     * ADMIN users can access any project in their organization.
+     * Non-ADMIN users can only access projects they are assigned to.
+     */
+    public Optional<Project> getProjectWithModulesById(Long projectId) {
+        User currentUser = userContextService.getCurrentUser();
+        Optional<Project> projectOpt = projectRepository.findProjectWithModulesById(projectId);
+
+        if (projectOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Project project = projectOpt.get();
+
+        // Check organization boundary
+        if (!project.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+            throw new RuntimeException("Project not found or access denied");
+        }
+
+        // ADMIN users can access any project in their organization
+        if (userContextService.isAdmin(currentUser)) {
+            return projectOpt;
+        }
+
+        // Non-ADMIN users can only access projects they are assigned to
+        if (currentUser.getAssignedProjects().contains(project)) {
+            return projectOpt;
+        }
+
         throw new RuntimeException("Access denied: You are not assigned to this project");
     }
 

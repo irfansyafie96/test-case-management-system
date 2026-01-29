@@ -2,9 +2,17 @@
 
 ## Current Work Focus
 - **Stabilizing the application for production-readiness**.
-- All Phase 1 and Phase 2 tasks completed.
+- Addressing user-reported visibility issues.
 
 ## Recent Changes
+- **Module Visibility Fix (COMPLETED)**:
+  - **Issue**: Admin users could not see modules they created on the `/modules` page because `getTestModulesAssignedToCurrentUser` only returned explicitly assigned modules.
+  - **Fix**: Updated `ModuleService.getTestModulesAssignedToCurrentUser` to check for ADMIN role. If Admin, it now returns all modules in the user's organization (mirroring `getAllModulesInOrganization` logic).
+  - **Impact**: Admins now see all modules in the "My Modules" view without needing manual assignment.
+- **Project Visibility Fix (COMPLETED)**:
+  - **Issue**: Identified consistent behavior in `ProjectService` where Admins might not see projects in "My Projects" view.
+  - **Fix**: Updated `ProjectService.getProjectsAssignedToCurrentUser` to return all organization projects for Admins.
+  - **Impact**: Consistent visibility logic across Projects and Modules for Admin users.
 - **Submodule Refactoring (COMPLETED)**:
   - **Terminology**: Standardized on "Submodule" instead of "Test Submodule" or "Suite".
   - **Final Completion**: Renamed all remaining 'test submodule' references in UI labels, method names, comments, and error messages across both frontend and backend.
@@ -61,13 +69,13 @@
   - **Security**: Removed password logging.
 
 ## Next Steps
-- **Verify Frontend Functionality**: Manually test the "Executions" page grouping, "Modules" page counts, and "Project Detail" page stats to ensure the terminology refactor didn't break display logic.
 - **Test Excel Import**: Verify that importing an Excel file works correctly with the new `TestSubmodule` logic and without the `Scenario` field.
 - **Update Excel Template**: The downloadable template needs to be updated to match the new schema (remove "Scenario" column).
 - **Advanced Reporting**: Start planning the reporting dashboard (charts, metrics).
 - **File Uploads**: Add capability to attach screenshots to test executions.
 
 ## Important Decisions & Considerations
+- **Admin Visibility**: Admins should implicitly see all resources in their organization. API endpoints returning "assigned" resources must explicitly check for Admin role and return the full set.
 - **Database Strategy**: `ddl-auto=create` is currently used to handle the massive schema changes (renaming tables, removing columns). This wipes data on restart. Once stable, switch back to `update` to persist data.
 - **Terminology**: "Submodule" is the definitive term. "Suite" should no longer appear in the UI or code (except maybe as deprecated aliases if absolutely necessary for transition, but we aimed for a clean break).
 - **Domain Services**: Continue using the domain service pattern for new features to keep `TcmService` manageable.
