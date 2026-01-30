@@ -4,7 +4,8 @@
 - **Automatic Execution Generation**: Executions are now automatically created when a user is assigned to a module OR when a test case is created.
 - **Project Access**: QA/BA users with module assignments can now correctly view parent project details.
 - **Execution Workbench**: Admin filtering by user now correctly shows tasks assigned to that user.    
-- **Project Deletion**: Fixed bug where deleting a project with modules failed. Now correctly cleans up junction tables and cascades deletions.- **Module Visibility**: Fixed issue where Admins couldn't see their own modules on the Modules page.
+- **Project Deletion**: Fixed bug where deleting a project with modules failed. Now correctly cleans up junction tables and cascades deletions.
+- **Module Visibility**: Fixed issue where Admins couldn't see their own modules on the Modules page.
 - **Refactoring**: Standardized on "Submodule" across the stack (Entity, DB, API, UI).
 - **Project Infrastructure**: Backend (Spring Boot) and Frontend (Angular) robust setup.
 // ...
@@ -30,4 +31,4 @@ Recent fixes and improvements include:
 
 **Build Status**: Both Angular frontend and Spring Boot backend compile without errors. Frontend build shows only CSS budget warnings (non-critical).
 
-**Next Focus**: Fix the persistent Project Deletion foreign key error.
+**Next Focus**: Continue stabilizing features and move towards Advanced Reporting.

@@ -19,9 +19,6 @@
   - **Impact**: Users with module-level access can now correctly view the parent project details.
 - **Execution Filter Logic Fix (COMPLETED)**:
   - **Issue**: Admin users reported seeing no tasks on the Executions page when filtering by user (or even default view).
-  - **Fix**: Updated `ExecutionService` to correctly filter by `execution.assignedToUser.id` when a user filter is applied.
-  - **Impact**: Admin users can now correctly filter execution lists to see tasks assigned to specific users.
-  - **Issue**: Admin users reported seeing no tasks on the Executions page when filtering by user (or even default view).
   - **Root Cause**: `ExecutionService.getAllExecutionsInOrganization` had incorrect filtering logic. When a `userId` was provided, it filtered executions based on the user's *assigned modules* (showing all executions in those modules) instead of the user's *assigned executions*.
   - **Fix**: Updated `ExecutionService` to correctly filter by `execution.assignedToUser.id` when a user filter is applied.
   - **Impact**: Admin users can now correctly filter execution lists to see tasks assigned to specific users.
