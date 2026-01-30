@@ -6,7 +6,21 @@
 - **Verification**: Verify that project deletion now works correctly with the recent fix.
 
 ## Recent Changes
+- **Automatic Execution Generation (COMPLETED)**:
+  - **Issue**: QA users saw empty execution lists even when assigned to modules because execution records were not automatically created.
+  - **Fix**: Implemented bidirectional auto-generation triggers:
+    1.  **On Test Case Creation**: Automatically creates executions for all users already assigned to the parent module.
+    2.  **On Module Assignment**: Automatically creates executions for the newly assigned user for all existing test cases in that module.
+  - **Impact**: Ensures "Tasks" appear in the execution workbench immediately upon assignment or creation, without needing manual regeneration.
+- **Project Access Logic Fix (COMPLETED)**:
+  - **Issue**: QA users assigned to a module (but not the project) received a 500 Error when accessing the project detail page.
+  - **Root Cause**: `ProjectService` enforced strict project-level assignment checks, throwing a RuntimeException if the user wasn't directly assigned to the project.
+  - **Fix**: Updated access checks in `getProjectById` and `getProjectWithModulesById` to grant access if the user is assigned to the project OR to any module within that project.
+  - **Impact**: Users with module-level access can now correctly view the parent project details.
 - **Execution Filter Logic Fix (COMPLETED)**:
+  - **Issue**: Admin users reported seeing no tasks on the Executions page when filtering by user (or even default view).
+  - **Fix**: Updated `ExecutionService` to correctly filter by `execution.assignedToUser.id` when a user filter is applied.
+  - **Impact**: Admin users can now correctly filter execution lists to see tasks assigned to specific users.
   - **Issue**: Admin users reported seeing no tasks on the Executions page when filtering by user (or even default view).
   - **Root Cause**: `ExecutionService.getAllExecutionsInOrganization` had incorrect filtering logic. When a `userId` was provided, it filtered executions based on the user's *assigned modules* (showing all executions in those modules) instead of the user's *assigned executions*.
   - **Fix**: Updated `ExecutionService` to correctly filter by `execution.assignedToUser.id` when a user filter is applied.

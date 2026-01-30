@@ -126,8 +126,14 @@ public class ProjectService {
             return projectOpt;
         }
 
-        // Non-ADMIN users can only access projects they are assigned to
-        if (currentUser.getAssignedProjects().contains(project)) {
+        // Non-ADMIN users can access if:
+        // 1. Assigned to the Project directly
+        // 2. Assigned to ANY Module in the Project
+        boolean isAssignedToProject = currentUser.getAssignedProjects().contains(project);
+        boolean isAssignedToModule = currentUser.getAssignedTestModules().stream()
+            .anyMatch(m -> m.getProject().getId().equals(projectId));
+
+        if (isAssignedToProject || isAssignedToModule) {
             return projectOpt;
         }
 
@@ -160,8 +166,14 @@ public class ProjectService {
             return projectOpt;
         }
 
-        // Non-ADMIN users can only access projects they are assigned to
-        if (currentUser.getAssignedProjects().contains(project)) {
+        // Non-ADMIN users can access if:
+        // 1. Assigned to the Project directly
+        // 2. Assigned to ANY Module in the Project
+        boolean isAssignedToProject = currentUser.getAssignedProjects().contains(project);
+        boolean isAssignedToModule = currentUser.getAssignedTestModules().stream()
+            .anyMatch(m -> m.getProject().getId().equals(projectId));
+
+        if (isAssignedToProject || isAssignedToModule) {
             return projectOpt;
         }
 

@@ -37,6 +37,7 @@ public class ModuleService {
     private final UserRepository userRepository;
     private final UserContextService userContextService;
     private final EntityManager entityManager;
+    private final TestCaseService testCaseService;
 
     @Autowired
     public ModuleService(TestModuleRepository testModuleRepository,
@@ -44,13 +45,15 @@ public class ModuleService {
                         ProjectRepository projectRepository,
                         UserRepository userRepository,
                         UserContextService userContextService,
-                        EntityManager entityManager) {
+                        EntityManager entityManager,
+                        TestCaseService testCaseService) {
         this.testModuleRepository = testModuleRepository;
         this.submoduleRepository = submoduleRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.userContextService = userContextService;
         this.entityManager = entityManager;
+        this.testCaseService = testCaseService;
     }
 
     /**
@@ -269,10 +272,13 @@ public class ModuleService {
         entityManager.flush();
     }
 
+    // ... existing code ...
+
     /**
      * Assign a user to a test module.
      * ADMIN users can assign any user in their organization.
      * Non-ADMIN users cannot assign users to modules.
+     * Automatically generates executions for the user for all test cases in the module.
      */
     @Transactional
     public User assignUserToTestModule(ModuleAssignmentRequest request) {
@@ -299,6 +305,28 @@ public class ModuleService {
                 user.getAssignedTestModules().add(testModule);
                 User savedUser = userRepository.save(user);
                 entityManager.flush();
+                
+                // Auto-generate executions for the user for all test cases in this module
+                // This ensures they immediately see tasks in their workbench
+                try {
+                    // We need to fetch submodules with test cases to iterate
+                    List<Submodule> submodules = submoduleRepository.findByTestModuleIdWithTestCases(testModule.getId());
+                    for (Submodule submodule : submodules) {
+                        if (submodule.getTestCases() != null) {
+                            for (TestCase testCase : submodule.getTestCases()) {
+                                try {
+                                    testCaseService.createTestExecutionForTestCaseAndUser(testCase.getId(), user.getId());
+                                } catch (Exception e) {
+                                    // Ignore if execution already exists or other error, continue with others
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // Log error but don't fail the assignment
+                    System.err.println("Error auto-generating executions: " + e.getMessage());
+                }
+                
                 return savedUser;
             } else {
                 return user; // Already assigned
