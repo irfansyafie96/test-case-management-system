@@ -325,26 +325,30 @@ public class ExecutionService {
         if (!executionOpt.isPresent()) {
             throw new RuntimeException("Test Execution not found with id: " + executionId);
         }
-        
+
         TestExecution execution = executionOpt.get();
-        
+
         // Check organization boundary via test case → submodule → module → project → organization
-        if (execution.getTestCase() == null || 
+        if (execution.getTestCase() == null ||
+            execution.getTestCase().getSubmodule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule().getProject() == null ||
             !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
                 .getId().equals(currentUser.getOrganization().getId())) {
             throw new RuntimeException("Access denied: Execution not in your organization");
         }
-        
+
         // ADMIN users can save work for any execution in their organization
         if (!userContextService.isAdmin(currentUser)) {
             // Non-ADMIN users can save work if:
             // 1. They are the assigned user for this execution
-            boolean isAssignedUser = execution.getAssignedToUser() != null && 
+            boolean isAssignedUser = execution.getAssignedToUser() != null &&
                                      execution.getAssignedToUser().getId().equals(currentUser.getId());
-            
+
             // 2. OR they are assigned to the module this execution belongs to (shared responsibility)
             boolean isAssignedToModule = false;
-            if (!isAssignedUser && execution.getTestCase() != null && execution.getTestCase().getSubmodule() != null) {
+            if (!isAssignedUser && execution.getTestCase() != null && execution.getTestCase().getSubmodule() != null
+                && execution.getTestCase().getSubmodule().getTestModule() != null) {
                 Long moduleId = execution.getTestCase().getSubmodule().getTestModule().getId();
                 // Direct DB check for robustness
                 List<TestModule> assignedModules = testModuleRepository.findTestModulesAssignedToUser(currentUser.getId());
@@ -355,7 +359,7 @@ public class ExecutionService {
                 throw new RuntimeException("Access denied: You are not assigned to this execution or its module");
             }
         }
-        
+
         execution.setNotes(notes);  // Only update notes, don't change overallResult
         TestExecution savedExecution = testExecutionRepository.save(execution);
         entityManager.flush();
@@ -432,22 +436,26 @@ public class ExecutionService {
         TestExecution execution = executionOpt.get();
         
         // Check organization boundary via test case → submodule → module → project → organization
-        if (execution.getTestCase() == null || 
+        if (execution.getTestCase() == null ||
+            execution.getTestCase().getSubmodule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule().getProject() == null ||
             !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
                 .getId().equals(currentUser.getOrganization().getId())) {
             throw new RuntimeException("Access denied: Execution not in your organization");
         }
-        
+
         // ADMIN users can update any step result in their organization
         if (!userContextService.isAdmin(currentUser)) {
             // Non-ADMIN users can update step results if:
             // 1. They are the assigned user for this execution
-            boolean isAssignedUser = execution.getAssignedToUser() != null && 
+            boolean isAssignedUser = execution.getAssignedToUser() != null &&
                                      execution.getAssignedToUser().getId().equals(currentUser.getId());
-            
+
             // 2. OR they are assigned to the module this execution belongs to (shared responsibility)
             boolean isAssignedToModule = false;
-            if (!isAssignedUser && execution.getTestCase() != null && execution.getTestCase().getSubmodule() != null) {
+            if (!isAssignedUser && execution.getTestCase() != null && execution.getTestCase().getSubmodule() != null
+                && execution.getTestCase().getSubmodule().getTestModule() != null) {
                 Long moduleId = execution.getTestCase().getSubmodule().getTestModule().getId();
                 // Direct DB check for robustness
                 List<TestModule> assignedModules = testModuleRepository.findTestModulesAssignedToUser(currentUser.getId());

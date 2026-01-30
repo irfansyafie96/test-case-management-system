@@ -1,15 +1,19 @@
 # Active Context: Test Case Management (TCM) System
 
 ## Current Work Focus
-- **Debugging**: Investigating persistent 500 Error when QA users save/navigate executions.
 - **Stabilizing the application for production-readiness**.
-- Addressing user-reported visibility issues.
+- Ensuring QA users can navigate and save execution work without errors.
 
 ## Recent Changes
-- **Backend Permission Robustness (ATTEMPTED)**:
-  - **Change**: Updated `ExecutionService` to use direct DB queries (`testModuleRepository.findTestModulesAssignedToUser`) instead of entity collections for checking module-level permissions.
-  - **Goal**: To fix the 500 error where QA users couldn't save work on executions they accessed via module assignment.
-  - **Status**: **Unresolved**. User reports the error persists.
+- **QA Execution Save Failure (RESOLVED)**:
+  - **Issue**: QA users received a 500 Internal Server Error when clicking "Next" or "Prev" buttons in the Execution Workbench, even when not filling in execution notes or actual results.
+  - **Root Cause**: The `findByIdWithStepResults` query in `TestExecutionRepository` was not fetching all necessary relationships (submodule, testModule, project, organization) required for permission checks in `ExecutionService.saveExecutionWork()`. These relationships were lazy-loaded and not properly initialized.
+  - **Fix**: Updated the `findByIdWithStepResults` query to include explicit `LEFT JOIN FETCH` for all necessary relationships:
+    - `tc.submodule ts`
+    - `ts.testModule tm`
+    - `tm.project p`
+    - `p.organization`
+  - **Impact**: QA users can now successfully navigate between executions and save work (even with empty notes) without encountering 500 errors.
 - **Execution Workbench UI Polish (COMPLETED)**:
   - **Change**: Updated the "PREV" button in the execution workbench to match the "NEXT" button style (Raised, Accent Color).
   - **Reason**: To ensure visual consistency and perfect vertical alignment across all navigation controls in the workbench.
@@ -29,17 +33,12 @@
   - **Fix**: Updated `ExecutionService` to correctly filter by `execution.assignedToUser.id` when a user filter is applied.
   - **Impact**: Admin users can now correctly filter execution lists to see tasks assigned to specific users.
 
-## Known Issues (FOR LATER FIX)
-- **QA Execution Save Failure (PERSISTENT)**:
-  - **Symptom**: QA users receive a 500 Internal Server Error (Access Denied) when clicking "Next" or trying to save work in the Execution Workbench, even for executions within modules they are assigned to.
-  - **Current State**: Backend permission logic was updated to check module assignment via direct DB query, but the error persists.
-  - **Suspects**: 
-    - Transaction boundaries or Entity Manager state?
-    - Potential mismatch between the execution's module and the user's assigned modules (data integrity)?
-    - Is `currentUser` id correct in the context?
-  - **Next Step**: Deep debug of `ExecutionService.saveExecutionWork`. Verify IDs being compared.
+## Known Issues
+- **None currently**
 
 ## Next Steps
+- Continue monitoring for any user-reported issues.
+- Consider adding additional logging for debugging future permission-related issues.
 
 ## Important Decisions & Considerations
 - **Admin Visibility**: Admins should implicitly see all resources in their organization. API endpoints returning "assigned" resources must explicitly check for Admin role and return the full set.
@@ -47,3 +46,4 @@
 - **Entity Equality**: Always implement `equals()` and `hashCode()` based on ID for entities involved in collections (Sets) to ensure correct removal and persistence behavior.
 - **DTOs**: Ensure all DTOs (like `TestExecutionDTO`) match their constructors exactly when used in services. Flattened DTOs are preferred for the frontend to avoid complex object graph traversals.
 - **Frontend Models**: `project.model.ts` is the source of truth for frontend interfaces. Keep it synchronized with backend DTOs.
+- **JPA Query Optimization**: When fetching entities that require access to nested relationships for permission checks or business logic, always include explicit `LEFT JOIN FETCH` clauses in the query to avoid lazy loading issues and potential N+1 query problems.

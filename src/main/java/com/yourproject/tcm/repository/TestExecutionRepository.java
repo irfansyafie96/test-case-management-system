@@ -12,7 +12,16 @@ import java.util.Optional;
 public interface TestExecutionRepository extends JpaRepository<TestExecution, Long> {
     List<TestExecution> findByTestCase_Id(Long testCaseId);
 
-    @Query("SELECT DISTINCT e FROM TestExecution e LEFT JOIN FETCH e.testCase LEFT JOIN FETCH e.assignedToUser LEFT JOIN FETCH e.stepResults sr LEFT JOIN FETCH sr.testStep WHERE e.id = :id")
+    @Query("SELECT DISTINCT e FROM TestExecution e " +
+           "LEFT JOIN FETCH e.testCase tc " +
+           "LEFT JOIN FETCH e.assignedToUser " +
+           "LEFT JOIN FETCH e.stepResults sr " +
+           "LEFT JOIN FETCH sr.testStep " +
+           "LEFT JOIN FETCH tc.submodule ts " +
+           "LEFT JOIN FETCH ts.testModule tm " +
+           "LEFT JOIN FETCH tm.project p " +
+           "LEFT JOIN FETCH p.organization " +
+           "WHERE e.id = :id")
     Optional<TestExecution> findByIdWithStepResults(@Param("id") Long id);
 
     @Query("SELECT e FROM TestExecution e " +
