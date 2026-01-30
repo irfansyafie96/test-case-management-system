@@ -6,6 +6,9 @@
 - **Verification**: Verify that project deletion now works correctly with the recent fix.
 
 ## Recent Changes
+- **Execution Workbench UI Polish (COMPLETED)**:
+  - **Change**: Updated the "PREV" button in the execution workbench to match the "NEXT" button style (Raised, Accent Color).
+  - **Reason**: To ensure visual consistency and perfect vertical alignment across all navigation controls in the workbench.
 - **Automatic Execution Generation (COMPLETED)**:
   - **Issue**: QA users saw empty execution lists even when assigned to modules because execution records were not automatically created.
   - **Fix**: Implemented bidirectional auto-generation triggers:
