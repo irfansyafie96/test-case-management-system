@@ -337,10 +337,22 @@ public class ExecutionService {
         
         // ADMIN users can save work for any execution in their organization
         if (!userContextService.isAdmin(currentUser)) {
-            // Non-ADMIN users can only save work for executions assigned to them
-            if (execution.getAssignedToUser() == null || 
-                !execution.getAssignedToUser().getId().equals(currentUser.getId())) {
-                throw new RuntimeException("Access denied: You can only save work for executions assigned to you");
+            // Non-ADMIN users can save work if:
+            // 1. They are the assigned user for this execution
+            boolean isAssignedUser = execution.getAssignedToUser() != null && 
+                                     execution.getAssignedToUser().getId().equals(currentUser.getId());
+            
+            // 2. OR they are assigned to the module this execution belongs to (shared responsibility)
+            boolean isAssignedToModule = false;
+            if (!isAssignedUser && execution.getTestCase() != null && execution.getTestCase().getSubmodule() != null) {
+                Long moduleId = execution.getTestCase().getSubmodule().getTestModule().getId();
+                // Direct DB check for robustness
+                List<TestModule> assignedModules = testModuleRepository.findTestModulesAssignedToUser(currentUser.getId());
+                isAssignedToModule = assignedModules.stream().anyMatch(m -> m.getId().equals(moduleId));
+            }
+
+            if (!isAssignedUser && !isAssignedToModule) {
+                throw new RuntimeException("Access denied: You are not assigned to this execution or its module");
             }
         }
         
@@ -428,10 +440,22 @@ public class ExecutionService {
         
         // ADMIN users can update any step result in their organization
         if (!userContextService.isAdmin(currentUser)) {
-            // Non-ADMIN users can only update step results for executions assigned to them
-            if (execution.getAssignedToUser() == null || 
-                !execution.getAssignedToUser().getId().equals(currentUser.getId())) {
-                throw new RuntimeException("Access denied: You can only update step results for executions assigned to you");
+            // Non-ADMIN users can update step results if:
+            // 1. They are the assigned user for this execution
+            boolean isAssignedUser = execution.getAssignedToUser() != null && 
+                                     execution.getAssignedToUser().getId().equals(currentUser.getId());
+            
+            // 2. OR they are assigned to the module this execution belongs to (shared responsibility)
+            boolean isAssignedToModule = false;
+            if (!isAssignedUser && execution.getTestCase() != null && execution.getTestCase().getSubmodule() != null) {
+                Long moduleId = execution.getTestCase().getSubmodule().getTestModule().getId();
+                // Direct DB check for robustness
+                List<TestModule> assignedModules = testModuleRepository.findTestModulesAssignedToUser(currentUser.getId());
+                isAssignedToModule = assignedModules.stream().anyMatch(m -> m.getId().equals(moduleId));
+            }
+
+            if (!isAssignedUser && !isAssignedToModule) {
+                throw new RuntimeException("Access denied: You are not assigned to this execution or its module");
             }
         }
         

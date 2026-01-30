@@ -267,17 +267,20 @@ export class ExecutionWorkbenchComponent implements OnInit {
       // Already complete - just navigate to next
       this.navigateToNext();
     } else {
-      // Incomplete - save notes then navigate to next
+      // Incomplete - try to save notes then navigate
       this.tcmService.saveExecution(this.executionId!, this.executionNotes).subscribe({
         next: () => {
           this.navigateToNext();
         },
         error: (error) => {
+          // If save fails (e.g. permissions), we still want to allow navigation
+          console.warn('Save failed during navigation', error);
           this.snackBar.open(
-            'Failed to save execution. Please try again.',
+            'Could not save progress, but proceeding to next test case.',
             'DISMISS',
-            { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+            { panelClass: ['warning-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
           );
+          this.navigateToNext();
         }
       });
     }

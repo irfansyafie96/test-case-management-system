@@ -12,15 +12,18 @@
 // ...
 
 ## Known Issues
-- **None currently identified.**
+- **QA Execution Save Failure**: QA users get a 500 Error (Access Denied) when saving/navigating executions, despite backend permission updates.
 
 ## Current Status
 The application has successfully completed the comprehensive refactoring from "Test Submodule" to "Submodule" across the entire codebase. All UI labels, method names, comments, and error messages have been updated. Both backend and frontend compile successfully and have been validated through testing.
 
 Recent fixes and improvements include:
+- **Project Access**: Fixed 500 error for QA users viewing projects via module assignment.
+- **Auto-Generation**: Implemented automatic test execution creation on module assignment.
+- **UI Polish**: Standardized Execution Workbench navigation buttons.
 - **Project Deletion**: Resolved `Test Module not found` error during project deletion by fixing the cleanup logic in `ProjectService`.
 - **Critical Fix**: Updated `ModuleService` and `ProjectService` to correctly show all resources to Admin users in "assigned to me" endpoints.
-- Final pass completed to rename all remaining 'test submodule' references across frontend and backend
+- Final pass completed to rename all remaining 'test submodule' references across frontend and backend 
 - Updated execution workbench label from "Test Submodule" to "Submodule"
 - Renamed all service methods (`createTestSubmodule` → `createSubmodule`, etc.)
 - Updated API controller method names and error messages
@@ -32,4 +35,4 @@ Recent fixes and improvements include:
 
 **Build Status**: Both Angular frontend and Spring Boot backend compile without errors. Frontend build shows only CSS budget warnings (non-critical).
 
-**Next Focus**: Continue stabilizing features and move towards Advanced Reporting.
+**Next Focus**: Debug and resolve the persistent QA Execution Save Failure.
