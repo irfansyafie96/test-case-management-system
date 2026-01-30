@@ -153,4 +153,17 @@ public class Project {
     public void setOrganization(Organization organization) {
         this.organization = organization;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Project project = (Project) o;
+        return id != null && id.equals(project.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

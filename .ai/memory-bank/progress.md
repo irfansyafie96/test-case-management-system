@@ -1,14 +1,20 @@
 # Progress: Test Case Management (TCM) System
 
 ## What Works
+- **Project Deletion**: Fixed bug where deleting a project with modules failed. Now correctly cleans up junction tables and cascades deletions.
 - **Module Visibility**: Fixed issue where Admins couldn't see their own modules on the Modules page.
 - **Refactoring**: Standardized on "Submodule" across the stack (Entity, DB, API, UI).
 - **Project Infrastructure**: Backend (Spring Boot) and Frontend (Angular) robust setup.
 // ...
+
+## Known Issues
+- **None currently identified.**
+
 ## Current Status
 The application has successfully completed the comprehensive refactoring from "Test Submodule" to "Submodule" across the entire codebase. All UI labels, method names, comments, and error messages have been updated. Both backend and frontend compile successfully and have been validated through testing.
 
 Recent fixes and improvements include:
+- **Project Deletion**: Resolved `Test Module not found` error during project deletion by fixing the cleanup logic in `ProjectService`.
 - **Critical Fix**: Updated `ModuleService` and `ProjectService` to correctly show all resources to Admin users in "assigned to me" endpoints.
 - Final pass completed to rename all remaining 'test submodule' references across frontend and backend
 - Updated execution workbench label from "Test Submodule" to "Submodule"
@@ -22,4 +28,4 @@ Recent fixes and improvements include:
 
 **Build Status**: Both Angular frontend and Spring Boot backend compile without errors. Frontend build shows only CSS budget warnings (non-critical).
 
-**Next Focus**: Continue development with clean "submodule" terminology established.
+**Next Focus**: Fix the persistent Project Deletion foreign key error.

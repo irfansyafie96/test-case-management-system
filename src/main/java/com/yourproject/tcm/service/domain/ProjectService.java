@@ -1,6 +1,7 @@
 package com.yourproject.tcm.service.domain;
 
 import com.yourproject.tcm.model.Project;
+import com.yourproject.tcm.model.TestModule;
 import com.yourproject.tcm.model.User;
 import com.yourproject.tcm.model.Organization;
 import com.yourproject.tcm.model.dto.ProjectAssignmentRequest;
@@ -26,15 +27,18 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final UserContextService userContextService;
+    private final ModuleService moduleService;
     
     @PersistenceContext
     private EntityManager entityManager;
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository, UserContextService userContextService) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository, 
+                         UserContextService userContextService, ModuleService moduleService) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.userContextService = userContextService;
+        this.moduleService = moduleService;
     }
 
     /**
@@ -219,24 +223,26 @@ public class ProjectService {
                 throw new RuntimeException("Project not found or access denied");
             }
 
-            // 1. Clear assignments: Remove this project from all users' assigned lists
-            // This is critical for ManyToMany cleanup in the junction table 'user_projects'
-            if (project.getAssignedUsers() != null) {
-                // Create a copy to avoid concurrent modification exception
-                java.util.Set<User> users = new java.util.HashSet<>(project.getAssignedUsers());
-                for (User user : users) {
-                    user.getAssignedProjects().remove(project);
-                    userRepository.save(user); // Save user to update junction table
+            // 1. Clear user assignments from junction tables using native SQL
+            // This ensures junction table records are removed before attempting to delete the project
+            entityManager.createNativeQuery("DELETE FROM user_projects WHERE project_id = :projectId")
+                .setParameter("projectId", projectId)
+                .executeUpdate();
+                
+            // Clear module assignments from junction table as well
+            if (project.getModules() != null && !project.getModules().isEmpty()) {
+                for (TestModule module : project.getModules()) {
+                    entityManager.createNativeQuery("DELETE FROM user_test_modules WHERE test_module_id = :moduleId")
+                        .setParameter("moduleId", module.getId())
+                        .executeUpdate();
                 }
-                project.getAssignedUsers().clear();
             }
-            entityManager.flush(); // Ensure junction table records are gone
+            entityManager.flush();
 
-            // TODO: When ModuleService is implemented, replace this with proper module deletion
-            // For now, rely on JPA cascading (CascadeType.ALL on project.modules)
-            // Note: This may not handle all cleanup logic in deleteTestModule method
+            // 2. (Step removed) - Standard JPA cascading handles module/submodule deletion.
+            // The cleanup of user_test_modules in Step 1 is sufficient to prevent FK constraint violations.
             
-            // Now delete the project itself (JPA cascading should handle modules)
+            // 3. Now delete the project itself
             projectRepository.deleteById(projectId);
             entityManager.flush(); // Ensure data is written to DB
         } else {

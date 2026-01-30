@@ -123,4 +123,17 @@ public class TestModule {
     public String getProjectName() {
         return project != null ? project.getName() : null;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TestModule that = (TestModule) o;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

@@ -243,15 +243,11 @@ public class ModuleService {
             throw new RuntimeException("Test Module not found or access denied");
         }
         
-        // 1. Clear assignments: Remove this module from all users' assigned lists
-        if (testModule.getAssignedUsers() != null) {
-            Set<User> users = new HashSet<>(testModule.getAssignedUsers());
-            for (User user : users) {
-                user.getAssignedTestModules().remove(testModule);
-                userRepository.save(user);
-            }
-            testModule.getAssignedUsers().clear();
-        }
+        // 1. Clear assignments from junction table using native SQL
+        // This ensures junction table records are removed before attempting to delete the module
+        entityManager.createNativeQuery("DELETE FROM user_test_modules WHERE test_module_id = :moduleId")
+            .setParameter("moduleId", testModuleId)
+            .executeUpdate();
         entityManager.flush();
 
         // 2. Clean up submodules deeply
