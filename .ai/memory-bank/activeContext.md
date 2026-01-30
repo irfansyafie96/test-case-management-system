@@ -6,6 +6,11 @@
 - **Verification**: Verify that project deletion now works correctly with the recent fix.
 
 ## Recent Changes
+- **Execution Filter Logic Fix (COMPLETED)**:
+  - **Issue**: Admin users reported seeing no tasks on the Executions page when filtering by user (or even default view).
+  - **Root Cause**: `ExecutionService.getAllExecutionsInOrganization` had incorrect filtering logic. When a `userId` was provided, it filtered executions based on the user's *assigned modules* (showing all executions in those modules) instead of the user's *assigned executions*.
+  - **Fix**: Updated `ExecutionService` to correctly filter by `execution.assignedToUser.id` when a user filter is applied.
+  - **Impact**: Admin users can now correctly filter execution lists to see tasks assigned to specific users.
 - **Project Deletion Fix (COMPLETED)**:
   - **Issue**: Deleting a project with modules failed with `RuntimeException: Test Module not found`.
   - **Root Cause**: `ProjectService.deleteProject` was clearing the project's module list and flushing (triggering implicit DB deletion via `orphanRemoval`) *before* attempting to manually delete modules service-side. This caused the service to look for already-deleted modules.

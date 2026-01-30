@@ -83,22 +83,11 @@ public class ExecutionService {
         Long orgId = org.getId();
         List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
 
-        // If userId is provided, filter by that user's current module assignments
+        // If userId is provided, filter by that user's assigned executions
         if (userId != null) {
-            User filteredUser = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
-
-            // Get the user's currently assigned module IDs
-            Set<Long> assignedModuleIds = filteredUser.getAssignedTestModules().stream()
-                .map(TestModule::getId)
-                .collect(Collectors.toSet());
-
-            // Filter executions to only show those from assigned modules
             allExecutions = allExecutions.stream()
-                .filter(execution -> {
-                    Long moduleId = execution.getModuleId();
-                    return moduleId != null && assignedModuleIds.contains(moduleId);
-                })
+                .filter(execution -> execution.getAssignedToUser() != null && 
+                                     execution.getAssignedToUser().getId().equals(userId))
                 .collect(Collectors.toList());
         }
 

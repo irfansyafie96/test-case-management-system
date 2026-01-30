@@ -1,6 +1,7 @@
 # Progress: Test Case Management (TCM) System
 
 ## What Works
+- **Execution Workbench**: Admin filtering by user now correctly shows tasks assigned to that user.
 - **Project Deletion**: Fixed bug where deleting a project with modules failed. Now correctly cleans up junction tables and cascades deletions.
 - **Module Visibility**: Fixed issue where Admins couldn't see their own modules on the Modules page.
 - **Refactoring**: Standardized on "Submodule" across the stack (Entity, DB, API, UI).
