@@ -41,6 +41,9 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
   isLoading = true;
   error: string | null = null;
   private routeSub: Subscription | null = null;
+  
+  // Navigation properties
+  allTestCases: TestCase[] = [];
 
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
@@ -54,21 +57,18 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-
-    
     // Force change detection after a short delay to handle SSR hydration
     setTimeout(() => {
       this.cdr.detectChanges();
-
     }, 100);
     
     // Subscribe to route parameter changes instead of using snapshot
     this.routeSub = this.route.paramMap.subscribe(params => {
       this.testCaseId = params.get('id');
-
       
       if (this.testCaseId) {
         this.loadTestCase(this.testCaseId);
+        this.loadAllTestCases();
       }
     });
   }
@@ -80,14 +80,12 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
   }
 
   loadTestCase(id: string) {
-
     this.isLoading = true;
     this.error = null;
     this.cdr.detectChanges(); // Force UI update immediately
     
     this.tcmService.getTestCase(id).subscribe({
       next: (data) => {
-
         this.testCase = data;
         this.isLoading = false;
         this.cdr.detectChanges(); // Force UI update
@@ -98,6 +96,47 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges(); // Force UI update
       }
     });
+  }
+
+  loadAllTestCases() {
+    this.tcmService.getAllTestCases().subscribe({
+      next: (testCases) => {
+        this.allTestCases = testCases;
+      },
+      error: (err) => {
+        // Error loading test cases
+      }
+    });
+  }
+
+  get isPreviousDisabled(): boolean {
+    if (!this.testCaseId || this.allTestCases.length === 0) return true;
+    const currentIndex = this.allTestCases.findIndex(tc => tc.id?.toString() === this.testCaseId);
+    return currentIndex <= 0;
+  }
+
+  get isNextDisabled(): boolean {
+    if (!this.testCaseId || this.allTestCases.length === 0) return true;
+    const currentIndex = this.allTestCases.findIndex(tc => tc.id?.toString() === this.testCaseId);
+    return currentIndex >= this.allTestCases.length - 1 || currentIndex === -1;
+  }
+
+  navigateToPrevious(): void {
+    if (this.isPreviousDisabled) return;
+    const currentIndex = this.allTestCases.findIndex(tc => tc.id?.toString() === this.testCaseId);
+    if (currentIndex > 0) {
+      const previousTestCase = this.allTestCases[currentIndex - 1];
+      this.router.navigate(['/test-cases', previousTestCase.id]);
+    }
+  }
+
+  navigateToNext(): void {
+    if (this.isNextDisabled) return;
+    const currentIndex = this.allTestCases.findIndex(tc => tc.id?.toString() === this.testCaseId);
+    if (currentIndex < this.allTestCases.length - 1) {
+      const nextTestCase = this.allTestCases[currentIndex + 1];
+      this.router.navigate(['/test-cases', nextTestCase.id]);
+    }
   }
 
   editTestCase(): void {
