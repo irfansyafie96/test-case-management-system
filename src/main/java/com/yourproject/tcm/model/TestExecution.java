@@ -56,13 +56,21 @@ public class TestExecution {
     @Column(nullable = false)  // Overall result is required
     private String overallResult; // Overall result: "Pass", "Fail", "Incomplete", etc.
 
-    // Alias for frontend compatibility - same as overallResult
-    public String getStatus() {
+    // Separate status field to track execution state without overwriting overallResult
+    @Column(name = "execution_status", nullable = false)
+    private String status = "PENDING"; // Execution status: "PENDING", "IN_PROGRESS", "COMPLETED"
+
+    // Alias for frontend compatibility - returns overallResult for backward compatibility
+    public String getResultStatus() {
         return overallResult;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
     public void setStatus(String status) {
-        this.overallResult = status;
+        this.status = status;
     }
 
     @Column(columnDefinition = "TEXT")  // TEXT allows longer notes

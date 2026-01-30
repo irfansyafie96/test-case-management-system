@@ -236,7 +236,13 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
     this.tcmService.completeExecution(this.executionId, overallResult, notes || '').subscribe({
       next: () => {
-        this.router.navigate(['/executions']);
+        // Reload the current execution to show the updated status
+        this.loadExecution();
+        this.snackBar.open(
+          'Test execution completed successfully!',
+          'DISMISS',
+          { panelClass: ['success-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
+        );
       },
       error: (error) => {
         this.snackBar.open(
