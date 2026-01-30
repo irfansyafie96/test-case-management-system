@@ -401,7 +401,7 @@ public class ApiController {
     }
 
     @DeleteMapping("/testcases/{testCaseId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<Void> deleteTestCase(@PathVariable Long testCaseId) {
         try {
             testCaseService.deleteTestCase(testCaseId);

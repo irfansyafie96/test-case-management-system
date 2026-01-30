@@ -248,49 +248,59 @@ public class TestCaseService {
 
     /**
      * Delete a test case with security checks and comprehensive cleanup.
-     * Only ADMIN users can delete test cases.
+     * ADMIN users can delete any test case in their organization.
+     * QA/BA users can delete test cases in modules they are assigned to.
      * Deletes test executions and related test step results before deleting the test case.
      */
     @Transactional
     public void deleteTestCase(Long testCaseId) {
         User currentUser = userContextService.getCurrentUser();
         
-        // Only ADMIN users can delete test cases
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Access denied: Only ADMIN users can delete test cases");
-        }
-        
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
-        if (testCaseOpt.isPresent()) {
-            TestCase testCase = testCaseOpt.get();
-            
-            // Verify organization boundary
-            if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
-                    .getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Access denied: Test case not in your organization");
-            }
-            
-            // First, delete all test executions for this test case
-            // This will cascade to delete test step results associated with those executions
-            java.util.List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCaseId);
-            for (TestExecution execution : executions) {
-                testExecutionRepository.deleteById(execution.getId());
-            }
-            
-            // Next, delete test step results that might still reference the test steps
-            // (in case any are orphaned)
-            if (testCase.getTestSteps() != null) {
-                for (TestStep step : testCase.getTestSteps()) {
-                    testStepResultRepository.deleteByTestStepId(step.getId());
-                }
-            }
-            
-            // Now delete the test case (cascading should handle test steps)
-            testCaseRepository.deleteById(testCaseId);
-            entityManager.flush(); // Ensure data is written to DB
-        } else {
+        if (testCaseOpt.isEmpty()) {
             throw new RuntimeException("Test Case not found with id: " + testCaseId);
         }
+        
+        TestCase testCase = testCaseOpt.get();
+        
+        // Verify organization boundary
+        if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
+                .getId().equals(currentUser.getOrganization().getId())) {
+            throw new RuntimeException("Access denied: Test case not in your organization");
+        }
+        
+        // ADMIN users can delete any test case in their organization
+        if (!userContextService.isAdmin(currentUser)) {
+            // Non-ADMIN users can only delete test cases in modules they are assigned to
+            if (!userContextService.isQaOrBa(currentUser)) {
+                throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can delete test cases");
+            }
+            
+            // Check if user is assigned to the module
+            boolean isAssignedToModule = currentUser.getAssignedTestModules().contains(testCase.getSubmodule().getTestModule());
+            if (!isAssignedToModule) {
+                throw new RuntimeException("Access denied: You are not assigned to the parent module of this test case");
+            }
+        }
+        
+        // First, delete all test executions for this test case
+        // This will cascade to delete test step results associated with those executions
+        java.util.List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCaseId);
+        for (TestExecution execution : executions) {
+            testExecutionRepository.deleteById(execution.getId());
+        }
+        
+        // Next, delete test step results that might still reference the test steps
+        // (in case any are orphaned)
+        if (testCase.getTestSteps() != null) {
+            for (TestStep step : testCase.getTestSteps()) {
+                testStepResultRepository.deleteByTestStepId(step.getId());
+            }
+        }
+        
+        // Now delete the test case (cascading should handle test steps)
+        testCaseRepository.deleteById(testCaseId);
+        entityManager.flush(); // Ensure data is written to DB
     }
 
     /**

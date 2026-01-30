@@ -184,56 +184,67 @@ public class SubmoduleService {
     /**
      * Delete a submodule and all its contents (cascading delete).
      * ADMIN users can delete any submodule in their organization.
-     * Non-ADMIN users cannot delete submodules.
+     * QA/BA users can delete submodules in modules they are assigned to.
      */
     @Transactional
     public void deleteSubmodule(Long submoduleId) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can delete submodules");
-        }
         
         Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleId);
-        if (submoduleOpt.isPresent()) {
-            Submodule submodule = submoduleOpt.get();
-            
-            // Check organization boundary via module -> project
-            TestModule testModule = submodule.getTestModule();
-            if (testModule == null || !testModule.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Submodule not found or access denied");
-            }
-            
-            // First, cleanup all execution data for test cases in the submodule
-            if (submodule.getTestCases() != null) {
-                // We don't delete the test case entity here directly
-                // We just clean up the 'grandchildren' (Executions/Results)
-                // The test cases themselves will be deleted via orphanRemoval when we clear the list
-                for (TestCase testCase : submodule.getTestCases()) {
-                    // Delete all test executions for this test case
-                    List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
-                    if (!executions.isEmpty()) {
-                        testExecutionRepository.deleteAll(executions);
-                    }
-
-                    // Delete test step results that might still reference the test steps
-                    if (testCase.getTestSteps() != null) {
-                        for (TestStep step : testCase.getTestSteps()) {
-                            testStepResultRepository.deleteByTestStepId(step.getId());
-                        }
-                    }
-                }
-
-                // Clear the collection to trigger orphanRemoval
-                // This deletes the test cases from DB cleanly without setting FK to null
-                submodule.getTestCases().clear();
-                entityManager.flush(); // Force the deletion of test cases
-            }
-
-            // Now delete the submodule
-            submoduleRepository.delete(submodule);
-            entityManager.flush();
-        } else {
+        if (submoduleOpt.isEmpty()) {
             throw new RuntimeException("Submodule not found with id: " + submoduleId);
         }
+        
+        Submodule submodule = submoduleOpt.get();
+        
+        // Check organization boundary via module -> project
+        TestModule testModule = submodule.getTestModule();
+        if (testModule == null || !testModule.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+            throw new RuntimeException("Submodule not found or access denied");
+        }
+        
+        // ADMIN users can delete any submodule in their organization
+        if (!userContextService.isAdmin(currentUser)) {
+            // Non-ADMIN users can only delete submodules in modules they are assigned to
+            if (!userContextService.isQaOrBa(currentUser)) {
+                throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can delete submodules");
+            }
+            
+            // Check if user is assigned to the module
+            boolean isAssignedToModule = currentUser.getAssignedTestModules().contains(testModule);
+            if (!isAssignedToModule) {
+                throw new RuntimeException("Access denied: You are not assigned to the parent module of this submodule");
+            }
+        }
+        
+        // First, cleanup all execution data for test cases in the submodule
+        if (submodule.getTestCases() != null) {
+            // We don't delete the test case entity here directly
+            // We just clean up the 'grandchildren' (Executions/Results)
+            // The test cases themselves will be deleted via orphanRemoval when we clear the list
+            for (TestCase testCase : submodule.getTestCases()) {
+                // Delete all test executions for this test case
+                List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCase.getId());
+                if (!executions.isEmpty()) {
+                    testExecutionRepository.deleteAll(executions);
+                }
+
+                // Delete test step results that might still reference the test steps
+                if (testCase.getTestSteps() != null) {
+                    for (TestStep step : testCase.getTestSteps()) {
+                        testStepResultRepository.deleteByTestStepId(step.getId());
+                    }
+                }
+            }
+
+            // Clear the collection to trigger orphanRemoval
+            // This deletes the test cases from DB cleanly without setting FK to null
+            submodule.getTestCases().clear();
+            entityManager.flush(); // Force the deletion of test cases
+        }
+
+        // Now delete the submodule
+        submoduleRepository.delete(submodule);
+        entityManager.flush();
     }
 }
