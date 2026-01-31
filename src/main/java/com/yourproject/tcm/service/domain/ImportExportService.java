@@ -2,6 +2,7 @@ package com.yourproject.tcm.service.domain;
 
 import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.repository.*;
+import com.yourproject.tcm.service.UserContextService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -28,6 +29,7 @@ public class ImportExportService {
     private final SubmoduleRepository submoduleRepository;
     private final TestCaseRepository testCaseRepository;
     private final TestCaseService testCaseService;
+    private final UserContextService userContextService;
     private final jakarta.persistence.EntityManager entityManager;
 
     @Autowired
@@ -36,11 +38,13 @@ public class ImportExportService {
             SubmoduleRepository submoduleRepository,
             TestCaseRepository testCaseRepository,
             TestCaseService testCaseService,
+            UserContextService userContextService,
             jakarta.persistence.EntityManager entityManager) {
         this.testModuleRepository = testModuleRepository;
         this.submoduleRepository = submoduleRepository;
         this.testCaseRepository = testCaseRepository;
         this.testCaseService = testCaseService;
+        this.userContextService = userContextService;
         this.entityManager = entityManager;
     }
 
@@ -76,6 +80,40 @@ public class ImportExportService {
             }
 
             TestModule module = moduleOpt.get();
+            
+            // Check user permissions
+            User currentUser = userContextService.getCurrentUser();
+            if (currentUser == null) {
+                throw new RuntimeException("Access denied: User not authenticated");
+            }
+            
+            // Verify organization boundary
+            if (module.getProject() == null || module.getProject().getOrganization() == null) {
+                throw new RuntimeException("Test module has no organization assigned");
+            }
+            if (!module.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+                throw new RuntimeException("Access denied: Test module not found in your organization");
+            }
+            
+            // ADMIN users can import into any module
+            if (!userContextService.isAdmin(currentUser)) {
+                // QA/BA users can only import into modules they are assigned to
+                if (!userContextService.isQaOrBa(currentUser)) {
+                    throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can import test cases");
+                }
+                
+                // Check if user has assigned test modules
+                if (currentUser.getAssignedTestModules() == null || currentUser.getAssignedTestModules().isEmpty()) {
+                    throw new RuntimeException("Access denied: You are not assigned to any test modules");
+                }
+                
+                // Check assignment by ID instead of object reference
+                boolean isAssigned = currentUser.getAssignedTestModules().stream()
+                    .anyMatch(m -> m.getId().equals(module.getId()));
+                if (!isAssigned) {
+                    throw new RuntimeException("Access denied: You are not assigned to this test module");
+                }
+            }
 
             // Parse Excel file
             Workbook workbook = WorkbookFactory.create(file.getInputStream());
@@ -98,9 +136,13 @@ public class ImportExportService {
 
             // Get existing test case IDs in this module to check for duplicates
             Set<String> existingTestCaseIds = new HashSet<>();
-            for (Submodule submodule : module.getSubmodules()) {
-                for (TestCase testCase : submodule.getTestCases()) {
-                    existingTestCaseIds.add(testCase.getTestCaseId());
+            if (module.getSubmodules() != null) {
+                for (Submodule submodule : module.getSubmodules()) {
+                    if (submodule.getTestCases() != null) {
+                        for (TestCase testCase : submodule.getTestCases()) {
+                            existingTestCaseIds.add(testCase.getTestCaseId());
+                        }
+                    }
                 }
             }
 

@@ -123,14 +123,11 @@ public class SubmoduleService {
     /**
      * Create a submodule for a test module.
      * ADMIN users can create submodules in any module in their organization.
-     * Non-ADMIN users cannot create submodules.
+     * QA/BA users can create submodules only in modules they are assigned to.
      */
     @Transactional
     public Submodule createSubmoduleForTestModule(Long testModuleId, Submodule submodule) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can create submodules");
-        }
         
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(testModuleId);
         if (testModuleOpt.isPresent()) {
@@ -141,10 +138,27 @@ public class SubmoduleService {
                 throw new RuntimeException("Test Module not found or access denied");
             }
             
-            submodule.setTestModule(testModule);
-            Submodule savedSubmodule = submoduleRepository.save(submodule);
-            entityManager.flush();
-            return savedSubmodule;
+            // ADMIN users can create submodules in any module
+            if (userContextService.isAdmin(currentUser)) {
+                submodule.setTestModule(testModule);
+                Submodule savedSubmodule = submoduleRepository.save(submodule);
+                entityManager.flush();
+                return savedSubmodule;
+            }
+            
+            // QA/BA users can only create submodules in modules they are assigned to
+            if (userContextService.isQaOrBa(currentUser)) {
+                if (currentUser.getAssignedTestModules().contains(testModule)) {
+                    submodule.setTestModule(testModule);
+                    Submodule savedSubmodule = submoduleRepository.save(submodule);
+                    entityManager.flush();
+                    return savedSubmodule;
+                } else {
+                    throw new RuntimeException("Access denied: You are not assigned to this test module");
+                }
+            }
+            
+            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can create submodules");
         } else {
             throw new RuntimeException("Test Module not found with id: " + testModuleId);
         }
@@ -153,14 +167,11 @@ public class SubmoduleService {
     /**
      * Update a submodule.
      * ADMIN users can update any submodule in their organization.
-     * Non-ADMIN users cannot update submodules.
+     * QA/BA users can update submodules only in modules they are assigned to.
      */
     @Transactional
     public Submodule updateSubmodule(Long submoduleId, Submodule submoduleDetails) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can update submodules");
-        }
         
         Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleId);
         if (submoduleOpt.isPresent()) {
@@ -172,10 +183,27 @@ public class SubmoduleService {
                 throw new RuntimeException("Submodule not found or access denied");
             }
             
-            submodule.setName(submoduleDetails.getName());
-            Submodule updatedSubmodule = submoduleRepository.save(submodule);
-            entityManager.flush();
-            return updatedSubmodule;
+            // ADMIN users can update any submodule
+            if (userContextService.isAdmin(currentUser)) {
+                submodule.setName(submoduleDetails.getName());
+                Submodule updatedSubmodule = submoduleRepository.save(submodule);
+                entityManager.flush();
+                return updatedSubmodule;
+            }
+            
+            // QA/BA users can only update submodules in modules they are assigned to
+            if (userContextService.isQaOrBa(currentUser)) {
+                if (currentUser.getAssignedTestModules().contains(testModule)) {
+                    submodule.setName(submoduleDetails.getName());
+                    Submodule updatedSubmodule = submoduleRepository.save(submodule);
+                    entityManager.flush();
+                    return updatedSubmodule;
+                } else {
+                    throw new RuntimeException("Access denied: You are not assigned to the parent module of this submodule");
+                }
+            }
+            
+            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can update submodules");
         } else {
             throw new RuntimeException("Submodule not found with id: " + submoduleId);
         }

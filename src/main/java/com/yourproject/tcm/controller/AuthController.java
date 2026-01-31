@@ -216,7 +216,7 @@ public class AuthController {
         // Create HttpOnly cookie for JWT token
         Cookie jwtCookie = new Cookie("JWT_TOKEN", jwtToken);
         jwtCookie.setHttpOnly(true);  // Prevent client-side JavaScript access (XSS protection)
-        jwtCookie.setSecure(environment.acceptsProfiles("prod"));  // HTTPS only in production
+        jwtCookie.setSecure(environment.matchesProfiles("prod"));  // HTTPS only in production
         jwtCookie.setPath("/");       // Make available for all paths
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
         jwtCookie.setAttribute("SameSite", "Strict");  // Prevent CSRF attacks
@@ -232,7 +232,7 @@ public class AuthController {
         if (csrfToken != null) {
             Cookie csrfCookie = new Cookie("XSRF-TOKEN", csrfToken.getToken());
             csrfCookie.setHttpOnly(false);  // Must be false for JavaScript access (Angular needs it)
-            csrfCookie.setSecure(environment.acceptsProfiles("prod"));  // HTTPS only in production
+            csrfCookie.setSecure(environment.matchesProfiles("prod"));  // HTTPS only in production
             csrfCookie.setPath("/");
             csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
             csrfCookie.setAttribute("SameSite", "Lax");  // Lax allows cookies on same-site GET requests

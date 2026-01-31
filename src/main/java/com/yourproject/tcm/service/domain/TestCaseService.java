@@ -112,138 +112,176 @@ public class TestCaseService {
 
     /**
      * Create a test case for a submodule with security checks.
-     * Only ADMIN users can create test cases.
+     * ADMIN users can create test cases in any module in their organization.
+     * QA/BA users can create test cases only in modules they are assigned to.
      * Auto-generates executions for all users assigned to the module.
      */
     @Transactional
     public TestCase createTestCaseForSubmodule(Long submoduleId, TestCase testCase) {
         User currentUser = userContextService.getCurrentUser();
         
-        // Only ADMIN users can create test cases
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Access denied: Only ADMIN users can create test cases");
-        }
-        
         Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleId);
         if (submoduleOpt.isPresent()) {
             Submodule submodule = submoduleOpt.get();
+            TestModule testModule = submodule.getTestModule();
             
             // Verify organization boundary
-            if (!submodule.getTestModule().getProject().getOrganization()
+            if (!testModule.getProject().getOrganization()
                     .getId().equals(currentUser.getOrganization().getId())) {
                 throw new RuntimeException("Access denied: Submodule not in your organization");
             }
             
-            testCase.setSubmodule(submodule);
+            // ADMIN users can create test cases in any module
+            if (userContextService.isAdmin(currentUser)) {
+                return createTestCaseInternal(submodule, testCase);
+            }
             
-            // Set up test steps with sequential step numbers
-            if (testCase.getTestSteps() != null) {
-                int stepNum = 1;
-                for (TestStep step : testCase.getTestSteps()) {
-                    step.setTestCase(testCase);
-                    step.setStepNumber(stepNum++);
+            // QA/BA users can only create test cases in modules they are assigned to
+            if (userContextService.isQaOrBa(currentUser)) {
+                if (currentUser.getAssignedTestModules().contains(testModule)) {
+                    return createTestCaseInternal(submodule, testCase);
+                } else {
+                    throw new RuntimeException("Access denied: You are not assigned to the parent module of this submodule");
                 }
             }
             
-            TestCase savedTestCase = testCaseRepository.save(testCase);
-            entityManager.flush(); // Ensure data is written to DB
-            
-            // Auto-generate executions for all users assigned to the module
-            TestModule module = submodule.getTestModule();
-            if (module != null && module.getAssignedUsers() != null && !module.getAssignedUsers().isEmpty()) {
-                for (User user : module.getAssignedUsers()) {
-                    try {
-                        createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
-                    } catch (Exception e) {
-                        // Log error but continue with other users
-                        // In production, consider using a logger
-                    }
-                }
-            }
-            
-            return savedTestCase;
+            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can create test cases");
         } else {
             throw new RuntimeException("Submodule not found with id: " + submoduleId);
         }
     }
+    
+    /**
+     * Internal method to create a test case (after security checks pass)
+     */
+    @Transactional
+    private TestCase createTestCaseInternal(Submodule submodule, TestCase testCase) {
+        testCase.setSubmodule(submodule);
+        
+        // Set up test steps with sequential step numbers
+        if (testCase.getTestSteps() != null) {
+            int stepNum = 1;
+            for (TestStep step : testCase.getTestSteps()) {
+                step.setTestCase(testCase);
+                step.setStepNumber(stepNum++);
+            }
+        }
+        
+        TestCase savedTestCase = testCaseRepository.save(testCase);
+        entityManager.flush(); // Ensure data is written to DB
+        
+        // Auto-generate executions for all users assigned to the module
+        TestModule module = submodule.getTestModule();
+        if (module != null && module.getAssignedUsers() != null && !module.getAssignedUsers().isEmpty()) {
+            for (User user : module.getAssignedUsers()) {
+                try {
+                    createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
+                } catch (Exception e) {
+                    // Log error but continue with other users
+                    // In production, consider using a logger
+                }
+            }
+        }
+        
+        return savedTestCase;
+    }
 
     /**
      * Update a test case with security checks.
-     * Only ADMIN users can update test cases.
+     * ADMIN users can update any test case in their organization.
+     * QA/BA users can update test cases only in modules they are assigned to.
      * Properly handles test steps and cleans up related test step results.
      */
     @Transactional
     public TestCase updateTestCase(Long testCaseId, TestCase testCaseDetails) {
         User currentUser = userContextService.getCurrentUser();
         
-        // Only ADMIN users can update test cases
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Access denied: Only ADMIN users can update test cases");
-        }
-        
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
         if (testCaseOpt.isPresent()) {
             TestCase testCase = testCaseOpt.get();
+            TestModule testModule = testCase.getSubmodule().getTestModule();
             
             // Verify organization boundary
-            if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
+            if (!testModule.getProject().getOrganization()
                     .getId().equals(currentUser.getOrganization().getId())) {
                 throw new RuntimeException("Access denied: Test case not in your organization");
             }
             
-            // Update basic properties
-            testCase.setTitle(testCaseDetails.getTitle());
-            testCase.setTestCaseId(testCaseDetails.getTestCaseId());
-            testCase.setDescription(testCaseDetails.getDescription());
-            testCase.setPrerequisites(testCaseDetails.getPrerequisites());
-            testCase.setExpectedResult(testCaseDetails.getExpectedResult());
-            testCase.setTags(testCaseDetails.getTags());
+            // ADMIN users can update any test case
+            if (userContextService.isAdmin(currentUser)) {
+                return updateTestCaseInternal(testCase, testCaseDetails);
+            }
             
-            // Handle test steps - properly manage the relationship to avoid cascade issues
-            if (testCaseDetails.getTestSteps() != null) {
-                // Get or create the current test steps list to maintain the same collection instance
-                java.util.List<TestStep> currentSteps = testCase.getTestSteps();
-                if (currentSteps == null) {
-                    currentSteps = new java.util.ArrayList<>();
-                    testCase.setTestSteps(currentSteps);
+            // QA/BA users can only update test cases in modules they are assigned to
+            if (userContextService.isQaOrBa(currentUser)) {
+                if (currentUser.getAssignedTestModules().contains(testModule)) {
+                    return updateTestCaseInternal(testCase, testCaseDetails);
+                } else {
+                    throw new RuntimeException("Access denied: You are not assigned to the parent module of this test case");
                 }
-                
-                // Delete related test step results for existing steps to avoid foreign key constraint violations
+            }
+            
+            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can update test cases");
+        } else {
+            throw new RuntimeException("Test case not found with id: " + testCaseId);
+        }
+    }
+    
+    /**
+     * Internal method to update a test case (after security checks pass)
+     */
+    @Transactional
+    private TestCase updateTestCaseInternal(TestCase testCase, TestCase testCaseDetails) {
+        // Update basic properties
+        testCase.setTitle(testCaseDetails.getTitle());
+        testCase.setTestCaseId(testCaseDetails.getTestCaseId());
+        testCase.setDescription(testCaseDetails.getDescription());
+        testCase.setPrerequisites(testCaseDetails.getPrerequisites());
+        testCase.setExpectedResult(testCaseDetails.getExpectedResult());
+        testCase.setTags(testCaseDetails.getTags());
+        
+        // Handle test steps - properly manage the relationship to avoid cascade issues
+        if (testCaseDetails.getTestSteps() != null) {
+            // Get or create the current test steps list to maintain the same collection instance
+            java.util.List<TestStep> currentSteps = testCase.getTestSteps();
+            if (currentSteps == null) {
+                currentSteps = new java.util.ArrayList<>();
+                testCase.setTestSteps(currentSteps);
+            }
+            
+            // Delete related test step results for existing steps to avoid foreign key constraint violations
+            for (TestStep existingStep : currentSteps) {
+                testStepResultRepository.deleteByTestStepId(existingStep.getId());
+            }
+            
+            // Clear the existing steps - this should properly handle the cascade
+            currentSteps.clear();
+            
+            // Add new test steps to the same collection instance
+            for (int i = 0; i < testCaseDetails.getTestSteps().size(); i++) {
+                TestStep stepDetail = testCaseDetails.getTestSteps().get(i);
+                TestStep newStep = new TestStep();
+                newStep.setStepNumber(i + 1); // Ensure step numbers are sequential (1, 2, 3, etc.)
+                newStep.setAction(stepDetail.getAction());
+                newStep.setExpectedResult(stepDetail.getExpectedResult());
+                newStep.setTestCase(testCase); // Set the back-reference to testCase
+                currentSteps.add(newStep);
+            }
+        } else {
+            // If new test steps are null, clear existing ones
+            java.util.List<TestStep> currentSteps = testCase.getTestSteps();
+            if (currentSteps != null) {
+                // Delete related test step results first to avoid foreign key constraint violations
                 for (TestStep existingStep : currentSteps) {
                     testStepResultRepository.deleteByTestStepId(existingStep.getId());
                 }
                 
-                // Clear the existing steps - this should properly handle the cascade
+                // Clear the existing test steps
                 currentSteps.clear();
-                
-                // Add new test steps to the same collection instance
-                for (int i = 0; i < testCaseDetails.getTestSteps().size(); i++) {
-                    TestStep stepDetail = testCaseDetails.getTestSteps().get(i);
-                    TestStep newStep = new TestStep();
-                    newStep.setStepNumber(i + 1); // Ensure step numbers are sequential (1, 2, 3, etc.)
-                    newStep.setAction(stepDetail.getAction());
-                    newStep.setExpectedResult(stepDetail.getExpectedResult());
-                    newStep.setTestCase(testCase); // Set the back-reference to testCase
-                    currentSteps.add(newStep);
-                }
-            } else {
-                // If new test steps are null, clear existing ones
-                java.util.List<TestStep> currentSteps = testCase.getTestSteps();
-                if (currentSteps != null) {
-                    // Delete related test step results first to avoid foreign key constraint violations
-                    for (TestStep existingStep : currentSteps) {
-                        testStepResultRepository.deleteByTestStepId(existingStep.getId());
-                    }
-                    
-                    // Clear the existing test steps
-                    currentSteps.clear();
-                }
             }
-            
-            return testCaseRepository.save(testCase);
-        } else {
-            throw new RuntimeException("Test case not found with id: " + testCaseId);
         }
+        
+        return testCaseRepository.save(testCase);
     }
 
     /**
