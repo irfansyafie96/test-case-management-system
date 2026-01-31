@@ -84,6 +84,29 @@ public class TestExecution {
     private String environment;  // Environment where test was executed (dev, staging, prod)
 
     /**
+     * Redmine Integration Fields
+     * These fields track Redmine issue information when a test execution fails.
+     * Allows linking failed test cases to Redmine issues for bug tracking.
+     */
+    @Column(name = "redmine_issue_id", length = 100)
+    private String redmineIssueId;  // ID of the Redmine issue created for this failure
+
+    @Column(name = "redmine_issue_url", length = 500)
+    private String redmineIssueUrl;  // Direct URL to the Redmine issue
+
+    @Column(name = "bug_report_subject", length = 500)
+    private String bugReportSubject;  // Subject/title of the bug report sent to Redmine
+
+    @Column(name = "bug_report_description", columnDefinition = "TEXT")
+    private String bugReportDescription;  // Detailed description of the bug sent to Redmine
+
+    @Column(name = "redmine_issue_created_at")
+    private LocalDateTime redmineIssueCreatedAt;  // When the Redmine issue was created
+
+    @Column(name = "redmine_issue_updated_at")
+    private LocalDateTime redmineIssueUpdatedAt;  // When the Redmine issue was last updated
+
+    /**
      * Many-to-One relationship: Many TestExecutions can be assigned to One User
      * fetch = FetchType.LAZY: Only load user data when explicitly accessed
      * @JoinColumn: Foreign key 'assigned_to_user_id' in test_executions table points to User
@@ -261,5 +284,55 @@ public class TestExecution {
             return testCase.getSubmodule().getTestModule().getProject().getId();
         }
         return null;
+    }
+
+    // Redmine Integration Getters and Setters
+
+    public String getRedmineIssueId() {
+        return redmineIssueId;
+    }
+
+    public void setRedmineIssueId(String redmineIssueId) {
+        this.redmineIssueId = redmineIssueId;
+    }
+
+    public String getRedmineIssueUrl() {
+        return redmineIssueUrl;
+    }
+
+    public void setRedmineIssueUrl(String redmineIssueUrl) {
+        this.redmineIssueUrl = redmineIssueUrl;
+    }
+
+    public String getBugReportSubject() {
+        return bugReportSubject;
+    }
+
+    public void setBugReportSubject(String bugReportSubject) {
+        this.bugReportSubject = bugReportSubject;
+    }
+
+    public String getBugReportDescription() {
+        return bugReportDescription;
+    }
+
+    public void setBugReportDescription(String bugReportDescription) {
+        this.bugReportDescription = bugReportDescription;
+    }
+
+    public LocalDateTime getRedmineIssueCreatedAt() {
+        return redmineIssueCreatedAt;
+    }
+
+    public void setRedmineIssueCreatedAt(LocalDateTime redmineIssueCreatedAt) {
+        this.redmineIssueCreatedAt = redmineIssueCreatedAt;
+    }
+
+    public LocalDateTime getRedmineIssueUpdatedAt() {
+        return redmineIssueUpdatedAt;
+    }
+
+    public void setRedmineIssueUpdatedAt(LocalDateTime redmineIssueUpdatedAt) {
+        this.redmineIssueUpdatedAt = redmineIssueUpdatedAt;
     }
 }

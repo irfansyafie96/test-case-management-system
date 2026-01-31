@@ -14,6 +14,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -85,6 +87,9 @@ public class AuthController {
 
     @Autowired
     com.yourproject.tcm.repository.EmailVerificationRepository emailVerificationRepository;
+
+    @Autowired
+    private Environment environment;  // To check if running in production profile
 
     /**
      * POST /api/auth/otp - Generate and send OTP for organization registration
@@ -210,14 +215,15 @@ public class AuthController {
 
         // Create HttpOnly cookie for JWT token
         Cookie jwtCookie = new Cookie("JWT_TOKEN", jwtToken);
-        jwtCookie.setHttpOnly(true);  // Prevent client-side JavaScript access
-        jwtCookie.setSecure(false);   // Set to true in production with HTTPS
+        jwtCookie.setHttpOnly(true);  // Prevent client-side JavaScript access (XSS protection)
+        jwtCookie.setSecure(environment.acceptsProfiles("prod"));  // HTTPS only in production
         jwtCookie.setPath("/");       // Make available for all paths
         jwtCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
-        // Note: SameSite=None requires Secure=true, which doesn't work in development with HTTP
-        // Using Lax (default) which works properly with HTTP and allows cookies to be sent
-        // For production with HTTPS, change to: jwtCookie.setSecure(true); and use SameSite=None if needed
-        // Remove domain setting to work better with proxy configurations
+        jwtCookie.setAttribute("SameSite", "Strict");  // Prevent CSRF attacks
+        // Security Note: 
+        // - HttpOnly: Prevents JavaScript from accessing cookies (XSS protection)
+        // - Secure: Ensures cookies only sent over HTTPS (true in production)
+        // - SameSite=Strict: Prevents cookies from being sent with cross-site requests (CSRF protection)
 
         response.addCookie(jwtCookie);
 
@@ -225,13 +231,15 @@ public class AuthController {
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
         if (csrfToken != null) {
             Cookie csrfCookie = new Cookie("XSRF-TOKEN", csrfToken.getToken());
-            csrfCookie.setHttpOnly(false);  // Must be false for JavaScript access
-            csrfCookie.setSecure(false);    // Set to true in production with HTTPS
+            csrfCookie.setHttpOnly(false);  // Must be false for JavaScript access (Angular needs it)
+            csrfCookie.setSecure(environment.acceptsProfiles("prod"));  // HTTPS only in production
             csrfCookie.setPath("/");
             csrfCookie.setMaxAge(7 * 24 * 60 * 60);  // 7 days
-            // Note: SameSite=None requires Secure=true, which doesn't work in development with HTTP
-            // Using Lax (default) which works properly with HTTP
-            // Remove domain setting to work better with proxy configurations
+            csrfCookie.setAttribute("SameSite", "Lax");  // Lax allows cookies on same-site GET requests
+            // Security Note:
+            // - HttpOnly=false: Required for Angular to read CSRF token
+            // - Secure: Ensures cookies only sent over HTTPS (true in production)
+            // - SameSite=Lax: Allows cookies on same-site GET requests (needed for navigation)
             response.addCookie(csrfCookie);
         }
 

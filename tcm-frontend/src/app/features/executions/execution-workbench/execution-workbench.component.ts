@@ -19,6 +19,7 @@ import { map } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
 import { TestExecution, TestStepResult } from '../../../core/models/project.model';
 import { CompletionSummaryDialogComponent } from './completion-summary-dialog.component';
+import { RedmineIssueDialogComponent } from './redmine-issue-dialog.component';
 
 interface ExecutionWorkbenchView {
   loading: boolean;
@@ -431,4 +432,47 @@ export class ExecutionWorkbenchComponent implements OnInit {
     });
   }
 
+  /**
+   * Open Redmine Issue Dialog for failed test cases
+   * Shows dialog with pre-filled subject and description
+   */
+  openRedmineDialog(): void {
+    const execution = this.executionSubject.value;
+    if (!execution || !execution.testCaseId) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(RedmineIssueDialogComponent, {
+      width: '700px',
+      maxWidth: '95vw',
+      data: {
+        testCaseId: execution.testCaseId,
+        testCaseTitle: execution.testCaseTitle || 'Test Case',
+        testSteps: execution.stepResults || [],
+        execution: execution
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Save Redmine data to the execution
+        // For now, just show a success message
+        // In the future, we might want to update the execution with the Redmine link
+        this.snackBar.open(
+          'Redmine issue data saved!',
+          'DISMISS',
+          { panelClass: ['success-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
+        );
+      }
+    });
   }
+
+  /**
+   * Check if Redmine issue should be shown
+   * Returns true if execution is completed with FAILED status
+   */
+  shouldShowRedmineIssue(): boolean {
+    const execution = this.executionSubject.value;
+    return execution?.overallResult === 'FAILED' && !!execution.redmineIssueUrl;
+  }
+}

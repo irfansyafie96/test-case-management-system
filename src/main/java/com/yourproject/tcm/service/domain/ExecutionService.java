@@ -276,11 +276,13 @@ public class ExecutionService {
     }
 
     /**
-     * Complete a test execution with security checks.
+     * Complete a test execution with the overall result and optional notes.
      * Only the assigned user or ADMIN can complete an execution.
+     * Redmine issue fields can be provided when the test case fails.
      */
     @Transactional
-    public TestExecution completeTestExecution(Long executionId, String overallResult, String notes) {
+    public TestExecution completeTestExecution(Long executionId, String overallResult, String notes,
+                                                String bugReportSubject, String bugReportDescription, String redmineIssueUrl) {
         User currentUser = userContextService.getCurrentUser();
         Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
         if (!executionOpt.isPresent()) {
@@ -309,6 +311,21 @@ public class ExecutionService {
         execution.setNotes(notes);
         execution.setCompletionDate(LocalDateTime.now());
         execution.setStatus("COMPLETED");
+        
+        // Save Redmine integration data if provided and execution failed
+        if ("FAILED".equals(overallResult)) {
+            if (bugReportSubject != null) {
+                execution.setBugReportSubject(bugReportSubject);
+            }
+            if (bugReportDescription != null) {
+                execution.setBugReportDescription(bugReportDescription);
+            }
+            if (redmineIssueUrl != null) {
+                execution.setRedmineIssueUrl(redmineIssueUrl);
+                execution.setRedmineIssueCreatedAt(LocalDateTime.now());
+            }
+        }
+        
         TestExecution savedExecution = testExecutionRepository.save(execution);
         entityManager.flush();
         return savedExecution;

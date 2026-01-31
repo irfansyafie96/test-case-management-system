@@ -1,0 +1,61 @@
+<h2 mat-dialog-title>
+  <mat-icon class="bug-icon">bug_report</mat-icon>
+  Create Redmine Issue
+</h2>
+
+<mat-dialog-content>
+  <p class="dialog-intro">
+    This test case has failed. You can create a Redmine issue to track this bug.
+    Fill in the details below and click "Open in Redmine" to pre-fill the Redmine form.
+  </p>
+
+  <form [formGroup]="redmineForm" class="redmine-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Subject *</mat-label>
+      <input matInput formControlName="subject" placeholder="Bug title">
+      <mat-icon matSuffix>title</mat-icon>
+      <mat-error>Subject is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description *</mat-label>
+      <textarea matInput formControlName="description" 
+                rows="10" 
+                placeholder="Detailed description of the bug"></textarea>
+      <mat-icon matSuffix>description</mat-icon>
+      <mat-error>Description is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Redmine Issue Link (Optional)</mat-label>
+      <input matInput formControlName="redmineLink" 
+             placeholder="Paste the Redmine issue URL after creating it">
+      <mat-icon matSuffix>link</mat-icon>
+      <mat-hint>After creating the issue in Redmine, paste the link here</mat-hint>
+    </mat-form-field>
+  </form>
+
+  <div class="info-box">
+    <mat-icon>info</mat-icon>
+    <p>
+      <strong>Instructions:</strong>
+      1. Review and edit the subject and description above
+      2. Click "Open in Redmine" to open the Redmine form with pre-filled data
+      3. Complete the issue creation in Redmine
+      4. Copy the Redmine issue URL and paste it in the field above
+      5. Click "Save" to link the issue to this execution
+    </p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-button color="primary" (click)="saveOnly()">
+    <mat-icon>save</mat-icon>
+    Save Only
+  </button>
+  <button mat-raised-button color="accent" (click)="openRedmineDirectly()">
+    <mat-icon>open_in_new</mat-icon>
+    Open in Redmine
+  </button>
+</mat-dialog-actions>

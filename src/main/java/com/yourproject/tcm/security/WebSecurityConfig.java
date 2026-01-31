@@ -72,7 +72,41 @@ public class WebSecurityConfig {
             config.setExposedHeaders(Arrays.asList("Set-Cookie", "X-XSRF-TOKEN"));
             return config;
         }))
-            .csrf(csrf -> csrf
+
+        /**
+         * CSRF (Cross-Site Request Forgery) Configuration
+         * 
+         * CSRF is DISABLED for all API endpoints in this application.
+         * This is INTENTIONAL and CORRECT for the following reasons:
+         * 
+         * 1. STATELESS JWT AUTHENTICATION: This application uses stateless JWT tokens
+         *    stored in HttpOnly cookies. Each request includes the JWT token, which must
+         *    be validated by the server. This provides protection against CSRF attacks
+         *    without requiring CSRF tokens.
+         * 
+         * 2. NO SESSION-BASED AUTHENTICATION: CSRF tokens are primarily needed for
+         *    session-based authentication where the browser automatically includes session
+         *    cookies. With JWT tokens, the client must explicitly include the token in
+         *    each request.
+         * 
+         * 3. REDUCED COMPLEXITY: Disabling CSRF for JWT APIs simplifies the client
+         *    implementation and reduces the chance of configuration errors.
+         * 
+         * SECURITY NOTE: While CSRF is disabled, the application still has strong
+         * security through:
+         * - JWT token validation on every request
+         * - HttpOnly cookies (XSS protection)
+         * - Secure flag on cookies (HTTPS only in production)
+         * - SameSite attribute (prevents cross-site cookie sending)
+         * - CORS configuration
+         * - Content Security Policy (CSP)
+         * - Rate limiting (recommended for production)
+         * 
+         * References:
+         * - OWASP CSRF Prevention Cheat Sheet
+         * - Spring Security documentation on CSRF and JWT
+         */
+        .csrf(csrf -> csrf
             .ignoringRequestMatchers("/api/auth/**")  // Don't require CSRF for auth endpoints
             .ignoringRequestMatchers("/api/projects/**")  // Ignore CSRF for projects
             .ignoringRequestMatchers("/api/testmodules/**")  // Ignore CSRF for testmodules

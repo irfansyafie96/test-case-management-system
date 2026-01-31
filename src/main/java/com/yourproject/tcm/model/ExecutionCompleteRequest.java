@@ -13,6 +13,13 @@ public class ExecutionCompleteRequest {
     @Size(max = 5000, message = "Notes must not exceed 5000 characters")
     private String notes;
 
+    // Redmine Integration Fields (Optional - only needed for FAILED results)
+    private String bugReportSubject;
+    
+    private String bugReportDescription;
+    
+    private String redmineIssueUrl;
+
     // Constructors
     public ExecutionCompleteRequest() {}
 
@@ -36,5 +43,29 @@ public class ExecutionCompleteRequest {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getBugReportSubject() {
+        return bugReportSubject;
+    }
+
+    public void setBugReportSubject(String bugReportSubject) {
+        this.bugReportSubject = bugReportSubject;
+    }
+
+    public String getBugReportDescription() {
+        return bugReportDescription;
+    }
+
+    public void setBugReportDescription(String bugReportDescription) {
+        this.bugReportDescription = bugReportDescription;
+    }
+
+    public String getRedmineIssueUrl() {
+        return redmineIssueUrl;
+    }
+
+    public void setRedmineIssueUrl(String redmineIssueUrl) {
+        this.redmineIssueUrl = redmineIssueUrl;
     }
 }

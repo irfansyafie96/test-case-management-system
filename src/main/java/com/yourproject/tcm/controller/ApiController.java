@@ -505,7 +505,13 @@ public class ApiController {
                 overallResult = "PENDING";
             }
             String notes = completeData.getNotes();
-            TestExecution completedExecution = executionService.completeTestExecution(executionId, overallResult, notes);
+            // Get Redmine integration fields from request
+            String bugReportSubject = completeData.getBugReportSubject();
+            String bugReportDescription = completeData.getBugReportDescription();
+            String redmineIssueUrl = completeData.getRedmineIssueUrl();
+            
+            TestExecution completedExecution = executionService.completeTestExecution(
+                executionId, overallResult, notes, bugReportSubject, bugReportDescription, redmineIssueUrl);
             return new ResponseEntity<>(completedExecution, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);

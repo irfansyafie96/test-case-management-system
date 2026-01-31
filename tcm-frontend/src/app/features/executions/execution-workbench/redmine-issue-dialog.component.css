@@ -1,0 +1,86 @@
+/* Redmine Issue Dialog Styles */
+
+h2.mat-mdc-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e91e63;
+  font-size: 1.25rem;
+}
+
+.bug-icon {
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.dialog-intro {
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.redmine-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Info Box */
+.info-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-top: 16px;
+}
+
+.info-box mat-icon {
+  color: #2196f3;
+  flex-shrink: 0;
+}
+
+.info-box p {
+  margin: 0;
+  color: #1976d2;
+  line-height: 1.5;
+  font-size: 0.875rem;
+}
+
+/* Form field styling */
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-container-color: #f5f5f5;
+}
+
+.mat-mdc-input-element {
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+.mat-mdc-text-field-wrapper {
+  background-color: white;
+}
+
+/* Button styling */
+.mat-mdc-dialog-actions {
+  padding: 16px 24px;
+}
+
+.mat-mdc-button {
+  font-weight: 500;
+}
+
+.mat-mdc-raised-button {
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mat-mdc-raised-button:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}

@@ -1,49 +1,182 @@
 # Active Context: Test Case Management (TCM) System
 
 ## Current Work Focus
-- **Stabilizing the application for production-readiness**.
-- Ensuring QA users can navigate and save execution work without errors.
+- **Sprint 1: Critical Security Fixes & Redmine Integration** (Week 1-2)
+- **Sprint 2: Code Quality & Simple Deployment Prep** (Week 2)
+- Production-ready deployment using JAR + Nginx approach (simplest for learning)
 
-## Recent Changes
-- **QA Execution Save Failure (RESOLVED)**:
-  - **Issue**: QA users received a 500 Internal Server Error when clicking "Next" or "Prev" buttons in the Execution Workbench, even when not filling in execution notes or actual results.
-  - **Root Cause**: The `findByIdWithStepResults` query in `TestExecutionRepository` was not fetching all necessary relationships (submodule, testModule, project, organization) required for permission checks in `ExecutionService.saveExecutionWork()`. These relationships were lazy-loaded and not properly initialized.
-  - **Fix**: Updated the `findByIdWithStepResults` query to include explicit `LEFT JOIN FETCH` for all necessary relationships:
-    - `tc.submodule ts`
-    - `ts.testModule tm`
-    - `tm.project p`
-    - `p.organization`
-  - **Impact**: QA users can now successfully navigate between executions and save work (even with empty notes) without encountering 500 errors.
-- **Execution Workbench UI Polish (COMPLETED)**:
-  - **Change**: Updated the "PREV" button in the execution workbench to match the "NEXT" button style (Raised, Accent Color).
-  - **Reason**: To ensure visual consistency and perfect vertical alignment across all navigation controls in the workbench.
-- **Automatic Execution Generation (COMPLETED)**:
-  - **Issue**: QA users saw empty execution lists even when assigned to modules because execution records were not automatically created.
-  - **Fix**: Implemented bidirectional auto-generation triggers:
-    1.  **On Test Case Creation**: Automatically creates executions for all users already assigned to the parent module.
-    2.  **On Module Assignment**: Automatically creates executions for the newly assigned user for all existing test cases in that module.
-  - **Impact**: Ensures "Tasks" appear in the execution workbench immediately upon assignment or creation, without needing manual regeneration.
-- **Project Access Logic Fix (COMPLETED)**:
-  - **Issue**: QA users assigned to a module (but not the project) received a 500 Error when accessing the project detail page.
-  - **Root Cause**: `ProjectService` enforced strict project-level assignment checks, throwing a RuntimeException if the user wasn't directly assigned to the project.
-  - **Fix**: Updated access checks in `getProjectById` and `getProjectWithModulesById` to grant access if the user is assigned to the project OR to any module within that project.
-  - **Impact**: Users with module-level access can now correctly view the parent project details.
-- **Execution Filter Logic Fix (COMPLETED)**:
-  - **Issue**: Admin users reported seeing no tasks on the Executions page when filtering by user (or even default view).
-  - **Fix**: Updated `ExecutionService` to correctly filter by `execution.assignedToUser.id` when a user filter is applied.
-  - **Impact**: Admin users can now correctly filter execution lists to see tasks assigned to specific users.
+## Sprint 1 Changes (COMPLETED - Backend & Partial Frontend)
+
+### Security Fixes (COMPLETED):
+1. **InvitationService Frontend URL Fix**:
+   - **Change**: Made frontend URL configurable via environment variable
+   - **Files**: `InvitationService.java`
+   - **Details**: Added `@Value("${tcm.app.frontendUrl:http://localhost:4200}")` with default for development
+   - **Impact**: Invitation links now work in production without code changes
+
+2. **AuthController Cookie Security**:
+   - **Change**: Secure cookies for production environments
+   - **Files**: `AuthController.java`
+   - **Details**: 
+     - `setSecure(environment.acceptsProfiles("prod"))` - Only secure in production
+     - `setAttribute("SameSite", "Strict")` - CSRF protection
+   - **Impact**: Cookies are properly secured for production HTTPS
+
+3. **WebSecurityConfig CSRF Documentation**:
+   - **Change**: Added clear documentation explaining CSRF configuration
+   - **Files**: `WebSecurityConfig.java`
+   - **Details**: Explained that CSRF is disabled because using stateless JWT authentication
+   - **Impact**: Clear understanding for future maintenance
+
+### Redmine Integration (COMPLETED - Backend, IN PROGRESS - Frontend):
+
+**Backend Changes (COMPLETED)**:
+1. **TestExecution Entity**:
+   - **Change**: Added Redmine integration fields
+   - **Files**: `TestExecution.java`
+   - **New Fields**:
+     - `redmineIssueId` (String) - Stores Redmine issue ID
+     - `redmineIssueUrl` (String) - Direct link to Redmine issue
+     - `bugReportSubject` (String) - Bug report title
+     - `bugReportDescription` (String) - Detailed bug description
+   - **Impact**: Test executions can now track Redmine issue references
+
+2. **ExecutionService**:
+   - **Change**: Updated `completeTestExecution()` to accept Redmine fields
+   - **Files**: `ExecutionService.java`
+   - **Details**: Added parameters for Redmine data, stores when provided
+   - **Impact**: Redmine data is saved when completing failed executions
+
+3. **ApiController**:
+   - **Change**: Updated execution completion endpoint to handle Redmine fields
+   - **Files**: `ApiController.java`
+   - **Details**: Updated `/api/executions/{executionId}/complete` endpoint
+   - **Impact**: Frontend can send Redmine data to backend
+
+4. **ExecutionCompleteRequest DTO**:
+   - **Change**: Added Redmine fields to request DTO
+   - **Files**: `ExecutionCompleteRequest.java`
+   - **New Fields**: `bugReportSubject`, `bugReportDescription`, `redmineIssueUrl`
+   - **Impact**: Data transfer for Redmine integration
+
+**Frontend Changes (IN PROGRESS)**:
+1. **RedmineIssueDialogComponent** (COMPLETED):
+   - **Files**: `redmine-issue-dialog.component.ts/html/css`
+   - **Features**:
+     - Pre-filled subject with test case ID and title
+     - Auto-generated description with test steps and results
+     - "Open in Redmine" button - opens pre-filled Redmine form
+     - "Save Only" button - saves data without opening Redmine
+     - Manual link input for pasting Redmine issue URL
+   - **Impact**: Users can easily create Redmine issues for failed tests
+
+2. **ExecutionWorkbenchComponent** (COMPLETED):
+   - **Change**: Added Redmine button and dialog integration
+   - **Files**: `execution-workbench.component.ts/html/css`
+   - **Status**: Component created and integrated
+
+3. **TestExecution Model** (COMPLETED):
+   - **Change**: Added Redmine fields to frontend interface
+   - **Files**: `project.model.ts`
+   - **Status**: Updated with all Redmine fields
+
+## Previous Changes (Before Sprint 1):
+
+- **Test Case Detail Navigation (COMPLETED)**: Added Next/Prev navigation across all submodules
+- **Test Analytics Display Fix (COMPLETED)**: Separated `status` and `overallResult` fields
+- **Execution Workbench Completion Fix (COMPLETED)**: Stay on page after completion
+- **QA/BA Deletion Permissions (COMPLETED)**: Allow QA/BA to delete within assigned modules
+- **Excel Import Template Updated (COMPLETED)**: Regenerated with correct terminology
+- **QA Execution Save Failure (RESOLVED)**: Fixed query to fetch all relationships
+- **Execution Workbench UI Polish (COMPLETED)**: Standardized button styles
+- **Automatic Execution Generation (COMPLETED)**: Auto-create on assignment
+- **Project Access Logic Fix (COMPLETED)**: Module-level users can view parent projects
+- **Execution Filter Logic Fix (COMPLETED)**: Admin filtering by user now works
+
+## Sprint 2 Tasks (PENDING):
+
+### Code Quality Improvements:
+1. **Create OrganizationSecurityUtil** - Extract 18 repeated organization checks
+2. **Create DTOMapperService** - Extract DTO conversions from ApiController
+3. **Create Custom Exception Classes** - ResourceNotFound, AccessDenied, Duplicate, Validation
+4. **Refactor AnalyticsService** - Extract methods from long `getTestAnalytics()` method
+
+### Deployment Preparation:
+1. **Delete Unnecessary Files**:
+   - `07 TEST SCENARIOS_CLAIMS_MANAGEMENT_FINAL TESTING HRDC_NCS_.xlsx` (legacy template) - DELETED
+   - `replay_pid8848.log` (temporary log) - DELETED
+   - `apache-maven-3.9.8/` (Maven installation) - KEEPING (Chocolatey PATH issue)
+   - `tcm.iml` (IntelliJ file) - KEEPING (using IntelliJ)
+
+2. **Create Configuration Files**:
+   - `application-prod.properties` - Production configuration
+   - `.env.example` - Environment variable documentation
+   - `DEPLOYMENT.md` - Step-by-step JAR + Nginx deployment guide
+
+### Learning-Focused Deployment:
+- **Approach**: JAR file + Nginx (simple, easy to understand)
+- **Target**: DigitalOcean Droplet with Ubuntu
+- **Database**: Managed MySQL or self-hosted
+- **SSL**: Let's Encrypt with certbot
+
+## Development Setup Issues & Solutions
+
+### Chocolatey Installation Issue (Documented):
+- **Problem**: Chocolatey was previously installed but `choco` command not recognized
+- **Error**: `choco : The term 'choco' is not recognized as the name of a cmdlet, function, script file, or operable program`
+- **Root Cause**: Chocolatey installed but not added to system PATH
+- **Location**: `C:\ProgramData\chocolatey\bin\choco.exe` exists but not in PATH
+- **Attempted Solutions**:
+  1. Closed and reopened PowerShell - didn't work
+  2. Checked `C:\ProgramData\chocolatey` - exists
+  3. Winget search for Apache Maven - not available
+- **Decision**: Keep using local Maven (`apache-maven-3.9.8/`) for now
+- **Future Solutions**:
+  1. Add `C:\ProgramData\chocolatey\bin` to PATH manually
+  2. Use full path: `C:\ProgramData\chocolatey\bin\choco.exe install maven`
+  3. Reinstall Chocolatey in new session
+
+### Maven Setup:
+- **Current**: Using local Maven installation at `apache-maven-3.9.8/`
+- **Status**: Working fine for development
+- **Notes**: Not tracked by git, can be used until PATH issue resolved
 
 ## Known Issues
 - **None currently**
 
-## Next Steps
-- Continue monitoring for any user-reported issues.
-- Consider adding additional logging for debugging future permission-related issues.
-
 ## Important Decisions & Considerations
-- **Admin Visibility**: Admins should implicitly see all resources in their organization. API endpoints returning "assigned" resources must explicitly check for Admin role and return the full set.
-- **Deletion Strategy**: Complex deletions (like Projects) must leverage the domain services of their children (Modules) to ensure side effects (like clearing user assignments) are handled. Relying solely on JPA Cascade is insufficient for complex relationships.
-- **Entity Equality**: Always implement `equals()` and `hashCode()` based on ID for entities involved in collections (Sets) to ensure correct removal and persistence behavior.
-- **DTOs**: Ensure all DTOs (like `TestExecutionDTO`) match their constructors exactly when used in services. Flattened DTOs are preferred for the frontend to avoid complex object graph traversals.
-- **Frontend Models**: `project.model.ts` is the source of truth for frontend interfaces. Keep it synchronized with backend DTOs.
-- **JPA Query Optimization**: When fetching entities that require access to nested relationships for permission checks or business logic, always include explicit `LEFT JOIN FETCH` clauses in the query to avoid lazy loading issues and potential N+1 query problems.
+
+### Architecture:
+- **Admin Visibility**: Admins see all resources in their organization
+- **Deletion Strategy**: Use domain services for complex deletions
+- **Entity Equality**: Use ID-based equals/hashCode for collections
+- **DTOs**: Flattened DTOs preferred for frontend
+- **Frontend Models**: `project.model.ts` is source of truth
+- **JPA Optimization**: Use explicit LEFT JOIN FETCH for permission checks
+- **Status vs Result**: Always separate fields (PASSED/FAILED vs PENDING/COMPLETED)
+
+### Security:
+- **JWT Authentication**: Stateless, no session management
+- **CSRF**: Disabled for stateless JWT APIs (documented)
+- **Cookie Security**: Secure + SameSite in production
+- **Environment Variables**: All secrets configurable via env vars
+
+### Learning Principles:
+- **DRY**: Extract repeated patterns (organization checks, DTO conversions)
+- **Simplicity**: Use JAR + Nginx (easier to learn than Docker initially)
+- **Documentation**: Clear comments for codebase learning
+- **Modularity**: Keep components focused and single-purpose
+
+### Redmine Integration:
+- **Approach**: URL pre-filling (simple, no API key needed)
+- **Trigger**: Manual button (user chooses when to create issue)
+- **Flow**: Fill form → Open Redmine → Paste link back
+- **Future**: Could upgrade to API integration when needed
+
+## Next Steps (When Continuing):
+1. Complete Sprint 1 remaining tasks (Tasks 11-16)
+2. Create code quality utilities (Tasks 11-13)
+3. Create deployment configuration (Tasks 14-16)
+4. Update memory bank with all changes (Task 17)
+5. Test Redmine integration end-to-end
+6. Deploy to DigitalOcean (after Sprint 2 completion)

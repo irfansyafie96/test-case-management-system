@@ -96,6 +96,17 @@ export interface TestExecution {
   moduleName?: string;
   submoduleId?: number | string;
   submoduleName?: string;
+
+  // Redmine Integration Fields
+  redmineIssueId?: string;
+  redmineIssueUrl?: string;
+  bugReportSubject?: string;
+  bugReportDescription?: string;
+  redmineIssueCreatedAt?: string;
+  redmineIssueUpdatedAt?: string;
+  
+  // Convenience fields for display
+  testCaseTitle?: string; // Alias for title (test case title)
 }
 
 // Completion Summary Model

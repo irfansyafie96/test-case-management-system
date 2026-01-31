@@ -188,10 +188,49 @@
                     (click)="completeExecution(overallResult, executionNotes)">
                     COMPLETE EXECUTION
                   </button>
+                  <!-- Create Redmine Issue button - only visible for FAILED executions -->
+                  <button
+                    mat-raised-button
+                    color="warn"
+                    *ngIf="isExecutionCompleted && vm.execution.overallResult === 'FAILED' && !vm.execution.redmineIssueUrl"
+                    (click)="openRedmineDialog()">
+                    <mat-icon>bug_report</mat-icon> CREATE REDMINE ISSUE
+                  </button>
                   <button mat-raised-button color="accent" type="button" (click)="navigateSmartNext()" *ngIf="!isLastExecution">
                     <mat-icon>navigate_next</mat-icon> NEXT
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+
+        <!-- Redmine Issue Card - Only shown when execution is FAILED and has Redmine data -->
+        <mat-card class="redmine-card" *ngIf="isExecutionCompleted && vm.execution.overallResult === 'FAILED' && shouldShowRedmineIssue()">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon class="redmine-icon">bug_report</mat-icon>
+              Redmine Issue
+            </mat-card-title>
+            <mat-card-subtitle>Track this bug in Redmine</mat-card-subtitle>
+          </mat-card-header>
+          
+          <div class="redmine-content">
+            <div class="redmine-info">
+              <div class="redmine-field">
+                <label>Issue ID:</label>
+                <span>{{ vm.execution.redmineIssueId || 'N/A' }}</span>
+              </div>
+              <div class="redmine-field">
+                <label>Subject:</label>
+                <span>{{ vm.execution.bugReportSubject || 'N/A' }}</span>
+              </div>
+              <div class="redmine-field" *ngIf="vm.execution.redmineIssueUrl">
+                <label>Issue Link:</label>
+                <a [href]="vm.execution.redmineIssueUrl" target="_blank" class="redmine-link">
+                  <mat-icon>open_in_new</mat-icon>
+                  {{ vm.execution.redmineIssueUrl }}
+                </a>
               </div>
             </div>
           </div>

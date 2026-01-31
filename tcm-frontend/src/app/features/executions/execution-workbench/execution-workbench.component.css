@@ -311,6 +311,95 @@
   margin-left: auto;
 }
 
+/* Redmine Issue Card */
+.redmine-card {
+  background-color: var(--surface);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  border-left: 4px solid #e91e63; /* Pink/red border for Redmine */
+}
+
+.redmine-card mat-card-header {
+  background-color: var(--paper);
+  border-bottom: var(--border-thin);
+  padding: 16px 24px;
+}
+
+.redmine-card mat-card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e91e63;
+}
+
+.redmine-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.redmine-card mat-card-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: #666;
+  text-transform: none;
+}
+
+.redmine-content {
+  padding: 24px;
+}
+
+.redmine-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.redmine-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.redmine-field label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+  letter-spacing: 1px;
+}
+
+.redmine-field span {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.redmine-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #e91e63;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.redmine-link:hover {
+  text-decoration: underline;
+}
+
+.redmine-link mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .info-grid {

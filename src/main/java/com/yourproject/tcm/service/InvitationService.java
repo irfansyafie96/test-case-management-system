@@ -8,6 +8,7 @@ import com.yourproject.tcm.repository.InvitationRepository;
 import com.yourproject.tcm.repository.RoleRepository;
 import com.yourproject.tcm.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,15 @@ public class InvitationService {
     @Autowired
     private UserContextService userContextService; // To get current user
 
+    /**
+     * Frontend URL configuration.
+     * This allows the invitation link to use the correct frontend URL in different environments.
+     * Default: http://localhost:4200 (development)
+     * Production: Should be set via environment variable tcm.app.frontendUrl
+     */
+    @Value("${tcm.app.frontendUrl:http://localhost:4200}")
+    private String frontendUrl;
+
     public Invitation createInvitation(String email, String roleName) {
         User currentUser = userContextService.getCurrentUser();
         Organization org = currentUser.getOrganization();
@@ -52,8 +62,8 @@ public class InvitationService {
         Invitation invitation = new Invitation(email, roleName, org);
         invitation = invitationRepository.save(invitation);
 
-        // Generate link (assuming frontend runs on port 4200)
-        String link = "http://localhost:4200/join?token=" + invitation.getToken();
+        // Generate invitation link using configurable frontend URL
+        String link = frontendUrl + "/join?token=" + invitation.getToken();
         
         emailService.sendInvitationEmail(email, link, org.getName());
 
