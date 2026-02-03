@@ -4,6 +4,7 @@ import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.StepResultResponse;
 import com.yourproject.tcm.model.dto.TestExecutionDTO;
 import com.yourproject.tcm.repository.*;
+import com.yourproject.tcm.service.SecurityHelper;
 import com.yourproject.tcm.service.UserContextService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -31,6 +32,7 @@ public class ExecutionService {
     private final UserRepository userRepository;
     private final TestStepResultRepository testStepResultRepository;
     private final UserContextService userContextService;
+    private final SecurityHelper securityHelper;
     private final TestModuleRepository testModuleRepository;
     private final SubmoduleRepository submoduleRepository;
     private final TestCaseRepository testCaseRepository;
@@ -44,6 +46,7 @@ public class ExecutionService {
                            UserRepository userRepository,
                            TestStepResultRepository testStepResultRepository,
                            UserContextService userContextService,
+                           SecurityHelper securityHelper,
                            TestModuleRepository testModuleRepository,
                            SubmoduleRepository submoduleRepository,
                            TestCaseRepository testCaseRepository,
@@ -52,6 +55,7 @@ public class ExecutionService {
         this.userRepository = userRepository;
         this.testStepResultRepository = testStepResultRepository;
         this.userContextService = userContextService;
+        this.securityHelper = securityHelper;
         this.testModuleRepository = testModuleRepository;
         this.submoduleRepository = submoduleRepository;
         this.testCaseRepository = testCaseRepository;
@@ -70,9 +74,7 @@ public class ExecutionService {
         User currentUser = userContextService.getCurrentUser();
         
         // Only admin users can access this
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only admin users can access all organization executions");
-        }
+        securityHelper.requireAdmin(currentUser);
 
         Organization org = currentUser.getOrganization();
         if (org == null) {
@@ -180,9 +182,7 @@ public class ExecutionService {
         User targetUser = userOpt.get();
         
         // Verify organization boundary
-        if (!targetUser.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Access denied: User not in your organization");
-        }
+        securityHelper.requireSameOrganization(currentUser, targetUser.getOrganization());
         
         List<TestExecution> executions = testExecutionRepository.findByAssignedToUserWithDetails(targetUser);
         
@@ -285,18 +285,14 @@ public class ExecutionService {
                                                 String bugReportSubject, String bugReportDescription, String redmineIssueUrl) {
         User currentUser = userContextService.getCurrentUser();
         Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
-        if (!executionOpt.isPresent()) {
+        if (executionOpt.isEmpty()) {
             throw new RuntimeException("Test Execution not found with id: " + executionId);
         }
         
         TestExecution execution = executionOpt.get();
         
         // Check organization boundary via test case → submodule → module → project → organization
-        if (execution.getTestCase() == null || 
-            !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
-                .getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Access denied: Execution not in your organization");
-        }
+        securityHelper.requireSameOrganization(currentUser, execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization());
         
         // ADMIN users can complete any execution in their organization
         if (!userContextService.isAdmin(currentUser)) {
@@ -339,7 +335,7 @@ public class ExecutionService {
     public TestExecution saveExecutionWork(Long executionId, String notes) {
         User currentUser = userContextService.getCurrentUser();
         Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
-        if (!executionOpt.isPresent()) {
+        if (executionOpt.isEmpty()) {
             throw new RuntimeException("Test Execution not found with id: " + executionId);
         }
 
@@ -393,14 +389,12 @@ public class ExecutionService {
         User currentUser = userContextService.getCurrentUser();
         
         // Only ADMIN users can assign executions
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can assign test executions");
-        }
+        securityHelper.requireAdmin(currentUser);
         
         Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
         Optional<User> userOpt = userRepository.findById(userId);
 
-        if (!executionOpt.isPresent() || !userOpt.isPresent()) {
+        if (executionOpt.isEmpty() || userOpt.isEmpty()) {
             throw new RuntimeException("Test execution or user not found with id: " + executionId + " or " + userId);
         }
 
@@ -408,16 +402,10 @@ public class ExecutionService {
         User user = userOpt.get();
 
         // Check organization boundary for execution
-        if (execution.getTestCase() == null || 
-            !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
-                .getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Access denied: Execution not in your organization");
-        }
+        securityHelper.requireSameOrganization(currentUser, execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization());
         
         // Check that target user belongs to same organization
-        if (!user.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("User must belong to the same organization as the assigner");
-        }
+        securityHelper.requireSameOrganization(currentUser, user.getOrganization());
 
         // Check if user has QA, BA, or TESTER role
         boolean hasValidRole = user.getRoles().stream()
@@ -446,7 +434,7 @@ public class ExecutionService {
         
         // First get the execution to check permissions
         Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
-        if (!executionOpt.isPresent()) {
+        if (executionOpt.isEmpty()) {
             throw new RuntimeException("Test Execution not found with id: " + executionId);
         }
         
@@ -516,13 +504,10 @@ public class ExecutionService {
     public void regenerateExecutionsForModule(Long moduleId) {
         User currentUser = userContextService.getCurrentUser();
         // Check role permissions: only ADMIN, QA, or BA can regenerate executions
-        if (!userContextService.isAdmin(currentUser) && 
-            !userContextService.isQaOrBa(currentUser)) {
-            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can regenerate test executions");
-        }
+        securityHelper.requireAdminQaOrBa(currentUser);
         
         Optional<TestModule> moduleOpt = testModuleRepository.findById(moduleId);
-        if (!moduleOpt.isPresent()) {
+        if (moduleOpt.isEmpty()) {
             throw new RuntimeException("Test module not found with id: " + moduleId);
         }
 

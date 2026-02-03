@@ -2,6 +2,7 @@ package com.yourproject.tcm.service.domain;
 
 import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.repository.*;
+import com.yourproject.tcm.service.SecurityHelper;
 import com.yourproject.tcm.service.UserContextService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -30,6 +31,7 @@ public class ImportExportService {
     private final TestCaseRepository testCaseRepository;
     private final TestCaseService testCaseService;
     private final UserContextService userContextService;
+    private final SecurityHelper securityHelper;
     private final jakarta.persistence.EntityManager entityManager;
 
     @Autowired
@@ -39,12 +41,14 @@ public class ImportExportService {
             TestCaseRepository testCaseRepository,
             TestCaseService testCaseService,
             UserContextService userContextService,
+            SecurityHelper securityHelper,
             jakarta.persistence.EntityManager entityManager) {
         this.testModuleRepository = testModuleRepository;
         this.submoduleRepository = submoduleRepository;
         this.testCaseRepository = testCaseRepository;
         this.testCaseService = testCaseService;
         this.userContextService = userContextService;
+        this.securityHelper = securityHelper;
         this.entityManager = entityManager;
     }
 
@@ -75,7 +79,7 @@ public class ImportExportService {
 
             // Get module
             Optional<TestModule> moduleOpt = testModuleRepository.findById(moduleId);
-            if (!moduleOpt.isPresent()) {
+            if (moduleOpt.isEmpty()) {
                 throw new RuntimeException("Test module not found with id: " + moduleId);
             }
 
@@ -91,17 +95,13 @@ public class ImportExportService {
             if (module.getProject() == null || module.getProject().getOrganization() == null) {
                 throw new RuntimeException("Test module has no organization assigned");
             }
-            if (!module.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Access denied: Test module not found in your organization");
-            }
+            securityHelper.requireSameOrganization(currentUser, module.getProject().getOrganization());
+            
+            // Check role permissions
+            securityHelper.requireAdminQaOrBa(currentUser);
             
             // ADMIN users can import into any module
             if (!userContextService.isAdmin(currentUser)) {
-                // QA/BA users can only import into modules they are assigned to
-                if (!userContextService.isQaOrBa(currentUser)) {
-                    throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can import test cases");
-                }
-                
                 // Re-fetch user with assignedTestModules loaded to avoid lazy loading issues
                 User userWithModules = userContextService.getCurrentUserWithModules();
                 

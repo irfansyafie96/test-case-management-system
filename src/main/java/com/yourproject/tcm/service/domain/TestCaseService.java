@@ -15,6 +15,7 @@ import com.yourproject.tcm.repository.SubmoduleRepository;
 import com.yourproject.tcm.repository.TestExecutionRepository;
 import com.yourproject.tcm.repository.TestStepResultRepository;
 import com.yourproject.tcm.repository.UserRepository;
+import com.yourproject.tcm.service.SecurityHelper;
 import com.yourproject.tcm.service.UserContextService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -41,6 +42,7 @@ public class TestCaseService {
     private final TestStepResultRepository testStepResultRepository;
     private final UserRepository userRepository;
     private final UserContextService userContextService;
+    private final SecurityHelper securityHelper;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -51,13 +53,15 @@ public class TestCaseService {
                           TestExecutionRepository testExecutionRepository,
                           TestStepResultRepository testStepResultRepository,
                           UserRepository userRepository,
-                          UserContextService userContextService) {
+                          UserContextService userContextService,
+                          SecurityHelper securityHelper) {
         this.testCaseRepository = testCaseRepository;
         this.submoduleRepository = submoduleRepository;
         this.testExecutionRepository = testExecutionRepository;
         this.testStepResultRepository = testStepResultRepository;
         this.userRepository = userRepository;
         this.userContextService = userContextService;
+        this.securityHelper = securityHelper;
     }
 
     /**
@@ -86,10 +90,8 @@ public class TestCaseService {
         }
         
         // Check organization boundary via submodule → module → project → organization
-        if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
-                .getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Test case not found or access denied");
-        }
+        TestModule testModule = testCase.getSubmodule().getTestModule();
+        securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
         
         // ADMIN users can access any test case in their organization
         if (userContextService.isAdmin(currentUser)) {
@@ -97,13 +99,13 @@ public class TestCaseService {
         }
         
         // Non-ADMIN users can only access test cases in projects/modules they are assigned to
-        Project project = testCase.getSubmodule().getTestModule().getProject();
+        Project project = testModule.getProject();
         if (currentUser.getAssignedProjects().contains(project)) {
             return Optional.of(testCase);
         }
         
         // Check module assignment
-        if (currentUser.getAssignedTestModules().contains(testCase.getSubmodule().getTestModule())) {
+        if (currentUser.getAssignedTestModules().contains(testModule)) {
             return Optional.of(testCase);
         }
         
@@ -121,34 +123,23 @@ public class TestCaseService {
         User currentUser = userContextService.getCurrentUser();
         
         Optional<Submodule> submoduleOpt = submoduleRepository.findById(submoduleId);
-        if (submoduleOpt.isPresent()) {
-            Submodule submodule = submoduleOpt.get();
-            TestModule testModule = submodule.getTestModule();
-            
-            // Verify organization boundary
-            if (!testModule.getProject().getOrganization()
-                    .getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Access denied: Submodule not in your organization");
-            }
-            
-            // ADMIN users can create test cases in any module
-            if (userContextService.isAdmin(currentUser)) {
-                return createTestCaseInternal(submodule, testCase);
-            }
-            
-            // QA/BA users can only create test cases in modules they are assigned to
-            if (userContextService.isQaOrBa(currentUser)) {
-                if (currentUser.getAssignedTestModules().contains(testModule)) {
-                    return createTestCaseInternal(submodule, testCase);
-                } else {
-                    throw new RuntimeException("Access denied: You are not assigned to the parent module of this submodule");
-                }
-            }
-            
-            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can create test cases");
-        } else {
+        if (submoduleOpt.isEmpty()) {
             throw new RuntimeException("Submodule not found with id: " + submoduleId);
         }
+        
+        Submodule submodule = submoduleOpt.get();
+        TestModule testModule = submodule.getTestModule();
+        
+        // Verify organization boundary
+        securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
+        
+        // Check role permissions
+        securityHelper.requireAdminQaOrBa(currentUser);
+        
+        // Check module assignment for non-ADMIN users
+        securityHelper.requireModuleAccess(currentUser, testModule);
+        
+        return createTestCaseInternal(submodule, testCase);
     }
     
     /**
@@ -197,34 +188,23 @@ public class TestCaseService {
         User currentUser = userContextService.getCurrentUser();
         
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
-        if (testCaseOpt.isPresent()) {
-            TestCase testCase = testCaseOpt.get();
-            TestModule testModule = testCase.getSubmodule().getTestModule();
-            
-            // Verify organization boundary
-            if (!testModule.getProject().getOrganization()
-                    .getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Access denied: Test case not in your organization");
-            }
-            
-            // ADMIN users can update any test case
-            if (userContextService.isAdmin(currentUser)) {
-                return updateTestCaseInternal(testCase, testCaseDetails);
-            }
-            
-            // QA/BA users can only update test cases in modules they are assigned to
-            if (userContextService.isQaOrBa(currentUser)) {
-                if (currentUser.getAssignedTestModules().contains(testModule)) {
-                    return updateTestCaseInternal(testCase, testCaseDetails);
-                } else {
-                    throw new RuntimeException("Access denied: You are not assigned to the parent module of this test case");
-                }
-            }
-            
-            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can update test cases");
-        } else {
+        if (testCaseOpt.isEmpty()) {
             throw new RuntimeException("Test case not found with id: " + testCaseId);
         }
+        
+        TestCase testCase = testCaseOpt.get();
+        TestModule testModule = testCase.getSubmodule().getTestModule();
+        
+        // Verify organization boundary
+        securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
+        
+        // Check role permissions
+        securityHelper.requireAdminQaOrBa(currentUser);
+        
+        // Check module assignment for non-ADMIN users
+        securityHelper.requireModuleAccess(currentUser, testModule);
+        
+        return updateTestCaseInternal(testCase, testCaseDetails);
     }
     
     /**
@@ -302,24 +282,13 @@ public class TestCaseService {
         TestCase testCase = testCaseOpt.get();
         
         // Verify organization boundary
-        if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
-                .getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Access denied: Test case not in your organization");
-        }
+        securityHelper.requireSameOrganization(currentUser, testCase.getSubmodule().getTestModule().getProject().getOrganization());
         
-        // ADMIN users can delete any test case in their organization
-        if (!userContextService.isAdmin(currentUser)) {
-            // Non-ADMIN users can only delete test cases in modules they are assigned to
-            if (!userContextService.isQaOrBa(currentUser)) {
-                throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can delete test cases");
-            }
-            
-            // Check if user is assigned to the module
-            boolean isAssignedToModule = currentUser.getAssignedTestModules().contains(testCase.getSubmodule().getTestModule());
-            if (!isAssignedToModule) {
-                throw new RuntimeException("Access denied: You are not assigned to the parent module of this test case");
-            }
-        }
+        // Check role permissions
+        securityHelper.requireAdminQaOrBa(currentUser);
+        
+        // Check module assignment for non-ADMIN users
+        securityHelper.requireModuleAccess(currentUser, testCase.getSubmodule().getTestModule());
         
         // First, delete all test executions for this test case
         // This will cascade to delete test step results associated with those executions
@@ -358,10 +327,7 @@ public class TestCaseService {
         TestCase testCase = testCaseOpt.get();
         
         // Check organization boundary via submodule → module → project → organization
-        if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
-                .getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Access denied: Test case not in your organization");
-        }
+        securityHelper.requireSameOrganization(currentUser, testCase.getSubmodule().getTestModule().getProject().getOrganization());
         
         // ADMIN users can access any test case in their organization
         if (userContextService.isAdmin(currentUser)) {
@@ -401,59 +367,56 @@ public class TestCaseService {
         }
         
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
-        if (testCaseOpt.isPresent()) {
-            TestCase testCase = testCaseOpt.get();
-            
-            // Verify organization boundary
-            if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
-                    .getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Access denied: Test case not in your organization");
-            }
-            
-            // Check user assignments for non-ADMIN users
-            if (!userContextService.isAdmin(currentUser)) {
-                Project project = testCase.getSubmodule().getTestModule().getProject();
-                if (!currentUser.getAssignedProjects().contains(project) && 
-                    !currentUser.getAssignedTestModules().contains(testCase.getSubmodule().getTestModule())) {
-                    throw new RuntimeException("Access denied: You are not assigned to this project or module");
-                }
-            }
-            
-            // Create the main execution record
-            TestExecution execution = new TestExecution();
-            execution.setTestCase(testCase);  // Link to the test case
-            execution.setExecutionDate(LocalDateTime.now());  // Set current time
-            execution.setOverallResult("PENDING");  // Default to pending until executed
-            execution.setStatus("PENDING");
-
-            TestExecution initialExecution = testExecutionRepository.save(execution);
-            entityManager.flush(); // Ensure execution has an ID
-
-            // Create step results for each step in the test case
-            if (testCase.getTestSteps() != null) {
-                List<TestStepResult> stepResults = testCase.getTestSteps().stream()
-                    .map(step -> {
-                        TestStepResult result = new TestStepResult();
-                        result.setTestExecution(initialExecution); // Link to the execution
-                        result.setTestStep(step);  // Link to the step
-                        result.setStepNumber(step.getStepNumber());  // Copy step number
-                        result.setStatus("PENDING");  // Default to pending until executed
-                        return result;
-                    })
-                    .collect(Collectors.toList());
-
-                // Assign the step results to the execution and save again
-                initialExecution.setStepResults(stepResults);
-                TestExecution finalExecution = testExecutionRepository.save(initialExecution);
-                entityManager.flush();
-                return finalExecution;
-            }
-
-            entityManager.flush();
-            return initialExecution;
-        } else {
+        if (testCaseOpt.isEmpty()) {
             throw new RuntimeException("Test Case not found with id: " + testCaseId);
         }
+        
+        TestCase testCase = testCaseOpt.get();
+        
+        // Verify organization boundary
+        securityHelper.requireSameOrganization(currentUser, testCase.getSubmodule().getTestModule().getProject().getOrganization());
+        
+        // Check user assignments for non-ADMIN users
+        if (!userContextService.isAdmin(currentUser)) {
+            Project project = testCase.getSubmodule().getTestModule().getProject();
+            if (!currentUser.getAssignedProjects().contains(project) && 
+                !currentUser.getAssignedTestModules().contains(testCase.getSubmodule().getTestModule())) {
+                throw new RuntimeException("Access denied: You are not assigned to this project or module");
+            }
+        }
+        
+        // Create the main execution record
+        TestExecution execution = new TestExecution();
+        execution.setTestCase(testCase);  // Link to the test case
+        execution.setExecutionDate(LocalDateTime.now());  // Set current time
+        execution.setOverallResult("PENDING");  // Default to pending until executed
+        execution.setStatus("PENDING");
+
+        TestExecution initialExecution = testExecutionRepository.save(execution);
+        entityManager.flush(); // Ensure execution has an ID
+
+        // Create step results for each step in the test case
+        if (testCase.getTestSteps() != null) {
+            List<TestStepResult> stepResults = testCase.getTestSteps().stream()
+                .map(step -> {
+                    TestStepResult result = new TestStepResult();
+                    result.setTestExecution(initialExecution); // Link to the execution
+                    result.setTestStep(step);  // Link to the step
+                    result.setStepNumber(step.getStepNumber());  // Copy step number
+                    result.setStatus("PENDING");  // Default to pending until executed
+                    return result;
+                })
+                .collect(Collectors.toList());
+
+            // Assign the step results to the execution and save again
+            initialExecution.setStepResults(stepResults);
+            TestExecution finalExecution = testExecutionRepository.save(initialExecution);
+            entityManager.flush();
+            return finalExecution;
+        }
+
+        entityManager.flush();
+        return initialExecution;
     }
 
     /**
@@ -466,60 +429,54 @@ public class TestCaseService {
         User currentUser = userContextService.getCurrentUser();
         
         // Only ADMIN users can assign executions to other users
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Access denied: Only ADMIN users can assign test executions to other users");
-        }
+        securityHelper.requireAdmin(currentUser);
         
         Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
         Optional<User> userOpt = userRepository.findById(userId);
 
-        if (testCaseOpt.isPresent() && userOpt.isPresent()) {
-            TestCase testCase = testCaseOpt.get();
-            User targetUser = userOpt.get();
-            
-            // Verify organization boundary for test case
-            if (!testCase.getSubmodule().getTestModule().getProject().getOrganization()
-                    .getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Access denied: Test case not in your organization");
-            }
-            
-            // Verify target user is in the same organization
-            if (!targetUser.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Access denied: Target user not in your organization");
-            }
-            
-            // Optional: Verify target user is assigned to the module/project
-            // This is not required but could be added for validation
-            
-            // Create new test execution
-            TestExecution execution = new TestExecution();
-            execution.setTestCase(testCase);
-            execution.setExecutionDate(LocalDateTime.now());
-            execution.setOverallResult("PENDING");
-            execution.setStatus("PENDING");
-            execution.setAssignedToUser(targetUser);
-
-            // Create step results for each step in the test case
-            List<TestStep> steps = testCase.getTestSteps();
-            if (steps != null && !steps.isEmpty()) {
-                List<TestStepResult> stepResults = new ArrayList<>();
-                for (TestStep step : steps) {
-                    TestStepResult stepResult = new TestStepResult();
-                    stepResult.setTestExecution(execution);
-                    stepResult.setTestStep(step);
-                    stepResult.setStepNumber(step.getStepNumber());
-                    stepResult.setStatus("NOT_EXECUTED");
-                    stepResult.setActualResult("");
-                    stepResults.add(stepResult);
-                }
-                execution.setStepResults(stepResults);
-            }
-
-            TestExecution savedExecution = testExecutionRepository.save(execution);
-            entityManager.flush();
-            return savedExecution;
+        if (testCaseOpt.isEmpty() || userOpt.isEmpty()) {
+            throw new RuntimeException("Test case or user not found with id: " + testCaseId + " or " + userId);
         }
-        throw new RuntimeException("Test case or user not found with id: " + testCaseId + " or " + userId);
+
+        TestCase testCase = testCaseOpt.get();
+        User targetUser = userOpt.get();
+        
+        // Verify organization boundary for test case
+        securityHelper.requireSameOrganization(currentUser, testCase.getSubmodule().getTestModule().getProject().getOrganization());
+        
+        // Verify target user is in the same organization
+        securityHelper.requireSameOrganization(currentUser, targetUser.getOrganization());
+        
+        // Optional: Verify target user is assigned to the module/project
+        // This is not required but could be added for validation
+        
+        // Create new test execution
+        TestExecution execution = new TestExecution();
+        execution.setTestCase(testCase);
+        execution.setExecutionDate(LocalDateTime.now());
+        execution.setOverallResult("PENDING");
+        execution.setStatus("PENDING");
+        execution.setAssignedToUser(targetUser);
+
+        // Create step results for each step in the test case
+        List<TestStep> steps = testCase.getTestSteps();
+        if (steps != null && !steps.isEmpty()) {
+            List<TestStepResult> stepResults = new ArrayList<>();
+            for (TestStep step : steps) {
+                TestStepResult stepResult = new TestStepResult();
+                stepResult.setTestExecution(execution);
+                stepResult.setTestStep(step);
+                stepResult.setStepNumber(step.getStepNumber());
+                stepResult.setStatus("NOT_EXECUTED");
+                stepResult.setActualResult("");
+                stepResults.add(stepResult);
+            }
+            execution.setStepResults(stepResults);
+        }
+
+        TestExecution savedExecution = testExecutionRepository.save(execution);
+        entityManager.flush();
+        return savedExecution;
     }
 
     /**
