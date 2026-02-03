@@ -14,7 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     
     @EntityGraph(attributePaths = {"roles", "assignedTestModules"})
-    Optional<User> findByUsernameWithModules(String username);
+    @Query("SELECT u FROM User u WHERE u.username = :username")
+    Optional<User> findByUsernameWithModules(@Param("username") String username);
     
     Optional<User> findByEmail(String email);
     Boolean existsByUsername(String username);
