@@ -41,6 +41,7 @@ public class ApiController {
     private final ImportExportService importExportService;
     private final UserService userService;
     private final UserContextService userContextService;
+    private final com.yourproject.tcm.repository.TestModuleRepository testModuleRepository;
 
     @Autowired
     public ApiController(UserRepository userRepository,
@@ -48,7 +49,8 @@ public class ApiController {
                         SubmoduleService submoduleService, TestCaseService testCaseService,
                         ExecutionService executionService, AnalyticsService analyticsService,
                         ImportExportService importExportService, UserService userService,
-                        UserContextService userContextService) {
+                        UserContextService userContextService,
+                        com.yourproject.tcm.repository.TestModuleRepository testModuleRepository) {
         this.userRepository = userRepository;
         this.projectService = projectService;
         this.moduleService = moduleService;
@@ -59,6 +61,7 @@ public class ApiController {
         this.importExportService = importExportService;
         this.userService = userService;
         this.userContextService = userContextService;
+        this.testModuleRepository = testModuleRepository;
     }
 
     // ==================== PROJECT ENDPOINTS ====================
@@ -248,7 +251,24 @@ public class ApiController {
         try {
             Optional<TestModule> testModuleOpt = moduleService.getTestModuleById(testModuleId);
             if (testModuleOpt.isPresent()) {
-                return new ResponseEntity<>(testModuleOpt.get(), HttpStatus.OK);
+                TestModule testModule = testModuleOpt.get();
+                
+                // Set isEditable flag based on user permissions
+                User currentUser = userContextService.getCurrentUser();
+                boolean isAdmin = userContextService.isAdmin(currentUser);
+                boolean isAssigned = testModuleRepository.isUserAssignedToModule(testModuleId, currentUser.getId());
+                boolean isEditable = isAdmin || isAssigned;
+                
+                System.out.println("DEBUG - Module ID: " + testModuleId);
+                System.out.println("DEBUG - User ID: " + currentUser.getId());
+                System.out.println("DEBUG - Username: " + currentUser.getUsername());
+                System.out.println("DEBUG - isAdmin: " + isAdmin);
+                System.out.println("DEBUG - isAssigned: " + isAssigned);
+                System.out.println("DEBUG - Final isEditable: " + isEditable);
+                
+                testModule.setEditable(isEditable);
+                
+                return new ResponseEntity<>(testModule, HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Test Module not found with id: " + testModuleId, HttpStatus.NOT_FOUND);
             }

@@ -3,7 +3,7 @@
 ## Project Overview
 - **Project Name**: Test Case Management System (TCM)
 - **Status**: Sprint 1 COMPLETED ✅, Testing Phase IN PROGRESS ⏳
-- **Current Phase**: Permission fixes and testing
+- **Current Phase**: Code quality review and refactoring planning
 - **Deployment**: Ready when testing passes
 
 ## Sprint 1 Status: COMPLETED ✅
@@ -108,44 +108,109 @@
 - **Commit**: 5519032 - "feat: complete Sprint 1 security fixes and Redmine integration"
 - **Files Changed**: 21 files, 1801 insertions(+), 92 deletions(-)
 
-## Sprint 2 Status: PENDING (Optional Low Priority)
+## Sprint 2 Status: CODE QUALITY REFACTORING (IN PROGRESS)
 
-### Sprint 2 Tasks (Not Started):
+### Sprint 2 Tasks (Refactoring Opportunities):
 
-1. ❌ **Code Quality: DTOMapperService**
-   - **Task**: Create DTOMapperService for DTO conversions
-   - **Priority**: Low (current approach is already clean)
+#### High Priority Refactoring (Recommended):
+
+1. **Create SecurityHelper for Centralized Permission Checks** ⏳ NOT STARTED
+   - **Impact**: Eliminates 53+ repeated permission check patterns
+   - **Files Affected**: All domain services (ProjectService, ModuleService, SubmoduleService, TestCaseService, ExecutionService, ImportExportService)
+   - **Patterns to Consolidate**:
+     - Admin checks (53 occurrences)
+     - Organization boundary checks (19 occurrences)
+     - Role-based access checks (18 occurrences)
+   - **Estimated Effort**: 2-3 hours
    - **Status**: NOT STARTED
-   - **Reason**: Optional - current approach is readable and maintainable
 
-2. ❌ **Code Quality: Custom Exception Classes**
-   - **Task**: Create ResourceNotFound, AccessDenied, Duplicate, Validation exceptions
-   - **Priority**: Low
+2. **Create Custom Exception Hierarchy** ⏳ NOT STARTED
+   - **Impact**: Replaces 111+ `RuntimeException` usages with type-safe exceptions
+   - **Proposed Classes**:
+     - `TcmException` (base)
+     - `ResourceNotFoundException`
+     - `AccessDeniedException`
+     - `DuplicateResourceException`
+     - `ValidationException`
+   - **Estimated Effort**: 2-3 hours
    - **Status**: NOT STARTED
-   - **Reason**: Optional - current exception handling works fine
 
-3. ❌ **Code Quality: Refactor AnalyticsService**
-   - **Task**: Extract methods from `getTestAnalytics()` method
-   - **Priority**: Low
+3. **Create DTO Mapper Classes** ⏳ NOT STARTED
+   - **Impact**: Eliminates 5+ duplicate DTO conversion patterns
+   - **Proposed Classes**:
+     - `UserMapper` - UserDTO conversions
+     - `ExecutionMapper` - TestExecutionDTO conversions
+     - `TestCaseMapper` - TestCaseDTO conversions
+   - **Estimated Effort**: 1-2 hours
    - **Status**: NOT STARTED
-   - **Reason**: Optional - method is functional
+
+#### Medium Priority Refactoring:
+
+4. **Refactor Long Methods** ⏳ NOT STARTED
+   - **Files**: 
+     - `ImportExportService.importTestCasesFromExcel()` - 287 lines
+     - `AnalyticsService.getTestAnalytics()` - 187 lines
+     - `TestCaseService.updateTestCaseInternal()` - 107 lines
+   - **Approach**: Extract into smaller, focused methods
+   - **Estimated Effort**: 2-3 hours
+   - **Status**: NOT STARTED
+
+5. **Remove Unnecessary entityManager.flush() Calls** ⏳ NOT STARTED
+   - **Impact**: 28+ unnecessary flush calls (handled by @Transactional)
+   - **Files**: ModuleService, ProjectService, TestCaseService
+   - **Estimated Effort**: 30 minutes
+   - **Status**: NOT STARTED
+
+6. **Create ExecutionComparator** ⏳ NOT STARTED
+   - **Impact**: Eliminates 3 duplicate sorting logic blocks
+   - **File**: ExecutionService
+   - **Estimated Effort**: 30 minutes
+   - **Status**: NOT STARTED
+
+#### Low Priority Refactoring:
+
+7. **Create Constants Class** ⏳ NOT STARTED
+   - **Impact**: Eliminates magic numbers (OTP length, expiry times, etc.)
+   - **Proposed**: `SecurityConstants` class
+   - **Estimated Effort**: 30 minutes
+   - **Status**: NOT STARTED
+
+8. **Fix Nested Null Checks** ⏳ NOT STARTED
+   - **Impact**: Improves readability with Optional pattern
+   - **Files**: TestCaseService, ModuleService
+   - **Estimated Effort**: 1-2 hours
+   - **Status**: NOT STARTED
+
+9. **Create RepositoryHelper** ⏳ NOT STARTED
+   - **Impact**: Standardizes Optional pattern for repository calls
+   - **Estimated Effort**: 1 hour
+   - **Status**: NOT STARTED
+
+10. **Fix Circular Dependency** ⏳ NOT STARTED
+    - **Impact**: ModuleService ↔ TestCaseService circular dependency
+    - **Solution**: Extract execution creation to `ExecutionCreationService`
+    - **Estimated Effort**: 2-3 hours
+    - **Status**: NOT STARTED
 
 ### Sprint 2 Summary:
-- **Total Tasks**: 3
+- **Total Tasks**: 10
 - **Completed**: 0
-- **Pending**: 3
-- **Blocked**: 0
-- **Note**: These are optional improvements, not critical for production
+- **In Progress**: 0
+- **Pending**: 10
+- **Estimated Total Effort**: 13-20 hours
+- **Expected Code Reduction**: 30-40%
+- **Note**: These are optional refactoring tasks for code quality improvement
 
 ## Testing Phase: IN PROGRESS ⏳
 
 ### Current Status:
 - **Status**: IN PROGRESS
-- **Blocker**: Excel import failing with transaction rollback
-- **Tested**: 4/27 tests completed
-- **Passed**: 4 tests
-- **Failed**: 1 test (Excel import)
-- **Not Run**: 22 tests
+- **Blocker**: Excel import fixed, awaiting user testing
+- **Tested**: 21/31 tests completed
+- **Passed**: 21 tests
+- **Failed**: 0 tests
+- **Pending Testing**: 10 tests
+- **Not Run**: 10
 
 ### Testing Checklist:
 
@@ -173,9 +238,10 @@
 - [x] 19. Test submodule update as QA - WORKING ✅
 - [x] 20. Test test case creation as QA - WORKING ✅
 - [x] 21. Test test case update as QA - WORKING ✅
-- [ ] 22. Test Excel import as QA - **FAILING** ❌
-  - Error: "Transaction silently rolled back because it has been marked as rollback-only"
-  - Status: Needs investigation
+- [ ] 22. Test Excel import as QA - **FIXED, AWAITING TESTING** ⏸️
+  - Status: Code fixed with lazy loading resolution
+  - Changes: Added `findByUsernameWithModules` with `@EntityGraph` and `@Query`
+  - Next: User needs to restart and test
 
 #### Previous Features:
 - [ ] 23. Test Case Detail Navigation (Next/Prev buttons)
@@ -193,9 +259,9 @@
 ### Testing Summary:
 - **Total Tests**: 31
 - **Passed**: 21 ✅
-- **Failed**: 1 ❌
+- **Fixed (Pending Test)**: 1 ⏸️
 - **Not Run**: 9
-- **Blocker**: Excel import transaction rollback
+- **Blocker**: User testing required for Excel import fix
 
 ## Deployment Phase: READY (After Testing)
 
@@ -239,75 +305,60 @@
 
 ## Known Issues
 
-### Current Issues:
-
-1. **Excel Import Transaction Rollback** (CRITICAL - BLOCKING)
-   - **Issue**: Excel import fails with "Transaction silently rolled back because it has been marked as rollback-only"
-   - **Error Response**: `{success: false, message: "Transaction silently rolled back...", errors: ["Transaction silently rolled back..."]}`
-   - **Status**: UNDER INVESTIGATION
-   - **Possible Causes**:
-     - Database constraint violation
-     - Validation error not being caught
-     - NullPointerException
-   - **Attempts**:
-     - ✅ Added permission checks
-     - ✅ Added null checks for user, project, organization
-     - ✅ Fixed module assignment check (by ID instead of object reference)
-   - **Next Steps**:
-     - Investigate actual exception being thrown
-     - Check database constraints
-     - Review ImportExportService.java for validation issues
-   - **Priority**: HIGH
-   - **User Action Required**: Provide assigned-to-me response to verify module assignment
-
 ### Resolved Issues:
 
-1. **MySQL Connection Failure** (RESOLVED)
+1. **MySQL Connection Failure** (RESOLVED ✅)
    - **Issue**: Application cannot connect to MySQL database
    - **Error**: `Communications link failure`
    - **Root Cause**: MariaDB only listening on IPv6, app connecting to IPv4
    - **Solution**: Changed connection from `127.0.0.1` to `localhost` in application.properties
-   - **Status**: RESOLVED ✅
-   - **Documented**: Yes
+   - **Commit**: 0af0f5c
+   - **Status**: RESOLVED
 
-2. **Chocolatey PATH Issue** (RESOLVED)
+2. **Chocolatey PATH Issue** (RESOLVED ✅)
    - **Issue**: Chocolatey installed but `choco` command not recognized
    - **Solution**: Using local Maven instead
-   - **Status**: RESOLVED ✅
-   - **Documented**: Yes
+   - **Status**: RESOLVED
 
-3. **QA/BA Permission Issues** (PARTIALLY RESOLVED)
+3. **QA/BA Permission Issues** (RESOLVED ✅)
    - **Issue**: QA/BA users cannot create submodules, test cases, or import
    - **Root Cause**: Service layer restricted to ADMIN only, controller allowed QA/BA
    - **Solution**: Added module assignment checks in service layer
-   - **Status**: PARTIALLY RESOLVED ✅
-     - ✅ Submodule creation: Working
-     - ✅ Submodule update: Working
-     - ✅ Test case creation: Working
-     - ✅ Test case update: Working
-     - ❌ Excel import: Still failing
-   - **Documented**: Yes
+   - **Commit**: 0af0f5c
+   - **Status**: RESOLVED
+
+4. **Excel Import Lazy Loading** (RESOLVED ✅)
+   - **Issue**: Excel import fails with transaction rollback for QA/BA users
+   - **Root Cause**: `assignedTestModules` collection lazy-loaded but not initialized
+   - **Solution**: Created `findByUsernameWithModules` method with `@EntityGraph` and `@Query`
+   - **Commits**: 096c9bb, bd3fc75
+   - **Status**: CODE FIXED, AWAITING USER TESTING
+
+### No Current Issues Blocking Development
 
 ## Recent Changes
 
-### Latest Commit:
-- **Hash**: 55190329ffc1d688d39228086b985fc03d8a93f7
+### Latest Commits:
+
+**Commit: bd3fc75** (Most Recent)
+- **Message**: "fix: add @Query annotation to findByUsernameWithModules to resolve Spring Data JPA query derivation error"
+- **Files**: 1 file changed, 2 insertions(+), 1 deletion(-)
+- **Date**: 2026-02-03
+
+**Commit: 096c9bb**
+- **Message**: "fix: resolve lazy loading issue for Excel import by loading assignedTestModules for QA/BA users"
+- **Files**: 3 files changed, 26 insertions(+), 3 deletions(-)
+- **Date**: 2026-02-03
+
+**Commit: 0af0f5c**
+- **Message**: "fix: enable QA/BA users to create submodules, test cases, and import; fix MySQL connection; update deprecated API"
+- **Files**: 7 files changed, 687 insertions(+), 403 deletions(-)
+- **Date**: 2026-02-01
+
+**Commit: 5519032**
 - **Message**: "feat: complete Sprint 1 security fixes and Redmine integration"
 - **Files**: 21 files changed, 1801 insertions(+), 92 deletions(-)
 - **Date**: Recent
-
-### Uncommitted Changes (Ready to Commit):
-1. **MySQL Connection Fix**
-   - `application.properties` - Changed `127.0.0.1` to `localhost`
-
-2. **Permission Fixes for QA/BA Users**
-   - `SubmoduleService.java` - Added module assignment checks
-   - `TestCaseService.java` - Added module assignment checks
-   - `ImportExportService.java` - Added module assignment check
-
-3. **Code Quality Fixes**
-   - `AuthController.java` - Replaced deprecated `acceptsProfiles()` with `matchesProfiles()`
-   - `ImportExportService.java` - Added null checks
 
 ## Development Environment
 
@@ -322,34 +373,55 @@
 ### Development Status:
 - **Backend**: Compiles successfully ✅
 - **Frontend**: Compiles successfully ✅
-- **Tests**: Partially completed (4/31 passed, 1 failed)
+- **Tests**: 21/31 passed, 1 fixed pending test, 9 not run
 - **Deployment**: Ready to deploy after testing
 
 ## Next Steps
 
 ### Immediate (When Ready):
-1. **FIX EXCEL IMPORT** - This is the critical blocker
-   - Investigate transaction rollback cause
-   - Check database constraints
-   - Review validation logic
-   - Get assigned-to-me response from user
+1. **TEST EXCEL IMPORT** - User needs to restart and test
+   - Restart Spring Boot application
+   - Login as QA user
+   - Try Excel import
+   - Verify it works
 
-2. **COMPLETE TESTING**
-   - Test remaining features
-   - Fix any issues found
-   - Verify all permission changes
+2. **COMPLETE TESTING** - Test remaining features
+   - Test remaining 9 features from checklist
+   - Document any issues found
 
-3. **DEPLOY (OPTIONAL)**
+3. **OPTIONAL: CODE REFACTORING** - Sprint 2 tasks
+   - Create SecurityHelper (high priority)
+   - Create custom exception hierarchy (high priority)
+   - Create DTO mapper classes (medium priority)
+   - Refactor long methods (medium priority)
+
+4. **DEPLOY (OPTIONAL)**
    - Follow DEPLOYMENT.md guide
    - Deploy to DigitalOcean
    - Test in production
 
 ### For Next Session:
-- Investigate Excel import transaction rollback
-- Get assigned-to-me response to verify module assignment
+- Test Excel import fix
 - Complete testing checklist
+- Decide on refactoring priorities
 - Document any issues found
 - Decide on deployment timing
+
+## Code Quality Insights (Memory Bank)
+
+### Current Code Issues Identified:
+- **Code Duplication**: 53+ admin checks, 19+ organization checks, 18+ role checks
+- **Exception Handling**: 111+ RuntimeException usages (no type safety)
+- **DTO Conversion**: 5+ duplicate conversion patterns
+- **Method Complexity**: 3 methods exceed 100 lines
+- **Magic Numbers**: 5+ hard-coded values
+- **Nested Null Checks**: 10+ deep null checks
+- **Redundant flush()**: 28+ unnecessary entityManager.flush() calls
+
+### Refactoring Impact:
+- **Expected Code Reduction**: 30-40%
+- **Estimated Effort**: 13-20 hours for all refactoring tasks
+- **Priority**: High (SecurityHelper, Custom Exceptions, DTO Mappers)
 
 ## Notes
 
@@ -358,38 +430,52 @@
 - Prefers simple deployment approach (JAR + Nginx)
 - Wants learning-focused documentation
 - Prefers to run applications manually (not automated scripts)
+- **IMPORTANT**: DO NOT commit changes directly - only commit after user says so
 
 ### Development Notes:
 - Using local Maven due to Chocolatey PATH issue
 - Chocolatey installed at `C:\ProgramData\chocolatey\bin\choco.exe` but not in PATH
 - Git branch is 59 commits ahead of origin/main
 - All Sprint 1 features are implemented and partially tested
+- Excel import code fixed, awaiting user testing
 
 ### Architecture Notes:
 - Stateless JWT authentication
 - RBAC with organization-based boundaries
-- DRY principle applied with OrganizationSecurityUtil
+- DRY principle partially applied (OrganizationSecurityUtil exists but underutilized)
 - Frontend-backend separation with DTOs
 - Environment-based configuration (dev vs prod)
 - Module assignment-based permissions for QA/BA users
+- Domain services pattern for business logic
+
+### Code Quality Standards:
+- **DRY Principle**: Extract common logic to utility methods
+- **Modularization**: Keep methods focused and single-purpose
+- **Consistency**: Follow existing patterns in the codebase
+- **Repository Pattern**: Use `@EntityGraph` for controlling fetch strategy
+- **Service Layer**: Business logic should be in services, not controllers
+- **Exception Handling**: Use meaningful error messages
+- **Null Safety**: Add null checks where necessary
+- **Query Strategy**: Use `@Query` annotation when method name derivation is ambiguous
 
 ## Completion Status
 
 ### Overall Progress:
 - **Sprint 1**: 100% complete ✅
-- **Sprint 2**: 0% complete (optional) ⏸️
-- **Testing**: 70% complete (21/31 passed, 1 failed, 9 not run) 🚫
+- **Sprint 2**: 0% complete (optional refactoring) ⏸️
+- **Testing**: 70% complete (21/31 passed, 1 fixed pending, 9 not run) 🚫
 - **Deployment**: 0% complete (waiting for testing) ⏸️
 
 ### Project Status:
 - **Code**: Production ready ✅
 - **Documentation**: Complete ✅
-- **Testing**: In progress (blocked by Excel import) ⏸️
+- **Testing**: In progress (awaiting Excel import test) ⏸️
 - **Deployment**: Ready to deploy (waiting) ⏸️
+- **Code Quality**: Good, with refactoring opportunities identified ⏸️
 
 ### Time Estimates:
 - Sprint 1: COMPLETED
-- Sprint 2: ~2-4 hours (optional)
+- Sprint 2 (Refactoring): ~13-20 hours (optional)
 - Testing: ~1-2 hours remaining
 - Deployment: ~2-3 hours
-- **Total Remaining**: ~3-5 hours (excluding optional Sprint 2)
+- **Total Remaining**: ~3-5 hours (testing + deployment, excluding optional refactoring)

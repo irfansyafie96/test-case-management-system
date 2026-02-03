@@ -30,14 +30,14 @@
               mat-raised-button
               color="primary"
               (click)="createSubmodule(vm.module!.id)"
-              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA']) && vm.module!.isEditable">
               <mat-icon>add</mat-icon> NEW SUBMODULE
             </button>
             <button 
               mat-raised-button 
               color="primary" 
               (click)="toggleAssignments()"
-              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA']) && vm.module!.isEditable">
               <mat-icon>{{ showAssignments ? 'close' : 'group' }}</mat-icon>
               {{ showAssignments ? 'CLOSE ASSIGNMENTS' : 'MANAGE ASSIGNMENTS' }}
             </button>
@@ -45,7 +45,7 @@
               mat-raised-button 
               color="primary" 
               (click)="openImportDialog()"
-              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+              *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA']) && vm.module!.isEditable">
               <mat-icon>upload_file</mat-icon> IMPORT
             </button>
           </div>
@@ -135,7 +135,7 @@
                   mat-stroked-button
                   class="small-btn"
                   (click)="createTestCase(submodule.id)"
-                  *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+                  *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA']) && vm.module!.isEditable">
                   <mat-icon>post_add</mat-icon> ADD CASE
                 </button>
                 <button
@@ -143,7 +143,7 @@
                   matTooltip="Delete submodule"
                   (click)="deleteSubmodule(submodule)"
                   color="warn"
-                  *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+                  *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA']) && vm.module!.isEditable">
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>
@@ -182,7 +182,7 @@
                       (click)="editTestCase(testCase)"
                       color="primary"
                       class="action-btn"
-                      *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+                      *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA']) && vm.module!.isEditable">
                       <mat-icon>edit</mat-icon>
                     </button>
                     <button
@@ -191,7 +191,7 @@
                       (click)="deleteTestCase(testCase)"
                       color="warn"
                       class="action-btn"
-                      *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])">
+                      *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA']) && vm.module!.isEditable">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </td>

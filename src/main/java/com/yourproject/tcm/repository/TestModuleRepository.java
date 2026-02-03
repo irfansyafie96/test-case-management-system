@@ -40,4 +40,9 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     @Query("SELECT DISTINCT tm FROM TestModule tm " +
            "JOIN FETCH tm.project")
     List<TestModule> findAll();
+    
+    // Check if a user is assigned to a test module (direct assignment)
+    @Query("SELECT CASE WHEN COUNT(u.id) > 0 THEN true ELSE false END FROM TestModule tm " +
+           "JOIN tm.assignedUsers u WHERE tm.id = :moduleId AND u.id = :userId")
+    boolean isUserAssignedToModule(@Param("moduleId") Long moduleId, @Param("userId") Long userId);
 }

@@ -23,6 +23,7 @@ export interface TestModule {
   testCasesCount?: number; // Total number of test cases across all submodules
   createdDate?: string;
   updatedDate?: string;
+  isEditable?: boolean; // UI flag: true if current user can edit this module
 }
 
 // Submodule Model

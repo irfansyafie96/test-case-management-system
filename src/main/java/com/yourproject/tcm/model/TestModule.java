@@ -2,6 +2,7 @@ package com.yourproject.tcm.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.List;
@@ -65,6 +66,22 @@ public class TestModule {
     @JsonIgnore
     private Set<User> assignedUsers = new HashSet<>();  // Users assigned to this module
 
+    /**
+
+     * Transient field to indicate if the current user can edit this module.
+
+     * Not persisted to database, set by controller based on user permissions.
+
+     * Used by frontend to show/hide edit buttons.
+
+     */
+
+    @Transient
+
+    @JsonProperty("isEditable")
+
+    private boolean isEditable;  // UI flag: true if current user can edit this module
+
     // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
@@ -112,6 +129,15 @@ public class TestModule {
 
     public void setAssignedUsers(Set<User> assignedUsers) {
         this.assignedUsers = assignedUsers;
+    }
+
+    @JsonProperty("isEditable")
+    public boolean isEditable() {
+        return isEditable;
+    }
+
+    public void setEditable(boolean isEditable) {
+        this.isEditable = isEditable;
     }
 
     // Helper method to expose project ID to frontend without exposing entire project object

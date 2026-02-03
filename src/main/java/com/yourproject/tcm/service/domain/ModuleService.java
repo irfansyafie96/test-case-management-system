@@ -36,6 +36,7 @@ public class ModuleService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final UserContextService userContextService;
+    private final com.yourproject.tcm.service.SecurityHelper securityHelper;
     private final EntityManager entityManager;
     private final TestCaseService testCaseService;
 
@@ -45,6 +46,7 @@ public class ModuleService {
                         ProjectRepository projectRepository,
                         UserRepository userRepository,
                         UserContextService userContextService,
+                        com.yourproject.tcm.service.SecurityHelper securityHelper,
                         EntityManager entityManager,
                         TestCaseService testCaseService) {
         this.testModuleRepository = testModuleRepository;
@@ -52,6 +54,7 @@ public class ModuleService {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.userContextService = userContextService;
+        this.securityHelper = securityHelper;
         this.entityManager = entityManager;
         this.testCaseService = testCaseService;
     }
@@ -104,8 +107,9 @@ public class ModuleService {
 
     /**
      * Get a test module by ID with all its submodules and test cases.
-     * ADMIN users can access any module in their organization.
-     * Non-ADMIN users can only access modules they are assigned to.
+     * All users in the same organization can view modules (read-only access).
+     * ADMIN users can access any module in their organization (full access).
+     * Non-ADMIN users can only edit modules they are assigned to.
      */
     public Optional<TestModule> getTestModuleById(Long testModuleId) {
         User currentUser = userContextService.getCurrentUser();
@@ -119,45 +123,26 @@ public class ModuleService {
         
         // Check organization boundary via project
         Project project = testModule.getProject();
-        if (project == null || !project.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+        if (project == null) {
             throw new RuntimeException("Test Module not found or access denied");
         }
         
-        // ADMIN users can access any module in their organization
-        if (userContextService.isAdmin(currentUser)) {
-            // Fetch all submodules with their test cases for this module
-            List<Submodule> submodulesWithTestCases = submoduleRepository.findByTestModuleIdWithTestCases(testModuleId);
-            
-            // Sort test cases within each submodule by ID
-            for (Submodule submodule : submodulesWithTestCases) {
-                if (submodule.getTestCases() != null) {
-                    submodule.getTestCases().sort(Comparator.comparing(TestCase::getId));
-                }
+        // Check organization boundary - all users in same organization can view
+        securityHelper.requireSameOrganization(currentUser, project.getOrganization());
+        
+        // Fetch all submodules with their test cases for this module
+        List<Submodule> submodulesWithTestCases = submoduleRepository.findByTestModuleIdWithTestCases(testModuleId);
+        
+        // Sort test cases within each submodule by ID
+        for (Submodule submodule : submodulesWithTestCases) {
+            if (submodule.getTestCases() != null) {
+                submodule.getTestCases().sort(Comparator.comparing(TestCase::getId));
             }
-            
-            // Set the complete submodules list with test cases
-            testModule.setSubmodules(submodulesWithTestCases);
-            return Optional.of(testModule);
         }
         
-        // Non-ADMIN users can only access modules they are assigned to
-        if (currentUser.getAssignedTestModules().contains(testModule)) {
-            // Fetch all submodules with their test cases for this module
-            List<Submodule> submodulesWithTestCases = submoduleRepository.findByTestModuleIdWithTestCases(testModuleId);
-            
-            // Sort test cases within each submodule by ID
-            for (Submodule submodule : submodulesWithTestCases) {
-                if (submodule.getTestCases() != null) {
-                    submodule.getTestCases().sort(Comparator.comparing(TestCase::getId));
-                }
-            }
-            
-            // Set the complete submodules list with test cases
-            testModule.setSubmodules(submodulesWithTestCases);
-            return Optional.of(testModule);
-        }
-        
-        throw new RuntimeException("Access denied: You are not assigned to this test module");
+        // Set the complete submodules list with test cases
+        testModule.setSubmodules(submodulesWithTestCases);
+        return Optional.of(testModule);
     }
 
     /**
@@ -167,18 +152,15 @@ public class ModuleService {
     @Transactional
     public TestModule createTestModuleForProject(Long projectId, TestModule testModule) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can create test modules");
-        }
+        
+        securityHelper.requireAdmin(currentUser);
         
         Optional<Project> projectOpt = projectRepository.findById(projectId);
         if (projectOpt.isPresent()) {
             Project project = projectOpt.get();
             
             // Check organization boundary
-            if (!project.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Project not found or access denied");
-            }
+            securityHelper.requireSameOrganization(currentUser, project.getOrganization());
             
             testModule.setProject(project);
             TestModule savedTestModule = testModuleRepository.save(testModule);
@@ -207,14 +189,18 @@ public class ModuleService {
         
         // Check organization boundary via project
         Project project = testModule.getProject();
-        if (project == null || !project.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+        if (project == null) {
             throw new RuntimeException("Test Module not found or access denied");
         }
         
+        securityHelper.requireSameOrganization(currentUser, project.getOrganization());
+        
         // ADMIN users can update any module in their organization
         // Non-ADMIN users can only update modules they are assigned to
-        if (!userContextService.isAdmin(currentUser) && !currentUser.getAssignedTestModules().contains(testModule)) {
-            throw new RuntimeException("Access denied: You are not assigned to this test module");
+        if (!userContextService.isAdmin(currentUser)) {
+            if (!securityHelper.canAccessModule(currentUser, testModule)) {
+                throw new RuntimeException("Access denied: You are not assigned to this test module");
+            }
         }
         
         testModule.setName(testModuleDetails.getName());
@@ -232,9 +218,8 @@ public class ModuleService {
     @Transactional
     public void deleteTestModule(Long testModuleId) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can delete test modules");
-        }
+        
+        securityHelper.requireAdmin(currentUser);
         
         // Fetch the module with submodules
         TestModule testModule = testModuleRepository.findByIdWithSubmodules(testModuleId)
@@ -242,9 +227,11 @@ public class ModuleService {
         
         // Check organization boundary via project
         Project project = testModule.getProject();
-        if (project == null || !project.getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+        if (project == null) {
             throw new RuntimeException("Test Module not found or access denied");
         }
+        
+        securityHelper.requireSameOrganization(currentUser, project.getOrganization());
         
         // 1. Clear assignments from junction table using native SQL
         // This ensures junction table records are removed before attempting to delete the module
@@ -283,9 +270,8 @@ public class ModuleService {
     @Transactional
     public User assignUserToTestModule(ModuleAssignmentRequest request) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can assign users to test modules");
-        }
+        
+        securityHelper.requireAdmin(currentUser);
         
         Optional<User> userOpt = userRepository.findById(request.getUserId());
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(request.getTestModuleId());
@@ -343,9 +329,8 @@ public class ModuleService {
     @Transactional
     public User removeUserFromTestModule(ModuleAssignmentRequest request) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only ADMIN users can remove users from test modules");
-        }
+        
+        securityHelper.requireAdmin(currentUser);
         
         Optional<User> userOpt = userRepository.findById(request.getUserId());
         Optional<TestModule> testModuleOpt = testModuleRepository.findById(request.getTestModuleId());

@@ -32,6 +32,7 @@ public class SubmoduleService {
     private final TestExecutionRepository testExecutionRepository;
     private final TestStepResultRepository testStepResultRepository;
     private final UserContextService userContextService;
+    private final com.yourproject.tcm.service.SecurityHelper securityHelper;
     private final EntityManager entityManager;
 
     @Autowired
@@ -40,19 +41,22 @@ public class SubmoduleService {
                            TestExecutionRepository testExecutionRepository,
                            TestStepResultRepository testStepResultRepository,
                            UserContextService userContextService,
+                           com.yourproject.tcm.service.SecurityHelper securityHelper,
                            EntityManager entityManager) {
         this.submoduleRepository = submoduleRepository;
         this.testModuleRepository = testModuleRepository;
         this.testExecutionRepository = testExecutionRepository;
         this.testStepResultRepository = testStepResultRepository;
         this.userContextService = userContextService;
+        this.securityHelper = securityHelper;
         this.entityManager = entityManager;
     }
 
     /**
      * Get a submodule by ID with its module information.
-     * ADMIN users can access any submodule in their organization.
-     * Non-ADMIN users can only access submodules in modules they are assigned to.
+     * All users in the same organization can view submodules (read-only access).
+     * ADMIN users can access any submodule in their organization (full access).
+     * Non-ADMIN users can only edit submodules in modules they are assigned to.
      */
     public Optional<Submodule> getSubmoduleById(Long submoduleId) {
         User currentUser = userContextService.getCurrentUser();
@@ -69,28 +73,17 @@ public class SubmoduleService {
             throw new RuntimeException("Submodule not found or access denied");
         }
         
-        // Check organization boundary via module -> project
-        if (!testModule.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Submodule not found or access denied");
-        }
+        // Check organization boundary - all users in same organization can view
+        securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
         
-        // ADMIN users can access any submodule in their organization
-        if (userContextService.isAdmin(currentUser)) {
-            return submoduleOpt;
-        }
-        
-        // Non-ADMIN users can only access submodules in modules they are assigned to
-        if (currentUser.getAssignedTestModules().contains(testModule)) {
-            return submoduleOpt;
-        }
-        
-        throw new RuntimeException("Access denied: You are not assigned to the parent module of this submodule");
+        return submoduleOpt;
     }
 
     /**
      * Get all submodules for a test module with their test cases.
-     * ADMIN users can access any module's submodules in their organization.
-     * Non-ADMIN users can only access submodules in modules they are assigned to.
+     * All users in the same organization can view submodules (read-only access).
+     * ADMIN users can access any module's submodules in their organization (full access).
+     * Non-ADMIN users can only edit submodules in modules they are assigned to.
      */
     public List<Submodule> getSubmodulesByModuleId(Long moduleId) {
         User currentUser = userContextService.getCurrentUser();
@@ -102,22 +95,10 @@ public class SubmoduleService {
         
         TestModule testModule = testModuleOpt.get();
         
-        // Check organization boundary via module -> project
-        if (!testModule.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-            throw new RuntimeException("Test Module not found or access denied");
-        }
+        // Check organization boundary - all users in same organization can view
+        securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
         
-        // ADMIN users can access any module's submodules in their organization
-        if (userContextService.isAdmin(currentUser)) {
-            return submoduleRepository.findByTestModuleIdWithTestCases(moduleId);
-        }
-        
-        // Non-ADMIN users can only access submodules in modules they are assigned to
-        if (currentUser.getAssignedTestModules().contains(testModule)) {
-            return submoduleRepository.findByTestModuleIdWithTestCases(moduleId);
-        }
-        
-        throw new RuntimeException("Access denied: You are not assigned to this test module");
+        return submoduleRepository.findByTestModuleIdWithTestCases(moduleId);
     }
 
     /**
@@ -133,32 +114,17 @@ public class SubmoduleService {
         if (testModuleOpt.isPresent()) {
             TestModule testModule = testModuleOpt.get();
             
-            // Check organization boundary via module -> project
-            if (!testModule.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
-                throw new RuntimeException("Test Module not found or access denied");
-            }
+            // Check organization boundary
+            securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
             
-            // ADMIN users can create submodules in any module
-            if (userContextService.isAdmin(currentUser)) {
-                submodule.setTestModule(testModule);
-                Submodule savedSubmodule = submoduleRepository.save(submodule);
-                entityManager.flush();
-                return savedSubmodule;
-            }
+            // Check role and module access
+            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireModuleAccess(currentUser, testModule);
             
-            // QA/BA users can only create submodules in modules they are assigned to
-            if (userContextService.isQaOrBa(currentUser)) {
-                if (currentUser.getAssignedTestModules().contains(testModule)) {
-                    submodule.setTestModule(testModule);
-                    Submodule savedSubmodule = submoduleRepository.save(submodule);
-                    entityManager.flush();
-                    return savedSubmodule;
-                } else {
-                    throw new RuntimeException("Access denied: You are not assigned to this test module");
-                }
-            }
-            
-            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can create submodules");
+            submodule.setTestModule(testModule);
+            Submodule savedSubmodule = submoduleRepository.save(submodule);
+            entityManager.flush();
+            return savedSubmodule;
         } else {
             throw new RuntimeException("Test Module not found with id: " + testModuleId);
         }
@@ -179,31 +145,20 @@ public class SubmoduleService {
             
             // Check organization boundary via module -> project
             TestModule testModule = submodule.getTestModule();
-            if (testModule == null || !testModule.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+            if (testModule == null) {
                 throw new RuntimeException("Submodule not found or access denied");
             }
             
-            // ADMIN users can update any submodule
-            if (userContextService.isAdmin(currentUser)) {
-                submodule.setName(submoduleDetails.getName());
-                Submodule updatedSubmodule = submoduleRepository.save(submodule);
-                entityManager.flush();
-                return updatedSubmodule;
-            }
+            securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
             
-            // QA/BA users can only update submodules in modules they are assigned to
-            if (userContextService.isQaOrBa(currentUser)) {
-                if (currentUser.getAssignedTestModules().contains(testModule)) {
-                    submodule.setName(submoduleDetails.getName());
-                    Submodule updatedSubmodule = submoduleRepository.save(submodule);
-                    entityManager.flush();
-                    return updatedSubmodule;
-                } else {
-                    throw new RuntimeException("Access denied: You are not assigned to the parent module of this submodule");
-                }
-            }
+            // Check role and module access
+            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireModuleAccess(currentUser, testModule);
             
-            throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can update submodules");
+            submodule.setName(submoduleDetails.getName());
+            Submodule updatedSubmodule = submoduleRepository.save(submodule);
+            entityManager.flush();
+            return updatedSubmodule;
         } else {
             throw new RuntimeException("Submodule not found with id: " + submoduleId);
         }
@@ -227,22 +182,16 @@ public class SubmoduleService {
         
         // Check organization boundary via module -> project
         TestModule testModule = submodule.getTestModule();
-        if (testModule == null || !testModule.getProject().getOrganization().getId().equals(currentUser.getOrganization().getId())) {
+        if (testModule == null) {
             throw new RuntimeException("Submodule not found or access denied");
         }
         
-        // ADMIN users can delete any submodule in their organization
+        securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
+        
+        // Check role and module access (ADMIN can delete any, QA/BA must be assigned)
         if (!userContextService.isAdmin(currentUser)) {
-            // Non-ADMIN users can only delete submodules in modules they are assigned to
-            if (!userContextService.isQaOrBa(currentUser)) {
-                throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can delete submodules");
-            }
-            
-            // Check if user is assigned to the module
-            boolean isAssignedToModule = currentUser.getAssignedTestModules().contains(testModule);
-            if (!isAssignedToModule) {
-                throw new RuntimeException("Access denied: You are not assigned to the parent module of this submodule");
-            }
+            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireModuleAccess(currentUser, testModule);
         }
         
         // First, cleanup all execution data for test cases in the submodule
