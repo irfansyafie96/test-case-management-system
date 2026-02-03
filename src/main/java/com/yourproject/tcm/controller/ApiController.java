@@ -255,16 +255,8 @@ public class ApiController {
                 
                 // Set isEditable flag based on user permissions
                 User currentUser = userContextService.getCurrentUser();
-                boolean isAdmin = userContextService.isAdmin(currentUser);
-                boolean isAssigned = testModuleRepository.isUserAssignedToModule(testModuleId, currentUser.getId());
-                boolean isEditable = isAdmin || isAssigned;
-                
-                System.out.println("DEBUG - Module ID: " + testModuleId);
-                System.out.println("DEBUG - User ID: " + currentUser.getId());
-                System.out.println("DEBUG - Username: " + currentUser.getUsername());
-                System.out.println("DEBUG - isAdmin: " + isAdmin);
-                System.out.println("DEBUG - isAssigned: " + isAssigned);
-                System.out.println("DEBUG - Final isEditable: " + isEditable);
+                boolean isEditable = userContextService.isAdmin(currentUser) || 
+                    testModuleRepository.isUserAssignedToModule(testModuleId, currentUser.getId());
                 
                 testModule.setEditable(isEditable);
                 
@@ -821,10 +813,31 @@ public class ApiController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/testmodules/{moduleId}/import")
     public ResponseEntity<?> importTestCasesFromExcel(@PathVariable Long moduleId, @RequestParam("file") MultipartFile file) {
+        System.out.println("IMPORT REQUEST - Module ID: " + moduleId + ", File: " + (file != null ? file.getOriginalFilename() : "null"));
+        
+        // Check permissions first (before transaction to avoid rollback issues)
+        try {
+            importExportService.checkImportPermission(moduleId);
+        } catch (RuntimeException e) {
+            System.out.println("IMPORT PERMISSION ERROR: " + e.getMessage());
+            return new ResponseEntity<>(Map.of(
+                "success", false,
+                "message", e.getMessage(),
+                "suitesCreated", 0,
+                "testCasesCreated", 0,
+                "testCasesSkipped", 0,
+                "errors", List.of(e.getMessage())
+            ), HttpStatus.BAD_REQUEST);
+        }
+        
+        // Then perform import in transaction
         try {
             Map<String, Object> result = importExportService.importTestCasesFromExcel(moduleId, file);
+            System.out.println("IMPORT SUCCESS - " + result);
             return new ResponseEntity<>(result, HttpStatus.OK);
         } catch (RuntimeException e) {
+            System.out.println("IMPORT ERROR (RuntimeException): " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(Map.of(
                 "success", false,
                 "message", e.getMessage(),
@@ -834,6 +847,8 @@ public class ApiController {
                 "errors", List.of(e.getMessage())
             ), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
+            System.out.println("IMPORT ERROR (Exception): " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>("Error importing test cases: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

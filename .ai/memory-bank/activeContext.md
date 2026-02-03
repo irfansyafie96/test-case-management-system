@@ -13,7 +13,7 @@
 - **Type**: Full-stack web application (Spring Boot + Angular)
 - **Purpose**: Test Case Management System with execution tracking
 - **Organization**: TMS Asia
-- **Status**: Sprint 1 completed, Testing phase in progress, Refactoring in progress
+- **Status**: Sprint 1 completed, Testing phase in progress, Refactoring complete
 
 ### Current Blockers
 None - All issues resolved!
@@ -27,54 +27,38 @@ None - All issues resolved!
    - SubmoduleService.java: Added module assignment checks for create/update operations
    - TestCaseService.java: Added module assignment checks for create/update operations
    - ImportExportService.java: Added module assignment check for import operation
-   - Status: Submodule and test case creation working
 
 3. **Code Quality Fixes** (Commit: 0af0f5c)
    - AuthController.java: Replaced deprecated `acceptsProfiles()` with `matchesProfiles()`
-   - ImportExportService.java: Added null checks for user, project, organization, submodules
 
 4. **Lazy Loading Fix for Excel Import** (Commit: 096c9bb)
    - UserRepository.java: Added `findByUsernameWithModules` method
    - UserContextService.java: Added `getCurrentUserWithModules` method
-   - ImportExportService.java: Updated to use user with modules loaded
 
 5. **Query Derivation Fix** (Commit: bd3fc75)
    - UserRepository.java: Added `@Query` annotation to `findByUsernameWithModules`
-   - Fixed: Spring Data JPA query derivation error
 
-### Current Work (Not Committed)
-1. **SecurityHelper Refactoring** (COMPLETED)
+6. **SecurityHelper Pattern & Module Visibility** (Commit: 8d9581a)
    - Created: `SecurityHelper.java` service class
-   - Added methods: `requireAdmin()`, `requireAdminQaOrBa()`, `requireSameOrganization()`, `requireModuleAccess()`, `canAccessModule()`
-   - Updated: `SubmoduleService.java` (all 5 methods refactored)
-   - Updated: `ModuleService.java` (all 6 methods refactored)
-   - Code reduction: ~80% fewer permission check lines
-   - Status: Tested and working
+   - Refactored: SubmoduleService (5 methods), ModuleService (6 methods)
+   - Added: `isEditable` flag to TestModule entity with `@JsonProperty` annotation
+   - Fixed: Jackson serialization issue with isEditable field
+   - Implemented: READ/WRITE access separation for modules and submodules
+   - Fixed: Frontend edit button hiding based on isEditable flag
 
-2. **Module Visibility Bug Fix** (COMPLETED)
-   - Issue: QA users couldn't view unassigned modules (showed "Module Not Found")
-   - Solution: Separated READ access (all modules in org) from WRITE access (assigned modules only)
-   - Updated: `ModuleService.getTestModuleById()` - allows read access for all org modules
-   - Updated: `ModuleService.updateTestModule()` - still requires assignment for edit
-   - Status: Tested and working
+7. **SecurityHelper Refactoring** (Commit: 2f1a449)
+   - Refactored: TestCaseService (7 methods), ExecutionService (7 methods), ImportExportService (1 method)
+   - Replaced duplicate permission checks with SecurityHelper methods
+   - Code reduction: 156 insertions, 214 deletions (-58 lines net)
 
-3. **Submodule READ Access Fix** (COMPLETED)
-   - Issue: Submodules in unassigned modules also blocked access
-   - Solution: Applied same READ/WRITE separation to submodules
-   - Updated: `SubmoduleService.getSubmoduleById()` - allows read access
-   - Updated: `SubmoduleService.getSubmodulesByModuleId()` - allows read access
-   - Status: Tested and working
+8. **Excel Import Transaction Rollback Fix** (Commit: Pending)
+   - Issue: QA users couldn't import Excel due to transaction rollback
+   - Root Cause: `createTestExecutionForTestCaseAndUser()` had `@Transactional` + `requireAdmin()` check
+   - Solution: Created `autoGenerateTestExecution()` method bypassing ADMIN check for auto-generation
+   - Updated: ImportExportService, ModuleService to use new method
+   - Result: QA users can now import Excel successfully
 
-4. **Frontend Edit Control** (COMPLETED)
-   - Added: `isEditable` transient field to `TestModule` entity with `@JsonProperty("isEditable")` on getter
-   - Updated: `TestModuleRepository.java` - Added `isUserAssignedToModule()` direct database query
-   - Updated: `ApiController.java` - Sets isEditable flag using direct database query
-   - Updated: Frontend `module-detail.component.html` - Hides edit buttons when `!isEditable`
-   - Root Cause: Jackson was serializing `isEditable()` getter as `editable` (lowercase)
-   - Fix: Added `@JsonProperty("isEditable")` to getter method to force correct JSON property name
-   - Status: Tested and working
-
-### Testing Status (29/31 Tests Passed)
+### Testing Status (30/31 Tests Passed)
 - ✅ Redmine integration (17 tests): Working
 - ✅ QA/BA permissions (4 tests): Working
 - ✅ Test Case Detail Navigation: Working
@@ -85,19 +69,91 @@ None - All issues resolved!
 - ✅ Project access: Working
 - ✅ Execution filtering: Working
 - ✅ Submodule operations (QA): Working
-- ✅ Module visibility bug: FIXED - QA users can now view unassigned modules
-- ✅ Submodule READ access: FIXED - All users can view submodules in their organization
+- ✅ Module visibility: FIXED - QA users can view unassigned modules
+- ✅ Submodule READ access: FIXED - All users can view submodules
 - ✅ Frontend edit control: FIXED - Edit buttons hidden for unassigned modules
-- ⏸️ Excel import (QA): Fixed in previous session, needs testing
+- ✅ Excel import (QA): FIXED - Transaction rollback issue resolved
 - ⏸️ Production tests (2): Require deployment
 
-### Next Session Tasks
-1. **Test Excel Import**
-   - User needs to test import as QA user
-   - Verify the lazy loading fix works correctly
+### Completed Work Summary
 
-2. **Continue SecurityHelper Refactoring**
-   - Update remaining services: TestCaseService, ExecutionService, ImportExportService
+**SecurityHelper Pattern Implementation:**
+- Created centralized permission checking service
+- Refactored all service classes to use SecurityHelper
+- Eliminated ~150 lines of duplicate permission check code
+- Improved maintainability and consistency
+
+**Module Visibility & Edit Control:**
+- Separated READ access (all org modules) from WRITE access (assigned modules)
+- Added isEditable flag to communicate permissions to frontend
+- Fixed Jackson serialization issue with @JsonProperty annotation
+- Frontend now conditionally hides edit buttons
+
+**Excel Import Fix:**
+- Fixed transaction rollback issue for QA users
+- Created autoGenerateTestExecution() for auto-generation scenarios
+- Maintains ADMIN check for explicit API calls
+- QA users can now import Excel files successfully
+
+### Code Quality Standards (Memory Bank)
+
+#### Permission & Security Patterns
+- **READ vs WRITE Access**: Always separate viewing (read) from editing (write) permissions
+- **Use SecurityHelper**: All permission checks must use SecurityHelper methods
+- **Organization Boundary**: Always verify organization match before checking other permissions
+- **Role-Based Access**: Use helper methods: `requireAdmin()`, `requireAdminQaOrBa()`, `requireModuleAccess()`
+- **Non-throwing Checks**: Use `canAccessModule()` for read access, `requireModuleAccess()` for write access
+- **UI Control Flags**: Use `@Transient` fields with `@JsonProperty` for frontend communication
+
+#### Transaction Management
+- **Permission Checks Outside Transaction**: Check permissions BEFORE starting @Transactional methods
+- **Avoid Nested @Transactional with Security Checks**: Can cause transaction rollback issues
+- **Auto-Generation Methods**: Create separate methods bypassing role checks for internal auto-generation
+- **Try-Catch Doesn't Save Transactions**: Once a RuntimeException is thrown in @Transactional, transaction is marked rollback-only
+
+#### DRY Principle (Don't Repeat Yourself)
+- **Extract common logic**: If code appears 2+ times, create a helper method
+- **SecurityHelper**: For all permission checks (admin checks, organization checks, role checks)
+- **Code Duplication Threshold**: If you see the same pattern 3+ times, extract it
+
+#### Modularization Standards
+- **Single Responsibility**: Each method should do ONE thing
+- **Method Length**: Keep methods under 50 lines when possible, maximum 100 lines
+- **Service Layer**: Business logic belongs in services, not controllers
+- **Helper Classes**: Create utility classes for reusable logic (SecurityHelper, Mappers, etc.)
+
+#### Repository Patterns
+- **@EntityGraph**: Use for controlling fetch strategy (roles, assignedTestModules)
+- **@Query**: Use when method name derivation is ambiguous
+- **Optional Pattern**: Always use Optional for findById() operations
+- **Direct Database Queries**: Use for bypassing lazy loading issues when needed
+
+#### Exception Handling
+- **Custom Exceptions**: Create typed exceptions for better type safety
+- **Meaningful Messages**: Error messages should be specific and actionable
+- **Global Handler**: Rely on GlobalExceptionHandler
+- **Transaction Rollback**: RuntimeException in @Transactional marks transaction rollback-only
+
+### Known Issues
+None - All issues resolved!
+
+### Environment Notes
+- **OS**: Windows 10
+- **IDE**: IntelliJ IDEA 2025.2.2
+- **Java**: JDK 25
+- **Maven**: Local installation at `apache-maven-3.9.8/`
+- **Database**: MySQL (Standalone, connection fixed)
+- **Frontend**: Angular 21 running on port 4200
+- **Backend**: Spring Boot running on port 8080
+
+### Git Status
+- Branch: main
+- Last commit: 2f1a449 (SecurityHelper refactoring)
+- Pending changes to commit:
+  - ImportExportService.java (Excel import transaction fix)
+  - ApiController.java (Permission check before transaction)
+  - TestCaseService.java (Added autoGenerateTestExecution method)
+  - ModuleService.java (Uses autoGenerateTestExecution)
    - Test each service update
    - Commit after user approval
 

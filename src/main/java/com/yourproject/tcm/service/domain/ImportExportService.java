@@ -53,6 +53,54 @@ public class ImportExportService {
     }
 
     /**
+     * Check if user has permission to import into a module (for use by controller before transaction)
+     * @param moduleId ID of the test module
+     * @throws RuntimeException if user doesn't have permission
+     */
+    public void checkImportPermission(Long moduleId) {
+        // Get module
+        Optional<TestModule> moduleOpt = testModuleRepository.findById(moduleId);
+        if (moduleOpt.isEmpty()) {
+            throw new RuntimeException("Test module not found with id: " + moduleId);
+        }
+
+        TestModule module = moduleOpt.get();
+        
+        // Check user permissions
+        User currentUser = userContextService.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("Access denied: User not authenticated");
+        }
+        
+        // Verify organization boundary
+        if (module.getProject() == null || module.getProject().getOrganization() == null) {
+            throw new RuntimeException("Test module has no organization assigned");
+        }
+        securityHelper.requireSameOrganization(currentUser, module.getProject().getOrganization());
+        
+        // Check role permissions
+        securityHelper.requireAdminQaOrBa(currentUser);
+        
+        // ADMIN users can import into any module
+        if (!userContextService.isAdmin(currentUser)) {
+            // Re-fetch user with assignedTestModules loaded to avoid lazy loading issues
+            User userWithModules = userContextService.getCurrentUserWithModules();
+            
+            // Check if user has assigned test modules
+            if (userWithModules.getAssignedTestModules() == null || userWithModules.getAssignedTestModules().isEmpty()) {
+                throw new RuntimeException("Access denied: You are not assigned to any test modules");
+            }
+            
+            // Check assignment by ID
+            boolean isAssigned = userWithModules.getAssignedTestModules().stream()
+                .anyMatch(m -> m.getId().equals(module.getId()));
+            if (!isAssigned) {
+                throw new RuntimeException("Access denied: You are not assigned to this test module");
+            }
+        }
+    }
+
+    /**
      * Import test cases from Excel file into a test module
      * @param moduleId ID of the test module to import into
      * @param file Excel file to import (.xlsx format)
@@ -84,39 +132,6 @@ public class ImportExportService {
             }
 
             TestModule module = moduleOpt.get();
-            
-            // Check user permissions
-            User currentUser = userContextService.getCurrentUser();
-            if (currentUser == null) {
-                throw new RuntimeException("Access denied: User not authenticated");
-            }
-            
-            // Verify organization boundary
-            if (module.getProject() == null || module.getProject().getOrganization() == null) {
-                throw new RuntimeException("Test module has no organization assigned");
-            }
-            securityHelper.requireSameOrganization(currentUser, module.getProject().getOrganization());
-            
-            // Check role permissions
-            securityHelper.requireAdminQaOrBa(currentUser);
-            
-            // ADMIN users can import into any module
-            if (!userContextService.isAdmin(currentUser)) {
-                // Re-fetch user with assignedTestModules loaded to avoid lazy loading issues
-                User userWithModules = userContextService.getCurrentUserWithModules();
-                
-                // Check if user has assigned test modules
-                if (userWithModules.getAssignedTestModules() == null || userWithModules.getAssignedTestModules().isEmpty()) {
-                    throw new RuntimeException("Access denied: You are not assigned to any test modules");
-                }
-                
-                // Check assignment by ID
-                boolean isAssigned = userWithModules.getAssignedTestModules().stream()
-                    .anyMatch(m -> m.getId().equals(module.getId()));
-                if (!isAssigned) {
-                    throw new RuntimeException("Access denied: You are not assigned to this test module");
-                }
-            }
 
             // Parse Excel file
             Workbook workbook = WorkbookFactory.create(file.getInputStream());
@@ -319,7 +334,7 @@ public class ImportExportService {
                 if (module.getAssignedUsers() != null) {
                     for (User user : module.getAssignedUsers()) {
                         try {
-                            testCaseService.createTestExecutionForTestCaseAndUser(testCase.getId(), user.getId());
+                            testCaseService.autoGenerateTestExecution(testCase.getId(), user.getId());
                         } catch (Exception e) {
                             // Log error but continue
                         }

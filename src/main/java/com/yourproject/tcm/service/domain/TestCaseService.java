@@ -480,6 +480,60 @@ public class TestCaseService {
     }
 
     /**
+     * Internal method for auto-generating executions (bypasses ADMIN check).
+     * Used during test case import and module assignment when permissions are already verified by the caller.
+     * This method does NOT check ADMIN role - only organization boundary is verified.
+     */
+    @Transactional
+    public TestExecution autoGenerateTestExecution(Long testCaseId, Long userId) {
+        User currentUser = userContextService.getCurrentUser();
+        
+        Optional<TestCase> testCaseOpt = testCaseRepository.findById(testCaseId);
+        Optional<User> userOpt = userRepository.findById(userId);
+
+        if (testCaseOpt.isEmpty() || userOpt.isEmpty()) {
+            throw new RuntimeException("Test case or user not found with id: " + testCaseId + " or " + userId);
+        }
+
+        TestCase testCase = testCaseOpt.get();
+        User targetUser = userOpt.get();
+        
+        // Verify organization boundary for test case
+        securityHelper.requireSameOrganization(currentUser, testCase.getSubmodule().getTestModule().getProject().getOrganization());
+        
+        // Verify target user is in the same organization
+        securityHelper.requireSameOrganization(currentUser, targetUser.getOrganization());
+        
+        // Create new test execution
+        TestExecution execution = new TestExecution();
+        execution.setTestCase(testCase);
+        execution.setExecutionDate(LocalDateTime.now());
+        execution.setOverallResult("PENDING");
+        execution.setStatus("PENDING");
+        execution.setAssignedToUser(targetUser);
+
+        // Create step results for each step in the test case
+        List<TestStep> steps = testCase.getTestSteps();
+        if (steps != null && !steps.isEmpty()) {
+            List<TestStepResult> stepResults = new ArrayList<>();
+            for (TestStep step : steps) {
+                TestStepResult stepResult = new TestStepResult();
+                stepResult.setTestExecution(execution);
+                stepResult.setTestStep(step);
+                stepResult.setStepNumber(step.getStepNumber());
+                stepResult.setStatus("NOT_EXECUTED");
+                stepResult.setActualResult("");
+                stepResults.add(stepResult);
+            }
+            execution.setStepResults(stepResults);
+        }
+
+        TestExecution savedExecution = testExecutionRepository.save(execution);
+        entityManager.flush();
+        return savedExecution;
+    }
+
+    /**
      * Convert TestExecution to DTO with proper null safety.
      */
     private TestExecutionDTO convertToDTO(TestExecution execution) {

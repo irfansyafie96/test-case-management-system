@@ -301,7 +301,7 @@ public class ModuleService {
                         if (submodule.getTestCases() != null) {
                             for (TestCase testCase : submodule.getTestCases()) {
                                 try {
-                                    testCaseService.createTestExecutionForTestCaseAndUser(testCase.getId(), user.getId());
+                                    testCaseService.autoGenerateTestExecution(testCase.getId(), user.getId());
                                 } catch (Exception e) {
                                     // Ignore if execution already exists or other error, continue with others
                                 }
