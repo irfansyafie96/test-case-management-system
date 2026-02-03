@@ -39,6 +39,23 @@ public class UserContextService {
     }
 
     /**
+     * Get the currently authenticated user with assignedTestModules loaded.
+     * Use this when you need to access the user's assigned test modules.
+     * @return the current User entity with assignedTestModules loaded
+     * @throws RuntimeException if no authenticated user is found
+     */
+    public User getCurrentUserWithModules() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() &&
+            !authentication.getPrincipal().equals("anonymousUser")) {
+            String username = authentication.getName();
+            return userRepository.findByUsernameWithModules(username)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + username));
+        }
+        throw new RuntimeException("No authenticated user found");
+    }
+
+    /**
      * Get the organization of the currently authenticated user.
      * @return the current user's Organization entity
      */

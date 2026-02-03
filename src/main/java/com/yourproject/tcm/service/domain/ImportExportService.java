@@ -102,13 +102,16 @@ public class ImportExportService {
                     throw new RuntimeException("Access denied: Only ADMIN, QA, or BA users can import test cases");
                 }
                 
+                // Re-fetch user with assignedTestModules loaded to avoid lazy loading issues
+                User userWithModules = userContextService.getCurrentUserWithModules();
+                
                 // Check if user has assigned test modules
-                if (currentUser.getAssignedTestModules() == null || currentUser.getAssignedTestModules().isEmpty()) {
+                if (userWithModules.getAssignedTestModules() == null || userWithModules.getAssignedTestModules().isEmpty()) {
                     throw new RuntimeException("Access denied: You are not assigned to any test modules");
                 }
                 
-                // Check assignment by ID instead of object reference
-                boolean isAssigned = currentUser.getAssignedTestModules().stream()
+                // Check assignment by ID
+                boolean isAssigned = userWithModules.getAssignedTestModules().stream()
                     .anyMatch(m -> m.getId().equals(module.getId()));
                 if (!isAssigned) {
                     throw new RuntimeException("Access denied: You are not assigned to this test module");
