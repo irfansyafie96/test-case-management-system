@@ -1,6 +1,6 @@
 # Active Context - Test Case Management System
 
-## Current Session: 2026-02-03
+## Current Session: 2026-02-04
 
 ### User Context
 - **User**: irfan
@@ -13,32 +13,77 @@
 - **Type**: Full-stack web application (Spring Boot + Angular)
 - **Purpose**: Test Case Management System with execution tracking
 - **Organization**: TMS Asia
-- **Status**: Sprint 1 completed, Testing phase in progress, Refactoring complete
+- **Status**: Sprint 1 completed, Database migrated to MariaDB 11.4
 
 ### Current Blockers
 None - All issues resolved!
 
 ### Recent Changes (Committed)
-1. **MySQL Connection Fix** (Commit: 0af0f5c)
+1. **TestCase isEditable Flag Implementation** (2026-02-04)
+   - **Issue**: Edit button shown for all QA/BA users regardless of module assignment
+   - **Solution**: Added `isEditable` flag to TestCaseDTO to control edit button visibility
+   - **Changes Made**:
+     - Added `isEditable` field to `TestCaseDTO` with `@JsonProperty("isEditable")` annotations
+     - Modified `ApiController.getTestCaseById()` to set `isEditable` based on module assignment
+     - Updated frontend `TestCase` interface to include `isEditable?: boolean`
+     - Updated `test-case-detail.component.html` to use `testCase.isEditable` condition
+   - **Permission Logic**: Edit button shows if user is admin OR assigned to the test case's parent module
+   - **Pattern**: Follows the same pattern as TestModule for consistent permission handling
+   - **Code Reduction**: Cleaner implementation with module-based edit control
+   - **Status**: COMPLETED ✅
+
+2. **QA User Test Case Viewing Permission Fix** (2026-02-04)
+   - **Issue**: QA users couldn't navigate to test cases in unassigned modules, getting "Failed to load test case details" error
+   - **Root Cause**: `getTestCaseById()` required project/module assignment for VIEWING (too restrictive)
+   - **Solution**: Removed assignment checks for VIEWING, allowing all org members to view test cases
+   - **Changes Made**:
+     - Modified `TestCaseService.getTestCaseById()` to only enforce organization boundary
+     - Removed project/module assignment checks for READ operations
+     - Kept existing `requireModuleAccess()` checks in update/delete methods
+   - **Result**: QA users can now view test cases from any module in their organization
+   - **Pattern**: Aligns with module viewing where READ access is org-wide, WRITE access is assignment-based
+   - **Status**: COMPLETED ✅ (awaiting testing)
+
+2. **Database Migration: XAMPP to MariaDB 11.4** (2026-02-04)
+   - **Issue**: XAMPP MySQL kept failing with "MySQL shutdown unexpectedly" due to corrupted Aria logs and data files
+   - **Solution**: Migrated to standalone MariaDB 11.4.9 LTS installed on C drive
+   - **Changes Made**:
+     - Installed MariaDB 11.4.9 LTS (Long Term Support, supported until May 2029)
+     - Created `testcasedb` database with utf8mb4_general_ci collation
+     - Updated application.properties to connect to MariaDB
+     - Uses HeidiSQL (bundled with MariaDB) as GUI tool
+   - **Configuration Details**:
+     - JDBC URL: `jdbc:mysql://localhost:3306/testcasedb` (MySQL protocol works with MariaDB)
+     - Driver: `com.mysql.cj.jdbc.Driver` (MySQL driver is compatible with MariaDB)
+     - Database: MariaDB 11.4.9 LTS on C:\Program Files\MariaDB 11.4
+     - GUI: HeidiSQL at C:\Program Files\Common Files\MariaDBShared\HeidiSQL\heidisql.exe
+   - **Benefits**:
+     - No more XAMPP startup issues
+     - More stable and reliable database
+     - LTS support until May 2029
+     - No permission issues on C drive
+   - **Status**: COMPLETED ✅
+
+2. **MySQL Connection Fix** (Commit: 0af0f5c)
    - Changed connection from `127.0.0.1` to `localhost` in application.properties
    - Resolved: MySQL connection issues on Windows with MariaDB
 
-2. **Permission Fixes for QA/BA Users** (Commit: 0af0f5c)
+3. **Permission Fixes for QA/BA Users** (Commit: 0af0f5c)
    - SubmoduleService.java: Added module assignment checks for create/update operations
    - TestCaseService.java: Added module assignment checks for create/update operations
    - ImportExportService.java: Added module assignment check for import operation
 
-3. **Code Quality Fixes** (Commit: 0af0f5c)
+4. **Code Quality Fixes** (Commit: 0af0f5c)
    - AuthController.java: Replaced deprecated `acceptsProfiles()` with `matchesProfiles()`
 
-4. **Lazy Loading Fix for Excel Import** (Commit: 096c9bb)
+5. **Lazy Loading Fix for Excel Import** (Commit: 096c9bb)
    - UserRepository.java: Added `findByUsernameWithModules` method
    - UserContextService.java: Added `getCurrentUserWithModules` method
 
-5. **Query Derivation Fix** (Commit: bd3fc75)
+6. **Query Derivation Fix** (Commit: bd3fc75)
    - UserRepository.java: Added `@Query` annotation to `findByUsernameWithModules`
 
-6. **SecurityHelper Pattern & Module Visibility** (Commit: 8d9581a)
+7. **SecurityHelper Pattern & Module Visibility** (Commit: 8d9581a)
    - Created: `SecurityHelper.java` service class
    - Refactored: SubmoduleService (5 methods), ModuleService (6 methods)
    - Added: `isEditable` flag to TestModule entity with `@JsonProperty` annotation
@@ -46,19 +91,19 @@ None - All issues resolved!
    - Implemented: READ/WRITE access separation for modules and submodules
    - Fixed: Frontend edit button hiding based on isEditable flag
 
-7. **SecurityHelper Refactoring** (Commit: 2f1a449)
+8. **SecurityHelper Refactoring** (Commit: 2f1a449)
    - Refactored: TestCaseService (7 methods), ExecutionService (7 methods), ImportExportService (1 method)
    - Replaced duplicate permission checks with SecurityHelper methods
    - Code reduction: 156 insertions, 214 deletions (-58 lines net)
 
-8. **Excel Import Transaction Rollback Fix** (Commit: Pending)
+9. **Excel Import Transaction Rollback Fix** (Commit: Pending)
    - Issue: QA users couldn't import Excel due to transaction rollback
    - Root Cause: `createTestExecutionForTestCaseAndUser()` had `@Transactional` + `requireAdmin()` check
    - Solution: Created `autoGenerateTestExecution()` method bypassing ADMIN check for auto-generation
    - Updated: ImportExportService, ModuleService to use new method
    - Result: QA users can now import Excel successfully
 
-### Testing Status (30/31 Tests Passed)
+### Testing Status (30/32 Tests Passed)
 - ✅ Redmine integration (17 tests): Working
 - ✅ QA/BA permissions (4 tests): Working
 - ✅ Test Case Detail Navigation: Working
@@ -73,9 +118,34 @@ None - All issues resolved!
 - ✅ Submodule READ access: FIXED - All users can view submodules
 - ✅ Frontend edit control: FIXED - Edit buttons hidden for unassigned modules
 - ✅ Excel import (QA): FIXED - Transaction rollback issue resolved
+- ✅ Database connection: FIXED - Migrated to MariaDB 11.4 LTS
+- ⏸️ QA test case viewing (unassigned modules): FIXED - Awaiting testing
 - ⏸️ Production tests (2): Require deployment
 
 ### Completed Work Summary
+
+**Database Migration (2026-02-04):**
+- Migrated from XAMPP MySQL to standalone MariaDB 11.4.9 LTS
+- Resolved persistent XAMPP startup failures due to corrupted Aria logs
+- Created `testcasedb` database with proper utf8mb4_general_ci collation
+- Updated application.properties for MariaDB connection
+- Uses HeidiSQL (bundled with MariaDB) as database GUI tool
+
+**QA User Test Case Viewing Fix (2026-02-04):**
+- Fixed issue where QA users couldn't view test cases in unassigned modules
+- Removed assignment checks from `getTestCaseById()` method
+- Now allows all organization members to VIEW test cases (READ access)
+- Maintains WRITE restrictions via existing `requireModuleAccess()` checks in update/delete methods
+- Aligns with module viewing pattern: org-wide READ, assignment-based WRITE
+- Code reduction: -13 lines (cleaner implementation)
+
+**TestCase isEditable Flag Implementation (202D-02-04):**
+- Added `isEditable` flag to TestCaseDTO to control edit button visibility
+- Backend sets flag based on user permissions (admin OR module assignment)
+- Frontend uses flag to conditionally show/hide edit button
+- Fixed JSON serialization by adding `@JsonProperty("isEditable")` annotations
+- Follows same pattern as TestModule for consistent permission handling
+- Result: Edit button only shows for admins and users assigned to parent module
 
 **SecurityHelper Pattern Implementation:**
 - Created centralized permission checking service
@@ -142,48 +212,20 @@ None - All issues resolved!
 - **IDE**: IntelliJ IDEA 2025.2.2
 - **Java**: JDK 25
 - **Maven**: Local installation at `apache-maven-3.9.8/`
-- **Database**: MySQL (Standalone, connection fixed)
+- **Database**: MariaDB 11.4.9 LTS (standalone, installed on C drive)
+- **Database GUI**: HeidiSQL (bundled with MariaDB at C:\Program Files\Common Files\MariaDBShared\HeidiSQL\heidisql.exe)
 - **Frontend**: Angular 21 running on port 4200
 - **Backend**: Spring Boot running on port 8080
 
 ### Git Status
 - Branch: main
 - Last commit: 2f1a449 (SecurityHelper refactoring)
-- Pending changes to commit:
+- Uncommitted changes:
+  - application.properties (Database connection updated for MariaDB)
   - ImportExportService.java (Excel import transaction fix)
   - ApiController.java (Permission check before transaction)
   - TestCaseService.java (Added autoGenerateTestExecution method)
   - ModuleService.java (Uses autoGenerateTestExecution)
-   - Test each service update
-   - Commit after user approval
-
-3. **Complete Testing Checklist**
-   - Test remaining features
-   - Verify all refactoring work doesn't break existing functionality
-
-### Environment Notes
-- **OS**: Windows 10
-- **IDE**: IntelliJ IDEA 2025.2.2
-- **Java**: JDK 25
-- **Maven**: Local installation at `apache-maven-3.9.8/`
-- **Database**: MySQL (Standalone, connection fixed)
-- **Frontend**: Angular 21 running on port 4200
-- **Backend**: Spring Boot running on port 8080
-
-### Git Status
-- Branch: main
-- Last commit: bd3fc75 (Query derivation fix)
-- Uncommitted changes:
-  - `src/main/java/com/yourproject/tcm/service/SecurityHelper.java` (NEW)
-  - `src/main/java/com/yourproject/tcm/service/domain/SubmoduleService.java` (MODIFIED)
-  - `src/main/java/com/yourproject/tcm/service/domain/ModuleService.java` (MODIFIED)
-  - `src/main/java/com/yourproject/tcm/model/TestModule.java` (MODIFIED - added isEditable field)
-  - `src/main/java/com/yourproject/tcm/controller/ApiController.java` (MODIFIED - added SecurityHelper, set isEditable flag)
-  - `.ai/memory-bank/activeContext.md` (MODIFIED - updated with all changes)
-
-### Known Issues
-1. Chocolatey PATH issue - using local Maven instead
-2. Excel import - code fixed in previous session, needs testing
 
 ### Code Quality Standards (Memory Bank)
 

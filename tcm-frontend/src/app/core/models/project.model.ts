@@ -63,6 +63,7 @@ export interface TestCase {
   updatedDate?: string;
   prerequisites?: string;
   tags?: string[];
+  isEditable?: boolean; // UI flag: true if current user can edit this test case
   
   // Flattened hierarchy fields from backend
   projectName?: string;

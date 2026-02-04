@@ -79,7 +79,8 @@ public class TestCaseService {
 
     /**
      * Get a test case by ID with security checks.
-     * Validates organization boundary and user assignments.
+     * Validates organization boundary - all users in same organization can view test cases.
+     * Edit permissions are enforced separately in update/delete methods.
      */
     public Optional<TestCase> getTestCaseById(Long testCaseId) {
         User currentUser = userContextService.getCurrentUser();
@@ -90,26 +91,13 @@ public class TestCaseService {
         }
         
         // Check organization boundary via submodule → module → project → organization
+        // All users in the same organization can view test cases
         TestModule testModule = testCase.getSubmodule().getTestModule();
         securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
         
-        // ADMIN users can access any test case in their organization
-        if (userContextService.isAdmin(currentUser)) {
-            return Optional.of(testCase);
-        }
-        
-        // Non-ADMIN users can only access test cases in projects/modules they are assigned to
-        Project project = testModule.getProject();
-        if (currentUser.getAssignedProjects().contains(project)) {
-            return Optional.of(testCase);
-        }
-        
-        // Check module assignment
-        if (currentUser.getAssignedTestModules().contains(testModule)) {
-            return Optional.of(testCase);
-        }
-        
-        throw new RuntimeException("Access denied: You are not assigned to this project or module");
+        // All users in same organization can view test cases
+        // Edit permissions are enforced separately in update/delete methods
+        return Optional.of(testCase);
     }
 
     /**

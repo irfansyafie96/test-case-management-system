@@ -390,7 +390,20 @@ public class ApiController {
         try {
             Optional<TestCase> testCaseOpt = testCaseService.getTestCaseById(testCaseId);
             if (testCaseOpt.isPresent()) {
-                return new ResponseEntity<>(convertToDTO(testCaseOpt.get()), HttpStatus.OK);
+                TestCase testCase = testCaseOpt.get();
+                TestCaseDTO dto = convertToDTO(testCase);
+                
+                // Set isEditable flag based on user permissions (same logic as modules)
+                User currentUser = userContextService.getCurrentUser();
+                boolean isEditable = userContextService.isAdmin(currentUser);
+                
+                if (testCase.getSubmodule() != null && testCase.getSubmodule().getTestModule() != null) {
+                    isEditable = isEditable || testModuleRepository.isUserAssignedToModule(
+                        testCase.getSubmodule().getTestModule().getId(), currentUser.getId());
+                }
+                
+                dto.setEditable(isEditable);
+                return new ResponseEntity<>(dto, HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Test case not found with id: " + testCaseId, HttpStatus.NOT_FOUND);
             }

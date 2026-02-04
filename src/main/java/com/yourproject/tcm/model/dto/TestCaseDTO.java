@@ -1,5 +1,6 @@
 package com.yourproject.tcm.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class TestCaseDTO {
@@ -13,10 +14,21 @@ public class TestCaseDTO {
     private String projectName;
     private Integer stepCount;
     private List<TestStepDTO> testSteps;
+    
+    @JsonProperty("isEditable")
+    private boolean isEditable;  // UI flag: true if current user can edit this test case
 
     public TestCaseDTO(Long id, String testCaseId, String title, String description,
                        Long submoduleId, String submoduleName, String moduleName,
                        String projectName, Integer stepCount, List<TestStepDTO> testSteps) {
+        this(id, testCaseId, title, description, submoduleId, submoduleName, moduleName,
+             projectName, stepCount, testSteps, false);
+    }
+
+    public TestCaseDTO(Long id, String testCaseId, String title, String description,
+                       Long submoduleId, String submoduleName, String moduleName,
+                       String projectName, Integer stepCount, List<TestStepDTO> testSteps,
+                       boolean isEditable) {
         this.id = id;
         this.testCaseId = testCaseId;
         this.title = title;
@@ -27,6 +39,7 @@ public class TestCaseDTO {
         this.projectName = projectName;
         this.stepCount = stepCount;
         this.testSteps = testSteps;
+        this.isEditable = isEditable;
     }
 
     // Getters and Setters
@@ -59,6 +72,10 @@ public class TestCaseDTO {
 
     public List<TestStepDTO> getTestSteps() { return testSteps; }
     public void setTestSteps(List<TestStepDTO> testSteps) { this.testSteps = testSteps; }
+
+    @JsonProperty("isEditable")
+    public boolean isEditable() { return isEditable; }
+    public void setEditable(boolean isEditable) { this.isEditable = isEditable; }
 
     // Inner class for test step data
     public static class TestStepDTO {

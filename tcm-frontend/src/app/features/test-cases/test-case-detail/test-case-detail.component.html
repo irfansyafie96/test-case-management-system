@@ -34,7 +34,7 @@
                   matTooltip="Previous test case">
             <mat-icon>chevron_left</mat-icon> PREV
           </button>
-          <button mat-stroked-button *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])" (click)="editTestCase()">
+          <button mat-stroked-button *ngIf="testCase.isEditable" (click)="editTestCase()">
             <mat-icon>edit</mat-icon> EDIT
           </button>
           <button mat-raised-button color="primary" (click)="navigateToExecutions()">
