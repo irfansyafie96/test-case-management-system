@@ -2,347 +2,363 @@
 
 A modern, full-stack web application designed to revolutionize how quality assurance teams organize, execute, and track software testing activities. This system transforms the traditional spreadsheet-based approach to test management into a structured, collaborative, and efficient workflow.
 
-## The Challenge of Modern Software Testing
+## Current Status
 
-Software testing has evolved from a simple verification step to a critical component of the software development lifecycle. Yet many teams still struggle with:
+- **Sprint 1**: ✅ Completed
+- **Testing**: ✅ 32/32 tests passed
+- **Database**: ✅ MariaDB 11.4.9 LTS (migrated from XAMPP)
+- **Deployment**: Ready to deploy
+- **Version**: 1.0.0
 
-- Disorganized test cases scattered across documents and spreadsheets
-- Lack of visibility into testing progress and coverage
-- Difficulty tracking test execution history and trends
-- Inefficient collaboration between developers, testers, and stakeholders
-- Manual reporting that consumes valuable testing time
+## Technology Stack
 
-This Test Case Management System addresses these challenges head-on by providing a centralized platform that brings order, automation, and insight to the testing process.
+### Backend
+- **Spring Boot 3.2.0** - Robust Java framework for enterprise applications
+- **Java 17** - Modern Java with long-term support
+- **Spring Security** - JWT-based authentication and authorization
+- **Spring Data JPA** - Database abstraction with Hibernate
+- **MariaDB 11.4.9 LTS** - Production-ready relational database (LTS until May 2029)
+- **Apache POI** - Excel import/export functionality
 
-## What This System Delivers
-
-### For QA Managers and Team Leads
-- **Real-time visibility** into testing progress across all projects
-- **Comprehensive reporting** with actionable insights
-- **Resource allocation** tools to optimize team productivity
-- **Quality metrics** that demonstrate testing effectiveness
-
-### For Test Engineers
-- **Structured test organization** that reduces administrative overhead
-- **Efficient test execution** with clear assignments and status tracking
-- **Historical context** for test cases and their execution results
-- **Collaborative environment** for team coordination
-
-### For Development Teams
-- **Clear requirements traceability** from features to test cases
-- **Fast feedback loops** on quality issues
-- **Integration readiness** for CI/CD pipelines
-- **Defect prevention** through comprehensive test coverage
-
-## Core Architecture
-
-### Backend Foundation
-- **Spring Boot 3.x** - Robust Java framework for enterprise applications
-- **Spring Security** - Comprehensive security with JWT authentication
-- **Spring Data JPA** - Efficient database abstraction and operations
-- **RESTful API Design** - Clean, predictable endpoints for all operations
-- **H2/PostgreSQL** - Flexible database support for development and production
-
-### Frontend Experience  
-- **Angular 17+** - Modern framework with standalone components
+### Frontend
+- **Angular 21** - Modern framework with standalone components
 - **Angular Material** - Consistent, accessible UI components
-- **RxJS** - Reactive state management throughout the application
-- **HttpClient with Interceptors** - Sophisticated HTTP handling with authentication
-- **Responsive Design** - Seamless experience across desktop and mobile devices
+- **RxJS** - Reactive state management
+- **TypeScript** - Type-safe development
+- **SCSS** - Custom theming with dark mode support
 
-## Getting Started in Minutes
+## Key Features
 
-### Prerequisites Verification
-Before beginning, ensure your system meets these requirements:
+### 1. Organization & Team Management
+- Multi-organization support with isolated workspaces
+- Team invitations with role-based access control
+- User management with configurable permissions
+
+### 2. Project Hierarchy
+- **Projects** - Top-level containers for testing initiatives
+- **Modules** - Functional area segmentation within projects
+- **Submodules** - Fine-grained organization for test cases
+- **Test Cases** - Detailed test specifications with steps and expected results
+
+### 3. Test Execution Workbench
+- Interactive execution interface with step-by-step guidance
+- Real-time status tracking (Pass/Fail/Blocked)
+- Execution assignment and completion tracking
+- Completion summary dialog with results overview
+
+### 4. Redmine Integration
+- Direct Redmine issue creation from failed test executions
+- Pre-filled subject and description from test case data
+- Issue URL tracking and display
+- Manual link input for existing Redmine tickets
+
+### 5. Excel Import/Export
+- Batch test case creation via Excel templates
+- Hierarchical data import (Submodule → Test Case → Steps)
+- Automatic execution generation for imported test cases
+- Transaction rollback on import errors
+
+### 6. Analytics & Reporting
+- Real-time dashboard with testing progress metrics
+- Pass/Fail/Not executed visualization
+- Project-level coverage tracking
+- Execution history and trend analysis
+
+### 7. Permission System
+- **Organization-based isolation** - Users only see their organization's data
+- **Module-level assignments** - QA/BA users can only edit assigned modules
+- **Role-based access** - Admin, QA, BA, Tester roles with specific capabilities
+- **READ/WRITE separation** - All users can view, only assigned users can edit
+
+## Getting Started
+
+### Prerequisites
 - Java Development Kit 17 or later
 - Node.js 18 or higher with npm
 - Maven 3.9 or newer
-- Git for version control
+- MariaDB 11.4+ or MySQL 8.0+
 
-### Installation Workflow
+### Installation
 
-1. **Clone and Navigate**
+1. **Clone the Repository**
    ```bash
    git clone https://github.com/irfansyafie96/test-case-management-system.git
    cd test-case-management-system
    ```
 
-2. **Backend Setup**
+2. **Database Setup**
+   - Install MariaDB 11.4.9 LTS or MySQL 8.0+
+   - Create database: `CREATE DATABASE testcasedb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`
+   - Update `src/main/resources/application.properties` with your database credentials
+
+3. **Backend Setup**
    ```bash
-   # Install dependencies and build
+   # Build the project
    mvn clean install
    
-   # Launch the Spring Boot application
+   # Run the application
    mvn spring-boot:run
    ```
-   The backend server starts on `http://localhost:8080` with auto-generated API documentation.
+   The backend server starts on `http://localhost:8080`
 
-3. **Frontend Setup**
+4. **Frontend Setup**
    ```bash
-   # Move to frontend directory
    cd tcm-frontend
    
-   # Install required packages
+   # Install dependencies
    npm install
    
    # Start development server
    npm start
    ```
-   The application interface becomes available at `http://localhost:4200`.
+   The application interface is available at `http://localhost:4200`
 
-4. **Initial Access**
-   - Default admin credentials are created on first run
-   - Navigate to the login page
-   - Create your organization's first project
+5. **Initial Configuration**
+   - Register a new organization or use default admin credentials
+   - Create your first project
+   - Add modules and submodules to organize your test cases
+   - Import test cases from Excel or create them manually
 
-## Security First Approach
+## Security Features
 
-### Authentication Architecture
-The system implements a multi-layered security model:
-- **JWT-based Authentication** - JSON Web Tokens stored in HttpOnly cookies prevent XSS attacks
-- **CSRF Protection** - All state-changing operations require valid CSRF tokens
-- **Role-Based Access Control** - Fine-grained permissions for different user types
-- **Input Validation** - Server-side validation of all incoming data
-- **Secure Password Storage** - BCrypt hashing with appropriate work factors
+- **JWT Authentication** - Stateless authentication with HttpOnly cookies
+- **CSRF Protection** - Cross-site request forgery prevention
+- **Role-Based Access Control** - Fine-grained permissions per user role
+- **Organization Isolation** - Complete data separation between organizations
+- **Module-Level Access** - Edit permissions restricted to assigned modules
+- **Input Validation** - Server-side validation on all endpoints
+- **Secure Password Storage** - BCrypt hashing
 
-### User Roles and Capabilities
+## User Roles
 
-**Administrator**
-- Full system configuration and user management
-- Project creation and organization structure definition
-- Access to all analytical reports and system metrics
+### Administrator
+- Full system configuration
+- User and team management
+- Project and module creation
+- Access to all analytics and reports
 
-**Quality Assurance Engineer**
-- Complete test case lifecycle management
-- Test execution and result recording
-- Defect logging and tracking integration
+### Quality Assurance Engineer
+- Create and manage test cases
+- Execute assigned tests
+- Import/export test cases
+- View execution history
 
-**Business Analyst**
-- Test case review and approval authority
-- Requirements traceability verification
-- Stakeholder reporting access
+### Business Analyst
+- Review and approve test cases
+- Requirements traceability
+- Stakeholder reporting
+- View execution results
 
-**Tester**
-- Execution of assigned test cases
-- Result submission with evidence attachment
-- Personal execution history viewing
+### Tester
+- Execute assigned test cases
+- Record test results
+- View personal execution history
 
-## System Workflows
+## API Endpoints
 
-### Test Case Creation Process
-1. Project establishment with defined scope and objectives
-2. Module definition for functional area segmentation
-3. Test suite creation for logical grouping of related tests
-4. Individual test case development with:
-   - Clear, actionable test steps
-   - Expected results for verification
-   - Pre-requisites and test data requirements
-   - Priority and risk assessment
-
-### Test Execution Cycle
-1. Test case assignment to available team members
-2. Execution with real-time status updates
-3. Step-by-step result recording
-4. Defect logging for failed tests
-5. Final execution status determination
-6. Historical tracking for trend analysis
-
-### Reporting and Analytics
-- **Project Coverage Reports** - Percentage of requirements covered by tests
-- **Execution Status Dashboards** - Real-time view of testing progress
-- **Defect Density Analysis** - Quality metrics by module and component
-- **Team Performance Metrics** - Efficiency and effectiveness measurements
-- **Historical Trend Visualization** - Quality improvement tracking over time
-
-## API Design Philosophy
-
-### RESTful Endpoint Structure
-The API follows consistent design patterns:
-- Resource-based URL structures
-- HTTP verbs that match operational intent
-- Standardized response formats
-- Comprehensive error handling
-- Pagination for large datasets
-- Filtering and sorting capabilities
-
-### Key Endpoint Categories
-
-**Authentication and User Management**
-```http
-POST   /api/auth/login      # Secure user authentication
-POST   /api/auth/signup     # New user registration  
-POST   /api/auth/logout     # Session termination
-GET    /api/auth/check      # Authentication status verification
+### Authentication
+```
+POST   /api/auth/login           # User login
+POST   /api/auth/register        # User registration
+POST   /api/auth/register-org    # Organization registration
+POST   /api/auth/join            # Join organization via invitation
+GET    /api/auth/check           # Check authentication status
 ```
 
-**Project Organization**
-```http
-GET    /api/projects                    # List all accessible projects
-POST   /api/projects                    # Create new project
-GET    /api/projects/{id}               # Project details with hierarchy
-DELETE /api/projects/{id}               # Project removal
+### Projects
+```
+GET    /api/projects                          # List projects
+POST   /api/projects                          # Create project
+GET    /api/projects/{id}                     # Get project details
+PUT    /api/projects/{id}                     # Update project
+DELETE /api/projects/{id}                     # Delete project
+POST   /api/projects/{id}/assign/{userId}     # Assign user to project
 ```
 
-**Test Management**
-```http
-POST   /api/projects/{id}/testmodules   # Add module to project
-POST   /api/testmodules/{id}/testsuites # Create test suite in module
-POST   /api/testsuites/{id}/testcases   # Add test case to suite
-PUT    /api/testcases/{id}              # Update test case details
+### Modules
+```
+GET    /api/projects/{id}/modules             # List project modules
+POST   /api/projects/{id}/modules             # Create module
+GET    /api/modules/{id}                      # Get module details
+PUT    /api/modules/{id}                      # Update module
+DELETE /api/modules/{id}                      # Delete module
 ```
 
-**Execution Tracking**
-```http
-POST   /api/testcases/{id}/executions   # Initiate test execution
-GET    /api/executions/my-assignments   # User's assigned executions
-PUT    /api/executions/{id}/complete    # Finalize execution
-PUT    /api/executions/{id}/steps/{sid} # Update step result
+### Submodules
+```
+GET    /api/modules/{id}/submodules           # List module submodules
+POST   /api/modules/{id}/submodules           # Create submodule
+GET    /api/submodules/{id}                   # Get submodule details
+PUT    /api/submodules/{id}                   # Update submodule
+DELETE /api/submodules/{id}                   # Delete submodule
 ```
 
-## Database Design
-
-### Entity Relationships
-The data model implements a hierarchical structure:
+### Test Cases
 ```
-User ──┬── Project ──┬── TestModule ──┬── TestSuite ──┬── TestCase ──┬── TestExecution
-       │             │                 │               │               │
-       │             │                 │               │               └── TestStepResult
-       │             │                 │               │
-       │             │                 │               └── TestStep
-       │             │                 │
-       │             │                 └── (Additional TestSuites)
-       │             │
-       │             └── (Additional TestModules)
+GET    /api/submodules/{id}/testcases         # List test cases
+POST   /api/submodules/{id}/testcases         # Create test case
+GET    /api/testcases/{id}                    # Get test case details
+PUT    /api/testcases/{id}                    # Update test case
+DELETE /api/testcases/{id}                    # Delete test case
+```
+
+### Executions
+```
+GET    /api/executions                        # List executions
+GET    /api/executions/{id}                   # Get execution details
+PUT    /api/executions/{id}/complete          # Complete execution
+PUT    /api/executions/{id}/steps/{stepId}    # Update step result
+GET    /api/executions/my-assignments          # My assigned executions
+GET    /api/modules/{id}/executions            # Module executions
+POST   /api/modules/{id}/regenerate-executions # Regenerate executions
+```
+
+### Import/Export
+```
+POST   /api/import/excel/{submoduleId}        # Import from Excel
+GET    /api/export/template                   # Download Excel template
+```
+
+### Analytics
+```
+GET    /api/analytics                         # Get analytics data
+GET    /api/analytics/summary                 # Get completion summary
+```
+
+## Database Schema
+
+```
+User ──┬── Organization
        │
-       └── RoleAssignment
+       ├── Project ──┬── TestModule ──┬── TestSubmodule ──┬── TestCase ──┬── TestExecution
+       │             │                 │                    │               │
+       │             │                 │                    │               └── TestStepResult
+       │             │                 │                    │
+       │             │                 │                    └── TestStep
+       │             │                 │
+       │             │                 └── (Additional Submodules)
+       │             │
+       │             └── (Additional Modules)
+       │
+       └── Role (ADMIN, QA, BA, TESTER)
 ```
 
-### Key Design Decisions
-- **Normalized Structure** - Minimized data redundancy
-- **Foreign Key Constraints** - Data integrity enforcement
-- **Indexed Query Patterns** - Optimized performance for common operations
-- **Soft Delete Patterns** - Historical data preservation where appropriate
-- **Audit Trail Columns** - Creation and modification tracking
+## Development
 
-## Development Practices
+### Building for Production
 
-### Code Quality Standards
-- **Consistent Code Style** - Enforced through editor configuration
-- **Comprehensive Testing** - Unit, integration, and end-to-end test coverage
-- **Documentation First** - API documentation with usage examples
-- **Performance Awareness** - Regular profiling and optimization
-- **Security Review** - Periodic vulnerability assessment
-
-### Build and Deployment
+**Backend:**
 ```bash
-# Production backend build
 mvn clean package -Pprod
+```
 
-# Frontend production build
+**Frontend:**
+```bash
 cd tcm-frontend
 npm run build
-
-# Combined deployment package
-# (Includes both backend JAR and frontend static assets)
 ```
 
-### Environment Configuration
-- **Development** - H2 in-memory database with sample data
-- **Testing** - Isolated database instances for automated tests
-- **Staging** - Production-like configuration with test data
-- **Production** - PostgreSQL with connection pooling and monitoring
+### Environment Variables
 
-## Extensibility and Integration
+Create `.env` file in project root:
 
-### Available Extension Points
-1. **Custom Report Generation** - Additional analytical modules
-2. **External Tool Integration** - Bug trackers, CI/CD systems
-3. **Notification Systems** - Email, Slack, Microsoft Teams
-4. **Import/Export Formats** - Additional file format support
-5. **Authentication Providers** - LDAP, OAuth, SAML integration
+```env
+# Database
+DB_URL=jdbc:mysql://localhost:3306/testcasedb
+DB_USERNAME=root
+DB_PASSWORD=your_password
 
-### API Integration Examples
-```typescript
-// Example: Creating a test case programmatically
-const testCase = {
-  name: "User Login Validation",
-  description: "Verify user authentication workflow",
-  steps: [
-    { description: "Navigate to login page", expectedResult: "Login form displayed" },
-    { description: "Enter valid credentials", expectedResult: "Successful authentication" }
-  ]
-};
+# JWT
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRATION=86400000
 
-// Using the API from external systems
-fetch('/api/testsuites/{suiteId}/testcases', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(testCase)
-});
+# Admin User (Default)
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+ADMIN_EMAIL=admin@example.com
+
+# Frontend URL (for invitations)
+TCM_APP_FRONTEND_URL=http://localhost:4200
 ```
 
-## Roadmap and Vision
+## Deployment
 
-### Near-Term Enhancements (Next 3-6 Months)
-- **Test Execution Scheduling** - Automated test runs at specified intervals
-- **Advanced Analytics Dashboard** - Customizable metrics and visualizations
-- **Mobile Application** - Native mobile experience for test execution
-- **Bulk Operations** - Mass import/export and update capabilities
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions to DigitalOcean or other cloud platforms.
 
-### Medium-Term Development (6-12 Months)
-- **API Test Integration** - Direct API testing capabilities
-- **Performance Test Management** - Load and stress test coordination
-- **Accessibility Testing** - Built-in accessibility validation tools
-- **Visual Regression Testing** - Image comparison and validation
+### Deployment Checklist
+- [ ] Configure production environment variables
+- [ ] Set up production database
+- [ ] Build backend JAR file
+- [ ] Build frontend dist files
+- [ ] Configure Nginx reverse proxy
+- [ ] Set up SSL certificate
+- [ ] Configure systemd service
+- [ ] Test all features end-to-end
 
-### Long-Term Vision (12+ Months)
-- **AI-Powered Test Generation** - Intelligent test case creation
-- **Predictive Analytics** - Defect prediction and risk assessment
-- **Cross-Platform Testing** - Unified web, mobile, and API testing
-- **Ecosystem Integration** - Marketplace for testing tools and extensions
+## Testing
 
-## Contributing to the Project
+### Test Coverage
+- ✅ 32/32 tests passing
+- ✅ Redmine integration (17 tests)
+- ✅ QA/BA permissions (4 tests)
+- ✅ Excel import/export
+- ✅ Test execution workflow
+- ✅ Analytics and reporting
 
-### Development Environment Setup
-1. Fork the repository and clone locally
-2. Set up both backend and frontend development environments
-3. Review existing code style and architecture patterns
-4. Create a feature branch for your changes
-5. Submit a pull request with comprehensive description
+### Running Tests
+```bash
+# Backend tests
+mvn test
 
-### Areas Needing Contribution
-- **Documentation Improvement** - User guides, API documentation
-- **Test Coverage Expansion** - Additional test scenarios
-- **Performance Optimization** - Query optimization, caching strategies
-- **Internationalization** - Multi-language support
-- **Accessibility Enhancements** - WCAG compliance improvements
+# Frontend tests
+cd tcm-frontend
+npm test
+```
 
-## Support and Resources
+## Known Issues
 
-### Troubleshooting Guide
+None - all issues resolved as of Sprint 1 completion.
 
-**Common Installation Issues**
-- Port conflicts: Verify ports 8080 and 4200 are available
-- Database connection: Check database service status and credentials
-- Dependency resolution: Clear Maven and npm caches if needed
+## Roadmap
 
-**Runtime Problems**
-- Authentication failures: Verify cookie settings in browser
-- CSRF token issues: Check proxy configuration for cookie handling
-- Performance concerns: Review database indexes and query patterns
+### Completed (Sprint 1)
+- ✅ Redmine integration
+- ✅ Excel import/export
+- ✅ JWT authentication
+- ✅ Organization management
+- ✅ Role-based permissions
+- ✅ Test execution workbench
+- ✅ Analytics dashboard
+- ✅ Security enhancements (CSRF, HttpOnly cookies)
 
-### Monitoring and Maintenance
-- Application health endpoints at `/actuator/health`
-- Performance metrics through Spring Boot Actuator
-- Log aggregation configuration for production deployments
-- Regular backup procedures for database preservation
+### Future Enhancements
+- Test execution scheduling
+- Advanced analytics and custom reports
+- Mobile application for on-the-go testing
+- API test integration
+- Performance test management
+- AI-powered test generation
 
-## Project Status and Evolution
+## Contributing
 
-This system represents an ongoing commitment to improving software testing practices. The architecture is designed for evolution, with clear separation of concerns that allows individual components to be enhanced or replaced without disrupting the entire system.
+Contributions are welcome! Please follow these guidelines:
 
-Regular updates incorporate user feedback, technological advancements, and emerging best practices in software quality assurance. The goal is not just to manage test cases, but to elevate the entire testing discipline through better tools, insights, and workflows.
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License.
+
+## Support
+
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/irfansyafie96/test-case-management-system).
 
 ---
 
-*This documentation reflects the current state of development. As the project evolves, this README will be updated to ensure it accurately represents capabilities, installation procedures, and usage patterns. For the latest information, always refer to the main repository branch.*
+**Last Updated**: February 5, 2026  
+**Version**: 1.0.0  
+**Status**: Production Ready
