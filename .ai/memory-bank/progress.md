@@ -373,14 +373,27 @@
 
 ### Latest Commits:
 
-**Commit: [Pending]** (2026-02-09)
+**Commit: 3f4d5a1** (2026-02-09)
+- **Message**: "fix: add text truncation for long submodule names and test case titles in module detail page"
+- **Files**: 2 files changed, 20 insertions(+), 34 deletions(-)
+- **Changes**:
+  - Frontend: Added text truncation (ellipsis) for submodule names (max-width: 380px)
+  - Frontend: Added text truncation (ellipsis) for test case titles (max-width: 480px)
+  - Frontend: Added flex properties to .suite-title to prevent overflow
+  - Frontend: Increased anyComponentStyle budget from 8kB to 9kB in angular.json
+  - Frontend: Removed duplicate CSS and unnecessary comments to optimize file size
+- **Impact**: Fixed visual layout bug where long text pushed buttons off-screen and broke table layout
+- **Files Modified**: `angular.json`, `module-detail.component.css`
+
+**Commit: 8ab49a2** (2026-02-09)
 - **Message**: "refactor: remove unused expected_result column from test_cases table"
-- **Files**: 4 files changed, backend and frontend compiled successfully
+- **Files**: 6 files changed, 83 insertions(+), 22 deletions(-)
 - **Changes**:
   - Backend: Removed `expectedResult` field, getter, and setter from `TestCase.java`
   - Backend: Removed `setExpectedResult()` call from `TestCaseService.java`
   - Frontend: Removed `expectedResult` from TestCase interface in `project.model.ts`
   - Frontend: Removed "Final Result" display section from `test-case-detail.component.html`
+  - Memory Bank: Updated activeContext.md and progress.md with changes
   - Database: Dropped `expected_result` column from `test_cases` table
 - **Impact**: Cleaner codebase, removed dead code (all values were NULL, no UI to set it)
 - **Note**: `TestStep.expectedResult` (for individual steps) remains intact and working
