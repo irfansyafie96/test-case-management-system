@@ -373,10 +373,61 @@
 
 ### Latest Commits:
 
-**Commit: bd3fc75** (Most Recent)
+**Commit: [Pending]** (2026-02-09)
+- **Message**: "refactor: remove unused expected_result column from test_cases table"
+- **Files**: 4 files changed, backend and frontend compiled successfully
+- **Changes**:
+  - Backend: Removed `expectedResult` field, getter, and setter from `TestCase.java`
+  - Backend: Removed `setExpectedResult()` call from `TestCaseService.java`
+  - Frontend: Removed `expectedResult` from TestCase interface in `project.model.ts`
+  - Frontend: Removed "Final Result" display section from `test-case-detail.component.html`
+  - Database: Dropped `expected_result` column from `test_cases` table
+- **Impact**: Cleaner codebase, removed dead code (all values were NULL, no UI to set it)
+- **Note**: `TestStep.expectedResult` (for individual steps) remains intact and working
+
+**Commit: c17ac38** (2026-02-05)
+- **Message**: "docs: update README.md to reflect Sprint 1 completion and current project state"
+- **Files**: 1 file changed, 344 insertions(+), 342 deletions(-)
+- **Changes**: Updated README.md with current project state, technology versions, architecture, API endpoints, and deployment instructions
+
+**Commit: bd3fc75**
 - **Message**: "fix: add @Query annotation to findByUsernameWithModules to resolve Spring Data JPA query derivation error"
 - **Files**: 1 file changed, 2 insertions(+), 1 deletion(-)
 - **Date**: 2026-02-03
+
+**Commit: 096c9bb**
+- **Message**: "fix: resolve lazy loading issue for Excel import by loading assignedTestModules for QA/BA users"
+- **Files**: 3 files changed, 26 insertions(+), 3 deletions(-)
+- **Date**: 2026-02-03
+
+**Commit: 0af0f5c**
+- **Message**: "fix: enable QA/BA users to create submodules, test cases, and import; fix MySQL connection; update deprecated API"
+- **Files**: 7 files changed, 687 insertions(+), 403 deletions(-)
+- **Date**: 2026-02-01
+
+**Commit: 5519032**
+- **Message**: "feat: complete Sprint 1 security fixes and Redmine integration"
+- **Files**: 21 files changed, 1801 insertions(+), 92 deletions(-)
+- **Date**: Recent
+
+### Documentation Updates (2026-02-05)
+
+**README.md Update**
+- Complete rewrite to reflect current project state
+- Added current status section (Sprint 1 completed, testing 32/32 passed)
+- Updated technology stack versions (Spring Boot 3.2.0, Angular 21, MariaDB 11.4.9 LTS)
+- Fixed architecture diagram (Project → Module → Submodule → TestCase)
+- Added key features documentation (Redmine, Excel import, Execution workbench, Analytics)
+- Updated all API endpoints to match implementation
+- Added environment variables reference
+- Added deployment checklist
+- Updated testing status
+
+**Memory Bank Updates**
+- Updated activeContext.md with testing completion dates
+- Updated progress.md with testing phase completion
+- Marked Excel import and QA test case viewing as RESOLVED
+- Updated overall progress to 100% testing complete
 
 **Commit: 096c9bb**
 - **Message**: "fix: resolve lazy loading issue for Excel import by loading assignedTestModules for QA/BA users"

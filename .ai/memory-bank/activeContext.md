@@ -106,6 +106,36 @@ None - All issues resolved!
    - Date Tested: 2026-02-05
    - Status: COMPLETED ✅
 
+10. **Documentation Update: README.md** (2026-02-05)
+   - **Issue**: README.md was outdated and didn't reflect current project state
+   - **Changes Made**:
+     - Updated technology stack versions (Spring Boot 3.2.0, Angular 21, MariaDB 11.4.9 LTS)
+     - Updated architecture to Project → Module → Submodule → TestCase hierarchy (removed TestSuite)
+     - Added current status section (Sprint 1 completed, testing 32/32 passed)
+     - Added key features section (Redmine integration, Excel import, Execution workbench, Analytics)
+     - Updated API endpoints to match actual implementation
+     - Updated database schema diagram
+     - Updated installation instructions with database setup
+     - Added environment variables reference
+     - Updated security features and user roles documentation
+     - Added deployment checklist and DEPLOYMENT.md reference
+     - Updated testing status and project roadmap
+   - **Commit**: c17ac38 - "docs: update README.md to reflect Sprint 1 completion and current project state"
+   - **Status**: COMPLETED ✅
+
+11. **Remove Unused expected_result Column** (2026-02-09)
+   - **Issue**: Unused `expected_result` column in `test_cases` table (all NULL values, no UI to set it)
+   - **Changes Made**:
+     - Backend: Removed `expectedResult` field, getter, and setter from `TestCase.java`
+     - Backend: Removed `setExpectedResult()` call from `TestCaseService.java:208`
+     - Frontend: Removed `expectedResult` from TestCase interface in `project.model.ts:59`
+     - Frontend: Removed "Final Result" display section from `test-case-detail.component.html:132-135`
+     - Database: Dropped `expected_result` column from `test_cases` table via SQL
+   - **Important Distinction**: `TestStep.expectedResult` (for individual steps) remains intact and working
+   - **Impact**: Cleaner codebase, removed dead code with no functionality loss
+   - **Testing**: Backend and frontend both compiled successfully after changes
+   - **Status**: COMPLETED ✅
+
 ### Testing Status (32/32 Tests Passed) ✅
 - ✅ Redmine integration (17 tests): Working
 - ✅ QA/BA permissions (4 tests): Working

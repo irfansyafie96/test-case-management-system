@@ -205,9 +205,8 @@ public class TestCaseService {
         testCase.setTestCaseId(testCaseDetails.getTestCaseId());
         testCase.setDescription(testCaseDetails.getDescription());
         testCase.setPrerequisites(testCaseDetails.getPrerequisites());
-        testCase.setExpectedResult(testCaseDetails.getExpectedResult());
         testCase.setTags(testCaseDetails.getTags());
-        
+
         // Handle test steps - properly manage the relationship to avoid cascade issues
         if (testCaseDetails.getTestSteps() != null) {
             // Get or create the current test steps list to maintain the same collection instance

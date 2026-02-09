@@ -56,7 +56,6 @@ export interface TestCase {
   status?: string;
   steps?: string[]; // Legacy/Simplified steps
   testSteps?: TestStep[]; // Detailed steps from backend
-  expectedResult?: string;
   submoduleId: number | string;
   submodule?: Submodule; // Full submodule information for display
   createdDate?: string;

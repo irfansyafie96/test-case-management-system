@@ -41,9 +41,6 @@ public class TestCase {
     @Column(columnDefinition = "TEXT")
     private String prerequisites;
 
-    @Column(columnDefinition = "TEXT")
-    private String expectedResult;
-
     private String tags;
 
     /**
@@ -113,14 +110,6 @@ public class TestCase {
 
     public void setPrerequisites(String prerequisites) {
         this.prerequisites = prerequisites;
-    }
-
-    public String getExpectedResult() {
-        return expectedResult;
-    }
-
-    public void setExpectedResult(String expectedResult) {
-        this.expectedResult = expectedResult;
     }
 
     public String getTags() {
