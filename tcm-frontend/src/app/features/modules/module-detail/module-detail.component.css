@@ -88,7 +88,7 @@
   gap: 8px;
   margin-bottom: 16px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 16px; /* Increased from 12px */
+  font-size: 16px;
   color: #666;
 }
 
@@ -102,7 +102,7 @@
 }
 
 .back-link mat-icon {
-  font-size: 18px; /* Increased from default/smaller */
+  font-size: 18px;
   width: 18px;
   height: 18px;
 }
@@ -136,13 +136,12 @@
   gap: 32px;
 }
 
-/* Suite Folder Style */
 .suite-folder {
   background-color: var(--surface);
   border: var(--border-medium);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-md);
-  overflow: hidden; /* Added */
+  overflow: hidden;
 }
 
 .suite-header {
@@ -158,6 +157,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
 .suite-title mat-icon { color: #666; }
@@ -168,6 +169,10 @@
   font-size: 18px;
   font-weight: 700;
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
 }
 
 .suite-actions {
@@ -181,17 +186,16 @@
   height: 32px;
   line-height: 32px;
   padding: 0 12px;
-  border: var(--border-thick) !important; /* Added for bolder border */
+  border: var(--border-thick) !important;
 }
 
-/* Bespoke Table */
 .bespoke-table {
   width: 100%;
 }
 
 .bespoke-table th {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 16px; /* Increased from 11px */
+  font-size: 16px;
   font-weight: 700;
   color: #666;
   text-transform: uppercase;
@@ -207,7 +211,7 @@
   padding: 12px 24px;
   border-bottom: var(--border-thin);
   font-family: 'DM Sans', sans-serif;
-  font-size: 16px; /* Increased from 14px */
+  font-size: 16px;
   vertical-align: middle;
 }
 
@@ -215,7 +219,6 @@
   vertical-align: middle;
 }
 
-/* Fix Icon Button Alignment in Table */
 .bespoke-table button[mat-icon-button] {
   display: inline-flex !important;
   align-items: center;
@@ -243,22 +246,12 @@
   box-shadow: 2px 2px 0 0 rgba(0,0,0,0.1);
 }
 
-.title-cell { font-weight: 500; }
-
-/* Fix Icon Button Alignment in Table */
-.bespoke-table button[mat-icon-button] {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-}
-
-.bespoke-table button[mat-icon-button] ::ng-deep mat-icon {
-  margin: 0 !important;
-  padding: 0 !important;
-  line-height: 1 !important;
-  display: flex !important;
+.title-cell {
+  font-weight: 500;
+  max-width: 480px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .actions-cell {
@@ -289,7 +282,6 @@
   font-size: 13px;
 }
 
-/* Badges */
 .status-badge { color: #666; background-color: #f0f0f0; border-color: #ccc; }
 
 .header-actions {
@@ -298,7 +290,6 @@
   align-items: center;
 }
 
-/* Empty State */
 .empty-state {
   display: flex;
   align-items: center;
@@ -372,7 +363,6 @@
   letter-spacing: 0.05em;
 }
 
-/* Assignment Management */
 .assignments-container {
   background-color: var(--surface);
   border: var(--border-medium);
@@ -382,7 +372,7 @@
   box-shadow: 8px 8px 0px 0px var(--ink);
   border-color: var(--ink);
   background-image: radial-gradient(var(--paper) 1px, transparent 1px);
-  background-size: 20px 20px; /* Subtle blueprint grid */
+  background-size: 20px 20px;
 }
 
 .assigned-users-list {
