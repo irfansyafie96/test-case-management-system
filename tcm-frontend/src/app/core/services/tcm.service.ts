@@ -624,6 +624,32 @@ export class TcmService {
       );
   }
 
+  /**
+   * Update a user's role (ADMIN only)
+   * @param userId ID of the user to update
+   * @param roleName New role name (QA, BA, TESTER)
+   * @returns Observable<User> Updated user
+   */
+  updateUserRole(userId: number | string, roleName: string): Observable<User> {
+    return this.http.put<any>(`${this.apiUrl}/users/${userId}/role?roleName=${roleName}`, {})
+      .pipe(
+        map(user => this.transformUserRoles(user)),
+        catchError(this.handleError<User>('updateUserRole'))
+      );
+  }
+
+  /**
+   * Remove a user from the team (Deactivate) (ADMIN only)
+   * @param userId ID of the user to remove
+   * @returns Observable<void>
+   */
+  removeUserFromTeam(userId: number | string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/users/${userId}`)
+      .pipe(
+        catchError(this.handleError<void>('removeUserFromTeam'))
+      );
+  }
+
   // ==================== UTILITY METHODS ====================
 
   /**

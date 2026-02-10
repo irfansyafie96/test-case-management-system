@@ -110,7 +110,15 @@
 
 ## Sprint 2 Status: CODE QUALITY REFACTORING (IN PROGRESS)
 
-### Sprint 2 Tasks (Refactoring Opportunities):
+### Sprint 2 Tasks (Refactoring & New Features):
+
+#### User Management Enhancements:
+- [x] **User Role Management & Deactivation** (2026-02-10)
+   - **Implemented**: Ability for admins to change member roles (QA, BA, TESTER) and remove members from the team via deactivation.
+   - **Backend**: Updated `UserRepository`, `UserService`, and `ApiController`.
+   - **Frontend**: Updated `TcmService`, `ProfileComponent`, and integrated `mat-menu`.
+   - **Safety**: "Remove from Team" uses deactivation (`enabled = false`) to preserve test execution history.
+   - **Status**: COMPLETED ✅
 
 #### High Priority Refactoring (Recommended):
 

@@ -270,6 +270,29 @@
   color: var(--ink);
 }
 
+/* Member Action Menu Styles */
+.text-danger {
+  color: var(--accent-danger) !important;
+}
+
+::ng-deep .mat-mdc-menu-panel {
+  border: var(--border-thin) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 4px 4px 0 0 var(--ink) !important;
+  background-color: var(--surface) !important;
+  min-width: 180px !important;
+}
+
+::ng-deep .mat-mdc-menu-item {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+::ng-deep .mat-mdc-menu-item:hover:not([disabled]) {
+  background-color: var(--paper) !important;
+}
+
 /* Remove old team styles */
 .team-header, .compact-field, .member-item {
   display: none;

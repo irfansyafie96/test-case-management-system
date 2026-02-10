@@ -125,9 +125,26 @@
                 </div>
                 <div class="member-meta">
                   <span class="role-chip">{{ member.roles?.[0] || 'MEMBER' }}</span>
-                  <button mat-icon-button class="action-btn" *ngIf="isAdmin && member.username !== currentUser?.username">
+                  <button mat-icon-button class="action-btn" *ngIf="isAdmin && member.username !== currentUser?.username" [matMenuTriggerFor]="memberMenu">
                     <mat-icon>more_vert</mat-icon>
                   </button>
+                  
+                  <mat-menu #memberMenu="matMenu">
+                    <button mat-menu-item [matMenuTriggerFor]="roleSubMenu">
+                      <mat-icon>badge</mat-icon>
+                      <span>Change Role</span>
+                    </button>
+                    <button mat-menu-item (click)="removeMember(member)" class="remove-btn">
+                      <mat-icon color="warn">person_remove</mat-icon>
+                      <span class="text-danger">Remove from Team</span>
+                    </button>
+                  </mat-menu>
+
+                  <mat-menu #roleSubMenu="matMenu">
+                    <button mat-menu-item (click)="changeRole(member, 'QA')" [disabled]="member.roles?.includes('QA')">QA</button>
+                    <button mat-menu-item (click)="changeRole(member, 'BA')" [disabled]="member.roles?.includes('BA')">BA</button>
+                    <button mat-menu-item (click)="changeRole(member, 'TESTER')" [disabled]="member.roles?.includes('TESTER')">Tester</button>
+                  </mat-menu>
                 </div>
               </div>
               

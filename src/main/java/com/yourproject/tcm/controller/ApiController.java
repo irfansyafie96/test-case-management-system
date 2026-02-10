@@ -818,6 +818,34 @@ public class ApiController {
         }
     }
 
+    // ==================== USER MANAGEMENT ENDPOINTS ====================
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<?> updateUserRole(@PathVariable Long userId, @RequestParam String roleName) {
+        try {
+            User updatedUser = userService.updateUserRole(userId, roleName);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating user role: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deactivateUser(@PathVariable Long userId) {
+        try {
+            userService.deactivateUser(userId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error removing user: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // ==================== IMPORT/EXPORT ENDPOINTS ====================
 
     /**

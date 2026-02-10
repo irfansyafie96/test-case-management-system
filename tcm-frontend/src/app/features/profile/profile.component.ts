@@ -8,11 +8,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 import { TcmService } from '../../core/services/tcm.service';
 import { TeamService } from '../../core/services/team.service';
 import { User } from '../../core/models/project.model';
+import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-profile',
@@ -27,6 +30,8 @@ import { User } from '../../core/models/project.model';
     MatInputModule,
     MatSelectModule,
     MatSnackBarModule,
+    MatMenuModule,
+    MatDialogModule,
     ReactiveFormsModule
   ],
   templateUrl: './profile.component.html',
@@ -48,6 +53,7 @@ export class ProfileComponent implements OnInit {
     private teamService: TeamService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {
     this.passwordForm = this.fb.group({
@@ -142,6 +148,69 @@ export class ProfileComponent implements OnInit {
           panelClass: ['error-snackbar'],
           horizontalPosition: 'right',
           verticalPosition: 'top'
+        });
+      }
+    });
+  }
+
+  changeRole(member: User, newRole: string) {
+    if (!member.id) return;
+    
+    this.tcmService.updateUserRole(member.id, newRole).subscribe({
+      next: () => {
+        this.snackBar.open(`Role updated to ${newRole} for ${member.username}`, 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+        this.loadTeamMembers();
+      },
+      error: (error) => {
+        this.snackBar.open(error.error || 'Failed to update role.', 'Close', {
+          duration: 5000,
+          panelClass: ['error-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
+
+  removeMember(member: User) {
+    if (!member.id) return;
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Remove Team Member',
+        message: `Are you sure you want to remove ${member.username} from the team? They will no longer be able to log in, but their testing history will be preserved.`,
+        confirmButtonText: 'Remove',
+        confirmButtonColor: 'warn',
+        icon: 'person_remove'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.tcmService.removeUserFromTeam(member.id!).subscribe({
+          next: () => {
+            this.snackBar.open(`${member.username} removed from the team`, 'Close', {
+              duration: 3000,
+              panelClass: ['success-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
+            this.loadTeamMembers();
+          },
+          error: (error) => {
+            this.snackBar.open(error.error || 'Failed to remove member.', 'Close', {
+              duration: 5000,
+              panelClass: ['error-snackbar'],
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
+          }
         });
       }
     });

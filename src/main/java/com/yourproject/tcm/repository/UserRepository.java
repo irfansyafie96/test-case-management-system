@@ -61,8 +61,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT DISTINCT u FROM User u JOIN u.assignedTestModules tm WHERE tm.id = :moduleId")
     List<User> findUsersAssignedToTestModule(@Param("moduleId") Long moduleId);
 
-    // Find all non-admin users (QA/BA/TESTER) for admin dashboard filter, filtered by organization
+    // Find all non-admin users (QA/BA/TESTER) for admin dashboard filter, filtered by organization, only active users
     @EntityGraph(attributePaths = {"roles"})
-    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA', 'TESTER') AND u.organization = :organization")
+    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA', 'TESTER') AND u.organization = :organization AND u.enabled = true")
     List<User> findAllNonAdminUsers(@Param("organization") com.yourproject.tcm.model.Organization organization);
 }

@@ -137,16 +137,16 @@ None - All issues resolved!
    - **Status**: COMPLETED ✅
 
 12. **Text Truncation for Module Detail Page** (2026-02-09)
-   - **Issue**: Long submodule names and test case titles broke the layout, pushing "ADD CASE" button off-screen and breaking line separator alignment
-   - **Changes Made**:
-     - Frontend: Added text truncation (ellipsis) for submodule names in `.suite-title h3` (max-width: 380px)
-     - Frontend: Added flex properties to `.suite-title` to allow shrinking (`flex: 1; min-width: 0;`)
-     - Frontend: Added text truncation (ellipsis) for test case titles in `.title-cell` (max-width: 480px)
-     - Frontend: Increased anyComponentStyle budget from 8kB to 9kB in `angular.json`
-     - Frontend: Removed duplicate CSS and unnecessary comments to optimize file size
-   - **Pattern**: Follows existing ellipsis truncation pattern used in sidebar and import-dialog components
-   - **Impact**: Fixed visual layout bug, long text now truncates with "..." without breaking layout
-   - **Testing**: Frontend built successfully after changes
+   - **Issue**: Long submodule names and test case titles broke the layout.
+   - **Solution**: Added ellipsis truncation and flex-box constraints.
+   - **Status**: COMPLETED ✅
+
+13. **User Role Management & Team Removal (Deactivation)** (2026-02-10)
+   - **Feature**: Admins can now change user roles and remove users from the team.
+   - **Mechanism**: "Removal" is implemented as **Deactivation** (`enabled = false`).
+   - **Preservation**: This ensures that all test execution history linked to that user is preserved in the audit trail.
+   - **Frontend**: Integrated a "Three Dots" menu (`mat-menu`) in the Team Members list on the Profile page.
+   - **Backend**: Added `updateUserRole` and `deactivateUser` to `UserService` and `ApiController`.
    - **Status**: COMPLETED ✅
 
 ### Testing Status (32/32 Tests Passed) ✅
