@@ -232,6 +232,29 @@
   flex-direction: column;
 }
 
+.member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.external-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background-color: var(--ink);
+  color: var(--surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.external-checkbox {
+  margin: 0 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+
 .member-name {
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;

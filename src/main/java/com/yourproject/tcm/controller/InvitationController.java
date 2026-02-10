@@ -21,7 +21,12 @@ public class InvitationController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createInvitation(@Valid @RequestBody InviteRequest request) {
         try {
-            Invitation invitation = invitationService.createInvitation(request.getEmail(), request.getRole());
+            Invitation invitation = invitationService.createInvitation(
+                request.getEmail(), 
+                request.getRole(),
+                request.isExternal(),
+                request.getProjectId()
+            );
             return ResponseEntity.ok("Invitation sent to " + invitation.getEmail());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

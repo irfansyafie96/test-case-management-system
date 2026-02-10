@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -29,6 +30,7 @@ import { ConfirmationDialogComponent } from '../../shared/confirmation-dialog/co
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatCheckboxModule,
     MatSnackBarModule,
     MatMenuModule,
     MatDialogModule,
@@ -64,7 +66,8 @@ export class ProfileComponent implements OnInit {
 
     this.inviteForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      role: ['QA', Validators.required]
+      role: ['QA', Validators.required],
+      external: [false]
     });
   }
 
@@ -78,12 +81,10 @@ export class ProfileComponent implements OnInit {
   }
 
   loadTeamMembers() {
-    if (this.isAdmin) {
-      this.tcmService.getAllNonAdminUsers().subscribe(users => {
-        this.teamMembers = users;
-        this.cdr.detectChanges(); // Fix NG0100
-      });
-    }
+    this.tcmService.getAllTeamMembers().subscribe(users => {
+      this.teamMembers = users;
+      this.cdr.detectChanges();
+    });
   }
 
   onUpdatePassword() {
@@ -95,12 +96,12 @@ export class ProfileComponent implements OnInit {
     if (this.inviteForm.invalid) return;
     
     this.isInviting = true;
-    const { email, role } = this.inviteForm.value;
+    const { email, role, external } = this.inviteForm.value;
 
-    this.teamService.inviteMember(email, role).subscribe({
+    this.teamService.inviteMember(email, role, external).subscribe({
       next: (response) => {
         this.isInviting = false;
-        this.inviteForm.reset({ role: 'QA' }); // Reset form but keep default role
+        this.inviteForm.reset({ role: 'QA', external: false }); // Reset form but keep default role
         this.snackBar.open('Invitation sent successfully!', 'Close', {
           duration: 3000,
           panelClass: ['success-snackbar'],

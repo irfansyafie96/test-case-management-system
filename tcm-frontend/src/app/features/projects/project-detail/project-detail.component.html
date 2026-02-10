@@ -24,6 +24,14 @@
           *ngIf="authService.hasRole('ADMIN')"
           mat-raised-button
           color="primary"
+          (click)="onInviteMember(project.id)"
+          [disabled]="loading$ | async">
+          <mat-icon>person_add</mat-icon> INVITE
+        </button>
+        <button
+          *ngIf="authService.hasRole('ADMIN')"
+          mat-raised-button
+          color="primary"
           (click)="toggleAssignments()"
           [disabled]="loading$ | async">
           <mat-icon>{{ showAssignments ? 'close' : 'group' }}</mat-icon>

@@ -19,6 +19,22 @@
 None - All issues resolved!
 
 ### Recent Changes (Committed)
+
+14. **Team Members Visibility Fix** (2026-02-10)
+   - **Issue**: Testers couldn't see team members on profile page - Team Members section was empty
+   - **Root Cause**: Frontend only loaded team members when `this.isAdmin` was true, blocking non-admin users
+   - **Solution**: 
+     - Created new backend endpoint `GET /api/auth/team-members` (no ADMIN restriction)
+     - Added `findAllUsersByOrganization()` query to fetch all org members including admins
+     - Updated frontend to call new endpoint for all users
+   - **Changes Made**:
+     - Backend: `UserRepository.java` - Added `findAllUsersByOrganization()` query
+     - Backend: `AuthController.java` - Added `/api/auth/team-members` endpoint
+     - Frontend: `tcm.service.ts` - Added `getAllTeamMembers()` method
+     - Frontend: `profile.component.ts` - Removed `if (this.isAdmin)` check in `loadTeamMembers()`
+   - **Result**: All users (testers, QA, BA, admins) can now see all team members on their profile
+   - **Status**: COMPLETED ✅
+
 1. **TestCase isEditable Flag Implementation** (2026-02-04)
    - **Issue**: Edit button shown for all QA/BA users regardless of module assignment
    - **Solution**: Added `isEditable` flag to TestCaseDTO to control edit button visibility
@@ -147,6 +163,20 @@ None - All issues resolved!
    - **Preservation**: This ensures that all test execution history linked to that user is preserved in the audit trail.
    - **Frontend**: Integrated a "Three Dots" menu (`mat-menu`) in the Team Members list on the Profile page.
    - **Backend**: Added `updateUserRole` and `deactivateUser` to `UserService` and `ApiController`.
+   - **Status**: COMPLETED ✅
+
+14. **Guest/External Collaborator Model** (2026-02-10)
+   - **Feature**: Support for outsourced teams and freelancers with restricted visibility.
+   - **Mechanism**: Added `isExternal` flag to `User` and `Invitation` entities.
+   - **Project Integration**: Added `projectId` to `Invitation` for auto-assignment upon registration.
+   - **Tunnel Vision**: External guests only see users they share projects with in the Team Directory.
+   - **Frontend**: 
+     - Added "External Guest" checkbox to the invitation forms (Global and Dialog).
+     - Added "INVITE" button to the Project Detail page for project-specific external invites.
+     - Added "External" badge in team lists to distinguish guests.
+   - **Backend**: 
+     - Updated `InvitationService` to handle external flags and auto-assignments.
+     - Updated `AuthController`'s `/team-members` endpoint with shared-project visibility logic.
    - **Status**: COMPLETED ✅
 
 ### Testing Status (32/32 Tests Passed) ✅

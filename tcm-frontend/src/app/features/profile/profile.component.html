@@ -105,6 +105,10 @@
                   </mat-select>
                 </mat-form-field>
 
+                <mat-checkbox formControlName="external" class="external-checkbox">
+                  External Guest
+                </mat-checkbox>
+
                 <button mat-flat-button color="primary" type="submit" [disabled]="isInviting">
                   {{ isInviting ? 'Sending...' : 'Invite' }}
                 </button>
@@ -120,7 +124,10 @@
                   {{ member.username.charAt(0).toUpperCase() }}
                 </div>
                 <div class="member-details">
-                  <span class="member-name">{{ member.username }}</span>
+                  <div class="member-name-row">
+                    <span class="member-name">{{ member.username }}</span>
+                    <span class="external-badge" *ngIf="member.isExternal">External</span>
+                  </div>
                   <span class="member-email">{{ member.email }}</span>
                 </div>
                 <div class="member-meta">

@@ -15,9 +15,16 @@ export class TeamService {
    * Invite a new member to the organization
    * @param email Email address of the invitee
    * @param role Role to assign (QA, BA, TESTER)
+   * @param external Whether the user is an external guest
+   * @param projectId Optional project ID to auto-assign
    */
-  inviteMember(email: string, role: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/invitations`, { email, role }, { responseType: 'text' });
+  inviteMember(email: string, role: string, external: boolean = false, projectId?: number | string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/invitations`, { 
+      email, 
+      role, 
+      external, 
+      projectId 
+    }, { responseType: 'text' });
   }
 
   /**

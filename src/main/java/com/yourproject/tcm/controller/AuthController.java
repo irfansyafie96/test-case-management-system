@@ -474,10 +474,53 @@ public class AuthController {
                 user.getOrganizationName(),
                 user.getRoles().stream()
                     .map(role -> role.getName())
-                    .collect(Collectors.toList())
+                    .collect(Collectors.toList()),
+                user.isExternal()
             ))
             .collect(Collectors.toList());
             
+        return ResponseEntity.ok(userDTOs);
+    }
+
+    /**
+     * GET /api/auth/team-members - Get all team members in the organization
+     * Accessible to all authenticated users
+     * Implements "Tunnel Vision": External guests only see users they share projects with.
+     * @return ResponseEntity with list of all users in the organization
+     */
+    @GetMapping("/team-members")
+    public ResponseEntity<List<com.yourproject.tcm.model.dto.UserDTO>> getAllTeamMembers() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Error: Current user not found."));
+
+        List<User> users;
+        if (currentUser.isExternal()) {
+            // External guests: Only see users they share projects with
+            users = userRepository.findCollaborators(currentUser.getId());
+            // Always ensure they can see themselves
+            if (!users.contains(currentUser)) {
+                users.add(currentUser);
+            }
+        } else {
+            // Internal members: See everyone in the organization
+            users = userRepository.findAllUsersByOrganization(currentUser.getOrganization());
+        }
+
+        List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
+            .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getOrganizationName(),
+                user.getRoles().stream()
+                    .map(role -> role.getName())
+                    .collect(Collectors.toList()),
+                user.isExternal()
+            ))
+            .collect(Collectors.toList());
+
         return ResponseEntity.ok(userDTOs);
     }
 }

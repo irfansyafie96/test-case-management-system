@@ -14,6 +14,10 @@
       <mat-error *ngIf="inviteForm.get('email')?.hasError('email')">Invalid email address</mat-error>
     </mat-form-field>
 
+    <div class="checkbox-row">
+      <mat-checkbox formControlName="external">Mark as External Guest</mat-checkbox>
+    </div>
+
     <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
       <mat-label>Role</mat-label>
       <mat-select formControlName="role">

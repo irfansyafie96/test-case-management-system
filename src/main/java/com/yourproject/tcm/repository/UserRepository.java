@@ -65,4 +65,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA', 'TESTER') AND u.organization = :organization AND u.enabled = true")
     List<User> findAllNonAdminUsers(@Param("organization") com.yourproject.tcm.model.Organization organization);
+
+    // Find all users in organization (including admins), only active users
+    @EntityGraph(attributePaths = {"roles"})
+    @Query("SELECT DISTINCT u FROM User u WHERE u.organization = :organization AND u.enabled = true")
+    List<User> findAllUsersByOrganization(@Param("organization") com.yourproject.tcm.model.Organization organization);
+
+    // Find users who share at least one project with the given user
+    @EntityGraph(attributePaths = {"roles"})
+    @Query("SELECT DISTINCT other FROM User u JOIN u.assignedProjects p JOIN p.assignedUsers other WHERE u.id = :userId AND other.enabled = true")
+    List<User> findCollaborators(@Param("userId") Long userId);
 }

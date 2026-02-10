@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TeamService } from '../../../core/services/team.service';
 
@@ -20,6 +21,7 @@ import { TeamService } from '../../../core/services/team.service';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatCheckboxModule,
     MatProgressSpinnerModule
   ],
   templateUrl: './invite-dialog.component.html',
@@ -33,11 +35,13 @@ export class InviteDialogComponent {
   constructor(
     private fb: FormBuilder,
     private teamService: TeamService,
-    private dialogRef: MatDialogRef<InviteDialogComponent>
+    private dialogRef: MatDialogRef<InviteDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { external?: boolean, projectId?: number | string }
   ) {
     this.inviteForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      role: ['QA', [Validators.required]]
+      role: ['QA', [Validators.required]],
+      external: [this.data?.external || false]
     });
   }
 
@@ -46,9 +50,9 @@ export class InviteDialogComponent {
 
     this.isLoading = true;
     this.errorMessage = '';
-    const { email, role } = this.inviteForm.value;
+    const { email, role, external } = this.inviteForm.value;
 
-    this.teamService.inviteMember(email, role).subscribe({
+    this.teamService.inviteMember(email, role, external, this.data?.projectId).subscribe({
       next: () => {
         this.isLoading = false;
         this.dialogRef.close(true);

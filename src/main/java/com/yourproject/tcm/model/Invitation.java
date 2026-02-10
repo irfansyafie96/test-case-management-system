@@ -32,6 +32,12 @@ public class Invitation {
     @Column(nullable = false)
     private LocalDateTime expiryDate;
 
+    @Column(name = "is_external")
+    private boolean external = false;
+
+    @Column(name = "project_id")
+    private Long projectId;
+
     private boolean accepted = false;
 
     public Invitation() {}
@@ -42,6 +48,13 @@ public class Invitation {
         this.role = role;
         this.organization = organization;
         this.expiryDate = LocalDateTime.now().plusDays(7); // Invites valid for 7 days
+        this.external = false;
+    }
+
+    public Invitation(String email, String role, Organization organization, boolean external, Long projectId) {
+        this(email, role, organization);
+        this.external = external;
+        this.projectId = projectId;
     }
 
     public boolean isValid() {
@@ -66,6 +79,12 @@ public class Invitation {
 
     public LocalDateTime getExpiryDate() { return expiryDate; }
     public void setExpiryDate(LocalDateTime expiryDate) { this.expiryDate = expiryDate; }
+
+    public boolean isExternal() { return external; }
+    public void setExternal(boolean external) { this.external = external; }
+
+    public Long getProjectId() { return projectId; }
+    public void setProjectId(Long projectId) { this.projectId = projectId; }
 
     public boolean isAccepted() { return accepted; }
     public void setAccepted(boolean accepted) { this.accepted = accepted; }

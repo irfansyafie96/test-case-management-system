@@ -4,9 +4,11 @@ import com.yourproject.tcm.model.Invitation;
 import com.yourproject.tcm.model.Organization;
 import com.yourproject.tcm.model.Role;
 import com.yourproject.tcm.model.User;
+import com.yourproject.tcm.model.Project;
 import com.yourproject.tcm.repository.InvitationRepository;
 import com.yourproject.tcm.repository.RoleRepository;
 import com.yourproject.tcm.repository.UserRepository;
+import com.yourproject.tcm.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -28,6 +31,9 @@ public class InvitationService {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private ProjectRepository projectRepository;
 
     @Autowired
     private EmailService emailService;
@@ -48,6 +54,10 @@ public class InvitationService {
     private String frontendUrl;
 
     public Invitation createInvitation(String email, String roleName) {
+        return createInvitation(email, roleName, false, null);
+    }
+
+    public Invitation createInvitation(String email, String roleName, boolean external, Long projectId) {
         User currentUser = userContextService.getCurrentUser();
         Organization org = currentUser.getOrganization();
 
@@ -59,7 +69,7 @@ public class InvitationService {
             throw new RuntimeException("User with this email already exists");
         }
 
-        Invitation invitation = new Invitation(email, roleName, org);
+        Invitation invitation = new Invitation(email, roleName, org, external, projectId);
         invitation = invitationRepository.save(invitation);
 
         // Generate invitation link using configurable frontend URL
@@ -85,6 +95,7 @@ public class InvitationService {
         // Create User
         User user = new User(username, invitation.getEmail(), encoder.encode(password));
         user.setOrganization(invitation.getOrganization());
+        user.setExternal(invitation.isExternal());
 
         // Assign Role
         Set<Role> roles = new HashSet<>();
@@ -92,6 +103,14 @@ public class InvitationService {
                 .orElseThrow(() -> new RuntimeException("Role not found: " + invitation.getRole()));
         roles.add(role);
         user.setRoles(roles);
+
+        // Auto-assign project if specified in invitation
+        if (invitation.getProjectId() != null) {
+            Optional<Project> projectOpt = projectRepository.findById(invitation.getProjectId());
+            if (projectOpt.isPresent()) {
+                user.getAssignedProjects().add(projectOpt.get());
+            }
+        }
 
         userRepository.save(user);
 

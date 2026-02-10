@@ -143,9 +143,23 @@ export interface User {
   email: string;
   roles?: string[];
   enabled: boolean;
+  isExternal?: boolean;
   createdDate?: string;
   assignedProjects?: Project[];
   assignedTestModules?: TestModule[];
+}
+
+// Invitation Model
+export interface Invitation {
+  id?: number | string;
+  email: string;
+  role: string;
+  token: string;
+  organizationName: string;
+  isExternal: boolean;
+  projectId?: number | string;
+  accepted: boolean;
+  expiryDate: string;
 }
 
 // Assignment Request DTOs

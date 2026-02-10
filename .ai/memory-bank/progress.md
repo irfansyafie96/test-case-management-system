@@ -113,11 +113,23 @@
 ### Sprint 2 Tasks (Refactoring & New Features):
 
 #### User Management Enhancements:
+- [x] **Team Members Visibility Fix** (2026-02-10)
+   - **Issue**: Testers couldn't see team members on profile page
+   - **Fix**: Created new `/api/auth/team-members` endpoint accessible to all users
+   - **Files**: UserRepository.java, AuthController.java, tcm.service.ts, profile.component.ts
+   - **Status**: COMPLETED ✅
+
 - [x] **User Role Management & Deactivation** (2026-02-10)
    - **Implemented**: Ability for admins to change member roles (QA, BA, TESTER) and remove members from the team via deactivation.
    - **Backend**: Updated `UserRepository`, `UserService`, and `ApiController`.
    - **Frontend**: Updated `TcmService`, `ProfileComponent`, and integrated `mat-menu`.
    - **Safety**: "Remove from Team" uses deactivation (`enabled = false`) to preserve test execution history.
+   - **Status**: COMPLETED ✅
+
+- [x] **Guest/External Collaborator Model** (2026-02-10)
+   - **Implemented**: Restricted access mode for outsourced teams.
+   - **Visibility**: Guests have "Tunnel Vision" - they only see collaborators on the same project.
+   - **Automation**: Project-specific invites automatically assign users to the correct project on signup.
    - **Status**: COMPLETED ✅
 
 #### High Priority Refactoring (Recommended):

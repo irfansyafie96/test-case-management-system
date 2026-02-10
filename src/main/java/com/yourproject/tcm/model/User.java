@@ -43,14 +43,16 @@ public class User {
     @Column(name = "enabled")
     private boolean enabled = true;  // Account status - true means active
 
+    @Column(name = "is_external")
+    private boolean external = false; // Whether user is an external guest
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;  // When the account was created
 
     /**
      * One-to-Many relationship with TestExecution entity (assigned to user)
-     * A user can be assigned to multiple test executions
      */
-    @OneToMany(mappedBy = "assignedToUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "assignedToUser", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<TestExecution> testExecutions = new HashSet<>();  // Test executions assigned to this user
 
     /**
@@ -105,6 +107,7 @@ public class User {
         this.email = email;
         this.password = password;
         this.enabled = true;              // New users are enabled by default
+        this.external = false;            // Default to internal member
         this.createdAt = LocalDateTime.now(); // Set creation time
     }
 
@@ -163,6 +166,14 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isExternal() {
+        return external;
+    }
+
+    public void setExternal(boolean external) {
+        this.external = external;
     }
 
     public LocalDateTime getCreatedAt() {

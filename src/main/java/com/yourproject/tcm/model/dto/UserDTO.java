@@ -13,15 +13,21 @@ public class UserDTO {
     private String email;
     private String organizationName;
     private List<String> roles;
+    private boolean isExternal;
 
     public UserDTO() {}
 
     public UserDTO(Long id, String username, String email, String organizationName, List<String> roles) {
+        this(id, username, email, organizationName, roles, false);
+    }
+
+    public UserDTO(Long id, String username, String email, String organizationName, List<String> roles, boolean isExternal) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.organizationName = organizationName;
         this.roles = roles;
+        this.isExternal = isExternal;
     }
 
     public Long getId() {
@@ -62,5 +68,13 @@ public class UserDTO {
 
     public void setRoles(List<String> roles) {
         this.roles = roles;
+    }
+
+    public boolean isExternal() {
+        return isExternal;
+    }
+
+    public void setExternal(boolean external) {
+        isExternal = external;
     }
 }
