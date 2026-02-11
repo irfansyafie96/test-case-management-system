@@ -54,6 +54,12 @@
               <span class="external-badge" *ngIf="member.isExternal">External</span>
             </div>
             <span class="member-email">{{ member.email }}</span>
+            <div class="member-modules" *ngIf="member.assignedTestModules?.length">
+              <span class="modules-label">Modules:</span>
+              <span class="modules-list" [matTooltip]="getModulesTooltip(member)">
+                {{ getModulesAbbreviated(member) }}
+              </span>
+            </div>
           </div>
           <div class="member-meta">
             <span class="role-chip">{{ member.roles?.[0] || 'MEMBER' }}</span>
@@ -62,13 +68,17 @@
             </button>
             
             <mat-menu #memberMenu="matMenu">
+              <button mat-menu-item (click)="openAssignModulesDialog(member)">
+                <mat-icon>folder_shared</mat-icon>
+                <span>Assign Modules</span>
+              </button>
               <button mat-menu-item [matMenuTriggerFor]="roleSubMenu">
                 <mat-icon>badge</mat-icon>
                 <span>Change Role</span>
               </button>
               <button mat-menu-item (click)="removeMember(member)" class="remove-btn">
                 <mat-icon color="warn">person_remove</mat-icon>
-                <span class="text-danger">Remove from Team</span>
+                <span class="text-danger">Remove from Project</span>
               </button>
             </mat-menu>
 

@@ -636,8 +636,8 @@ public class ApiController {
     @DeleteMapping("/projects/assign")
     public ResponseEntity<?> removeUserFromProject(@Valid @RequestBody ProjectAssignmentRequest request) {
         try {
-            User updatedUser = projectService.removeUserFromProject(request);
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+            projectService.removeUserFromProject(request.getUserId(), request.getProjectId());
+            return new ResponseEntity<>("User removed from project successfully", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error removing user from project: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -675,6 +675,20 @@ public class ApiController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @GetMapping("/projects/{projectId}/modules")
+    public ResponseEntity<?> getModulesByProject(@PathVariable Long projectId) {
+        try {
+            List<TestModule> modules = moduleService.getModulesByProjectId(projectId);
+            List<TestModuleDTO> moduleDTOs = modules.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+            return new ResponseEntity<>(moduleDTOs, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving modules: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // ==================== MODULE ASSIGNMENT ENDPOINTS ====================
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
@@ -696,6 +710,24 @@ public class ApiController {
             return new ResponseEntity<>(updatedUser, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error removing user from test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PostMapping("/testmodules/bulk-assign")
+    public ResponseEntity<?> bulkAssignModules(@RequestBody BulkAssignmentRequest request) {
+        try {
+            // Process assignments
+            for (ModuleAssignmentRequest assignment : request.getAssignments()) {
+                moduleService.assignUserToTestModule(assignment);
+            }
+            // Process removals
+            for (ModuleAssignmentRequest removal : request.getRemovals()) {
+                moduleService.removeUserFromTestModule(removal);
+            }
+            return new ResponseEntity<>("Modules updated successfully", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating module assignments: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

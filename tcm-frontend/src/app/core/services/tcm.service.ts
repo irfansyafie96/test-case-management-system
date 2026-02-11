@@ -471,18 +471,19 @@ export class TcmService {
       );
   }
 
-  /**
-   * Remove a QA/BA user from a project assignment (ADMIN only)
-   * @param request Project assignment request
-   * @returns Observable<User> Updated user with assignments
-   */
-  removeUserFromProject(request: ProjectAssignmentRequest): Observable<User> {
-    return this.http.delete<any>(`${this.apiUrl}/projects/assign`, { body: request })
-      .pipe(
-        map(user => this.transformUserRoles(user)),
-        catchError(this.handleError<User>('removeUserFromProject'))
-      );
-  }
+   /**
+    * Remove a user from a project completely (removes from project and all modules)
+    * @param userId User ID to remove
+    * @param projectId Project ID
+    * @returns Observable<string> Success message
+    */
+   removeUserFromProject(userId: number | string, projectId: number | string): Observable<string> {
+     const request = { userId, projectId };
+     return this.http.delete<any>(`${this.apiUrl}/projects/assign`, { body: request })
+       .pipe(
+         catchError(this.handleError<string>('removeUserFromProject'))
+       );
+   }
 
   /**
    * Get all projects assigned to the current user
@@ -500,13 +501,25 @@ export class TcmService {
    * @param projectId ID of the project
    * @returns Observable<User[]> List of assigned users
    */
-  getUsersAssignedToProject(projectId: string): Observable<User[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/projects/${projectId}/assigned-users`)
-      .pipe(
-        map(users => users.map(user => this.transformUserRoles(user))),
-        catchError(this.handleError<User[]>('getUsersAssignedToProject', []))
-      );
-  }
+   getUsersAssignedToProject(projectId: string): Observable<User[]> {
+     return this.http.get<any[]>(`${this.apiUrl}/projects/${projectId}/assigned-users`)
+       .pipe(
+         map(users => users.map(user => this.transformUserRoles(user))),
+         catchError(this.handleError<User[]>('getUsersAssignedToProject', []))
+       );
+   }
+
+   /**
+    * Get all modules in a project for module assignment dialog
+    * @param projectId Project ID
+    * @returns Observable<TestModule[]> List of modules
+    */
+   getModulesByProject(projectId: string): Observable<TestModule[]> {
+     return this.http.get<TestModule[]>(`${this.apiUrl}/projects/${projectId}/modules`)
+       .pipe(
+         catchError(this.handleError<TestModule[]>('getModulesByProject', []))
+       );
+   }
 
   /**
    * Assign a TESTER (or QA/BA) user to a test module (ADMIN/QA/BA)
@@ -526,13 +539,28 @@ export class TcmService {
    * @param request Module assignment request
    * @returns Observable<User> Updated user with assignments
    */
-  removeUserFromTestModule(request: ModuleAssignmentRequest): Observable<User> {
-    return this.http.delete<any>(`${this.apiUrl}/testmodules/assign`, { body: request })
-      .pipe(
-        map(user => this.transformUserRoles(user)),
-        catchError(this.handleError<User>('removeUserFromTestModule'))
-      );
-  }
+   removeUserFromTestModule(request: ModuleAssignmentRequest): Observable<User> {
+     return this.http.delete<any>(`${this.apiUrl}/testmodules/assign`, { body: request })
+       .pipe(
+         map(user => this.transformUserRoles(user)),
+         catchError(this.handleError<User>('removeUserFromTestModule'))
+       );
+   }
+
+   /**
+    * Bulk assign/remove modules for a user
+    * @param assignments Array of {userId, moduleId} to assign
+    * @param removals Array of {userId, moduleId} to remove
+    * @returns Observable<User> Updated user
+    */
+   bulkAssignModules(assignments: {userId: number | string, moduleId: number | string}[], 
+                    removals: {userId: number | string, moduleId: number | string}[]): Observable<User> {
+     return this.http.post<any>(`${this.apiUrl}/testmodules/bulk-assign`, { assignments, removals })
+       .pipe(
+         map(user => this.transformUserRoles(user)),
+         catchError(this.handleError<User>('bulkAssignModules'))
+       );
+   }
 
   /**
    * Get all test modules assigned to the current user

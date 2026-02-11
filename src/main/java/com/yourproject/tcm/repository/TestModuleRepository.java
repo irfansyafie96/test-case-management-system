@@ -45,4 +45,8 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     @Query("SELECT CASE WHEN COUNT(u.id) > 0 THEN true ELSE false END FROM TestModule tm " +
            "JOIN tm.assignedUsers u WHERE tm.id = :moduleId AND u.id = :userId")
     boolean isUserAssignedToModule(@Param("moduleId") Long moduleId, @Param("userId") Long userId);
+
+    // Find all modules in a specific project
+    @Query("SELECT tm FROM TestModule tm WHERE tm.project.id = :projectId")
+    List<TestModule> findByProjectId(@Param("projectId") Long projectId);
 }

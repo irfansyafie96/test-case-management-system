@@ -314,27 +314,36 @@ public class ProjectService {
     }
 
     /**
-     * Remove a user from a project.
+     * Remove a user from a project completely.
+     * Removes from assignedProjects AND assignedTestModules.
+     * Preserves execution history (test_executions table).
      */
     @Transactional
-    public User removeUserFromProject(ProjectAssignmentRequest request) {
-        Optional<User> userOpt = userRepository.findById(request.getUserId());
-        Optional<Project> projectOpt = projectRepository.findById(request.getProjectId());
+    public void removeUserFromProject(Long userId, Long projectId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        Optional<Project> projectOpt = projectRepository.findById(projectId);
 
         if (userOpt.isPresent() && projectOpt.isPresent()) {
             User user = userOpt.get();
             Project project = projectOpt.get();
 
-            // Remove project from user's assigned projects
+            // 1. Remove from user's assigned projects
             if (user.getAssignedProjects().contains(project)) {
                 user.getAssignedProjects().remove(project);
-                User savedUser = userRepository.save(user);
-                entityManager.flush();
-                return savedUser;
-            } else {
-                return user; // Not assigned
             }
+
+            // 2. Remove from all modules in this project (assignedTestModules)
+            List<TestModule> modulesInProject = moduleService.getModulesByProjectId(projectId);
+            for (TestModule module : modulesInProject) {
+                if (user.getAssignedTestModules().contains(module)) {
+                    user.getAssignedTestModules().remove(module);
+                    // Update bidirectional relationship
+                    module.getAssignedUsers().remove(user);
+                }
+            }
+
+            userRepository.save(user);
+            entityManager.flush();
         }
-        throw new RuntimeException("User or project not found with id: " + request.getUserId() + " or " + request.getProjectId());
     }
 }

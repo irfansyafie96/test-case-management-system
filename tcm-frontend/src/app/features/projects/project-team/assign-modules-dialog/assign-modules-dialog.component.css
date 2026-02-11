@@ -1,0 +1,48 @@
+.dialog-container {
+  min-width: 400px;
+  max-width: 500px;
+}
+
+mat-dialog-content {
+  min-height: 200px;
+  max-height: 400px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 12px;
+}
+
+.loading-container p {
+  color: #666;
+  margin: 0;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #999;
+}
+
+mat-selection-list {
+  display: flex;
+  flex-direction: column;
+}
+
+mat-list-option {
+  border-bottom: 1px solid var(--border-thin, #e0e0e0);
+}
+
+mat-list-option:last-child {
+  border-bottom: none;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+}

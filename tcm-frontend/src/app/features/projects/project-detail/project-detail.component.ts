@@ -363,16 +363,11 @@ export class ProjectDetailComponent implements OnInit {
     const projectId = this.route.snapshot.paramMap.get('id');
     if (!projectId) return;
 
-    const request: ProjectAssignmentRequest = {
-      userId: Number(userId),
-      projectId: Number(projectId)
-    };
-
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
       data: {
         title: 'Remove User',
-        message: 'Are you sure you want to remove this user from the project?',
+        message: 'Are you sure you want to remove this user from the project? They will lose all access (project and module assignments).',
         icon: 'warning',
         confirmButtonText: 'Remove',
         confirmButtonColor: 'warn'
@@ -381,8 +376,8 @@ export class ProjectDetailComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.tcmService.removeUserFromProject(request).subscribe(
-          (updatedUser: User) => {
+        this.tcmService.removeUserFromProject(userId, projectId).subscribe(
+          () => {
             // Refresh all assignment data
             this.loadAssignmentData(projectId);
             // Show success snackbar

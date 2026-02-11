@@ -106,6 +106,14 @@ public class ModuleService {
     }
 
     /**
+     * Get all modules in a specific project.
+     * Used for module assignment dialog in project team page.
+     */
+    public List<TestModule> getModulesByProjectId(Long projectId) {
+        return testModuleRepository.findByProjectId(projectId);
+    }
+
+    /**
      * Get a test module by ID with all its submodules and test cases.
      * All users in the same organization can view modules (read-only access).
      * ADMIN users can access any module in their organization (full access).

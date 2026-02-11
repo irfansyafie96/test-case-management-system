@@ -19,11 +19,30 @@
 
 ### Recent Changes
 
-19. **Test Case Prev/Next Navigation Fix** (2026-02-11)
-   - **Issue**: Prev/Next buttons on test-case-detail page worked inconsistently
-   - **Root Cause**: `loadAllTestCases()` didn't trigger change detection after loading
-   - **Fix**: Added `this.cdr.detectChanges()` in subscription callbacks
-   - **File**: `test-case-detail.component.ts`
+21. **Module Assignment Refactoring** (COMPLETED)
+   - **Goal**: Simplify access model by moving module assignment to three-dot menu
+   - **Changes**:
+     - Backend:
+       - Modified `ProjectService.removeUserFromProject()` to remove from project + all modules
+       - Added `ModuleService.getModulesByProjectId()` method
+       - Added `TestModuleRepository.findByProjectId()` query
+       - Added `ApiController.getModulesByProject()` endpoint
+       - Added `ApiController.bulkAssignModules()` endpoint
+       - Created `BulkAssignmentRequest` DTO
+     - Frontend:
+       - Added `AssignModulesDialogComponent` with checkbox list
+       - Added `getModulesAbbreviated()` and `getModulesTooltip()` helpers
+       - Updated team list to show module names (abbreviated + tooltip)
+       - Added "Assign Modules" option in three-dot menu
+       - Updated "Remove" to completely revoke access
+       - Added `bulkAssignModules()` service method
+       - Added `getModulesByProject()` service method
+       - Updated `removeUserFromProject()` to use new signature
+     - Updated `/modules/{id}` page to use new backend methods
+   - **Files**:
+     - Backend: `ProjectService.java`, `ModuleService.java`, `TestModuleRepository.java`, `ApiController.java`, `BulkAssignmentRequest.java`
+     - Frontend: `project-team.component.ts/html/css`, `assign-modules-dialog.component.ts/html/css`, `tcm.service.ts`, `project-detail.component.ts`
+   - **SOLID/DRY**: ✅ Reuses existing service methods, follows Single Responsibility
    - **Status**: COMPLETED ✅
 
 20. **Project Team Members Loading Fix** (2026-02-11)
@@ -35,6 +54,15 @@
      - Updated template to use `*ngIf="(teamMembers$ | async) as members"`
      - Added loading state template with spinner
    - **Files**: `project-team.component.ts`, `.html`, `.css`
+   - **Status**: COMPLETED ✅
+
+19. **Test Case Prev/Next Navigation Fix** (2026-02-11)
+   - **Issue**: Prev/Next buttons on test-case-detail page worked inconsistently
+   - **Root Cause**: `loadAllTestCases()` didn't trigger change detection after loading
+   - **Fix**: Added `this.cdr.detectChanges()` in subscription callbacks (next and error)
+   - **File**: `test-case-detail.component.ts`
+   - **SOLID Analysis**: ✅ Follows Single Responsibility, Open/Closed, Dependency Inversion
+   - **DRY Analysis**: ⚠️ Slight repetition (detectChanges called twice). Could use `.add()` for better DRY
    - **Status**: COMPLETED ✅
 
 ### Recent Changes (Committed)
@@ -365,6 +393,41 @@ None - All issues resolved!
 - **Custom Exceptions**: For error handling (AccessDeniedException, ResourceNotFoundException, etc.)
 - **Code Duplication Threshold**: If you see the same pattern 3+ times, extract it
 
+#### SOLID Principles
+Always apply SOLID principles when writing code:
+
+**S - Single Responsibility**
+- Each class should have ONE reason to change
+- Each method should do ONE thing
+- Example: Don't mix data access logic with business logic in the same class
+
+**O - Open/Closed**
+- Software entities should be open for extension, closed for modification
+- Use interfaces and inheritance to extend behavior
+- Example: Create new classes instead of modifying existing working code
+
+**L - Liskov Substitution**
+- Subtypes must be substitutable for their base types
+- Don't break existing contracts when extending
+- Example: If a method accepts `Service`, any `Service` implementation should work
+
+**I - Interface Segregation**
+- Clients should not be forced to depend on methods they don't use
+- Prefer many specific interfaces over one general interface
+- Example: Split `UserService` into `UserReadService` and `UserWriteService` if needed
+
+**D - Dependency Inversion**
+- Depend on abstractions, not concretions
+- Use dependency injection
+- Example: Inject `Repository<User>` instead of `UserRepositoryImpl`
+
+**Application in This Project**:
+- Use dependency injection for all services and repositories
+- Create helper classes for reusable logic (SecurityHelper, Mappers)
+- Keep controllers thin, services thick with business logic
+- Prefer composition over inheritance
+- Extract duplicate code into utility methods
+
 #### Modularization Standards
 - **Single Responsibility**: Each method should do ONE thing
 - **Method Length**: Keep methods under 50 lines when possible, maximum 100 lines
@@ -395,6 +458,8 @@ Before committing, verify:
 - [ ] READ access separated from WRITE access
 - [ ] Organization boundary verified first
 - [ ] UI flags added for frontend control (isEditable, etc.)
+- [ ] SOLID principles followed (Single Responsibility, Open/Closed, etc.)
+- [ ] DRY principle followed (no code duplication > 2 occurrences)
 
 ### Important Note for Future Work
 - Always ask user before committing changes
