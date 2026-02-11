@@ -51,6 +51,46 @@
   gap: 16px;
 }
 
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.team-btn {
+  color: var(--ink);
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background-color: var(--surface);
+  transition: all 0.15s ease;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+.team-btn:hover {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  box-shadow: 2px 2px 0 0 var(--ink);
+  transform: translate(-1px, -1px);
+}
+
+.delete-btn {
+  color: var(--ink);
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background-color: var(--surface);
+  transition: all 0.15s ease;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
 .project-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 1.75rem;

@@ -1,0 +1,251 @@
+.page-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.breadcrumb .back-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+}
+
+.breadcrumb .back-link mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.team-card {
+  width: 100%;
+  max-width: 100%;
+  border: var(--border-medium);
+  box-shadow: var(--shadow-sm) !important;
+  background-color: var(--surface);
+  transition: none !important;
+}
+
+.team-card:hover {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.team-card mat-card-header {
+  margin-bottom: 0;
+  padding: 16px 16px 0 16px;
+}
+
+.team-card mat-card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.team-card mat-card-subtitle {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.invite-section {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 16px;
+}
+
+.invite-form {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+  align-items: center;
+}
+
+.invite-form button {
+  height: 56px;
+}
+
+.full-width {
+  flex: 1;
+  min-width: 200px;
+}
+
+.role-select {
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.external-checkbox {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+}
+
+.members-divider {
+  height: 1px;
+  background-color: var(--border-thin);
+  margin: 16px 0;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.members-list:hover {
+  background: transparent;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: var(--border-thin);
+  transition: none;
+  cursor: default;
+}
+
+.member-row:hover {
+  background: transparent !important;
+}
+
+.member-row:last-child {
+  border-bottom: none;
+}
+
+.member-avatar-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: var(--accent-secondary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  margin-right: 16px;
+}
+
+.member-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.external-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background-color: var(--ink);
+  color: var(--surface);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.member-email {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #666;
+}
+
+.member-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 8px;
+  background-color: var(--paper);
+  border: 1px solid var(--border-thin);
+  border-radius: 4px;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 24px;
+}
+
+.empty-content {
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #ccc;
+  margin-bottom: 12px;
+}
+
+.empty-content h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 8px 0;
+}
+
+.empty-content p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: #999;
+  margin: 0;
+}
+
+.action-btn {
+  color: #999;
+}
+
+.text-danger {
+  color: var(--accent-danger) !important;
+}
+
+@media (max-width: 600px) {
+  .page-container {
+    padding: 16px;
+  }
+
+  .member-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .member-meta {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

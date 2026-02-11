@@ -5,7 +5,7 @@
         <mat-icon>arrow_back</mat-icon> Projects
       </a>
     </div>
-    
+
     <div class="dossier-header">
       <div class="dossier-title">
         <h1>{{ project.name }}</h1>
@@ -19,14 +19,6 @@
           (click)="openModuleDialog(project.id)"
           [disabled]="loading$ | async">
           <mat-icon>add</mat-icon> NEW MODULE
-        </button>
-        <button
-          *ngIf="authService.hasRole('ADMIN')"
-          mat-raised-button
-          color="primary"
-          (click)="onInviteMember(project.id)"
-          [disabled]="loading$ | async">
-          <mat-icon>person_add</mat-icon> INVITE
         </button>
         <button
           *ngIf="authService.hasRole('ADMIN')"
@@ -133,7 +125,7 @@
           *ngFor="let module of project.modules"
           [routerLink]="['/modules', module.id]"
           class="module-card">
-          
+
           <div class="module-header">
             <div class="module-title-row">
               <h3>{{ module.name }}</h3>

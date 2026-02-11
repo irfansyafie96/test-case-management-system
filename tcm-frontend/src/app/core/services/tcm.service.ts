@@ -612,17 +612,30 @@ export class TcmService {
       );
   }
 
-  /**
-   * Get all non-admin users (QA/BA/TESTER) for admin dashboard filter
-   * @returns Observable<User[]> List of non-admin users
-   */
-  getAllNonAdminUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/auth/users`)
-      .pipe(
-        map(users => users.map(user => this.transformUserRoles(user))),
-        catchError(this.handleError<User[]>('getAllNonAdminUsers', []))
-      );
-  }
+   /**
+    * Get all non-admin users (QA/BA/TESTER) for admin dashboard filter
+    * @returns Observable<User[]> List of non-admin users
+    */
+   getAllNonAdminUsers(): Observable<User[]> {
+     return this.http.get<User[]>(`${this.apiUrl}/auth/users`)
+       .pipe(
+         map(users => users.map(user => this.transformUserRoles(user))),
+         catchError(this.handleError<User[]>('getAllNonAdminUsers', []))
+       );
+   }
+
+   /**
+    * Get all team members in the organization (including admins)
+    * Accessible to all authenticated users
+    * @returns Observable<User[]> List of all team members
+    */
+   getAllTeamMembers(): Observable<User[]> {
+     return this.http.get<User[]>(`${this.apiUrl}/auth/team-members`)
+       .pipe(
+         map(users => users.map(user => this.transformUserRoles(user))),
+         catchError(this.handleError<User[]>('getAllTeamMembers', []))
+       );
+   }
 
   /**
    * Update a user's role (ADMIN only)

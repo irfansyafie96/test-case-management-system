@@ -295,6 +295,7 @@ public class ProjectService {
             // Add project to user's assigned projects if not already assigned
             if (!user.getAssignedProjects().contains(project)) {
                 user.getAssignedProjects().add(project);
+                project.getAssignedUsers().add(user);
                 User savedUser = userRepository.save(user);
                 entityManager.flush();
                 return savedUser;

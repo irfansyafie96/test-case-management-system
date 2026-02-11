@@ -20,18 +20,21 @@ public class UserPrincipal implements UserDetails {
 
     private String organization;
 
+    private boolean isExternal;
+
     @JsonIgnore
     private String password;
 
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserPrincipal(Long id, String username, String email, String password, String organization,
-            Collection<? extends GrantedAuthority> authorities) {
+            boolean isExternal, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
         this.organization = organization;
+        this.isExternal = isExternal;
         this.authorities = authorities;
     }
 
@@ -46,6 +49,7 @@ public class UserPrincipal implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.getOrganizationName(),
+                user.isExternal(),
                 authorities
         );
     }
@@ -60,6 +64,10 @@ public class UserPrincipal implements UserDetails {
 
     public String getOrganization() {
         return organization;
+    }
+
+    public boolean isExternal() {
+        return isExternal;
     }
 
     @Override

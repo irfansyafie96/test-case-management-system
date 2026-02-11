@@ -33,7 +33,7 @@ public class Invitation {
     private LocalDateTime expiryDate;
 
     @Column(name = "is_external")
-    private boolean external = false;
+    private Boolean external = false;
 
     @Column(name = "project_id")
     private Long projectId;
@@ -51,7 +51,7 @@ public class Invitation {
         this.external = false;
     }
 
-    public Invitation(String email, String role, Organization organization, boolean external, Long projectId) {
+    public Invitation(String email, String role, Organization organization, Boolean external, Long projectId) {
         this(email, role, organization);
         this.external = external;
         this.projectId = projectId;
@@ -80,8 +80,13 @@ public class Invitation {
     public LocalDateTime getExpiryDate() { return expiryDate; }
     public void setExpiryDate(LocalDateTime expiryDate) { this.expiryDate = expiryDate; }
 
-    public boolean isExternal() { return external; }
-    public void setExternal(boolean external) { this.external = external; }
+    public boolean isExternal() { 
+        return external != null && external; 
+    }
+    
+    public void setExternal(Boolean external) { 
+        this.external = external; 
+    }
 
     public Long getProjectId() { return projectId; }
     public void setProjectId(Long projectId) { this.projectId = projectId; }

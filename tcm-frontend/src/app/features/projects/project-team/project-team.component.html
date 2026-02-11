@@ -1,0 +1,95 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a routerLink="/projects" class="back-link">
+        <mat-icon>arrow_back</mat-icon> Back to Project
+      </a>
+    </div>
+  </div>
+
+  <mat-card class="team-card">
+    <mat-card-header>
+      <mat-card-title>Team Management</mat-card-title>
+      <mat-card-subtitle>{{ teamMembers.length }} Active Members</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="invite-section" *ngIf="isAdmin">
+        <form [formGroup]="inviteForm" (ngSubmit)="onInviteMember()" class="invite-form">
+          <mat-form-field appearance="outline" class="full-width" subscriptSizing="dynamic">
+            <mat-label>Invite by Email</mat-label>
+            <input matInput formControlName="email" placeholder="colleague@company.com">
+            <mat-icon matSuffix>mail_outline</mat-icon>
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" class="role-select" subscriptSizing="dynamic">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="role">
+              <mat-option value="QA">QA</mat-option>
+              <mat-option value="BA">BA</mat-option>
+              <mat-option value="TESTER">Tester</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-checkbox formControlName="external" class="external-checkbox">
+            External Guest
+          </mat-checkbox>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="isInviting">
+            {{ isInviting ? 'Sending...' : 'Invite' }}
+          </button>
+        </form>
+      </div>
+
+      <div class="members-divider" *ngIf="isAdmin"></div>
+
+      <div class="members-list" *ngIf="teamMembers.length > 0; else noMembers">
+        <div class="member-row" *ngFor="let member of teamMembers">
+          <div class="member-avatar-small">
+            {{ member.username.charAt(0).toUpperCase() }}
+          </div>
+          <div class="member-details">
+            <div class="member-name-row">
+              <span class="member-name">{{ member.username }}</span>
+              <span class="external-badge" *ngIf="member.isExternal">External</span>
+            </div>
+            <span class="member-email">{{ member.email }}</span>
+          </div>
+          <div class="member-meta">
+            <span class="role-chip">{{ member.roles?.[0] || 'MEMBER' }}</span>
+            <button mat-icon-button class="action-btn" *ngIf="isAdmin && member.username !== currentUser?.username" [matMenuTriggerFor]="memberMenu">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            
+            <mat-menu #memberMenu="matMenu">
+              <button mat-menu-item [matMenuTriggerFor]="roleSubMenu">
+                <mat-icon>badge</mat-icon>
+                <span>Change Role</span>
+              </button>
+              <button mat-menu-item (click)="removeMember(member)" class="remove-btn">
+                <mat-icon color="warn">person_remove</mat-icon>
+                <span class="text-danger">Remove from Team</span>
+              </button>
+            </mat-menu>
+
+            <mat-menu #roleSubMenu="matMenu">
+              <button mat-menu-item (click)="changeRole(member, 'QA')" [disabled]="member.roles?.includes('QA')">QA</button>
+              <button mat-menu-item (click)="changeRole(member, 'BA')" [disabled]="member.roles?.includes('BA')">BA</button>
+              <button mat-menu-item (click)="changeRole(member, 'TESTER')" [disabled]="member.roles?.includes('TESTER')">Tester</button>
+            </mat-menu>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noMembers>
+        <div class="empty-state">
+          <div class="empty-content">
+            <mat-icon class="empty-icon">group_off</mat-icon>
+            <h3>No Team Members</h3>
+            <p>No users have been assigned to this project yet.</p>
+          </div>
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+</div>

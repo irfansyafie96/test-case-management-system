@@ -113,6 +113,12 @@
 ### Sprint 2 Tasks (Refactoring & New Features):
 
 #### User Management Enhancements:
+- [x] **Guest User Team Visibility Fix** (2026-02-10)
+   - **Issue**: Guest users only saw themselves in Team Members even when assigned to projects
+   - **Fix**: Added bidirectional relationship sync in `ProjectService.assignUserToProject()`
+   - **File**: ProjectService.java
+   - **Status**: COMPLETED ✅
+
 - [x] **Team Members Visibility Fix** (2026-02-10)
    - **Issue**: Testers couldn't see team members on profile page
    - **Fix**: Created new `/api/auth/team-members` endpoint accessible to all users
@@ -131,6 +137,33 @@
    - **Visibility**: Guests have "Tunnel Vision" - they only see collaborators on the same project.
    - **Automation**: Project-specific invites automatically assign users to the correct project on signup.
    - **Status**: COMPLETED ✅
+
+#### Implemented:
+
+- [x] **Project Team Members Page with Full Functionality** (2026-02-11)
+   - **Issue**: Users needed a dedicated team management page per project
+   - **Solution**: Created full-featured Team Management page with complete functionality
+   - **Changes Made**:
+     - `app.routes.ts` - Added `/projects/:id/team` route
+     - `projects.component.html` - Added "group" icon button (left of delete)
+     - `projects.component.ts` - Added `viewTeam()` navigation method
+     - `projects.component.css` - Added team button styles
+     - `project-team/project-team.component.ts` - Full functionality (invite, change role, remove member)
+     - `project-team/project-team.component.html` - Complete Team Management UI (copied from profile)
+     - `project-team/project-team.component.css` - Full styles with action buttons, no hover effects
+     - `project-detail/project-detail.component.html` - REMOVED INVITE button
+   - **Features**:
+     - Admin can invite new members (email, role, external guest checkbox)
+     - Admin can change member roles (QA, BA, Tester)
+     - Admin can remove members from project
+     - All users can view team members
+     - No hover effects on table
+   - **URL**: http://localhost:4200/projects/{id}/team
+   - **Backend**: Uses existing endpoints (getUsersAssignedToProject, updateUserRole, removeUserFromTeam, inviteMember)
+   - **Simplification**: Removed INVITE button from Project Detail page (use Team Management page)
+   - **Status**: COMPLETED ✅
+
+#### In Progress:
 
 #### High Priority Refactoring (Recommended):
 

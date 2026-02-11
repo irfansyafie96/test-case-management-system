@@ -44,7 +44,7 @@ public class User {
     private boolean enabled = true;  // Account status - true means active
 
     @Column(name = "is_external")
-    private boolean external = false; // Whether user is an external guest
+    private Boolean external = false; // Whether user is an external guest
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;  // When the account was created
@@ -169,10 +169,10 @@ public class User {
     }
 
     public boolean isExternal() {
-        return external;
+        return external != null && external;
     }
 
-    public void setExternal(boolean external) {
+    public void setExternal(Boolean external) {
         this.external = external;
     }
 

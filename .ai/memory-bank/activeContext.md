@@ -1,6 +1,6 @@
 # Active Context - Test Case Management System
 
-## Current Session: 2026-02-05
+## Current Session: 2026-02-11
 
 ### User Context
 - **User**: irfan
@@ -15,10 +15,48 @@
 - **Organization**: TMS Asia
 - **Status**: Sprint 1 completed, Database migrated to MariaDB 11.4
 
-### Current Blockers
-None - All issues resolved!
+### Current Blocker: TEAM MEMBERS VISIBILITY FOR GUEST USERS (IMPLEMENTED)
+- **Issue**: Guest users only see themselves in Team Members section
+- **Root Cause**: QA/BA users (testers) CANNOT be assigned to projects due to role restriction
+- **Solution Implemented**: Created dedicated "Team Members" page for each project
+- **Files Created/Modified**:
+  - `app.routes.ts` - Added `/projects/:id/team` route
+  - `projects.component.html` - Added team button (left of delete)
+  - `projects.component.ts` - Added `viewTeam()` method
+  - `projects.component.css` - Added team button styles
+  - `project-team/project-team.component.ts` - FULL functionality (invite, change role, remove member)
+  - `project-team/project-team.component.html` - Copied from profile Team Management
+  - `project-team/project-team.component.css` - Full styles including action buttons
+  - `project-detail/project-detail.component.html` - REMOVED INVITE button
+- **Feature**: Full Team Management functionality (Admin can invite, change roles, remove members)
+- **URL**: http://localhost:4200/projects/{id}/team
+- **Backend**: Uses existing `getUsersAssignedToProject()`, `updateUserRole()`, `removeUserFromTeam()`, `inviteMember()` endpoints
+- **Simplification**: Removed INVITE button from Project Detail page (use Team Management page instead)
+- **Status**: IMPLEMENTED ✅ (2026-02-11)
 
 ### Recent Changes (Committed)
+
+16. **Project Team Members Page with Full Functionality** (2026-02-11)
+   - **Issue**: Users needed a dedicated team management page per project
+   - **Solution**: Created full-featured Team Management page at /projects/{id}/team
+   - **Changes Made**:
+     - `app.routes.ts` - Added route for project team page
+     - `projects.component.html/ts/css` - Added team button to project card
+     - `project-team/project-team.component.ts` - Full functionality (invite, change role, remove)
+     - `project-team/project-team.component.html` - Copied from profile Team Management
+     - `project-team/project-team.component.css` - Full styles matching profile
+     - `project-detail/project-detail.component.html` - Removed INVITE button
+   - **Features**: Admin can invite members, change roles, remove members
+   - **URL**: http://localhost:4200/projects/{id}/team
+   - **Backend**: Uses existing endpoints
+   - **Status**: COMPLETED ✅
+
+15. **Guest User Team Visibility Fix** (2026-02-10)
+   - **Issue**: Guest users only saw themselves in Team Members section even when assigned to projects
+   - **Root Cause**: `assignUserToProject()` only updated one side of bidirectional relationship (user.assignedProjects) but not (project.assignedUsers)
+   - **Impact**: The `findCollaborators()` query uses `p.assignedUsers` which was empty, so no collaborators were found
+   - **Fix**: Added `project.getAssignedUsers().add(user)` in ProjectService.java line ~296
+   - **Status**: COMPLETED ✅
 
 14. **Team Members Visibility Fix** (2026-02-10)
    - **Issue**: Testers couldn't see team members on profile page - Team Members section was empty

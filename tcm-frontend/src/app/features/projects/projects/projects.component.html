@@ -22,14 +22,23 @@
       
       <div class="card-header">
         <h3 class="project-title">{{ project.name || 'Untitled Project' }}</h3>
-        <button
-          *ngIf="authService.hasRole('ADMIN')"
-          mat-icon-button
-          class="delete-btn"
-          (click)="deleteProject($event, project.id)"
-          [matTooltip]="'Delete project'">
-          <mat-icon>delete_outline</mat-icon>
-        </button>
+        <div class="card-actions">
+          <button
+            mat-icon-button
+            class="team-btn"
+            (click)="viewTeam($event, project.id)"
+            [matTooltip]="'View team members'">
+            <mat-icon>group</mat-icon>
+          </button>
+          <button
+            *ngIf="authService.hasRole('ADMIN')"
+            mat-icon-button
+            class="delete-btn"
+            (click)="deleteProject($event, project.id)"
+            [matTooltip]="'Delete project'">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
       </div>
 
       <div class="card-body">

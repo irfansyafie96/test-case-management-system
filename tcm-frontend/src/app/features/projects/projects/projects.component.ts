@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Project } from '../../../core/models/project.model';
 import { Observable } from 'rxjs';
 import { RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-projects',
@@ -37,7 +38,8 @@ export class ProjectsComponent implements OnInit {
     public dialog: MatDialog,
     private tcmService: TcmService,
     public authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -242,6 +244,12 @@ export class ProjectsComponent implements OnInit {
         }
       }
     });
+  }
+
+  viewTeam(event: Event, projectId: string | number): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.router.navigate(['/projects', projectId, 'team']);
   }
 }
 
