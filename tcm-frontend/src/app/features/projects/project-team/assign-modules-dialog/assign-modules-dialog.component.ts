@@ -77,14 +77,14 @@ export class AssignModulesDialogComponent {
     this.isSaving = true;
     const assignments = Array.from(this.selectedModuleIds).map(moduleId => ({
       userId: this.data.userId,
-      moduleId: moduleId
+      testModuleId: moduleId
     }));
 
     const removals = this.data.currentModuleIds.filter(
       id => !this.selectedModuleIds.has(id)
     ).map(moduleId => ({
       userId: this.data.userId,
-      moduleId: moduleId
+      testModuleId: moduleId
     }));
 
     this.tcmService.bulkAssignModules(assignments, removals).subscribe({

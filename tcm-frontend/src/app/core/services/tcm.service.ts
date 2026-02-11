@@ -550,20 +550,20 @@ export class TcmService {
 
    /**
     * Bulk assign/remove modules for a user
-    * @param assignments Array of {userId, moduleId} to assign
-    * @param removals Array of {userId, moduleId} to remove
+    * @param assignments Array of {userId, testModuleId} to assign
+    * @param removals Array of {userId, testModuleId} to remove
     * @returns Observable<User> Updated user
     */
-   bulkAssignModules(assignments: {userId: number | string, moduleId: number | string}[], 
-                    removals: {userId: number | string, moduleId: number | string}[]): Observable<User> {
-     return this.http.post<any>(`${this.apiUrl}/testmodules/bulk-assign`, { assignments, removals })
-       .pipe(
-         map(user => this.transformUserRoles(user)),
-         catchError(this.handleError<User>('bulkAssignModules'))
-       );
-   }
+    bulkAssignModules(assignments: {userId: number | string, testModuleId: number | string}[],
+                     removals: {userId: number | string, testModuleId: number | string}[]): Observable<User> {
+      return this.http.post<any>(`${this.apiUrl}/testmodules/bulk-assign`, { assignments, removals })
+        .pipe(
+          map(user => this.transformUserRoles(user)),
+          catchError(this.handleError<User>('bulkAssignModules'))
+        );
+    }
 
-  /**
+   /**
    * Get all test modules assigned to the current user
    * @returns Observable<TestModule[]> List of assigned test modules
    */
