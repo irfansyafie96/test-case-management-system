@@ -146,7 +146,9 @@ export interface User {
   isExternal?: boolean;
   createdDate?: string;
   assignedProjects?: Project[];
-  assignedTestModules?: TestModule[];
+  assignedTestModules?: TestModule[]; // Legacy - kept for backward compatibility
+  assignedModulesForEditing?: TestModule[]; // Module editors (QA/BA only)
+  assignedModulesForExecution?: TestModule[]; // Execution assignees (QA/BA/TESTER)
 }
 
 // Invitation Model
@@ -169,6 +171,11 @@ export interface ProjectAssignmentRequest {
 }
 
 export interface ModuleAssignmentRequest {
+  userId: number | string;
+  testModuleId: number | string;
+}
+
+export interface ExecutionAssignmentRequest {
   userId: number | string;
   testModuleId: number | string;
 }

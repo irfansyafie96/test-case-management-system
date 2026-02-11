@@ -117,7 +117,8 @@ public class UserService {
         // Soft delete: disable the user and clear assignments
         userToDeactivate.setEnabled(false);
         userToDeactivate.getAssignedProjects().clear();
-        userToDeactivate.getAssignedTestModules().clear();
+        userToDeactivate.getAssignedModulesForEditing().clear();
+        userToDeactivate.getAssignedModulesForExecution().clear();
 
         userRepository.save(userToDeactivate);
     }

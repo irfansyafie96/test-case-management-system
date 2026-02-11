@@ -19,7 +19,35 @@
 
 ### Recent Changes
 
-21. **Module Assignment Refactoring** (COMPLETED)
+24. **Module Assignment Checkbox Fix** (2026-02-11)
+   - **Issue**: When assigning modules in the project team page, assigned modules were not being checked in the dialog despite being in the database (user_test_modules table)
+   - **Root Cause**: Backend `UserDTO` didn't include `assignedTestModules` field, so the frontend couldn't determine which modules were assigned
+   - **Changes**:
+     - Backend: Added `assignedTestModules` field to `UserDTO` with getter/setter and updated constructors
+     - Backend: Updated `UserRepository.findUsersAssignedToProject()` to include `assignedTestModules` in `@EntityGraph` attributePaths
+     - Backend: Updated `ApiController.getUsersAssignedToProject()` to convert `assignedTestModules` entities to `TestModuleDTOs` and filter to only include modules belonging to the specified project
+   - **Files**: `UserDTO.java`, `UserRepository.java`, `ApiController.java`
+   - **SOLID/DRY**: ✅ Reuses existing `convertToDTO()` method, follows Single Responsibility
+   - **Status**: COMPLETED ✅
+
+23. **Module Creation Permission & Assignment Fixes** (2026-02-11)
+   - **Goal**: Restrict module creation to ADMIN and fix bugs in module assignment dialog
+   - **Changes**:
+     - Backend:
+       - Restricted `createTestModuleForProject` endpoint to `hasRole('ADMIN')`
+       - Restricted `bulkAssignModules` endpoint to `hasRole('ADMIN')`
+       - Updated `bulkAssignModules` to return the updated `UserDTO` (fixes "nothing happens" issue)
+       - Refactored `ModuleService` to allow QA/BA to assign/remove users if they have edit access to the module
+       - **Refined `isEditable` logic**: Restrict edit access to ADMIN, QA, or BA roles only; TESTER role now only has execution access even if assigned to a module.
+       - **Fixed Compilation Error**: Replaced non-existent `hasAnyRole()` with `isQaOrBa()` in `ApiController.java`.
+     - Frontend:
+       - Updated `project-detail.component.html` to hide "NEW MODULE" from QA/BA
+       - Refactored `ProjectTeamComponent` using **Refresh Trigger pattern** (Subject + switchMap) to solve `NG0100` errors and added success snackbar after module assignment.
+       - Refactored `AssignModulesDialogComponent`:
+         - **Fixed Selection State**: Replaced `[(ngModel)]` with explicit `[selected]` binding and `(selectionChange)` handler. This guarantees correct checkbox state even with async data loading, converting all IDs to strings for reliable comparison.
+         - Implemented `setTimeout` in initial load and `cdr.detectChanges()` in save to ensure stable state.
+         - Standardized module selection and improved `onSave` logic to properly filter assignments/removals.
+   - **Status**: COMPLETED ✅
    - **Goal**: Simplify access model by moving module assignment to three-dot menu
    - **Changes**:
      - Backend:
@@ -43,6 +71,17 @@
      - Backend: `ProjectService.java`, `ModuleService.java`, `TestModuleRepository.java`, `ApiController.java`, `BulkAssignmentRequest.java`
      - Frontend: `project-team.component.ts/html/css`, `assign-modules-dialog.component.ts/html/css`, `tcm.service.ts`, `project-detail.component.ts`
    - **SOLID/DRY**: ✅ Reuses existing service methods, follows Single Responsibility
+   - **Status**: COMPLETED ✅
+
+22. **Module Assignment Bug Fixes** (2026-02-11)
+   - **Fixes**:
+     - Removed "Manage Assignments" section from project-detail page
+     - Changed button to "MANAGE TEAM" linking to `/projects/{id}/team`
+     - Fixed `ExpressionChangedAfterItHasBeenCheckedError` in dialog (added ChangeDetectorRef)
+     - Fixed `removeUserFromProject()` to handle plain text response
+     - Fixed `bulkAssignModules()` field name from `moduleId` to `testModuleId` to match backend DTO
+   - **Files**:
+     - Frontend: `project-detail.component.html`, `assign-modules-dialog.component.ts`, `tcm.service.ts`
    - **Status**: COMPLETED ✅
 
 20. **Project Team Members Loading Fix** (2026-02-11)
@@ -369,9 +408,13 @@ None - All issues resolved!
 - Branch: main
 - Last commit: 2f1a449 (SecurityHelper refactoring)
 - Uncommitted changes:
+  - .ai/memory-bank/activeContext.md (Updated with Module Assignment Checkbox Fix)
+  - .ai/memory-bank/progress.md (Updated with Module Assignment Checkbox Fix)
+  - src/main/java/com/yourproject/tcm/controller/ApiController.java (Updated getUsersAssignedToProject to populate assignedTestModules)
+  - src/main/java/com/yourproject/tcm/model/dto/UserDTO.java (Added assignedTestModules field)
+  - src/main/java/com/yourproject/tcm/repository/UserRepository.java (Updated findUsersAssignedToProject EntityGraph)
   - application.properties (Database connection updated for MariaDB)
   - ImportExportService.java (Excel import transaction fix)
-  - ApiController.java (Permission check before transaction)
   - TestCaseService.java (Added autoGenerateTestExecution method)
   - ModuleService.java (Uses autoGenerateTestExecution)
 

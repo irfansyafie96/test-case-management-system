@@ -148,15 +148,15 @@ public class ExecutionService {
         // 2. In projects/modules they are assigned to
         Project project = execution.getTestCase().getSubmodule().getTestModule().getProject();
         boolean isAssignedToProject = currentUser.getAssignedProjects().contains(project);
-        boolean isAssignedToModule = currentUser.getAssignedTestModules()
+        boolean isAssignedToModule = currentUser.getAssignedModulesForExecution()
             .contains(execution.getTestCase().getSubmodule().getTestModule());
-        boolean isAssignedToExecution = execution.getAssignedToUser() != null && 
+        boolean isAssignedToExecution = execution.getAssignedToUser() != null &&
             execution.getAssignedToUser().getId().equals(currentUser.getId());
-        
+
         if (isAssignedToExecution || isAssignedToProject || isAssignedToModule) {
             return executionOpt;
         }
-        
+
         return Optional.empty();
     }
 
@@ -244,7 +244,7 @@ public class ExecutionService {
 
         // Otherwise return only executions assigned to the user for modules they're currently assigned to
         List<TestExecution> allAssignedExecutions = testExecutionRepository.findByAssignedToUserWithDetails(currentUser);
-        Set<Long> assignedModuleIds = currentUser.getAssignedTestModules().stream()
+        Set<Long> assignedModuleIds = currentUser.getAssignedModulesForExecution().stream()
             .map(TestModule::getId)
             .collect(Collectors.toSet());
 
@@ -512,10 +512,10 @@ public class ExecutionService {
         }
 
         TestModule module = moduleOpt.get();
-        Set<User> assignedUsers = module.getAssignedUsers();
+        Set<User> executionAssignees = module.getExecutionAssignees();
 
-        if (assignedUsers != null && !assignedUsers.isEmpty()) {
-            for (User user : assignedUsers) {
+        if (executionAssignees != null && !executionAssignees.isEmpty()) {
+            for (User user : executionAssignees) {
                 createTestExecutionsForModuleAndUser(module, user);
             }
         }

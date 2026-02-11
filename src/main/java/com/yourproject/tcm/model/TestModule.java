@@ -57,18 +57,23 @@ public class TestModule {
     private List<Submodule> submodules;  // List of submodules in this module
 
     /**
-     * Many-to-Many relationship with User entity (module assignments)
-     * TESTER users can be assigned to this module to test it
-     * QA/BA users can also be assigned modules for testing purposes
-     * This is the inverse side of the relationship mapped in User entity
+     * Many-to-Many inverse relationship for module editors (QA/BA only)
+     * Users who can edit test cases in this module
      */
-    @ManyToMany(mappedBy = "assignedTestModules", fetch = FetchType.LAZY)
-    @JsonIgnore
-    private Set<User> assignedUsers = new HashSet<>();  // Users assigned to this module
-
-    /**
-
-     * Transient field to indicate if the current user can edit this module.
+        @ManyToMany(mappedBy = "assignedModulesForEditing", fetch = FetchType.LAZY)
+        @JsonIgnore
+        private Set<User> moduleEditors = new HashSet<>();  // QA/BA users assigned for editing
+    
+        /**
+         * Many-to-Many inverse relationship for execution assignees (QA/BA/TESTER)
+         * Users who are assigned to execute tests in this module
+         */
+        @ManyToMany(mappedBy = "assignedModulesForExecution", fetch = FetchType.LAZY)
+        @JsonIgnore
+        private Set<User> executionAssignees = new HashSet<>();  // Users assigned for execution
+    
+        /**
+         * Transient field to indicate if the current user can edit this module.
 
      * Not persisted to database, set by controller based on user permissions.
 
@@ -123,12 +128,20 @@ public class TestModule {
         this.submodules = submodules;
     }
 
-    public Set<User> getAssignedUsers() {
-        return assignedUsers;
+    public Set<User> getModuleEditors() {
+        return moduleEditors;
     }
 
-    public void setAssignedUsers(Set<User> assignedUsers) {
-        this.assignedUsers = assignedUsers;
+    public void setModuleEditors(Set<User> moduleEditors) {
+        this.moduleEditors = moduleEditors;
+    }
+
+    public Set<User> getExecutionAssignees() {
+        return executionAssignees;
+    }
+
+    public void setExecutionAssignees(Set<User> executionAssignees) {
+        this.executionAssignees = executionAssignees;
     }
 
     @JsonProperty("isEditable")

@@ -21,7 +21,7 @@ import { SubmoduleDialogComponent } from './submodule-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { TestCaseDialogImprovedComponent } from './test-case-dialog-improved.component';
 import { ImportDialogComponent } from './import-dialog.component';
-import { Project, TestModule, Submodule, TestCase, ModuleAssignmentRequest, User } from '../../../core/models/project.model';
+import { Project, TestModule, Submodule, TestCase, ModuleAssignmentRequest, ExecutionAssignmentRequest, User } from '../../../core/models/project.model';
 import { Observable, of, BehaviorSubject, combineLatest, forkJoin } from 'rxjs';
 import { catchError, finalize, map, startWith } from 'rxjs/operators';
 
@@ -494,8 +494,8 @@ export class ModuleDetailComponent implements OnInit {
     this.loadingAssignments = true;
     this.cdr.detectChanges(); // Force update to show loading state
 
-    // First load assigned users, then load available QA, BA, and TESTER users
-    this.tcmService.getUsersAssignedToTestModule(moduleId).subscribe({
+    // Load execution assignees (QA/BA/TESTER) instead of module editors
+    this.tcmService.getExecutionAssignees(moduleId).subscribe({
       next: (assignedUsers: User[]) => {
         // Now load QA, BA, and TESTER users in parallel
         forkJoin({
@@ -595,18 +595,18 @@ export class ModuleDetailComponent implements OnInit {
     const moduleId = this.route.snapshot.paramMap.get('id');
     if (!moduleId) return;
 
-    const request: ModuleAssignmentRequest = {
+    const request: ExecutionAssignmentRequest = {
       userId: Number(userId),
       testModuleId: Number(moduleId)
     };
 
-    this.tcmService.assignUserToTestModule(request).subscribe(
+    this.tcmService.assignExecutionAssignee(request).subscribe(
       (updatedUser: User) => {
         // Refresh all assignment data
         this.loadAssignmentData(moduleId);
         this.selectedUserId = null;
         // Show success snackbar
-        this.snackBar.open('User assigned successfully', 'Close', {
+        this.snackBar.open('User assigned for execution successfully', 'Close', {
           duration: 3000,
           panelClass: ['success-snackbar'],
           horizontalPosition: 'right',
@@ -614,7 +614,7 @@ export class ModuleDetailComponent implements OnInit {
         });
       },
       (error: any) => {
-        this.snackBar.open('Failed to assign user. Please try again.', 'Close', {
+        this.snackBar.open(error.error || 'Failed to assign user', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar'],
           horizontalPosition: 'right',
@@ -628,7 +628,7 @@ export class ModuleDetailComponent implements OnInit {
     const moduleId = this.route.snapshot.paramMap.get('id');
     if (!moduleId) return;
 
-    const request: ModuleAssignmentRequest = {
+    const request: ExecutionAssignmentRequest = {
       userId: Number(userId),
       testModuleId: Number(moduleId)
     };
@@ -646,12 +646,12 @@ export class ModuleDetailComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.tcmService.removeUserFromTestModule(request).subscribe(
+        this.tcmService.removeExecutionAssignee(request).subscribe(
           (updatedUser: User) => {
             // Refresh all assignment data
             this.loadAssignmentData(moduleId);
             // Show success snackbar
-            this.snackBar.open('User removed successfully', 'Close', {
+            this.snackBar.open('User removed from module successfully', 'Close', {
               duration: 3000,
               panelClass: ['success-snackbar'],
               horizontalPosition: 'right',
@@ -659,7 +659,7 @@ export class ModuleDetailComponent implements OnInit {
             });
           },
           (error: any) => {
-            this.snackBar.open('Failed to remove user. Please try again.', 'Close', {
+            this.snackBar.open(error.error || 'Failed to remove user', 'Close', {
               duration: 5000,
               panelClass: ['error-snackbar'],
               horizontalPosition: 'right',

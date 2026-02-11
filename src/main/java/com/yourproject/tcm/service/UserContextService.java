@@ -39,9 +39,9 @@ public class UserContextService {
     }
 
     /**
-     * Get the currently authenticated user with assignedTestModules loaded.
-     * Use this when you need to access the user's assigned test modules.
-     * @return the current User entity with assignedTestModules loaded
+     * Get the currently authenticated user with assigned modules loaded.
+     * Use this when you need to access the user's assigned test modules (for editing and execution).
+     * @return the current User entity with assignedModulesForEditing and assignedModulesForExecution loaded
      * @throws RuntimeException if no authenticated user is found
      */
     public User getCurrentUserWithModules() {

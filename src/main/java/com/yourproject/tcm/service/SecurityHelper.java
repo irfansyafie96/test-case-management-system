@@ -79,14 +79,18 @@ public class SecurityHelper {
         }
         
         // Non-ADMIN users must be assigned to the project or its modules
-        boolean isAssignedToProject = currentUser.getAssignedProjects() != null && 
+        boolean isAssignedToProject = currentUser.getAssignedProjects() != null &&
             currentUser.getAssignedProjects().contains(project);
-        
-        boolean isAssignedToModule = currentUser.getAssignedTestModules() != null &&
-            currentUser.getAssignedTestModules().stream()
+
+        boolean isAssignedToModuleForEditing = currentUser.getAssignedModulesForEditing() != null &&
+            currentUser.getAssignedModulesForEditing().stream()
                 .anyMatch(m -> m.getProject().getId().equals(project.getId()));
-        
-        if (!isAssignedToProject && !isAssignedToModule) {
+
+        boolean isAssignedToModuleForExecution = currentUser.getAssignedModulesForExecution() != null &&
+            currentUser.getAssignedModulesForExecution().stream()
+                .anyMatch(m -> m.getProject().getId().equals(project.getId()));
+
+        if (!isAssignedToProject && !isAssignedToModuleForEditing && !isAssignedToModuleForExecution) {
             throw new RuntimeException("You are not assigned to this project");
         }
     }
@@ -112,17 +116,17 @@ public class SecurityHelper {
             return;
         }
         
-        // Non-ADMIN users must be assigned to the module
-        if (currentUser.getAssignedTestModules() == null || 
-            currentUser.getAssignedTestModules().isEmpty()) {
-            throw new RuntimeException("You are not assigned to any test modules");
+        // Non-ADMIN users must be assigned to the module for editing
+        if (currentUser.getAssignedModulesForEditing() == null ||
+            currentUser.getAssignedModulesForEditing().isEmpty()) {
+            throw new RuntimeException("You are not assigned to any test modules for editing");
         }
-        
-        boolean isAssigned = currentUser.getAssignedTestModules().stream()
+
+        boolean isAssigned = currentUser.getAssignedModulesForEditing().stream()
             .anyMatch(m -> m.getId().equals(testModule.getId()));
-        
+
         if (!isAssigned) {
-            throw new RuntimeException("You are not assigned to this test module");
+            throw new RuntimeException("You are not assigned to this test module for editing");
         }
     }
 
@@ -150,12 +154,12 @@ public class SecurityHelper {
         }
         
         // Non-ADMIN users must be assigned
-        if (currentUser.getAssignedTestModules() == null || 
-            currentUser.getAssignedTestModules().isEmpty()) {
+        if (currentUser.getAssignedModulesForEditing() == null ||
+            currentUser.getAssignedModulesForEditing().isEmpty()) {
             return false;
         }
-        
-        return currentUser.getAssignedTestModules().stream()
+
+        return currentUser.getAssignedModulesForEditing().stream()
             .anyMatch(m -> m.getId().equals(testModule.getId()));
     }
 }

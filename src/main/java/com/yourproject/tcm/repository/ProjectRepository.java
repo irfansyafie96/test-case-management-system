@@ -22,8 +22,9 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     @Query("SELECT DISTINCT p FROM Project p " +
            "LEFT JOIN p.modules m " +
            "LEFT JOIN p.assignedUsers pa " +
-           "LEFT JOIN m.assignedUsers ma " +
-           "WHERE pa.id = :userId OR ma.id = :userId")
+           "LEFT JOIN m.moduleEditors me " +
+           "LEFT JOIN m.executionAssignees ea " +
+           "WHERE pa.id = :userId OR me.id = :userId OR ea.id = :userId")
     List<Project> findProjectsAssignedToUser(@Param("userId") Long userId);
 
     // Find projects NOT assigned to a specific user (for assignment purposes)

@@ -149,10 +149,10 @@ public class TestCaseService {
         TestCase savedTestCase = testCaseRepository.save(testCase);
         entityManager.flush(); // Ensure data is written to DB
         
-        // Auto-generate executions for all users assigned to the module
+        // Auto-generate executions for all users assigned to the module for execution
         TestModule module = submodule.getTestModule();
-        if (module != null && module.getAssignedUsers() != null && !module.getAssignedUsers().isEmpty()) {
-            for (User user : module.getAssignedUsers()) {
+        if (module != null && module.getExecutionAssignees() != null && !module.getExecutionAssignees().isEmpty()) {
+            for (User user : module.getExecutionAssignees()) {
                 try {
                     createTestExecutionForTestCaseAndUser(savedTestCase.getId(), user.getId());
                 } catch (Exception e) {
@@ -161,7 +161,7 @@ public class TestCaseService {
                 }
             }
         }
-        
+
         return savedTestCase;
     }
 
@@ -326,14 +326,14 @@ public class TestCaseService {
         
         // Non-ADMIN users can only access test cases in projects/modules they are assigned to
         Project project = testCase.getSubmodule().getTestModule().getProject();
-        if (currentUser.getAssignedProjects().contains(project) || 
-            currentUser.getAssignedTestModules().contains(testCase.getSubmodule().getTestModule())) {
+        if (currentUser.getAssignedProjects().contains(project) ||
+            currentUser.getAssignedModulesForEditing().contains(testCase.getSubmodule().getTestModule())) {
             List<TestExecution> executions = testExecutionRepository.findByTestCase_Id(testCaseId);
             return executions.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
         }
-        
+
         throw new RuntimeException("Access denied: You are not assigned to this project or module");
     }
 
@@ -366,8 +366,8 @@ public class TestCaseService {
         // Check user assignments for non-ADMIN users
         if (!userContextService.isAdmin(currentUser)) {
             Project project = testCase.getSubmodule().getTestModule().getProject();
-            if (!currentUser.getAssignedProjects().contains(project) && 
-                !currentUser.getAssignedTestModules().contains(testCase.getSubmodule().getTestModule())) {
+            if (!currentUser.getAssignedProjects().contains(project) &&
+                !currentUser.getAssignedModulesForEditing().contains(testCase.getSubmodule().getTestModule())) {
                 throw new RuntimeException("Access denied: You are not assigned to this project or module");
             }
         }

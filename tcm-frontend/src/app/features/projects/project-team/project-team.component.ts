@@ -18,7 +18,7 @@ import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { TeamService } from '../../../core/services/team.service';
 import { User } from '../../../core/models/project.model';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, startWith, switchMap, shareReplay } from 'rxjs';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 import { AssignModulesDialogComponent } from './assign-modules-dialog/assign-modules-dialog.component';
 
@@ -50,6 +50,7 @@ export class ProjectTeamComponent implements OnInit {
   projectId: string | null = null;
   projectName: string = '';
   teamMembers$: Observable<User[]> | null = null;
+  private refreshSubject = new Subject<void>();
   loading$ = new BehaviorSubject<boolean>(true);
   isAdmin = false;
   currentUser: User | null = null;
@@ -80,12 +81,19 @@ export class ProjectTeamComponent implements OnInit {
 
     if (this.projectId) {
       this.loadProjectDetails();
-      this.loadTeamMembers();
+      
+      // Reactive stream setup
+      this.teamMembers$ = this.refreshSubject.pipe(
+        startWith(undefined),
+        switchMap(() => this.tcmService.getUsersAssignedToProject(this.projectId!)),
+        shareReplay(1)
+      );
+      this.loading$.next(false);
     }
   }
 
   getModulesAbbreviated(member: User): string {
-    const modules = member.assignedTestModules || [];
+    const modules = member.assignedModulesForEditing || [];
     if (modules.length === 0) return '';
     if (modules.length <= 2) {
       return modules.map(m => m.name).join(', ');
@@ -94,7 +102,7 @@ export class ProjectTeamComponent implements OnInit {
   }
 
   getModulesTooltip(member: User): string {
-    const modules = member.assignedTestModules || [];
+    const modules = member.assignedModulesForEditing || [];
     return modules.map(m => m.name).join('\n');
   }
 
@@ -104,11 +112,8 @@ export class ProjectTeamComponent implements OnInit {
     });
   }
 
-  private loadTeamMembers(): void {
-    if (this.projectId) {
-      this.teamMembers$ = this.tcmService.getUsersAssignedToProject(this.projectId);
-      this.loading$.next(false);
-    }
+  private refreshTeam(): void {
+    this.refreshSubject.next();
   }
 
   onInviteMember(): void {
@@ -127,7 +132,7 @@ export class ProjectTeamComponent implements OnInit {
           horizontalPosition: 'right',
           verticalPosition: 'top'
         });
-        this.loadTeamMembers();
+        this.refreshTeam();
       },
       error: (error) => {
         this.isInviting = false;
@@ -152,7 +157,7 @@ export class ProjectTeamComponent implements OnInit {
           horizontalPosition: 'right',
           verticalPosition: 'top'
         });
-        this.loadTeamMembers();
+        this.refreshTeam();
       },
       error: (error) => {
         this.snackBar.open(error.error || 'Failed to update role.', 'Close', {
@@ -189,7 +194,7 @@ export class ProjectTeamComponent implements OnInit {
               horizontalPosition: 'right',
               verticalPosition: 'top'
             });
-            this.loadTeamMembers();
+            this.refreshTeam();
           },
           error: (error) => {
             this.snackBar.open(error.error || 'Failed to remove member.', 'Close', {
@@ -204,6 +209,11 @@ export class ProjectTeamComponent implements OnInit {
     });
   }
 
+  canAssignModules(member: User): boolean {
+    const role = member.roles?.[0];
+    return role === 'QA' || role === 'BA';
+  }
+
   openAssignModulesDialog(member: User): void {
     if (!member.id || !this.projectId) return;
 
@@ -213,13 +223,19 @@ export class ProjectTeamComponent implements OnInit {
         userId: member.id,
         username: member.username,
         projectId: this.projectId,
-        currentModuleIds: member.assignedTestModules?.map(m => m.id) || []
+        currentModuleIds: member.assignedModulesForEditing?.map(m => m.id) || []
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.loadTeamMembers();
+        this.snackBar.open('Module assignments updated successfully', 'Close', {
+          duration: 3000,
+          panelClass: ['success-snackbar'],
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
+        });
+        this.refreshTeam();
       }
     });
   }

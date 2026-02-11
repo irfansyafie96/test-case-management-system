@@ -279,14 +279,24 @@ public class ModuleService {
     public User assignUserToTestModule(ModuleAssignmentRequest request) {
         User currentUser = userContextService.getCurrentUser();
         
-        securityHelper.requireAdmin(currentUser);
+        Optional<TestModule> testModuleOpt = testModuleRepository.findById(request.getTestModuleId());
+        if (testModuleOpt.isEmpty()) {
+            throw new RuntimeException("Test module not found with id: " + request.getTestModuleId());
+        }
+        TestModule testModule = testModuleOpt.get();
+
+        // Check if user has permission to manage this module
+        if (!userContextService.isAdmin(currentUser)) {
+            securityHelper.requireAdminQaOrBa(currentUser);
+            if (!securityHelper.canAccessModule(currentUser, testModule)) {
+                throw new RuntimeException("Access denied: You are not assigned to this test module");
+            }
+        }
         
         Optional<User> userOpt = userRepository.findById(request.getUserId());
-        Optional<TestModule> testModuleOpt = testModuleRepository.findById(request.getTestModuleId());
 
-        if (userOpt.isPresent() && testModuleOpt.isPresent()) {
+        if (userOpt.isPresent()) {
             User user = userOpt.get();
-            TestModule testModule = testModuleOpt.get();
             
             // Check organization boundary for both user and module
             if (!user.getOrganization().getId().equals(currentUser.getOrganization().getId()) ||
@@ -294,12 +304,12 @@ public class ModuleService {
                 throw new RuntimeException("User and test module must belong to the same organization as the assigner");
             }
 
-            // Add module to user's assigned modules if not already assigned
-            if (!user.getAssignedTestModules().contains(testModule)) {
-                user.getAssignedTestModules().add(testModule);
+            // Add module to user's assigned modules for execution if not already assigned
+            if (!user.getAssignedModulesForExecution().contains(testModule)) {
+                user.getAssignedModulesForExecution().add(testModule);
                 User savedUser = userRepository.save(user);
                 entityManager.flush();
-                
+
                 // Auto-generate executions for the user for all test cases in this module
                 // This ensures they immediately see tasks in their workbench
                 try {
@@ -338,18 +348,28 @@ public class ModuleService {
     public User removeUserFromTestModule(ModuleAssignmentRequest request) {
         User currentUser = userContextService.getCurrentUser();
         
-        securityHelper.requireAdmin(currentUser);
+        Optional<TestModule> testModuleOpt = testModuleRepository.findById(request.getTestModuleId());
+        if (testModuleOpt.isEmpty()) {
+            throw new RuntimeException("Test module not found with id: " + request.getTestModuleId());
+        }
+        TestModule testModule = testModuleOpt.get();
+
+        // Check if user has permission to manage this module
+        if (!userContextService.isAdmin(currentUser)) {
+            securityHelper.requireAdminQaOrBa(currentUser);
+            if (!securityHelper.canAccessModule(currentUser, testModule)) {
+                throw new RuntimeException("Access denied: You are not assigned to this test module");
+            }
+        }
         
         Optional<User> userOpt = userRepository.findById(request.getUserId());
-        Optional<TestModule> testModuleOpt = testModuleRepository.findById(request.getTestModuleId());
 
-        if (userOpt.isPresent() && testModuleOpt.isPresent()) {
+        if (userOpt.isPresent()) {
             User user = userOpt.get();
-            TestModule testModule = testModuleOpt.get();
 
-            // Remove module from user's assigned modules
-            if (user.getAssignedTestModules().contains(testModule)) {
-                user.getAssignedTestModules().remove(testModule);
+            // Remove module from user's assigned modules for execution
+            if (user.getAssignedModulesForExecution().contains(testModule)) {
+                user.getAssignedModulesForExecution().remove(testModule);
                 User savedUser = userRepository.save(user);
                 entityManager.flush();
                 return savedUser;

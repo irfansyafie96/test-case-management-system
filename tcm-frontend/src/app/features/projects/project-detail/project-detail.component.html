@@ -13,7 +13,7 @@
       </div>
       <div class="dossier-actions">
         <button
-          *ngIf="authService.hasAnyRole(['ADMIN', 'QA', 'BA'])"
+          *ngIf="authService.hasRole('ADMIN')"
           mat-raised-button
           color="primary"
           (click)="openModuleDialog(project.id)"

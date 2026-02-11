@@ -1,0 +1,56 @@
+.dialog-container {
+  padding: 0;
+}
+
+.dialog-container h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.module-info {
+  padding: 16px 0;
+  margin-bottom: 16px;
+  background-color: var(--paper);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.module-info p {
+  margin: 4px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.option-content mat-icon {
+  color: var(--accent-secondary);
+}
+
+.option-content span {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.info-text {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: var(--paper);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-secondary);
+}
+
+.info-text p {
+  margin: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #666;
+}

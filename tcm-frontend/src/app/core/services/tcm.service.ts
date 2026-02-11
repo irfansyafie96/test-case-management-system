@@ -563,6 +563,88 @@ export class TcmService {
         );
     }
 
+    // ==================== MODULE EDITOR METHODS (Team Page - QA/BA only) ====================
+
+    /**
+     * Assign a user as a module editor
+     * @param request The assignment request
+     * @returns Observable<User> The updated user
+     */
+    assignModuleEditor(request: {userId: number | string, testModuleId: number | string}): Observable<User> {
+      return this.http.post<any>(`${this.apiUrl}/modules/editors/assign`, request)
+        .pipe(
+          map(user => this.transformUserRoles(user)),
+          catchError(this.handleError<User>('assignModuleEditor'))
+        );
+    }
+
+    /**
+     * Remove a user as a module editor
+     * @param request The removal request
+     * @returns Observable<User> The updated user
+     */
+    removeModuleEditor(request: {userId: number | string, testModuleId: number | string}): Observable<User> {
+      return this.http.delete<any>(`${this.apiUrl}/modules/editors/assign`, { body: request })
+        .pipe(
+          map(user => this.transformUserRoles(user)),
+          catchError(this.handleError<User>('removeModuleEditor'))
+        );
+    }
+
+    /**
+     * Get all module editors for a specific test module
+     * @param moduleId The test module ID
+     * @returns Observable<User[]> List of module editors
+     */
+    getModuleEditors(moduleId: string): Observable<User[]> {
+      return this.http.get<User[]>(`${this.apiUrl}/modules/${moduleId}/editors`)
+        .pipe(
+          map(users => users.map(user => this.transformUserRoles(user))),
+          catchError(this.handleError<User[]>('getModuleEditors'))
+        );
+    }
+
+    // ==================== EXECUTION ASSIGNEE METHODS (Module Detail Page - QA/BA/TESTER) ====================
+
+    /**
+     * Assign a user as an execution assignee
+     * @param request The assignment request
+     * @returns Observable<User> The updated user
+     */
+    assignExecutionAssignee(request: {userId: number | string, testModuleId: number | string}): Observable<User> {
+      return this.http.post<any>(`${this.apiUrl}/modules/execution-assign`, request)
+        .pipe(
+          map(user => this.transformUserRoles(user)),
+          catchError(this.handleError<User>('assignExecutionAssignee'))
+        );
+    }
+
+    /**
+     * Remove a user as an execution assignee
+     * @param request The removal request
+     * @returns Observable<User> The updated user
+     */
+    removeExecutionAssignee(request: {userId: number | string, testModuleId: number | string}): Observable<User> {
+      return this.http.delete<any>(`${this.apiUrl}/modules/execution-assign`, { body: request })
+        .pipe(
+          map(user => this.transformUserRoles(user)),
+          catchError(this.handleError<User>('removeExecutionAssignee'))
+        );
+    }
+
+    /**
+     * Get all execution assignees for a specific test module
+     * @param moduleId The test module ID
+     * @returns Observable<User[]> List of execution assignees
+     */
+    getExecutionAssignees(moduleId: string): Observable<User[]> {
+      return this.http.get<User[]>(`${this.apiUrl}/modules/${moduleId}/execution-assignees`)
+        .pipe(
+          map(users => users.map(user => this.transformUserRoles(user))),
+          catchError(this.handleError<User[]>('getExecutionAssignees'))
+        );
+    }
+
    /**
    * Get all test modules assigned to the current user
    * @returns Observable<TestModule[]> List of assigned test modules

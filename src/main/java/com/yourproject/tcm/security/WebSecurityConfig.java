@@ -109,6 +109,7 @@ public class WebSecurityConfig {
         .csrf(csrf -> csrf
             .ignoringRequestMatchers("/api/auth/**")  // Don't require CSRF for auth endpoints
             .ignoringRequestMatchers("/api/projects/**")  // Ignore CSRF for projects
+            .ignoringRequestMatchers("/api/modules/**")   // Ignore CSRF for modules
             .ignoringRequestMatchers("/api/testmodules/**")  // Ignore CSRF for testmodules
             .ignoringRequestMatchers("/api/testsuites/**")  // Ignore CSRF for testsuites
             .ignoringRequestMatchers("/api/submodules/**")  // Ignore CSRF for submodules

@@ -135,12 +135,15 @@ public class ProjectService {
 
         // Non-ADMIN users can access if:
         // 1. Assigned to the Project directly
-        // 2. Assigned to ANY Module in the Project
+        // 2. Assigned to ANY Module in the Project (for editing)
+        // 3. Assigned to ANY Module in the Project (for execution)
         boolean isAssignedToProject = currentUser.getAssignedProjects().contains(project);
-        boolean isAssignedToModule = currentUser.getAssignedTestModules().stream()
+        boolean isAssignedToModuleForEditing = currentUser.getAssignedModulesForEditing().stream()
+            .anyMatch(m -> m.getProject().getId().equals(projectId));
+        boolean isAssignedToModuleForExecution = currentUser.getAssignedModulesForExecution().stream()
             .anyMatch(m -> m.getProject().getId().equals(projectId));
 
-        if (isAssignedToProject || isAssignedToModule) {
+        if (isAssignedToProject || isAssignedToModuleForEditing || isAssignedToModuleForExecution) {
             return projectOpt;
         }
 
@@ -175,12 +178,15 @@ public class ProjectService {
 
         // Non-ADMIN users can access if:
         // 1. Assigned to the Project directly
-        // 2. Assigned to ANY Module in the Project
+        // 2. Assigned to ANY Module in the Project (for editing)
+        // 3. Assigned to ANY Module in the Project (for execution)
         boolean isAssignedToProject = currentUser.getAssignedProjects().contains(project);
-        boolean isAssignedToModule = currentUser.getAssignedTestModules().stream()
+        boolean isAssignedToModuleForEditing = currentUser.getAssignedModulesForEditing().stream()
+            .anyMatch(m -> m.getProject().getId().equals(projectId));
+        boolean isAssignedToModuleForExecution = currentUser.getAssignedModulesForExecution().stream()
             .anyMatch(m -> m.getProject().getId().equals(projectId));
 
-        if (isAssignedToProject || isAssignedToModule) {
+        if (isAssignedToProject || isAssignedToModuleForEditing || isAssignedToModuleForExecution) {
             return projectOpt;
         }
 
@@ -242,16 +248,19 @@ public class ProjectService {
                 throw new RuntimeException("Project not found or access denied");
             }
 
-            // 1. Clear user assignments from junction tables using native SQL
+            // Clear user assignments from junction tables using native SQL
             // This ensures junction table records are removed before attempting to delete the project
             entityManager.createNativeQuery("DELETE FROM user_projects WHERE project_id = :projectId")
                 .setParameter("projectId", projectId)
                 .executeUpdate();
-                
-            // Clear module assignments from junction table as well
+
+            // Clear module assignments from junction tables as well
             if (project.getModules() != null && !project.getModules().isEmpty()) {
                 for (TestModule module : project.getModules()) {
-                    entityManager.createNativeQuery("DELETE FROM user_test_modules WHERE test_module_id = :moduleId")
+                    entityManager.createNativeQuery("DELETE FROM module_editor_assignments WHERE test_module_id = :moduleId")
+                        .setParameter("moduleId", module.getId())
+                        .executeUpdate();
+                    entityManager.createNativeQuery("DELETE FROM execution_assignees WHERE test_module_id = :moduleId")
                         .setParameter("moduleId", module.getId())
                         .executeUpdate();
                 }
@@ -315,7 +324,8 @@ public class ProjectService {
 
     /**
      * Remove a user from a project completely.
-     * Removes from assignedProjects AND assignedTestModules.
+     * Removes from assignedProjects.
+     * Removes from module_editor_assignments and execution_assignees for all modules in the project.
      * Preserves execution history (test_executions table).
      */
     @Transactional
@@ -332,13 +342,18 @@ public class ProjectService {
                 user.getAssignedProjects().remove(project);
             }
 
-            // 2. Remove from all modules in this project (assignedTestModules)
+            // 2. Remove from all modules in this project (assignedModulesForEditing and assignedModulesForExecution)
             List<TestModule> modulesInProject = moduleService.getModulesByProjectId(projectId);
             for (TestModule module : modulesInProject) {
-                if (user.getAssignedTestModules().contains(module)) {
-                    user.getAssignedTestModules().remove(module);
+                if (user.getAssignedModulesForEditing().contains(module)) {
+                    user.getAssignedModulesForEditing().remove(module);
                     // Update bidirectional relationship
-                    module.getAssignedUsers().remove(user);
+                    module.getModuleEditors().remove(user);
+                }
+                if (user.getAssignedModulesForExecution().contains(module)) {
+                    user.getAssignedModulesForExecution().remove(module);
+                    // Update bidirectional relationship
+                    module.getExecutionAssignees().remove(user);
                 }
             }
 

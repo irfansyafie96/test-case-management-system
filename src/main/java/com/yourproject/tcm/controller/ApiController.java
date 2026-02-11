@@ -42,6 +42,8 @@ public class ApiController {
     private final UserService userService;
     private final UserContextService userContextService;
     private final com.yourproject.tcm.repository.TestModuleRepository testModuleRepository;
+    private final ModuleEditorService moduleEditorService;
+    private final ExecutionAssignmentService executionAssignmentService;
 
     @Autowired
     public ApiController(UserRepository userRepository,
@@ -50,7 +52,9 @@ public class ApiController {
                         ExecutionService executionService, AnalyticsService analyticsService,
                         ImportExportService importExportService, UserService userService,
                         UserContextService userContextService,
-                        com.yourproject.tcm.repository.TestModuleRepository testModuleRepository) {
+                        com.yourproject.tcm.repository.TestModuleRepository testModuleRepository,
+                        ModuleEditorService moduleEditorService,
+                        ExecutionAssignmentService executionAssignmentService) {
         this.userRepository = userRepository;
         this.projectService = projectService;
         this.moduleService = moduleService;
@@ -62,6 +66,8 @@ public class ApiController {
         this.userService = userService;
         this.userContextService = userContextService;
         this.testModuleRepository = testModuleRepository;
+        this.moduleEditorService = moduleEditorService;
+        this.executionAssignmentService = executionAssignmentService;
     }
 
     // ==================== PROJECT ENDPOINTS ====================
@@ -240,7 +246,7 @@ public class ApiController {
     // ==================== MODULE ENDPOINTS ====================
 
     @PostMapping("/projects/{projectId}/testmodules")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TestModuleDTO> createTestModuleForProject(@PathVariable Long projectId, @RequestBody TestModule testModule) {
         TestModule savedTestModule = moduleService.createTestModuleForProject(projectId, testModule);
         return new ResponseEntity<>(convertToDTO(savedTestModule), HttpStatus.CREATED);
@@ -256,7 +262,8 @@ public class ApiController {
                 // Set isEditable flag based on user permissions
                 User currentUser = userContextService.getCurrentUser();
                 boolean isEditable = userContextService.isAdmin(currentUser) || 
-                    testModuleRepository.isUserAssignedToModule(testModuleId, currentUser.getId());
+                    (userContextService.isQaOrBa(currentUser) && 
+                     testModuleRepository.isUserAssignedToModule(testModuleId, currentUser.getId()));
                 
                 testModule.setEditable(isEditable);
                 
@@ -397,9 +404,11 @@ public class ApiController {
                 User currentUser = userContextService.getCurrentUser();
                 boolean isEditable = userContextService.isAdmin(currentUser);
                 
-                if (testCase.getSubmodule() != null && testCase.getSubmodule().getTestModule() != null) {
-                    isEditable = isEditable || testModuleRepository.isUserAssignedToModule(
-                        testCase.getSubmodule().getTestModule().getId(), currentUser.getId());
+                if (!isEditable && userContextService.isQaOrBa(currentUser)) {
+                    if (testCase.getSubmodule() != null && testCase.getSubmodule().getTestModule() != null) {
+                        isEditable = testModuleRepository.isUserAssignedToModule(
+                            testCase.getSubmodule().getTestModule().getId(), currentUser.getId());
+                    }
                 }
                 
                 dto.setEditable(isEditable);
@@ -661,13 +670,33 @@ public class ApiController {
             List<User> users = userRepository.findUsersAssignedToProject(projectId);
             // Convert to DTOs to avoid serialization issues
             List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
-                .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getOrganizationName(),
-                    user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
-                ))
+                .map(user -> {
+                    com.yourproject.tcm.model.dto.UserDTO dto = new com.yourproject.tcm.model.dto.UserDTO(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getOrganizationName(),
+                        user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList()),
+                        user.isExternal()
+                    );
+                    // Set module assignments for editing (QA/BA)
+                    dto.setAssignedModulesForEditing(
+                        user.getAssignedModulesForEditing() != null
+                            ? user.getAssignedModulesForEditing().stream()
+                                .map(this::convertToDTO)
+                                .collect(java.util.stream.Collectors.toList())
+                            : java.util.Collections.emptyList()
+                    );
+                    // Set module assignments for execution (QA/BA/TESTER)
+                    dto.setAssignedModulesForExecution(
+                        user.getAssignedModulesForExecution() != null
+                            ? user.getAssignedModulesForExecution().stream()
+                                .map(this::convertToDTO)
+                                .collect(java.util.stream.Collectors.toList())
+                            : java.util.Collections.emptyList()
+                    );
+                    return dto;
+                })
                 .collect(java.util.stream.Collectors.toList());
             return new ResponseEntity<>(userDTOs, HttpStatus.OK);
         } catch (Exception e) {
@@ -713,21 +742,159 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/testmodules/bulk-assign")
     public ResponseEntity<?> bulkAssignModules(@RequestBody BulkAssignmentRequest request) {
         try {
-            // Process assignments
+            Long userId = null;
+            // Process module editor assignments (QA/BA only)
             for (ModuleAssignmentRequest assignment : request.getAssignments()) {
-                moduleService.assignUserToTestModule(assignment);
+                // Convert to ModuleEditorRequest and assign
+                ModuleEditorRequest editorRequest = new ModuleEditorRequest(assignment.getUserId(), assignment.getTestModuleId());
+                moduleEditorService.assignEditor(editorRequest);
+                if (userId == null) userId = assignment.getUserId();
             }
-            // Process removals
+            // Process module editor removals
             for (ModuleAssignmentRequest removal : request.getRemovals()) {
-                moduleService.removeUserFromTestModule(removal);
+                // Convert to ModuleEditorRequest and remove
+                ModuleEditorRequest editorRequest = new ModuleEditorRequest(removal.getUserId(), removal.getTestModuleId());
+                moduleEditorService.removeEditor(editorRequest);
+                if (userId == null) userId = removal.getUserId();
             }
-            return new ResponseEntity<>("Modules updated successfully", HttpStatus.OK);
+
+            if (userId != null) {
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    com.yourproject.tcm.model.dto.UserDTO userDTO = new com.yourproject.tcm.model.dto.UserDTO(
+                        user.getId(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getOrganizationName(),
+                        user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+                    );
+                    return new ResponseEntity<>(userDTO, HttpStatus.OK);
+                }
+            }
+            
+            return new ResponseEntity<>("Module editor assignments updated successfully", HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error updating module assignments: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error updating module editor assignments: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // ==================== MODULE EDITOR ENDPOINTS (Team Page - QA/BA only) ====================
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/modules/editors/assign")
+    public ResponseEntity<?> assignModuleEditor(@RequestBody ModuleEditorRequest request) {
+        try {
+            User user = moduleEditorService.assignEditor(request);
+            com.yourproject.tcm.model.dto.UserDTO userDTO = new com.yourproject.tcm.model.dto.UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getOrganizationName(),
+                user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+            );
+            return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error assigning module editor: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/modules/editors/assign")
+    public ResponseEntity<?> removeModuleEditor(@RequestBody ModuleEditorRequest request) {
+        try {
+            User user = moduleEditorService.removeEditor(request);
+            com.yourproject.tcm.model.dto.UserDTO userDTO = new com.yourproject.tcm.model.dto.UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getOrganizationName(),
+                user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+            );
+            return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error removing module editor: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @GetMapping("/modules/{moduleId}/editors")
+    public ResponseEntity<?> getModuleEditors(@PathVariable Long moduleId) {
+        try {
+            List<User> editors = moduleEditorService.getModuleEditors(moduleId);
+            List<com.yourproject.tcm.model.dto.UserDTO> editorDTOs = editors.stream()
+                .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getOrganizationName(),
+                    user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+                ))
+                .collect(java.util.stream.Collectors.toList());
+            return new ResponseEntity<>(editorDTOs, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving module editors: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // ==================== EXECUTION ASSIGNEE ENDPOINTS (Module Detail Page - QA/BA/TESTER) ====================
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PostMapping("/modules/execution-assign")
+    public ResponseEntity<?> assignExecutionAssignee(@RequestBody ExecutionAssignmentRequest request) {
+        try {
+            User user = executionAssignmentService.assignExecutor(request);
+            com.yourproject.tcm.model.dto.UserDTO userDTO = new com.yourproject.tcm.model.dto.UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getOrganizationName(),
+                user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+            );
+            return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error assigning execution assignee: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @DeleteMapping("/modules/execution-assign")
+    public ResponseEntity<?> removeExecutionAssignee(@RequestBody ExecutionAssignmentRequest request) {
+        try {
+            User user = executionAssignmentService.removeExecutor(request);
+            com.yourproject.tcm.model.dto.UserDTO userDTO = new com.yourproject.tcm.model.dto.UserDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getOrganizationName(),
+                user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+            );
+            return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error removing execution assignee: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @GetMapping("/modules/{moduleId}/execution-assignees")
+    public ResponseEntity<?> getExecutionAssignees(@PathVariable Long moduleId) {
+        try {
+            List<User> assignees = executionAssignmentService.getExecutionAssignees(moduleId);
+            List<com.yourproject.tcm.model.dto.UserDTO> assigneeDTOs = assignees.stream()
+                .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getEmail(),
+                    user.getOrganizationName(),
+                    user.getRoles().stream().map(role -> role.getName()).collect(java.util.stream.Collectors.toList())
+                ))
+                .collect(java.util.stream.Collectors.toList());
+            return new ResponseEntity<>(assigneeDTOs, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving execution assignees: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -749,7 +916,8 @@ public class ApiController {
     @GetMapping("/testmodules/{moduleId}/assigned-users")
     public ResponseEntity<?> getUsersAssignedToTestModule(@PathVariable Long moduleId) {
         try {
-            List<User> users = userRepository.findUsersAssignedToTestModule(moduleId);
+            // Return module editors (QA/BA only) for backward compatibility
+            List<User> users = userRepository.findModuleEditors(moduleId);
             // Convert to DTOs to avoid serialization issues
             List<com.yourproject.tcm.model.dto.UserDTO> userDTOs = users.stream()
                 .map(user -> new com.yourproject.tcm.model.dto.UserDTO(
@@ -762,7 +930,7 @@ public class ApiController {
                 .collect(java.util.stream.Collectors.toList());
             return new ResponseEntity<>(userDTOs, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error retrieving users assigned to test module: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error retrieving module editors: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

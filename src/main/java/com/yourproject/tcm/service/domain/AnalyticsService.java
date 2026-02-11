@@ -82,7 +82,7 @@ public class AnalyticsService {
 
             // For non-admin users, also filter by assigned modules (match execution page logic)
             if (!userContextService.isAdmin(currentUser)) {
-                Set<Long> assignedModuleIds = currentUser.getAssignedTestModules().stream()
+                Set<Long> assignedModuleIds = currentUser.getAssignedModulesForExecution().stream()
                     .map(TestModule::getId)
                     .collect(Collectors.toSet());
 
@@ -270,7 +270,7 @@ public class AnalyticsService {
         User user = userContextService.getCurrentUser();
         
         List<TestExecution> executions = testExecutionRepository.findByAssignedToUserWithDetails(user);
-        Set<Long> assignedModuleIds = user.getAssignedTestModules().stream()
+        Set<Long> assignedModuleIds = user.getAssignedModulesForExecution().stream()
             .map(TestModule::getId)
             .collect(Collectors.toSet());
 

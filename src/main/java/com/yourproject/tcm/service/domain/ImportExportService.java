@@ -83,19 +83,19 @@ public class ImportExportService {
         
         // ADMIN users can import into any module
         if (!userContextService.isAdmin(currentUser)) {
-            // Re-fetch user with assignedTestModules loaded to avoid lazy loading issues
+            // Re-fetch user with assigned modules loaded to avoid lazy loading issues
             User userWithModules = userContextService.getCurrentUserWithModules();
-            
-            // Check if user has assigned test modules
-            if (userWithModules.getAssignedTestModules() == null || userWithModules.getAssignedTestModules().isEmpty()) {
-                throw new RuntimeException("Access denied: You are not assigned to any test modules");
+
+            // Check if user has assigned test modules for editing
+            if (userWithModules.getAssignedModulesForEditing() == null || userWithModules.getAssignedModulesForEditing().isEmpty()) {
+                throw new RuntimeException("Access denied: You are not assigned to any test modules for editing");
             }
-            
+
             // Check assignment by ID
-            boolean isAssigned = userWithModules.getAssignedTestModules().stream()
+            boolean isAssigned = userWithModules.getAssignedModulesForEditing().stream()
                 .anyMatch(m -> m.getId().equals(module.getId()));
             if (!isAssigned) {
-                throw new RuntimeException("Access denied: You are not assigned to this test module");
+                throw new RuntimeException("Access denied: You are not assigned to this test module for editing");
             }
         }
     }
@@ -330,9 +330,9 @@ public class ImportExportService {
                 entityManager.flush(); // Ensure steps are persisted to database
                 testCasesCreated++;
 
-                // Auto-generate executions for assigned users
-                if (module.getAssignedUsers() != null) {
-                    for (User user : module.getAssignedUsers()) {
+                // Auto-generate executions for execution assignees
+                if (module.getExecutionAssignees() != null) {
+                    for (User user : module.getExecutionAssignees()) {
                         try {
                             testCaseService.autoGenerateTestExecution(testCase.getId(), user.getId());
                         } catch (Exception e) {

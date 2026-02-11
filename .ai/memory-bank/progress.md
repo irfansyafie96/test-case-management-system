@@ -138,6 +138,35 @@
    - **Automation**: Project-specific invites automatically assign users to the correct project on signup.
    - **Status**: COMPLETED ✅
 
+- [x] **Module Creation Permission & Assignment Fixes** (2026-02-11)
+   - **Implemented**: Restricted module creation to ADMIN only.
+   - **Fixed**: Module assignment dialog bugs (selection state, success notification) and NG0100 errors using best-practice **Refresh Trigger** pattern and explicit selection binding.
+   - **Refined**: Balanced permissions—QA/BA can manage assignments, while TESTERs are strictly restricted to execution only (isEditable=false) even if assigned.
+   - **Status**: COMPLETED ✅
+
+- [x] **Separate Module Assignment Systems** (2026-02-11)
+   - **Implemented**: Two distinct module assignment systems with separate database tables:
+     - **Editing System** (module_editor_assignments): QA/BA assigned via Project Team page (/projects/{id}/team)
+     - **Execution System** (execution_assignees): QA/BA/TESTER assigned via Module Detail page (/modules/{id})
+   - **Backend Changes**:
+     - User.java: Added `assignedModulesForEditing` and `assignedModulesForExecution` fields with @JoinTable annotations
+     - TestModule.java: Added inverse relationships `moduleEditors` and `executionAssignees`
+     - UserDTO.java: Added module assignment fields for frontend display
+     - UserRepository.java: Updated queries with @EntityGraph to fetch module assignments
+     - TestModuleRepository.java: Updated all queries to use new fields (moduleEditors, executionAssignees)
+     - ModuleEditorService.java: Created service for managing module editors
+     - ExecutionAssignmentService.java: Created service for managing execution assignees
+     - ApiController.java: Added endpoints for both assignment systems
+     - WebSecurityConfig.java: Added /api/modules/** to CSRF ignore list
+   - **Frontend Changes**:
+     - project.model.ts: Added assignedModulesForEditing and assignedModulesForExecution to User interface
+     - project-team.component.ts/html: Updated to use assignedModulesForEditing for displaying modules
+     - module-detail.component.ts/html: Uses execution assignment dialog for QA/BA/TESTER
+   - **Database Tables**:
+     - module_editor_assignments: user_id, test_module_id (for editing assignments)
+     - execution_assignees: user_id, test_module_id (for execution assignments)
+   - **Status**: COMPLETED ✅
+
 #### Implemented:
 
 - [x] **Project Team Members Page with Full Functionality** (2026-02-11)
@@ -155,6 +184,13 @@
      - Admins invisible to team members (Fixed query to include Org Admins).
      - New users invisible to Admins (Fixed bidirectional relationship sync).
      - Project creators not in team list (Added auto-assignment).
+   - **Status**: COMPLETED ✅
+
+- [x] **Module Assignment Checkbox Fix** (2026-02-11)
+   - **Issue**: When assigning modules in the project team page, assigned modules were not being checked in the dialog despite being in the database
+   - **Root Cause**: Backend `UserDTO` didn't include `assignedTestModules` field
+   - **Fix**: Added `assignedTestModules` field to `UserDTO`, updated `UserRepository.findUsersAssignedToProject()` to fetch modules, and updated `ApiController.getUsersAssignedToProject()` to populate modules in DTO
+   - **Files**: `UserDTO.java`, `UserRepository.java`, `ApiController.java`
    - **Status**: COMPLETED ✅
 
 #### In Progress:

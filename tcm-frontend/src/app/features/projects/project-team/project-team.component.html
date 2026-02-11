@@ -54,7 +54,7 @@
               <span class="external-badge" *ngIf="member.isExternal">External</span>
             </div>
             <span class="member-email">{{ member.email }}</span>
-            <div class="member-modules" *ngIf="member.assignedTestModules?.length">
+            <div class="member-modules" *ngIf="member.assignedModulesForEditing?.length">
               <span class="modules-label">Modules:</span>
               <span class="modules-list" [matTooltip]="getModulesTooltip(member)">
                 {{ getModulesAbbreviated(member) }}
@@ -68,7 +68,7 @@
             </button>
             
             <mat-menu #memberMenu="matMenu">
-              <button mat-menu-item (click)="openAssignModulesDialog(member)">
+              <button mat-menu-item (click)="openAssignModulesDialog(member)" *ngIf="canAssignModules(member)">
                 <mat-icon>folder_shared</mat-icon>
                 <span>Assign Modules</span>
               </button>

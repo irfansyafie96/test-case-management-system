@@ -14,6 +14,8 @@ public class UserDTO {
     private String organizationName;
     private List<String> roles;
     private boolean isExternal;
+    private List<TestModuleDTO> assignedModulesForEditing;
+    private List<TestModuleDTO> assignedModulesForExecution;
 
     public UserDTO() {}
 
@@ -76,5 +78,21 @@ public class UserDTO {
 
     public void setExternal(boolean external) {
         isExternal = external;
+    }
+
+    public List<TestModuleDTO> getAssignedModulesForEditing() {
+        return assignedModulesForEditing;
+    }
+
+    public void setAssignedModulesForEditing(List<TestModuleDTO> assignedModulesForEditing) {
+        this.assignedModulesForEditing = assignedModulesForEditing;
+    }
+
+    public List<TestModuleDTO> getAssignedModulesForExecution() {
+        return assignedModulesForExecution;
+    }
+
+    public void setAssignedModulesForExecution(List<TestModuleDTO> assignedModulesForExecution) {
+        this.assignedModulesForExecution = assignedModulesForExecution;
     }
 }

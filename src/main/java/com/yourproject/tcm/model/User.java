@@ -21,7 +21,7 @@ import java.util.Set;
  * to prevent duplicate accounts.
  */
 @Entity
-@JsonIgnoreProperties({"assignedProjects", "assignedTestModules", "testExecutions"})
+@JsonIgnoreProperties({"assignedProjects", "testExecutions"})
 @Table(name = "users", uniqueConstraints = {
     @UniqueConstraint(columnNames = "username"),  // Prevent duplicate usernames
     @UniqueConstraint(columnNames = "email")      // Prevent duplicate emails
@@ -78,16 +78,24 @@ public class User {
     private Set<Project> assignedProjects = new HashSet<>();  // Projects assigned to this user
 
     /**
-     * Many-to-Many relationship with TestModule entity (module assignments)
-     * TESTER users can be assigned to specific modules they can test
-     * QA/BA users can also be assigned modules for testing purposes
-     * This creates a 'user_test_modules' junction table in the database
+     * Many-to-Many relationship with TestModule for module editing (QA/BA only)
+     * This represents modules where the user can edit test cases
      */
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_test_modules",
+    @JoinTable(name = "module_editor_assignments",
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "test_module_id"))
-    private Set<TestModule> assignedTestModules = new HashSet<>();  // Test modules assigned to this user
+    private Set<TestModule> assignedModulesForEditing = new HashSet<>();  // Modules assigned for editing (QA/BA)
+
+    /**
+     * Many-to-Many relationship with TestModule for execution assignment (QA/BA/TESTER)
+     * This represents modules where the user is assigned to execute tests
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "execution_assignees",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "test_module_id"))
+    private Set<TestModule> assignedModulesForExecution = new HashSet<>();  // Modules assigned for execution (QA/BA/TESTER)
 
     /**
      * Default constructor - Creates a user with current timestamp
@@ -220,11 +228,20 @@ public class User {
     }
 
     @JsonIgnore
-    public Set<TestModule> getAssignedTestModules() {
-        return assignedTestModules;
+    public Set<TestModule> getAssignedModulesForEditing() {
+        return assignedModulesForEditing;
     }
 
-    public void setAssignedTestModules(Set<TestModule> assignedTestModules) {
-        this.assignedTestModules = assignedTestModules;
+    public void setAssignedModulesForEditing(Set<TestModule> assignedModulesForEditing) {
+        this.assignedModulesForEditing = assignedModulesForEditing;
+    }
+
+    @JsonIgnore
+    public Set<TestModule> getAssignedModulesForExecution() {
+        return assignedModulesForExecution;
+    }
+
+    public void setAssignedModulesForExecution(Set<TestModule> assignedModulesForExecution) {
+        this.assignedModulesForExecution = assignedModulesForExecution;
     }
 }

@@ -1,0 +1,34 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title>Assign {{ data.username }} for Execution</h2>
+
+  <mat-dialog-content>
+    <div class="module-info">
+      <p>Module: <strong>{{ data.testModuleName }}</strong></p>
+      <p>Assign this user to execute test cases in this module.</p>
+    </div>
+
+    <mat-selection-list (selectionChange)="onSelectionChange($event)">
+      <mat-list-option
+        [value]="data.testModuleId"
+        [selected]="isModuleAssigned()">
+        <div class="option-content">
+          <mat-icon>play_circle_outline</mat-icon>
+          <span>Assign {{ data.username }} to execute tests in {{ data.testModuleName }}</span>
+        </div>
+      </mat-list-option>
+    </mat-selection-list>
+
+    <div class="info-text">
+      <p><small>✓ QA, BA, and TESTER roles can be assigned for test execution</small></p>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isSaving">
+      Cancel
+    </button>
+    <button mat-flat-button color="primary" (click)="onSave()" [disabled]="isSaving">
+      {{ isSaving ? 'Saving...' : 'Save Changes' }}
+    </button>
+  </mat-dialog-actions>
+</div>

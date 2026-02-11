@@ -11,11 +11,11 @@
       <p>No modules available in this project.</p>
     </div>
 
-    <mat-selection-list *ngIf="!isLoading && modules.length > 0">
+    <mat-selection-list *ngIf="!isLoading && modules.length > 0" (selectionChange)="onSelectionChange($event)">
       <mat-list-option
         *ngFor="let module of modules"
-        [selected]="isModuleSelected(module.id)"
-        (click)="toggleModule(module.id)">
+        [value]="module.id.toString()"
+        [selected]="isModuleSelected(module.id)">
         {{ module.name }}
       </mat-list-option>
     </mat-selection-list>
