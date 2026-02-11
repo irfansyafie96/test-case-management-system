@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,6 +39,7 @@ export class AssignModulesDialogComponent {
 
   constructor(
     private tcmService: TcmService,
+    private cdr: ChangeDetectorRef,
     private dialogRef: MatDialogRef<AssignModulesDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: AssignModulesDialogData
   ) {
@@ -51,9 +52,11 @@ export class AssignModulesDialogComponent {
       next: (modules) => {
         this.modules = modules;
         this.isLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

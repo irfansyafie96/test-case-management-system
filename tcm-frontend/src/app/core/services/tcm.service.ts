@@ -479,8 +479,9 @@ export class TcmService {
     */
    removeUserFromProject(userId: number | string, projectId: number | string): Observable<string> {
      const request = { userId, projectId };
-     return this.http.delete<any>(`${this.apiUrl}/projects/assign`, { body: request })
+     return this.http.delete(`${this.apiUrl}/projects/assign`, { body: request, responseType: 'text' })
        .pipe(
+         map((response: any) => response as string),
          catchError(this.handleError<string>('removeUserFromProject'))
        );
    }
