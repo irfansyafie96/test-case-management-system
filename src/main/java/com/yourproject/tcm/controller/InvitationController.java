@@ -27,6 +27,10 @@ public class InvitationController {
                 request.isExternal(),
                 request.getProjectId()
             );
+            
+            if (invitation.isAccepted()) {
+                return ResponseEntity.ok("User " + invitation.getEmail() + " has been added to the project.");
+            }
             return ResponseEntity.ok("Invitation sent to " + invitation.getEmail());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

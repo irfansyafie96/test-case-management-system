@@ -98,7 +98,14 @@ public class ProjectService {
         }
         
         project.setOrganization(currentOrg);
-        return projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
+        
+        // Auto-assign the creator to the project
+        currentUser.getAssignedProjects().add(savedProject);
+        savedProject.getAssignedUsers().add(currentUser);
+        userRepository.save(currentUser);
+        
+        return savedProject;
     }
 
     /**

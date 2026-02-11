@@ -15,40 +15,46 @@
 - **Organization**: TMS Asia
 - **Status**: Sprint 1 completed, Database migrated to MariaDB 11.4
 
-### Current Blocker: TEAM MEMBERS VISIBILITY FOR GUEST USERS (IMPLEMENTED)
-- **Issue**: Guest users only see themselves in Team Members section
-- **Root Cause**: QA/BA users (testers) CANNOT be assigned to projects due to role restriction
-- **Solution Implemented**: Created dedicated "Team Members" page for each project
-- **Files Created/Modified**:
-  - `app.routes.ts` - Added `/projects/:id/team` route
-  - `projects.component.html` - Added team button (left of delete)
-  - `projects.component.ts` - Added `viewTeam()` method
-  - `projects.component.css` - Added team button styles
-  - `project-team/project-team.component.ts` - FULL functionality (invite, change role, remove member)
-  - `project-team/project-team.component.html` - Copied from profile Team Management
-  - `project-team/project-team.component.css` - Full styles including action buttons
-  - `project-detail/project-detail.component.html` - REMOVED INVITE button
-- **Feature**: Full Team Management functionality (Admin can invite, change roles, remove members)
-- **URL**: http://localhost:4200/projects/{id}/team
-- **Backend**: Uses existing `getUsersAssignedToProject()`, `updateUserRole()`, `removeUserFromTeam()`, `inviteMember()` endpoints
-- **Simplification**: Removed INVITE button from Project Detail page (use Team Management page instead)
-- **Status**: IMPLEMENTED ✅ (2026-02-11)
+### Current Blocker: NONE ✅
+
+### Recent Changes
+
+19. **Test Case Prev/Next Navigation Fix** (2026-02-11)
+   - **Issue**: Prev/Next buttons on test-case-detail page worked inconsistently
+   - **Root Cause**: `loadAllTestCases()` didn't trigger change detection after loading
+   - **Fix**: Added `this.cdr.detectChanges()` in subscription callbacks
+   - **File**: `test-case-detail.component.ts`
+   - **Status**: COMPLETED ✅
+
+20. **Project Team Members Loading Fix** (2026-02-11)
+   - **Issue**: Team members didn't load initially - required user interaction to appear
+   - **Root Cause**: Manual Observable subscription without change detection
+   - **Solution**: Refactored to use async pipe pattern
+   - **Changes**:
+     - Removed manual `teamMembers[]` array subscription
+     - Updated template to use `*ngIf="(teamMembers$ | async) as members"`
+     - Added loading state template with spinner
+   - **Files**: `project-team.component.ts`, `.html`, `.css`
+   - **Status**: COMPLETED ✅
 
 ### Recent Changes (Committed)
 
-16. **Project Team Members Page with Full Functionality** (2026-02-11)
-   - **Issue**: Users needed a dedicated team management page per project
-   - **Solution**: Created full-featured Team Management page at /projects/{id}/team
-   - **Changes Made**:
-     - `app.routes.ts` - Added route for project team page
-     - `projects.component.html/ts/css` - Added team button to project card
-     - `project-team/project-team.component.ts` - Full functionality (invite, change role, remove)
-     - `project-team/project-team.component.html` - Copied from profile Team Management
-     - `project-team/project-team.component.css` - Full styles matching profile
-     - `project-detail/project-detail.component.html` - Removed INVITE button
-   - **Features**: Admin can invite members, change roles, remove members
-   - **URL**: http://localhost:4200/projects/{id}/team
-   - **Backend**: Uses existing endpoints
+18. **Team Visibility & Relationship Fixes** (2026-02-11)
+   - **Issue**: Admins weren't visible to team; new users weren't visible to Admins.
+   - **Fixes**:
+     - `UserRepository`: Query now includes all Organization Admins.
+     - `InvitationService`: Explicitly updates both sides of `User-Project` relationship.
+     - `ProjectService`: Auto-assigns project creator (Admin) to the new project.
+   - **Status**: COMPLETED ✅
+
+17. **Consolidated Project-Centric Team Management** (2026-02-11)
+   - **Goal**: Move all team management to project pages and restrict visibility to project members.
+   - **Changes**:
+     - Removed Team tab from Profile page.
+     - Enabled non-admin visibility for project team members.
+     - Enhanced backend query to include module-assigned users in project team list.
+     - Refactored invitation logic to support direct project assignment for existing users.
+     - Removed all hover effects from project team list UI.
    - **Status**: COMPLETED ✅
 
 15. **Guest User Team Visibility Fix** (2026-02-10)

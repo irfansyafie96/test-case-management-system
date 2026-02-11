@@ -102,9 +102,10 @@ export class TestCaseDetailComponent implements OnInit, OnDestroy {
     this.tcmService.getAllTestCases().subscribe({
       next: (testCases) => {
         this.allTestCases = testCases;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        // Error loading test cases
+        this.cdr.detectChanges();
       }
     });
   }

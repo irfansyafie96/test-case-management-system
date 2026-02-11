@@ -141,26 +141,20 @@
 #### Implemented:
 
 - [x] **Project Team Members Page with Full Functionality** (2026-02-11)
-   - **Issue**: Users needed a dedicated team management page per project
-   - **Solution**: Created full-featured Team Management page with complete functionality
-   - **Changes Made**:
-     - `app.routes.ts` - Added `/projects/:id/team` route
-     - `projects.component.html` - Added "group" icon button (left of delete)
-     - `projects.component.ts` - Added `viewTeam()` navigation method
-     - `projects.component.css` - Added team button styles
-     - `project-team/project-team.component.ts` - Full functionality (invite, change role, remove member)
-     - `project-team/project-team.component.html` - Complete Team Management UI (copied from profile)
-     - `project-team/project-team.component.css` - Full styles with action buttons, no hover effects
-     - `project-detail/project-detail.component.html` - REMOVED INVITE button
-   - **Features**:
-     - Admin can invite new members (email, role, external guest checkbox)
-     - Admin can change member roles (QA, BA, Tester)
-     - Admin can remove members from project
-     - All users can view team members
-     - No hover effects on table
-   - **URL**: http://localhost:4200/projects/{id}/team
-   - **Backend**: Uses existing endpoints (getUsersAssignedToProject, updateUserRole, removeUserFromTeam, inviteMember)
-   - **Simplification**: Removed INVITE button from Project Detail page (use Team Management page)
+   - **Implemented**: Dedicated team management page per project.
+   - **Consolidation**: Removed team management from Profile page to focus on project context.
+   - **Refinement**: 
+     - Relaxed visibility to allow all project members to see teammates.
+     - Included module-assigned users in project team list.
+     - Refactored invitations to handle direct project assignment for existing users.
+     - Disabled all UI hover effects on project team rows.
+   - **Status**: COMPLETED ✅
+
+- [x] **Team Visibility & Relationship Logic Fixes** (2026-02-11)
+   - **Issues Resolved**: 
+     - Admins invisible to team members (Fixed query to include Org Admins).
+     - New users invisible to Admins (Fixed bidirectional relationship sync).
+     - Project creators not in team list (Added auto-assignment).
    - **Status**: COMPLETED ✅
 
 #### In Progress:

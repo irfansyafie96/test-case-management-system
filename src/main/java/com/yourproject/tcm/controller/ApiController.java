@@ -654,7 +654,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/projects/{projectId}/assigned-users")
     public ResponseEntity<?> getUsersAssignedToProject(@PathVariable Long projectId) {
         try {

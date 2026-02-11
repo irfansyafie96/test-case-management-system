@@ -45,7 +45,6 @@ import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog
 export class ProjectTeamComponent implements OnInit {
   projectId: string | null = null;
   projectName: string = '';
-  teamMembers: User[] = [];
   teamMembers$: Observable<User[]> | null = null;
   loading$ = new BehaviorSubject<boolean>(true);
   isAdmin = false;
@@ -90,13 +89,7 @@ export class ProjectTeamComponent implements OnInit {
   private loadTeamMembers(): void {
     if (this.projectId) {
       this.teamMembers$ = this.tcmService.getUsersAssignedToProject(this.projectId);
-      this.teamMembers$.subscribe({
-        next: (members) => {
-          this.teamMembers = members;
-          this.loading$.next(false);
-        },
-        error: () => this.loading$.next(false)
-      });
+      this.loading$.next(false);
     }
   }
 

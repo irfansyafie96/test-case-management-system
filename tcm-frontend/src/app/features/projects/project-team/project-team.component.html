@@ -10,7 +10,7 @@
   <mat-card class="team-card">
     <mat-card-header>
       <mat-card-title>Team Management</mat-card-title>
-      <mat-card-subtitle>{{ teamMembers.length }} Active Members</mat-card-subtitle>
+      <mat-card-subtitle>{{ (teamMembers$ | async)?.length || 0 }} Active Members</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
@@ -43,8 +43,8 @@
 
       <div class="members-divider" *ngIf="isAdmin"></div>
 
-      <div class="members-list" *ngIf="teamMembers.length > 0; else noMembers">
-        <div class="member-row" *ngFor="let member of teamMembers">
+      <div class="members-list" *ngIf="(teamMembers$ | async) as members; else loading">
+        <div class="member-row" *ngFor="let member of members">
           <div class="member-avatar-small">
             {{ member.username.charAt(0).toUpperCase() }}
           </div>
@@ -80,6 +80,13 @@
           </div>
         </div>
       </div>
+
+      <ng-template #loading>
+        <div class="loading-state">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading team members...</p>
+        </div>
+      </ng-template>
 
       <ng-template #noMembers>
         <div class="empty-state">

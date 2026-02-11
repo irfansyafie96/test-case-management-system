@@ -51,9 +51,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r.name IN ('QA', 'BA')")
     List<User> findQaBaUsers();
 
-    // Find users assigned to a specific project
+    // Find users assigned to a specific project (directly or via a module in that project) + all Organization Admins
     @EntityGraph(attributePaths = {"roles"})
-    @Query("SELECT DISTINCT u FROM User u JOIN u.assignedProjects p WHERE p.id = :projectId")
+    @Query("SELECT DISTINCT u FROM User u " +
+           "JOIN u.organization o " +
+           "LEFT JOIN u.assignedProjects p " +
+           "LEFT JOIN u.assignedTestModules tm " +
+           "LEFT JOIN u.roles r " +
+           "WHERE (p.id = :projectId OR tm.project.id = :projectId OR r.name = 'ADMIN') " +
+           "AND o.id = (SELECT p2.organization.id FROM Project p2 WHERE p2.id = :projectId) " +
+           "AND u.enabled = true")
     List<User> findUsersAssignedToProject(@Param("projectId") Long projectId);
 
     // Find users assigned to a specific test module

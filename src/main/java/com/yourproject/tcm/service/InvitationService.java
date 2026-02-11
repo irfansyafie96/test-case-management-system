@@ -65,8 +65,33 @@ public class InvitationService {
             throw new RuntimeException("Current user does not belong to an organization");
         }
 
-        if (userRepository.existsByEmail(email)) {
-            throw new RuntimeException("User with this email already exists");
+        // Check if user already exists
+        Optional<User> existingUserOpt = userRepository.findByEmail(email);
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+            
+            // Security: Ensure user is in the same organization
+            if (!existingUser.getOrganization().getId().equals(org.getId())) {
+                throw new RuntimeException("User with this email belongs to another organization");
+            }
+
+            // If projectId is provided, assign user to project directly
+            if (projectId != null) {
+                Optional<Project> projectOpt = projectRepository.findById(projectId);
+                if (projectOpt.isPresent()) {
+                    Project project = projectOpt.get();
+                    if (!existingUser.getAssignedProjects().contains(project)) {
+                        existingUser.getAssignedProjects().add(project);
+                        project.getAssignedUsers().add(existingUser); // Maintain bidirectional relationship
+                        userRepository.save(existingUser);
+                    }
+                    // Return a dummy invitation to indicate success without sending an email
+                    Invitation dummy = new Invitation(email, roleName, org, external, projectId);
+                    dummy.setAccepted(true);
+                    return dummy; 
+                }
+            }
+            throw new RuntimeException("User with this email already exists in your organization");
         }
 
         Invitation invitation = new Invitation(email, roleName, org, external, projectId);
@@ -108,7 +133,9 @@ public class InvitationService {
         if (invitation.getProjectId() != null) {
             Optional<Project> projectOpt = projectRepository.findById(invitation.getProjectId());
             if (projectOpt.isPresent()) {
-                user.getAssignedProjects().add(projectOpt.get());
+                Project project = projectOpt.get();
+                user.getAssignedProjects().add(project);
+                project.getAssignedUsers().add(user); // Maintain bidirectional relationship
             }
         }
 

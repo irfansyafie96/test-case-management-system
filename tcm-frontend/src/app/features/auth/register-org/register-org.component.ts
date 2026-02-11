@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -42,7 +42,8 @@ export class RegisterOrgComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     this.emailForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
@@ -67,12 +68,14 @@ export class RegisterOrgComponent {
       next: () => {
         this.isOtpSent = true;
         this.isLoading = false;
+        this.cdr.detectChanges();
         // Wait a tick for UI to update isOtpSent binding before moving
         setTimeout(() => this.stepper.next(), 0);
       },
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error || 'Failed to send OTP. Please try again.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -91,11 +94,13 @@ export class RegisterOrgComponent {
     this.authService.registerOrganization(registrationData).subscribe({
       next: () => {
         this.isLoading = false;
+        this.cdr.detectChanges();
         this.router.navigate(['/login'], { queryParams: { registered: 'true' } });
       },
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error || 'Registration failed. Please try again.';
+        this.cdr.detectChanges();
       }
     });
   }
