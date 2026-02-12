@@ -1,9 +1,15 @@
-<div class="page-container">
-  <div class="page-header">
+<div class="page-container" *ngIf="projectId">
+  <div class="project-header-section">
     <div class="breadcrumb">
       <a routerLink="/projects" class="back-link">
-        <mat-icon>arrow_back</mat-icon> Back to Project
+        <mat-icon>arrow_back</mat-icon> Projects
       </a>
+    </div>
+    <div class="dossier-header">
+      <div class="dossier-title">
+        <h1>Team Management</h1>
+        <p>Manage team members and module assignments</p>
+      </div>
     </div>
   </div>
 
@@ -21,7 +27,7 @@
             <input matInput formControlName="email" placeholder="colleague@company.com">
             <mat-icon matSuffix>mail_outline</mat-icon>
           </mat-form-field>
-          
+
           <mat-form-field appearance="outline" class="role-select" subscriptSizing="dynamic">
             <mat-label>Role</mat-label>
             <mat-select formControlName="role">
@@ -66,7 +72,7 @@
             <button mat-icon-button class="action-btn" *ngIf="isAdmin && member.username !== currentUser?.username" [matMenuTriggerFor]="memberMenu">
               <mat-icon>more_vert</mat-icon>
             </button>
-            
+
             <mat-menu #memberMenu="matMenu">
               <button mat-menu-item (click)="openAssignModulesDialog(member)" *ngIf="canAssignModules(member)">
                 <mat-icon>folder_shared</mat-icon>

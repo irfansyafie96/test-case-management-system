@@ -190,7 +190,16 @@
    - **Issue**: When assigning modules in the project team page, assigned modules were not being checked in the dialog despite being in the database
    - **Root Cause**: Backend `UserDTO` didn't include `assignedTestModules` field
    - **Fix**: Added `assignedTestModules` field to `UserDTO`, updated `UserRepository.findUsersAssignedToProject()` to fetch modules, and updated `ApiController.getUsersAssignedToProject()` to populate modules in DTO
-   - **Files**: `UserDTO.java`, `UserRepository.java`, `ApiController.java`
+    - **Files**: `UserDTO.java`, `UserRepository.java`, `ApiController.java`
+    - **Status**: COMPLETED ✅
+
+- [x] **Team Management Page Consistency Fix** (2026-02-12)
+   - **Goal**: Align Team Management page layout with Project Detail page
+   - **Changes**:
+     - Updated HTML structure with `project-header-section`, `breadcrumb`, and `dossier-title`
+     - Added consistent CSS classes matching project-detail component
+     - Removed local `.page-container` override to use global styles (`padding: 48px 64px`)
+   - **Files**: `project-team.component.html`, `project-team.component.css`
    - **Status**: COMPLETED ✅
 
 #### In Progress:

@@ -102,7 +102,21 @@
    - **File**: `test-case-detail.component.ts`
    - **SOLID Analysis**: ✅ Follows Single Responsibility, Open/Closed, Dependency Inversion
    - **DRY Analysis**: ⚠️ Slight repetition (detectChanges called twice). Could use `.add()` for better DRY
-   - **Status**: COMPLETED ✅
+    - **Status**: COMPLETED ✅
+
+25. **Team Management Page Consistency Fix** (2026-02-12)
+    - **Goal**: Align Team Management page layout with Project Detail page for consistency
+    - **Changes**:
+      - HTML (`project-team.component.html`):
+        - Replaced simple `page-header` with `project-header-section` wrapper matching project-detail structure
+        - Added breadcrumb with "Projects" link and icon at top-left
+        - Added `dossier-header` and `dossier-title` with "Team Management" title and description
+      - CSS (`project-team.component.css`):
+        - Added `.breadcrumb` class with `align-items: center`, fonts, and spacing
+        - Added `.project-header-section`, `.dossier-header`, `.dossier-title` styles
+        - Removed local `.page-container` override to use global styles (`padding: 48px 64px`)
+    - **Result**: Team page now has same top padding and header layout as Project Detail page
+    - **Status**: COMPLETED ✅
 
 ### Recent Changes (Committed)
 

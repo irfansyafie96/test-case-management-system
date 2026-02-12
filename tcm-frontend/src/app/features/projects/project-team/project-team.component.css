@@ -1,11 +1,36 @@
-.page-container {
-  padding: 24px;
-  max-width: 900px;
-  margin: 0 auto;
+.project-header-section {
+  margin-bottom: 48px;
+  padding-bottom: 24px;
 }
 
-.page-header {
-  margin-bottom: 24px;
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: #666;
+}
+
+.dossier-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.dossier-title h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 8px 0;
+  line-height: 1;
+}
+.dossier-title p {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 18px;
+  color: #4b4845;
+  margin: 0;
 }
 
 .breadcrumb .back-link {
