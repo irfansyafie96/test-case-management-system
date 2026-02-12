@@ -17,7 +17,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
-import { TestExecution, TestStepResult } from '../../../core/models/project.model';
+import { TestExecution, TestStepResult, RedmineIssue } from '../../../core/models/project.model';
 import { CompletionSummaryDialogComponent } from './completion-summary-dialog.component';
 import { RedmineIssueDialogComponent } from './redmine-issue-dialog.component';
 
@@ -66,6 +66,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
   allExecutions: TestExecution[] = [];
   currentModuleId: string | null = null;
   currentSubmoduleId: string | null = null;
+  redmineIssues: RedmineIssue[] = [];
 
   constructor(
     private tcmService: TcmService,
@@ -148,6 +149,9 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
         // Load all executions for navigation
         this.loadAllExecutions();
+        
+        // Load Redmine issues for this execution
+        this.loadRedmineIssues();
 
         this.loadingSubject.next(false);
       },
@@ -449,19 +453,46 @@ export class ExecutionWorkbenchComponent implements OnInit {
         testCaseId: execution.testCaseId,
         testCaseTitle: execution.testCaseTitle || 'Test Case',
         testSteps: execution.stepResults || [],
-        execution: execution
+        execution: execution,
+        existingIssues: this.redmineIssues
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.tcmService.updateRedmineLink(this.executionId!, {
+      if (!result) return;
+
+      if (result.issueId) {
+        // Editing existing issue
+        this.tcmService.updateRedmineIssue(this.executionId!, String(result.issueId), {
           redmineLink: result.redmineLink,
-          subject: result.subject,
-          description: result.description
+          bugReportSubject: result.subject,
+          bugReportDescription: result.description
         }).subscribe({
-          next: (updatedExecution) => {
-            this.executionSubject.next(updatedExecution);
+          next: () => {
+            this.loadRedmineIssues();
+            this.snackBar.open(
+              'Redmine issue updated successfully!',
+              'DISMISS',
+              { panelClass: ['success-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          },
+          error: (error) => {
+            this.snackBar.open(
+              'Failed to update Redmine issue. Please try again.',
+              'RETRY',
+              { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          }
+        });
+      } else {
+        // Adding new issue
+        this.tcmService.addRedmineIssue(this.executionId!, {
+          redmineLink: result.redmineLink,
+          bugReportSubject: result.subject,
+          bugReportDescription: result.description
+        }).subscribe({
+          next: () => {
+            this.loadRedmineIssues();
             this.snackBar.open(
               'Redmine issue linked successfully!',
               'DISMISS',
@@ -470,7 +501,7 @@ export class ExecutionWorkbenchComponent implements OnInit {
           },
           error: (error) => {
             this.snackBar.open(
-              'Failed to save Redmine link. Please try again.',
+              'Failed to save Redmine issue. Please try again.',
               'RETRY',
               { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
             );
@@ -481,11 +512,27 @@ export class ExecutionWorkbenchComponent implements OnInit {
   }
 
   /**
+   * Load Redmine issues for the current execution
+   */
+  loadRedmineIssues(): void {
+    if (!this.executionId) return;
+    this.tcmService.getRedmineIssues(this.executionId).subscribe({
+      next: (issues) => {
+        this.redmineIssues = issues;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.redmineIssues = [];
+      }
+    });
+  }
+
+  /**
    * Check if Redmine issue should be shown
-   * Returns true if execution is completed with FAILED status
+   * Returns true if execution is completed with FAILED status and has issues
    */
   shouldShowRedmineIssue(): boolean {
     const execution = this.executionSubject.value;
-    return execution?.overallResult === 'FAILED' && !!execution.redmineIssueUrl;
+    return execution?.overallResult === 'FAILED' && this.redmineIssues.length > 0;
   }
 }

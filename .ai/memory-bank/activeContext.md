@@ -155,6 +155,43 @@
     - **Files**: `tsconfig.json`
     - **Status**: COMPLETED ✅
 
+30. **Multi-Redmine Issue Support** (2026-02-12)
+    - **Goal**: Allow linking multiple Redmine issues to a single failed test execution
+    - **SOLID/DRY Analysis**:
+      - Single Responsibility: RedmineIssue entity handles only issue tracking
+      - Open/Closed: Easy to add fields without modifying TestExecution
+      - DRY: Reuses existing repository/DTO patterns
+    - **Changes**:
+      - Backend:
+        - Created `RedmineIssue.java` entity with OneToMany relationship
+        - Created `RedmineIssueDTO.java` for API responses
+        - Created `RedmineIssueRepository.java`
+        - Updated `TestExecution.java` with `@OneToMany redmineIssues` field
+        - Added CRUD methods to `ExecutionService.java`
+        - Added new endpoints to `ApiController.java`
+      - Database:
+        - Created SQL migration `001_create_redmine_issues_table.sql`
+        - Migrates existing redmine data to new table
+      - Frontend:
+        - Added `RedmineIssue` interface to `project.model.ts`
+        - Added service methods to `tcm.service.ts`
+        - Updated `RedmineIssueDialogComponent` to support multiple issues
+        - Updated `ExecutionWorkbenchComponent` to load and display issues
+        - Updated HTML templates with new issue list display
+    - **API Endpoints**:
+      - GET /api/executions/{id}/redmine - List all issues
+      - POST /api/executions/{id}/redmine - Add new issue
+      - PUT /api/executions/{id}/redmine/{issueId} - Update issue
+      - DELETE /api/executions/{id}/redmine/{issueId} - Delete issue
+    - **Database Note**:
+      - Old Redmine columns in `test_executions` table kept for backward compatibility
+      - Can be removed in future migration: `migrations/002_remove_old_redmine_columns.sql`
+      - Columns: redmine_issue_id, redmine_issue_url, bug_report_subject, bug_report_description, redmine_issue_created_at, redmine_issue_updated_at
+    - **Files**:
+      - Backend: `RedmineIssue.java`, `RedmineIssueDTO.java`, `RedmineIssueRepository.java`, `TestExecution.java`, `ExecutionService.java`, `ApiController.java`
+      - Frontend: `tcm.service.ts`, `project.model.ts`, `redmine-issue-dialog.component.ts/html/css`, `execution-workbench.component.ts/html/css`
+    - **Status**: COMPLETED ✅
+
 ### Recent Changes (Committed)
 
 18. **Team Visibility & Relationship Fixes** (2026-02-11)

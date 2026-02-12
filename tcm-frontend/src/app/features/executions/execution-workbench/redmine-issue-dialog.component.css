@@ -114,3 +114,34 @@ textarea.mat-mdc-input-element::-webkit-scrollbar-thumb {
 .mat-mdc-raised-button:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
+
+/* Existing Issues Section */
+.existing-issues-section {
+  margin-bottom: 24px;
+}
+
+.existing-issues-section h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 12px 0;
+}
+
+.existing-issues-section mat-list {
+  background-color: var(--paper);
+  border-radius: 4px;
+  border: var(--border-thin);
+}
+
+.existing-issues-section mat-list-item {
+  border-bottom: var(--border-thin);
+}
+
+.existing-issues-section mat-list-item:last-child {
+  border-bottom: none;
+}
+
+.existing-issues-section mat-icon[matListItemIcon] {
+  color: #e91e63;
+}

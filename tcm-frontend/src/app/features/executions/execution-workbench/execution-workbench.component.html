@@ -210,32 +210,36 @@
           <mat-card-header>
             <mat-card-title>
               <mat-icon class="redmine-icon">bug_report</mat-icon>
-              Redmine Issue
+              Redmine Issues
             </mat-card-title>
-            <mat-card-subtitle>Track this bug in Redmine</mat-card-subtitle>
+            <mat-card-subtitle>{{ redmineIssues.length }} linked issue(s)</mat-card-subtitle>
             <div class="redmine-actions">
-              <button mat-icon-button matTooltip="Update Redmine link" (click)="openRedmineDialog()">
+              <button mat-icon-button matTooltip="Add another Redmine issue" (click)="openRedmineDialog()">
+                <mat-icon>add</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Edit issues" (click)="openRedmineDialog()">
                 <mat-icon>edit</mat-icon>
               </button>
             </div>
           </mat-card-header>
           
           <div class="redmine-content">
-            <div class="redmine-info">
-              <div class="redmine-field">
-                <label>Issue ID:</label>
-                <span>{{ vm.execution.redmineIssueId || 'N/A' }}</span>
-              </div>
-              <div class="redmine-field">
-                <label>Subject:</label>
-                <span>{{ vm.execution.bugReportSubject || 'N/A' }}</span>
-              </div>
-              <div class="redmine-field" *ngIf="vm.execution.redmineIssueUrl">
-                <label>Issue Link:</label>
-                <a [href]="vm.execution.redmineIssueUrl" target="_blank" class="redmine-link">
-                  <mat-icon>open_in_new</mat-icon>
-                  {{ vm.execution.redmineIssueUrl }}
-                </a>
+            <div class="redmine-issues-list">
+              <div class="redmine-issue-item" *ngFor="let issue of redmineIssues">
+                <div class="redmine-issue-header">
+                  <mat-icon>bug_report</mat-icon>
+                  <span class="issue-id">{{ issue.redmineIssueId || 'N/A' }}</span>
+                </div>
+                <div class="redmine-issue-subject">{{ issue.bugReportSubject }}</div>
+                <div class="redmine-issue-link" *ngIf="issue.redmineIssueUrl">
+                  <a [href]="issue.redmineIssueUrl" target="_blank" class="redmine-link">
+                    <mat-icon>open_in_new</mat-icon>
+                    {{ issue.redmineIssueUrl }}
+                  </a>
+                </div>
+                <div class="redmine-issue-date" *ngIf="issue.createdAt">
+                  Created: {{ issue.createdAt | date:'medium' }}
+                </div>
               </div>
             </div>
           </div>

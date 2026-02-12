@@ -180,3 +180,14 @@ export interface ExecutionAssignmentRequest {
   testModuleId: number | string;
 }
 
+// Redmine Issue Interface - for tracking multiple issues per execution
+export interface RedmineIssue {
+  id: number | string;
+  redmineIssueId?: string;
+  redmineIssueUrl: string;
+  bugReportSubject?: string;
+  bugReportDescription?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

@@ -1,14 +1,34 @@
 <h2 mat-dialog-title>
   <mat-icon class="bug-icon">bug_report</mat-icon>
-  Create Redmine Issue
+  Manage Redmine Issues
 </h2>
 
 <mat-dialog-content>
   <p class="dialog-intro">
-    This test case has failed. You can create a Redmine issue to track this bug.
-    Fill in the details below and click "Open in Redmine" to pre-fill the Redmine form.
+    Link Redmine issues to this failed test case. You can add multiple issues to track different bugs.
   </p>
 
+  <!-- List of existing issues -->
+  <div class="existing-issues-section" *ngIf="existingIssues.length > 0">
+    <h4>Linked Issues</h4>
+    <mat-list>
+      <mat-list-item *ngFor="let issue of existingIssues">
+        <mat-icon matListItemIcon>bug_report</mat-icon>
+        <div matListItemTitle>
+          <a [href]="issue.redmineIssueUrl" target="_blank">
+            {{ issue.redmineIssueId || 'Issue' }}
+          </a>
+        </div>
+        <div matListItemLine>{{ issue.bugReportSubject }}</div>
+        <button mat-icon-button matListItemMeta (click)="editIssue(issue)">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </mat-list-item>
+    </mat-list>
+    <div class="members-divider"></div>
+  </div>
+
+  <!-- Form for adding/editing issue -->
   <form [formGroup]="redmineForm" class="redmine-form">
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Subject *</mat-label>
@@ -38,23 +58,25 @@
     <mat-icon>info</mat-icon>
     <p>
       <strong>Instructions:</strong>
-      1. Review and edit the subject and description above
-      2. Click "Open in Redmine" to open the Redmine form with pre-filled data
-      3. Complete the issue creation in Redmine
-      4. Copy the Redmine issue URL and paste it in the field above
-      5. Click "Save" to link the issue to this execution
+      1. Click "Open in Redmine" to create a new issue with pre-filled data
+      2. After creating the issue in Redmine, copy the URL and paste it above
+      3. Click "Save" to link the issue to this execution
     </p>
   </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-button color="primary" (click)="saveOnly()">
-    <mat-icon>save</mat-icon>
-    Save Only
+  <button mat-button (click)="cancelEdit()" *ngIf="editingIssue">
+    <mat-icon>close</mat-icon>
+    Cancel Edit
   </button>
-  <button mat-raised-button color="accent" (click)="openRedmineDirectly()">
+  <button mat-button color="primary" (click)="openRedmineDirectly()">
     <mat-icon>open_in_new</mat-icon>
     Open in Redmine
+  </button>
+  <button mat-raised-button color="accent" (click)="editingIssue ? saveEditedIssue() : saveIssue()">
+    <mat-icon>save</mat-icon>
+    {{ editingIssue ? 'Update Issue' : 'Save Issue' }}
   </button>
 </mat-dialog-actions>

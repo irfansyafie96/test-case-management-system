@@ -581,23 +581,106 @@ public class ApiController {
             return new ResponseEntity<>("Error saving execution work: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    
+    // ==================== REDMINE ISSUE ENDPOINTS ====================
 
     /**
-     * Update Redmine issue data for a completed execution.
-     * Allows users to add or update Redmine links after completing an execution.
+     * GET all Redmine issues for an execution.
      */
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
-    @PutMapping("/executions/{executionId}/redmine")
-    public ResponseEntity<?> updateRedmineIssue(
+    @GetMapping("/executions/{executionId}/redmine")
+    public ResponseEntity<?> getRedmineIssues(@PathVariable Long executionId) {
+        try {
+            List<RedmineIssue> issues = executionService.getRedmineIssuesByExecutionId(executionId);
+            List<RedmineIssueDTO> issueDTOs = issues.stream()
+                .map(issue -> new RedmineIssueDTO(
+                    issue.getId(),
+                    issue.getRedmineIssueId(),
+                    issue.getRedmineIssueUrl(),
+                    issue.getBugReportSubject(),
+                    issue.getBugReportDescription(),
+                    issue.getCreatedAt(),
+                    issue.getUpdatedAt()
+                ))
+                .collect(Collectors.toList());
+            return new ResponseEntity<>(issueDTOs, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error retrieving Redmine issues: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * POST - Add a new Redmine issue to an execution.
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PostMapping("/executions/{executionId}/redmine")
+    public ResponseEntity<?> addRedmineIssue(
             @PathVariable Long executionId,
             @RequestBody RedmineUpdateRequest request) {
         try {
-            TestExecution updatedExecution = executionService.updateRedmineData(executionId, request);
-            return new ResponseEntity<>(updatedExecution, HttpStatus.OK);
+            RedmineIssue issue = executionService.addRedmineIssue(executionId, request);
+            RedmineIssueDTO dto = new RedmineIssueDTO(
+                issue.getId(),
+                issue.getRedmineIssueId(),
+                issue.getRedmineIssueUrl(),
+                issue.getBugReportSubject(),
+                issue.getBugReportDescription(),
+                issue.getCreatedAt(),
+                issue.getUpdatedAt()
+            );
+            return new ResponseEntity<>(dto, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error creating Redmine issue: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * PUT - Update an existing Redmine issue.
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PutMapping("/executions/{executionId}/redmine/{issueId}")
+    public ResponseEntity<?> updateRedmineIssue(
+            @PathVariable Long executionId,
+            @PathVariable Long issueId,
+            @RequestBody RedmineUpdateRequest request) {
+        try {
+            RedmineIssue issue = executionService.updateRedmineIssue(executionId, issueId, request);
+            RedmineIssueDTO dto = new RedmineIssueDTO(
+                issue.getId(),
+                issue.getRedmineIssueId(),
+                issue.getRedmineIssueUrl(),
+                issue.getBugReportSubject(),
+                issue.getBugReportDescription(),
+                issue.getCreatedAt(),
+                issue.getUpdatedAt()
+            );
+            return new ResponseEntity<>(dto, HttpStatus.OK);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>("Error updating Redmine issue: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * DELETE - Remove a Redmine issue from an execution.
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @DeleteMapping("/executions/{executionId}/redmine/{issueId}")
+    public ResponseEntity<?> deleteRedmineIssue(
+            @PathVariable Long executionId,
+            @PathVariable Long issueId) {
+        try {
+            executionService.deleteRedmineIssue(executionId, issueId);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error deleting Redmine issue: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -3,7 +3,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { Project, TestModule, Submodule, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary } from '../models/project.model';
+import { Project, TestModule, Submodule, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary, RedmineIssue } from '../models/project.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -399,6 +399,80 @@ export class TcmService {
     })
       .pipe(
         catchError(this.handleError<TestExecution>('updateRedmineLink'))
+      );
+  }
+
+  // ==================== REDMINE ISSUE METHODS ====================
+
+  /**
+   * Get all Redmine issues for an execution
+   * @param executionId - ID of the execution
+   * @returns Observable<RedmineIssue[]> - Stream of Redmine issues
+   */
+  getRedmineIssues(executionId: string): Observable<RedmineIssue[]> {
+    return this.http.get<RedmineIssue[]>(`${this.apiUrl}/executions/${executionId}/redmine`)
+      .pipe(
+        catchError(this.handleError<RedmineIssue[]>('getRedmineIssues', []))
+      );
+  }
+
+  /**
+   * Add a new Redmine issue to an execution
+   * @param executionId - ID of the execution
+   * @param data - Redmine issue data
+   * @returns Observable<RedmineIssue> - Stream of created issue
+   */
+  addRedmineIssue(executionId: string, data: {
+    redmineIssueId?: string;
+    redmineLink?: string;
+    bugReportSubject?: string;
+    bugReportDescription?: string;
+  }): Observable<RedmineIssue> {
+    return this.http.post<RedmineIssue>(`${this.apiUrl}/executions/${executionId}/redmine`, {
+      redmineIssueId: data.redmineIssueId,
+      redmineIssueUrl: data.redmineLink,
+      bugReportSubject: data.bugReportSubject,
+      bugReportDescription: data.bugReportDescription
+    })
+      .pipe(
+        catchError(this.handleError<RedmineIssue>('addRedmineIssue'))
+      );
+  }
+
+  /**
+   * Update an existing Redmine issue
+   * @param executionId - ID of the execution
+   * @param issueId - ID of the issue to update
+   * @param data - Redmine issue data
+   * @returns Observable<RedmineIssue> - Stream of updated issue
+   */
+  updateRedmineIssue(executionId: string, issueId: string, data: {
+    redmineIssueId?: string;
+    redmineLink?: string;
+    bugReportSubject?: string;
+    bugReportDescription?: string;
+  }): Observable<RedmineIssue> {
+    return this.http.put<RedmineIssue>(`${this.apiUrl}/executions/${executionId}/redmine/${issueId}`, {
+      redmineIssueId: data.redmineIssueId,
+      redmineIssueUrl: data.redmineLink,
+      bugReportSubject: data.bugReportSubject,
+      bugReportDescription: data.bugReportDescription
+    })
+      .pipe(
+        catchError(this.handleError<RedmineIssue>('updateRedmineIssue'))
+      );
+  }
+
+  /**
+   * Delete a Redmine issue
+   * @param executionId - ID of the execution
+   * @param issueId - ID of the issue to delete
+   * @returns Observable<void>
+   */
+  deleteRedmineIssue(executionId: string, issueId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/executions/${executionId}/redmine/${issueId}`)
+      .pipe(
+        catchError(this.handleError<void>('deleteRedmineIssue'))
       );
   }
 

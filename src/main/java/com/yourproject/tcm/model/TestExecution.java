@@ -128,6 +128,16 @@ public class TestExecution {
     @JsonIgnoreProperties({"testExecution"}) // Prevent circular reference back to TestExecution
     private List<TestStepResult> stepResults;  // Results for each step in this execution
 
+    /**
+     * One-to-Many relationship: One TestExecution can have Many RedmineIssues
+     * cascade = CascadeType.ALL: Changes cascade to issues
+     * orphanRemoval = true: If an issue is removed, it's deleted
+     * @JsonIgnoreProperties: Prevent circular reference back to TestExecution
+     */
+    @OneToMany(mappedBy = "execution", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"execution"})
+    private List<RedmineIssue> redmineIssues;  // Linked Redmine issues for this execution
+
     // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
@@ -334,5 +344,13 @@ public class TestExecution {
 
     public void setRedmineIssueUpdatedAt(LocalDateTime redmineIssueUpdatedAt) {
         this.redmineIssueUpdatedAt = redmineIssueUpdatedAt;
+    }
+
+    public List<RedmineIssue> getRedmineIssues() {
+        return redmineIssues;
+    }
+
+    public void setRedmineIssues(List<RedmineIssue> redmineIssues) {
+        this.redmineIssues = redmineIssues;
     }
 }

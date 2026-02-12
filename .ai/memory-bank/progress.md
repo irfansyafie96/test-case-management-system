@@ -244,6 +244,22 @@
    - **Files**: `tsconfig.json`
    - **Status**: COMPLETED ✅
 
+- [x] **Multi-Redmine Issue Support** (2026-02-12)
+   - **Goal**: Allow linking multiple Redmine issues to a single failed test execution
+   - **Changes**:
+     - Backend: Created RedmineIssue entity, DTO, Repository
+     - Updated TestExecution with OneToMany relationship
+     - Added CRUD methods to ExecutionService
+     - Added new REST endpoints
+     - Created SQL migration script
+     - Frontend: Updated service, dialog, component, templates
+   - **Database Note**: Old Redmine columns kept in test_executions for backward compatibility
+     - Can be removed in future: `migrations/002_remove_old_redmine_columns.sql`
+     - Columns: redmine_issue_id, redmine_issue_url, bug_report_subject, bug_report_description, redmine_issue_created_at, redmine_issue_updated_at
+   - **SOLID/DRY**: Follows Single Responsibility, Open/Closed principles
+   - **Files**: `RedmineIssue.java`, `RedmineIssueDTO.java`, `RedmineIssueRepository.java`, `TestExecution.java`, `ExecutionService.java`, `ApiController.java`, `tcm.service.ts`, `project.model.ts`, `redmine-issue-dialog.component.ts/html/css`, `execution-workbench.component.ts/html/css`, `001_create_redmine_issues_table.sql`
+   - **Status**: COMPLETED ✅
+
 #### In Progress:
 
 #### High Priority Refactoring (Recommended):

@@ -32,6 +32,7 @@ public class ExecutionService {
     private final TestExecutionRepository testExecutionRepository;
     private final UserRepository userRepository;
     private final TestStepResultRepository testStepResultRepository;
+    private final RedmineIssueRepository redmineIssueRepository;
     private final UserContextService userContextService;
     private final SecurityHelper securityHelper;
     private final TestModuleRepository testModuleRepository;
@@ -46,6 +47,7 @@ public class ExecutionService {
     public ExecutionService(TestExecutionRepository testExecutionRepository, 
                            UserRepository userRepository,
                            TestStepResultRepository testStepResultRepository,
+                           RedmineIssueRepository redmineIssueRepository,
                            UserContextService userContextService,
                            SecurityHelper securityHelper,
                            TestModuleRepository testModuleRepository,
@@ -55,6 +57,7 @@ public class ExecutionService {
         this.testExecutionRepository = testExecutionRepository;
         this.userRepository = userRepository;
         this.testStepResultRepository = testStepResultRepository;
+        this.redmineIssueRepository = redmineIssueRepository;
         this.userContextService = userContextService;
         this.securityHelper = securityHelper;
         this.testModuleRepository = testModuleRepository;
@@ -436,6 +439,147 @@ public class ExecutionService {
         TestExecution savedExecution = testExecutionRepository.save(execution);
         entityManager.flush();
         return savedExecution;
+    }
+
+    /**
+     * Get all Redmine issues for an execution.
+     */
+    @Transactional(readOnly = true)
+    public List<RedmineIssue> getRedmineIssuesByExecutionId(Long executionId) {
+        return redmineIssueRepository.findByExecutionId(executionId);
+    }
+
+    /**
+     * Add a new Redmine issue to an execution.
+     */
+    @Transactional
+    public RedmineIssue addRedmineIssue(Long executionId, RedmineUpdateRequest request) {
+        User currentUser = userContextService.getCurrentUser();
+        Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
+        if (executionOpt.isEmpty()) {
+            throw new RuntimeException("Test Execution not found with id: " + executionId);
+        }
+
+        TestExecution execution = executionOpt.get();
+
+        // Check organization boundary
+        if (execution.getTestCase() == null ||
+            execution.getTestCase().getSubmodule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule().getProject() == null ||
+            !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
+                .getId().equals(currentUser.getOrganization().getId())) {
+            throw new RuntimeException("Access denied: Execution not in your organization");
+        }
+
+        // ADMIN users can update any execution in their organization
+        if (!userContextService.isAdmin(currentUser)) {
+            if (execution.getAssignedToUser() == null ||
+                !execution.getAssignedToUser().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("Access denied: You can only add Redmine issues to executions assigned to you");
+            }
+        }
+
+        RedmineIssue issue = new RedmineIssue();
+        issue.setExecution(execution);
+        issue.setRedmineIssueId(request.getRedmineIssueId());
+        issue.setRedmineIssueUrl(request.getRedmineIssueUrl());
+        issue.setBugReportSubject(request.getBugReportSubject());
+        issue.setBugReportDescription(request.getBugReportDescription());
+
+        return redmineIssueRepository.save(issue);
+    }
+
+    /**
+     * Update an existing Redmine issue.
+     */
+    @Transactional
+    public RedmineIssue updateRedmineIssue(Long executionId, Long issueId, RedmineUpdateRequest request) {
+        User currentUser = userContextService.getCurrentUser();
+        Optional<RedmineIssue> issueOpt = redmineIssueRepository.findById(issueId);
+        if (issueOpt.isEmpty()) {
+            throw new RuntimeException("Redmine Issue not found with id: " + issueId);
+        }
+
+        RedmineIssue issue = issueOpt.get();
+
+        // Verify execution matches
+        if (!issue.getExecution().getId().equals(executionId)) {
+            throw new RuntimeException("Redmine Issue does not belong to this execution");
+        }
+
+        // Check organization boundary
+        TestExecution execution = issue.getExecution();
+        if (execution.getTestCase() == null ||
+            execution.getTestCase().getSubmodule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule() == null ||
+            !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
+                .getId().equals(currentUser.getOrganization().getId())) {
+            throw new RuntimeException("Access denied: Issue not in your organization");
+        }
+
+        // ADMIN users can update any issue
+        if (!userContextService.isAdmin(currentUser)) {
+            if (execution.getAssignedToUser() == null ||
+                !execution.getAssignedToUser().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("Access denied: You can only update Redmine issues for executions assigned to you");
+            }
+        }
+
+        // Update fields if provided
+        if (request.getRedmineIssueId() != null) {
+            issue.setRedmineIssueId(request.getRedmineIssueId());
+        }
+        if (request.getRedmineIssueUrl() != null) {
+            issue.setRedmineIssueUrl(request.getRedmineIssueUrl());
+        }
+        if (request.getBugReportSubject() != null) {
+            issue.setBugReportSubject(request.getBugReportSubject());
+        }
+        if (request.getBugReportDescription() != null) {
+            issue.setBugReportDescription(request.getBugReportDescription());
+        }
+
+        return redmineIssueRepository.save(issue);
+    }
+
+    /**
+     * Delete a Redmine issue.
+     */
+    @Transactional
+    public void deleteRedmineIssue(Long executionId, Long issueId) {
+        User currentUser = userContextService.getCurrentUser();
+        Optional<RedmineIssue> issueOpt = redmineIssueRepository.findById(issueId);
+        if (issueOpt.isEmpty()) {
+            throw new RuntimeException("Redmine Issue not found with id: " + issueId);
+        }
+
+        RedmineIssue issue = issueOpt.get();
+
+        // Verify execution matches
+        if (!issue.getExecution().getId().equals(executionId)) {
+            throw new RuntimeException("Redmine Issue does not belong to this execution");
+        }
+
+        // Check organization boundary
+        TestExecution execution = issue.getExecution();
+        if (execution.getTestCase() == null ||
+            execution.getTestCase().getSubmodule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule() == null ||
+            !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
+                .getId().equals(currentUser.getOrganization().getId())) {
+            throw new RuntimeException("Access denied: Issue not in your organization");
+        }
+
+        // ADMIN users can delete any issue
+        if (!userContextService.isAdmin(currentUser)) {
+            if (execution.getAssignedToUser() == null ||
+                !execution.getAssignedToUser().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("Access denied: You can only delete Redmine issues for executions assigned to you");
+            }
+        }
+
+        redmineIssueRepository.delete(issue);
     }
 
     /**
