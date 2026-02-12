@@ -455,14 +455,27 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // Save Redmine data to the execution
-        // For now, just show a success message
-        // In the future, we might want to update the execution with the Redmine link
-        this.snackBar.open(
-          'Redmine issue data saved!',
-          'DISMISS',
-          { panelClass: ['success-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
-        );
+        this.tcmService.updateRedmineLink(this.executionId!, {
+          redmineLink: result.redmineLink,
+          subject: result.subject,
+          description: result.description
+        }).subscribe({
+          next: (updatedExecution) => {
+            this.executionSubject.next(updatedExecution);
+            this.snackBar.open(
+              'Redmine issue linked successfully!',
+              'DISMISS',
+              { panelClass: ['success-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          },
+          error: (error) => {
+            this.snackBar.open(
+              'Failed to save Redmine link. Please try again.',
+              'RETRY',
+              { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          }
+        });
       }
     });
   }

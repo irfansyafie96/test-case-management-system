@@ -213,6 +213,11 @@
               Redmine Issue
             </mat-card-title>
             <mat-card-subtitle>Track this bug in Redmine</mat-card-subtitle>
+            <div class="redmine-actions">
+              <button mat-icon-button matTooltip="Update Redmine link" (click)="openRedmineDialog()">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
           </mat-card-header>
           
           <div class="redmine-content">

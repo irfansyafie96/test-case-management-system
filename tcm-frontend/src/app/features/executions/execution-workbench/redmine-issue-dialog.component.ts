@@ -75,6 +75,7 @@ export class RedmineIssueDialogComponent {
   /**
    * Open Redmine with pre-filled data
    * Encodes subject and description and opens in new tab
+   * Does NOT close the dialog - user must manually save after creating the issue
    */
   openRedmineDirectly(): void {
     const subject = this.redmineForm.value.subject;
@@ -90,11 +91,9 @@ export class RedmineIssueDialogComponent {
     // Open in new tab
     window.open(url, '_blank');
     
-    // Close dialog with the data
-    this.dialogRef.close({
-      subject: subject,
-      description: description,
-      redmineLink: url
+    // Focus on the Redmine Link field to prompt user to paste the actual issue URL after creating it
+    this.redmineForm.patchValue({
+      redmineLink: 'After creating the issue in Redmine, paste the issue URL here'
     });
   }
   

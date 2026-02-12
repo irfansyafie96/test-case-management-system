@@ -1,6 +1,7 @@
 package com.yourproject.tcm.service.domain;
 
 import com.yourproject.tcm.model.*;
+import com.yourproject.tcm.model.dto.RedmineUpdateRequest;
 import com.yourproject.tcm.model.dto.StepResultResponse;
 import com.yourproject.tcm.model.dto.TestExecutionDTO;
 import com.yourproject.tcm.repository.*;
@@ -374,6 +375,64 @@ public class ExecutionService {
         }
 
         execution.setNotes(notes);  // Only update notes, don't change overallResult
+        TestExecution savedExecution = testExecutionRepository.save(execution);
+        entityManager.flush();
+        return savedExecution;
+    }
+
+    /**
+     * Update Redmine issue data for a completed execution.
+     * Can be called after completion to add or update the Redmine link.
+     * Only the assigned user or ADMIN can update Redmine data.
+     */
+    @Transactional
+    public TestExecution updateRedmineData(Long executionId, RedmineUpdateRequest request) {
+        User currentUser = userContextService.getCurrentUser();
+        Optional<TestExecution> executionOpt = testExecutionRepository.findByIdWithStepResults(executionId);
+        if (executionOpt.isEmpty()) {
+            throw new RuntimeException("Test Execution not found with id: " + executionId);
+        }
+
+        TestExecution execution = executionOpt.get();
+
+        // Check organization boundary
+        if (execution.getTestCase() == null ||
+            execution.getTestCase().getSubmodule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule() == null ||
+            execution.getTestCase().getSubmodule().getTestModule().getProject() == null ||
+            !execution.getTestCase().getSubmodule().getTestModule().getProject().getOrganization()
+                .getId().equals(currentUser.getOrganization().getId())) {
+            throw new RuntimeException("Access denied: Execution not in your organization");
+        }
+
+        // ADMIN users can update any execution in their organization
+        if (!userContextService.isAdmin(currentUser)) {
+            // Non-ADMIN users can only update executions assigned to them
+            if (execution.getAssignedToUser() == null ||
+                !execution.getAssignedToUser().getId().equals(currentUser.getId())) {
+                throw new RuntimeException("Access denied: You can only update Redmine data for executions assigned to you");
+            }
+        }
+
+        // Update Redmine fields
+        if (request.getRedmineIssueId() != null) {
+            execution.setRedmineIssueId(request.getRedmineIssueId());
+        }
+        if (request.getRedmineIssueUrl() != null) {
+            execution.setRedmineIssueUrl(request.getRedmineIssueUrl());
+            // Set created timestamp only if not already set
+            if (execution.getRedmineIssueCreatedAt() == null) {
+                execution.setRedmineIssueCreatedAt(LocalDateTime.now());
+            }
+            execution.setRedmineIssueUpdatedAt(LocalDateTime.now());
+        }
+        if (request.getBugReportSubject() != null) {
+            execution.setBugReportSubject(request.getBugReportSubject());
+        }
+        if (request.getBugReportDescription() != null) {
+            execution.setBugReportDescription(request.getBugReportDescription());
+        }
+
         TestExecution savedExecution = testExecutionRepository.save(execution);
         entityManager.flush();
         return savedExecution;

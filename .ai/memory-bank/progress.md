@@ -202,6 +202,48 @@
    - **Files**: `project-team.component.html`, `project-team.component.css`
    - **Status**: COMPLETED ✅
 
+- [x] **Redmine Issue Dialog Styling Improvements** (2026-02-12)
+   - **Goal**: Clean up modal appearance and improve scrollbar styling
+   - **Changes**:
+     - Removed document icon from description field
+     - Added CSS to hide dialog content scrollbar
+     - Added thin scrollbar styling (6px) for textarea with light gray thumb
+   - **Files**: `redmine-issue-dialog.component.html`, `redmine-issue-dialog.component.css`
+   - **Status**: COMPLETED ✅
+
+- [x] **Redmine Link Save Functionality** (2026-02-12)
+   - **Goal**: Enable saving Redmine issue data to backend and display linked issues
+   - **Changes**:
+     - Created dedicated `RedmineUpdateRequest` DTO (single responsibility)
+     - Added `updateRedmineData()` service method with security checks
+     - Added `PUT /api/executions/{id}/redmine` endpoint
+     - Added `updateRedmineLink()` frontend service method
+     - Updated dialog handler to call API and reload execution data
+     - Modified "Open in Redmine" to prompt user for manual save after creating issue
+     - Added edit button to Redmine card for updating links
+    - **Files**:
+      - Backend: `RedmineUpdateRequest.java`, `ExecutionService.java`, `ApiController.java`
+      - Frontend: `tcm.service.ts`, `execution-workbench.component.ts/html/css`, `redmine-issue-dialog.component.ts`
+    - **Bug Fixes**: Fixed URL typo, removed @Valid annotation causing 400 error
+    - **Status**: COMPLETED ✅
+
+- [x] **Redmine Card Styling Cleanup** (2026-02-12)
+   - **Goal**: Match Redmine card style with other cards in the workbench
+   - **Changes**:
+     - Removed hover effect (lift + shadow) from redmine-card
+     - Removed red left border accent
+     - Card now uses standard border styling like info-card, steps-card, notes-card
+   - **Files**: `execution-workbench.component.css`
+   - **Status**: COMPLETED ✅
+
+- [x] **NG8113 Warning Suppression** (2026-02-12)
+   - **Goal**: Suppress false positive warning for AssignModulesDialogComponent
+   - **Changes**:
+     - Added `extendedDiagnostics.checks.unusedStandaloneImports: "suppress"` to tsconfig.json
+     - Angular 19 template checker can't detect components opened via MatDialog.open()
+   - **Files**: `tsconfig.json`
+   - **Status**: COMPLETED ✅
+
 #### In Progress:
 
 #### High Priority Refactoring (Recommended):

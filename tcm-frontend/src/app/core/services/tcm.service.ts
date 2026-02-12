@@ -381,6 +381,28 @@ export class TcmService {
   }
 
   /**
+   * Update Redmine issue data for a completed execution
+   * Allows users to add or update Redmine links after completing an execution
+   * @param executionId - ID of the execution
+   * @param data - Redmine issue data (url, subject, description)
+   * @returns Observable<TestExecution> - Stream of updated execution
+   */
+  updateRedmineLink(executionId: string, data: {
+    redmineLink?: string;
+    subject?: string;
+    description?: string;
+  }): Observable<TestExecution> {
+    return this.http.put<TestExecution>(`${this.apiUrl}/executions/${executionId}/redmine`, {
+      redmineIssueUrl: data.redmineLink,
+      bugReportSubject: data.subject,
+      bugReportDescription: data.description
+    })
+      .pipe(
+        catchError(this.handleError<TestExecution>('updateRedmineLink'))
+      );
+  }
+
+  /**
    * Update a step result in a test execution
    * @param executionId - ID of the execution
    * @param stepId - ID of the step to update

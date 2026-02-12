@@ -582,6 +582,25 @@ public class ApiController {
         }
     }
 
+    /**
+     * Update Redmine issue data for a completed execution.
+     * Allows users to add or update Redmine links after completing an execution.
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PutMapping("/executions/{executionId}/redmine")
+    public ResponseEntity<?> updateRedmineIssue(
+            @PathVariable Long executionId,
+            @RequestBody RedmineUpdateRequest request) {
+        try {
+            TestExecution updatedExecution = executionService.updateRedmineData(executionId, request);
+            return new ResponseEntity<>(updatedExecution, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error updating Redmine issue: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // ==================== TEST EXECUTION ASSIGNMENT ENDPOINTS ====================
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")

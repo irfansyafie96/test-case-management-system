@@ -318,7 +318,11 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
-  border-left: 4px solid #e91e63; /* Pink/red border for Redmine */
+}
+
+.redmine-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm) !important;
 }
 
 .redmine-card mat-card-header {
@@ -349,6 +353,20 @@
   font-size: 12px;
   color: #666;
   text-transform: none;
+}
+
+.redmine-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.redmine-actions button {
+  color: #666;
+}
+
+.redmine-actions button:hover {
+  color: #e91e63;
 }
 
 .redmine-content {

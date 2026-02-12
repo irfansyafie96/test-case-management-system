@@ -118,6 +118,43 @@
     - **Result**: Team page now has same top padding and header layout as Project Detail page
     - **Status**: COMPLETED ✅
 
+27. **Redmine Link Save Functionality** (2026-02-12)
+    - **Issue**: Redmine data was never saved to backend - only showed snackbar message
+    - **Solution**: Implemented full save functionality following DRY/SOLID principles
+    - **Changes**:
+      - Backend: Created `RedmineUpdateRequest` DTO (dedicated, single-purpose)
+      - Backend: Added `updateRedmineData()` method in `ExecutionService.java`
+      - Backend: Added `PUT /api/executions/{id}/redmine` endpoint
+      - Frontend: Added `updateRedmineLink()` method in `TcmService.ts`
+      - Frontend: Updated `openRedmineDialog()` to call API and reload execution
+      - Frontend: Modified "Open in Redmine" to not auto-save (user manually saves after creating issue)
+      - Frontend: Added edit button to Redmine card for updating links
+    - **Bug Fixes**:
+      - Fixed typo in URL construction: `encodedDescription}` → `${encodedDescription}`
+      - Removed `@Valid` annotation causing 400 Bad Request error
+    - **Files**:
+      - Backend: `RedmineUpdateRequest.java`, `ExecutionService.java`, `ApiController.java`
+      - Frontend: `tcm.service.ts`, `execution-workbench.component.ts/html/css`, `redmine-issue-dialog.component.ts`
+    - **Status**: COMPLETED ✅
+
+28. **Redmine Card Styling Cleanup** (2026-02-12)
+    - **Goal**: Match Redmine card style with other cards in the workbench
+    - **Changes**:
+      - Removed hover effect (lift + shadow) from redmine-card
+      - Removed red left border accent
+      - Card now uses standard border styling like info-card, steps-card, notes-card
+    - **Files**: `execution-workbench.component.css`
+    - **Status**: COMPLETED ✅
+
+29. **NG8113 Warning Suppression** (2026-02-12)
+    - **Issue**: False positive warning for AssignModulesDialogComponent imported but not used in template
+    - **Root Cause**: Angular 19's template checker doesn't detect components opened via MatDialog.open()
+    - **Solution**: Suppress NG8113 diagnostic in tsconfig.json
+    - **Changes**:
+      - Added `extendedDiagnostics.checks.unusedStandaloneImports: "suppress"` to tsconfig.json
+    - **Files**: `tsconfig.json`
+    - **Status**: COMPLETED ✅
+
 ### Recent Changes (Committed)
 
 18. **Team Visibility & Relationship Fixes** (2026-02-11)
