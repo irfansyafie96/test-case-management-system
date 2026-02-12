@@ -67,9 +67,39 @@ h2.mat-mdc-dialog-title {
   background-color: white;
 }
 
+/* Thin scrollbar for textarea */
+textarea.mat-mdc-input-element {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #ddd transparent; /* Firefox */
+}
+
+textarea.mat-mdc-input-element::-webkit-scrollbar {
+  width: 6px; /* Thin scrollbar */
+  height: 6px;
+}
+
+textarea.mat-mdc-input-element::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea.mat-mdc-input-element::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 3px;
+}
+
 /* Button styling */
 .mat-mdc-dialog-actions {
   padding: 16px 24px;
+}
+
+/* Hide scrollbar in dialog */
+.mat-mdc-dialog-content {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.mat-mdc-dialog-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .mat-mdc-button {
