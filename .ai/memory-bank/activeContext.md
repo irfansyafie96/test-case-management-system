@@ -192,6 +192,14 @@
       - Frontend: `tcm.service.ts`, `project.model.ts`, `redmine-issue-dialog.component.ts/html/css`, `execution-workbench.component.ts/html/css`
     - **Status**: COMPLETED ✅
 
+31. **Redmine Dialog Edit Button Centering Fix** (2026-02-12)
+    - **Issue**: Edit button in redmine dialog list items was not vertically centered
+    - **Fix**: Added CSS to center the edit button in list items
+    - **Changes**:
+      - Added `align-self: center`, flex display, and negative margin to `button[matListItemMeta]`
+    - **Files**: `redmine-issue-dialog.component.css`
+    - **Status**: COMPLETED ✅
+
 ### Recent Changes (Committed)
 
 18. **Team Visibility & Relationship Fixes** (2026-02-11)

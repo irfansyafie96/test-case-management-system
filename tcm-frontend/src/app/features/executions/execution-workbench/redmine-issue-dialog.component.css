@@ -145,3 +145,12 @@ textarea.mat-mdc-input-element::-webkit-scrollbar-thumb {
 .existing-issues-section mat-icon[matListItemIcon] {
   color: #e91e63;
 }
+
+/* Center the edit button in list items */
+.existing-issues-section button[matListItemMeta] {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -4px;
+}

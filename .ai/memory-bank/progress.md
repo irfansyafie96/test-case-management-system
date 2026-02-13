@@ -260,6 +260,12 @@
    - **Files**: `RedmineIssue.java`, `RedmineIssueDTO.java`, `RedmineIssueRepository.java`, `TestExecution.java`, `ExecutionService.java`, `ApiController.java`, `tcm.service.ts`, `project.model.ts`, `redmine-issue-dialog.component.ts/html/css`, `execution-workbench.component.ts/html/css`, `001_create_redmine_issues_table.sql`
    - **Status**: COMPLETED ✅
 
+- [x] **Redmine Dialog Edit Button Centering Fix** (2026-02-12)
+   - **Issue**: Edit button in redmine dialog list items was not vertically centered
+   - **Fix**: Added CSS to center the edit button using flexbox and margin adjustment
+   - **Files**: `redmine-issue-dialog.component.css`
+   - **Status**: COMPLETED ✅
+
 #### In Progress:
 
 #### High Priority Refactoring (Recommended):
