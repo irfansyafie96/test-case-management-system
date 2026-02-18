@@ -268,6 +268,21 @@
 
 #### In Progress:
 
+#### Latest Changes (2026-02-18):
+
+- [x] **Auth Card Full-Width Divider** 
+   - **Issue**: Divider line inside cards was constrained by padding, not spanning full width
+   - **Fix**: Added `.divider-line` element with `position: absolute; left: 0; right: 0;` to span full card width
+   - **Files**: `login.component.css/html`, `register-org.component.css/html`, `join.component.css/html`
+   - **Commit**: 8085a93
+   - **Status**: COMPLETED ✅
+
+- [x] **Join Page Role Display**
+   - **Issue**: Role showed as raw value "PROJECT_MANAGER" instead of user-friendly "PROJECT MANAGER"
+   - **Fix**: Added `getRoleDisplayName()` method in `JoinComponent` to format role names
+   - **Files**: `join.component.ts`, `join.component.html`
+   - **Status**: COMPLETED ✅
+
 #### High Priority Refactoring (Recommended):
 
 1. **Create SecurityHelper for Centralized Permission Checks** ⏳ NOT STARTED
