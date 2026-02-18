@@ -122,7 +122,7 @@ public class TestCaseService {
         securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
         
         // Check role permissions
-        securityHelper.requireAdminQaOrBa(currentUser);
+        securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
         
         // Check module assignment for non-ADMIN users
         securityHelper.requireModuleAccess(currentUser, testModule);
@@ -187,7 +187,7 @@ public class TestCaseService {
         securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
         
         // Check role permissions
-        securityHelper.requireAdminQaOrBa(currentUser);
+        securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
         
         // Check module assignment for non-ADMIN users
         securityHelper.requireModuleAccess(currentUser, testModule);
@@ -272,7 +272,7 @@ public class TestCaseService {
         securityHelper.requireSameOrganization(currentUser, testCase.getSubmodule().getTestModule().getProject().getOrganization());
         
         // Check role permissions
-        securityHelper.requireAdminQaOrBa(currentUser);
+        securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
         
         // Check module assignment for non-ADMIN users
         securityHelper.requireModuleAccess(currentUser, testCase.getSubmodule().getTestModule());

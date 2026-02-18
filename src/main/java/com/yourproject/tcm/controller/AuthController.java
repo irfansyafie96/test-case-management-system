@@ -454,11 +454,11 @@ public class AuthController {
 
     /**
      * GET /api/auth/users - Get all non-admin users (QA/BA/TESTER) for admin dashboard filter
-     * Requires ADMIN role
+     * Requires ADMIN or PROJECT_MANAGER role
      * @return ResponseEntity with list of non-admin users filtered by organization
      */
     @GetMapping("/users")
-    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     public ResponseEntity<List<com.yourproject.tcm.model.dto.UserDTO>> getAllNonAdminUsers() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();

@@ -3,6 +3,7 @@ package com.yourproject.tcm.service.domain;
 import com.yourproject.tcm.model.User;
 import com.yourproject.tcm.model.Organization;
 import com.yourproject.tcm.model.Role;
+import com.yourproject.tcm.model.Project;
 import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.repository.RoleRepository;
 import com.yourproject.tcm.service.UserContextService;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Domain service for User-related operations.
@@ -43,14 +45,33 @@ public class UserService {
     public List<User> getUsersInOrganization() {
         User currentUser = userContextService.getCurrentUser();
         
-        // Only admin users can access this
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only admin users can access organization users");
+        // Only admin/PM users can access this
+        if (!userContextService.isAdmin(currentUser) && !userContextService.isProjectManager(currentUser)) {
+            throw new RuntimeException("Only admin and project manager users can access organization users");
         }
 
         Organization org = currentUser.getOrganization();
         if (org == null) {
             throw new RuntimeException("User does not belong to any organization");
+        }
+
+        // ADMIN sees all users, PM sees only users in their assigned projects
+        if (userContextService.isProjectManager(currentUser)) {
+            Set<Long> assignedProjectIds = currentUser.getAssignedProjects().stream()
+                .map(Project::getId)
+                .collect(Collectors.toSet());
+            
+            List<User> allUsers = userRepository.findAllNonAdminUsers(org);
+            return allUsers.stream()
+                .filter(user -> {
+                    // Include users assigned to PM's projects
+                    if (user.getAssignedProjects() != null) {
+                        return user.getAssignedProjects().stream()
+                            .anyMatch(p -> assignedProjectIds.contains(p.getId()));
+                    }
+                    return false;
+                })
+                .collect(Collectors.toList());
         }
 
         return userRepository.findAllNonAdminUsers(org);
@@ -82,6 +103,11 @@ public class UserService {
         // Prevent self-role change
         if (userToUpdate.getId().equals(currentUser.getId())) {
             throw new RuntimeException("You cannot change your own role");
+        }
+
+        // Prevent PROJECT_MANAGER from changing ADMIN user's role
+        if (isProjectManager && userContextService.isAdmin(userToUpdate)) {
+            throw new RuntimeException("Project managers cannot change ADMIN user roles");
         }
 
         // PROJECT_MANAGER can only assign QA, BA, TESTER (not ADMIN)

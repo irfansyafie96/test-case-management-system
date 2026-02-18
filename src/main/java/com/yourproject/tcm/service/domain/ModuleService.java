@@ -78,6 +78,18 @@ public class ModuleService {
                 allModules.addAll(project.getModules());
             }
             return allModules;
+        } else if (userContextService.isProjectManager(currentUser)) {
+            // PROJECT_MANAGER sees all modules in their assigned projects
+            if (currentUser.getAssignedProjects() == null || currentUser.getAssignedProjects().isEmpty()) {
+                return List.of();
+            }
+            List<TestModule> pmModules = new ArrayList<>();
+            for (Project project : currentUser.getAssignedProjects()) {
+                if (project.getModules() != null) {
+                    pmModules.addAll(project.getModules());
+                }
+            }
+            return pmModules;
         } else {
             return testModuleRepository.findTestModulesAssignedToUser(currentUser.getId());
         }
@@ -343,7 +355,7 @@ public class ModuleService {
 
         // Check if user has permission to manage this module
         if (!userContextService.isAdmin(currentUser)) {
-            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
             if (!securityHelper.canAccessModule(currentUser, testModule)) {
                 throw new RuntimeException("Access denied: You are not assigned to this test module");
             }
@@ -412,7 +424,7 @@ public class ModuleService {
 
         // Check if user has permission to manage this module
         if (!userContextService.isAdmin(currentUser)) {
-            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
             if (!securityHelper.canAccessModule(currentUser, testModule)) {
                 throw new RuntimeException("Access denied: You are not assigned to this test module");
             }

@@ -67,8 +67,8 @@ public class ExecutionService {
     }
 
     /**
-     * Get all executions in the organization.
-     * Used for admin filtering on execution page - returns all executions (not just latest per test case)
+     * Get all executions in the organization or assigned projects.
+     * Used for admin/PM filtering on execution page - returns all executions (not just latest per test case)
      * This allows admins to filter by assigned user and see all executions assigned to that user
      * @param userId Optional user ID to filter by - when provided, only shows executions from modules the user is currently assigned to
      * @return List of all executions in the organization as DTOs
@@ -77,8 +77,10 @@ public class ExecutionService {
     public List<TestExecutionDTO> getAllExecutionsInOrganization(Long userId) {
         User currentUser = userContextService.getCurrentUser();
         
-        // Only admin users can access this
-        securityHelper.requireAdmin(currentUser);
+        // Only admin/PM users can access this
+        if (!securityHelper.canViewAllOrganizationExecutions(currentUser)) {
+            throw new RuntimeException("Access denied: Only ADMIN and PROJECT_MANAGER can view all executions");
+        }
 
         Organization org = currentUser.getOrganization();
         if (org == null) {
@@ -88,6 +90,18 @@ public class ExecutionService {
         // Get all executions in the organization (not just latest per test case)
         Long orgId = org.getId();
         List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
+
+        // If user is PROJECT_MANAGER, filter to only their assigned projects
+        Set<Long> viewableProjectIds = securityHelper.getViewableProjectIds(currentUser);
+        if (viewableProjectIds != null && !viewableProjectIds.isEmpty()) {
+            List<Long> viewableModuleIds = testModuleRepository.findModuleIdsByProjectIds(
+                viewableProjectIds.stream().collect(Collectors.toList()));
+            Set<Long> viewableModuleIdSet = new HashSet<>(viewableModuleIds);
+            
+            allExecutions = allExecutions.stream()
+                .filter(e -> e.getModuleId() != null && viewableModuleIdSet.contains(e.getModuleId()))
+                .collect(Collectors.toList());
+        }
 
         // If userId is provided, filter by that user's assigned executions
         if (userId != null) {
@@ -205,17 +219,36 @@ public class ExecutionService {
     /**
      * Get test executions for the current user with security checks.
      * - ADMIN users see all executions in their organization, but only latest per test case
-     * - Non-ADMIN users see only executions assigned to them for modules they're assigned to
+     * - PROJECT_MANAGER users see all executions in their assigned projects, but only latest per test case
+     * - Non-ADMIN/PM users see only executions assigned to them for modules they're assigned to
      */
     @Transactional(readOnly = true)
     public List<TestExecutionDTO> getTestExecutionsForCurrentUser() {
         User currentUser = userContextService.getCurrentUser();
         
-        // If user is ADMIN, return all executions but only one per test case (latest)
-        if (userContextService.isAdmin(currentUser)) {
-            // Ensure we only get executions for the user's organization
+        // If user is ADMIN or PROJECT_MANAGER, return all executions but only one per test case (latest)
+        if (securityHelper.canViewAllOrganizationExecutions(currentUser)) {
+            Set<Long> viewableProjectIds = securityHelper.getViewableProjectIds(currentUser);
+            
+            // Get all executions for the user's organization or assigned projects
             Long orgId = currentUser.getOrganization() != null ? currentUser.getOrganization().getId() : -1L;
-            List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
+            List<TestExecution> allExecutions;
+            
+            if (viewableProjectIds == null) {
+                // ADMIN sees all in organization
+                allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
+            } else {
+                // PROJECT_MANAGER sees only their assigned projects - get module IDs first
+                List<Long> viewableModuleIds = testModuleRepository.findModuleIdsByProjectIds(
+                    viewableProjectIds.stream().collect(Collectors.toList()));
+                Set<Long> viewableModuleIdSet = new HashSet<>(viewableModuleIds);
+                
+                allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId).stream()
+                    .filter(e -> e.getModuleId() != null && viewableModuleIdSet.contains(e.getModuleId()))
+                    .collect(Collectors.toList());
+            }
+            
+            // Keep only the latest execution for each test case
             Map<Long, TestExecution> latestExecutionByTestCase = new HashMap<>();
 
             for (TestExecution execution : allExecutions) {

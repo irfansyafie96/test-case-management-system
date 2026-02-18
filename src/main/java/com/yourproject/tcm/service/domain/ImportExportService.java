@@ -79,10 +79,10 @@ public class ImportExportService {
         securityHelper.requireSameOrganization(currentUser, module.getProject().getOrganization());
         
         // Check role permissions
-        securityHelper.requireAdminQaOrBa(currentUser);
+        securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
         
-        // ADMIN users can import into any module
-        if (!userContextService.isAdmin(currentUser)) {
+        // ADMIN/PROJECT_MANAGER users can import into any module in their assigned projects
+        if (!userContextService.isAdmin(currentUser) && !userContextService.isProjectManager(currentUser)) {
             // Re-fetch user with assigned modules loaded to avoid lazy loading issues
             User userWithModules = userContextService.getCurrentUserWithModules();
 

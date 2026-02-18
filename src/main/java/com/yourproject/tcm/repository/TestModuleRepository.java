@@ -28,6 +28,10 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
            "WHERE me.id = :userId OR ea.id = :userId OR pu.id = :userId")
     List<TestModule> findTestModulesAssignedToUser(@Param("userId") Long userId);
 
+    // Find all module IDs for given project IDs
+    @Query("SELECT tm.id FROM TestModule tm WHERE tm.project.id IN :projectIds")
+    List<Long> findModuleIdsByProjectIds(@Param("projectIds") List<Long> projectIds);
+
     // Find test modules NOT assigned to a specific user (for assignment purposes)
     @Query("SELECT tm FROM TestModule tm JOIN FETCH tm.project WHERE tm.id NOT IN " +
            "(SELECT tm2.id FROM TestModule tm2 JOIN tm2.moduleEditors u WHERE u.id = :userId) " +

@@ -4,6 +4,7 @@ import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.*;
 import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.service.UserContextService;
+import com.yourproject.tcm.service.SecurityHelper;
 import com.yourproject.tcm.service.domain.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -41,6 +42,7 @@ public class ApiController {
     private final ImportExportService importExportService;
     private final UserService userService;
     private final UserContextService userContextService;
+    private final SecurityHelper securityHelper;
     private final com.yourproject.tcm.repository.TestModuleRepository testModuleRepository;
     private final ModuleEditorService moduleEditorService;
     private final ExecutionAssignmentService executionAssignmentService;
@@ -52,6 +54,7 @@ public class ApiController {
                         ExecutionService executionService, AnalyticsService analyticsService,
                         ImportExportService importExportService, UserService userService,
                         UserContextService userContextService,
+                        SecurityHelper securityHelper,
                         com.yourproject.tcm.repository.TestModuleRepository testModuleRepository,
                         ModuleEditorService moduleEditorService,
                         ExecutionAssignmentService executionAssignmentService) {
@@ -65,6 +68,7 @@ public class ApiController {
         this.importExportService = importExportService;
         this.userService = userService;
         this.userContextService = userContextService;
+        this.securityHelper = securityHelper;
         this.testModuleRepository = testModuleRepository;
         this.moduleEditorService = moduleEditorService;
         this.executionAssignmentService = executionAssignmentService;
@@ -259,11 +263,9 @@ public class ApiController {
             if (testModuleOpt.isPresent()) {
                 TestModule testModule = testModuleOpt.get();
                 
-                // Set isEditable flag based on user permissions
+                // Set isEditable flag based on user permissions (DRY: use SecurityHelper)
                 User currentUser = userContextService.getCurrentUser();
-                boolean isEditable = userContextService.isAdmin(currentUser) || 
-                    (userContextService.isQaOrBa(currentUser) && 
-                     testModuleRepository.isUserAssignedToModule(testModuleId, currentUser.getId()));
+                boolean isEditable = securityHelper.canAccessModule(currentUser, testModule);
                 
                 testModule.setEditable(isEditable);
                 
@@ -277,7 +279,7 @@ public class ApiController {
     }
 
     @PutMapping("/testmodules/{testModuleId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestModule(@PathVariable Long testModuleId, @RequestBody TestModule testModuleDetails) {
         try {
             TestModule updatedTestModule = moduleService.updateTestModule(testModuleId, testModuleDetails);
@@ -305,7 +307,7 @@ public class ApiController {
     // ==================== SUBMODULE ENDPOINTS ====================
 
     @PostMapping("/testmodules/{testModuleId}/submodules")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> createSubmoduleForTestModule(@PathVariable Long testModuleId, @RequestBody Submodule submodule) {
         try {
             Submodule savedSubmodule = submoduleService.createSubmoduleForTestModule(testModuleId, submodule);
@@ -332,7 +334,7 @@ public class ApiController {
     }
 
     @PutMapping("/submodules/{submoduleId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateSubmodule(@PathVariable Long submoduleId, @RequestBody Submodule submoduleDetails) {
         try {
             Submodule updatedSubmodule = submoduleService.updateSubmodule(submoduleId, submoduleDetails);
@@ -345,7 +347,7 @@ public class ApiController {
     }
 
     @DeleteMapping("/submodules/{submoduleId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<Void> deleteSubmodule(@PathVariable Long submoduleId) {
         try {
             submoduleService.deleteSubmodule(submoduleId);
@@ -363,7 +365,7 @@ public class ApiController {
     // ==================== TEST CASE ENDPOINTS ====================
 
     @PostMapping("/submodules/{submoduleId}/testcases")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<TestCaseDTO> createTestCaseForSubmodule(@PathVariable Long submoduleId, @RequestBody TestCase testCase) {
         TestCase savedTestCase = testCaseService.createTestCaseForSubmodule(submoduleId, testCase);
         return new ResponseEntity<>(convertToDTO(savedTestCase), HttpStatus.CREATED);
@@ -400,15 +402,13 @@ public class ApiController {
                 TestCase testCase = testCaseOpt.get();
                 TestCaseDTO dto = convertToDTO(testCase);
                 
-                // Set isEditable flag based on user permissions (same logic as modules)
+                // Set isEditable flag based on user permissions (DRY: use SecurityHelper)
                 User currentUser = userContextService.getCurrentUser();
-                boolean isEditable = userContextService.isAdmin(currentUser);
+                boolean isEditable = false;
                 
-                if (!isEditable && userContextService.isQaOrBa(currentUser)) {
-                    if (testCase.getSubmodule() != null && testCase.getSubmodule().getTestModule() != null) {
-                        isEditable = testModuleRepository.isUserAssignedToModule(
-                            testCase.getSubmodule().getTestModule().getId(), currentUser.getId());
-                    }
+                if (testCase.getSubmodule() != null && testCase.getSubmodule().getTestModule() != null) {
+                    TestModule module = testCase.getSubmodule().getTestModule();
+                    isEditable = securityHelper.canAccessModule(currentUser, module);
                 }
                 
                 dto.setEditable(isEditable);
@@ -422,7 +422,7 @@ public class ApiController {
     }
 
     @PutMapping("/testcases/{testCaseId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     public ResponseEntity<?> updateTestCase(@PathVariable Long testCaseId, @RequestBody TestCase testCaseDetails) {
         try {
             TestCase updatedTestCase = testCaseService.updateTestCase(testCaseId, testCaseDetails);
@@ -686,7 +686,7 @@ public class ApiController {
 
     // ==================== TEST EXECUTION ASSIGNMENT ENDPOINTS ====================
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/executions/{executionId}/assign")
     public ResponseEntity<?> assignTestExecution(@PathVariable Long executionId, @RequestParam Long userId) {
         try {
@@ -697,7 +697,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @GetMapping("/executions/assigned-to/{userId}")
     public ResponseEntity<?> getTestExecutionsAssignedToUser(@PathVariable Long userId) {
         try {
@@ -708,7 +708,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/executions/my-assignments")
     public ResponseEntity<?> getMyAssignedExecutions() {
         try {
@@ -719,7 +719,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/executions/summary")
     public ResponseEntity<?> getCompletionSummary() {
         try {
@@ -754,7 +754,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @GetMapping("/projects/assigned-to-me")
     public ResponseEntity<?> getProjectsAssignedToCurrentUser() {
         try {
@@ -806,7 +806,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @GetMapping("/projects/{projectId}/modules")
     public ResponseEntity<?> getModulesByProject(@PathVariable Long projectId) {
         try {
@@ -822,7 +822,7 @@ public class ApiController {
 
     // ==================== MODULE ASSIGNMENT ENDPOINTS ====================
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/testmodules/assign")
     public ResponseEntity<?> assignUserToTestModule(@Valid @RequestBody ModuleAssignmentRequest request) {
         try {
@@ -833,7 +833,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @DeleteMapping("/testmodules/assign")
     public ResponseEntity<?> removeUserFromTestModule(@Valid @RequestBody ModuleAssignmentRequest request) {
         try {
@@ -922,7 +922,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @GetMapping("/modules/{moduleId}/editors")
     public ResponseEntity<?> getModuleEditors(@PathVariable Long moduleId) {
         try {
@@ -944,7 +944,7 @@ public class ApiController {
 
     // ==================== EXECUTION ASSIGNEE ENDPOINTS (Module Detail Page - QA/BA/TESTER) ====================
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/modules/execution-assign")
     public ResponseEntity<?> assignExecutionAssignee(@RequestBody ExecutionAssignmentRequest request) {
         try {
@@ -962,7 +962,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @DeleteMapping("/modules/execution-assign")
     public ResponseEntity<?> removeExecutionAssignee(@RequestBody ExecutionAssignmentRequest request) {
         try {
@@ -980,7 +980,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @GetMapping("/modules/{moduleId}/execution-assignees")
     public ResponseEntity<?> getExecutionAssignees(@PathVariable Long moduleId) {
         try {
@@ -1014,7 +1014,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @GetMapping("/testmodules/{moduleId}/assigned-users")
     public ResponseEntity<?> getUsersAssignedToTestModule(@PathVariable Long moduleId) {
         try {
@@ -1036,7 +1036,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @GetMapping("/users/by-role/{roleName}")
     public ResponseEntity<?> getUsersByRole(@PathVariable String roleName) {
         try {
@@ -1063,7 +1063,7 @@ public class ApiController {
 
     // ==================== ADMIN FILTER ENDPOINTS ====================
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     @GetMapping("/admin/users")
     public ResponseEntity<?> getUsersInOrganization() {
         try {
@@ -1084,7 +1084,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     @GetMapping("/admin/modules")
     public ResponseEntity<?> getAllModulesInOrganization() {
         try {
@@ -1098,7 +1098,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     @GetMapping("/admin/executions")
     public ResponseEntity<?> getAllExecutionsInOrganization(@RequestParam(required = false) Long userId) {
         try {
@@ -1109,7 +1109,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/testmodules/{moduleId}/regenerate-executions")
     public ResponseEntity<?> regenerateExecutionsForModule(@PathVariable Long moduleId) {
         try {
@@ -1153,7 +1153,7 @@ public class ApiController {
     /**
      * Import test cases and test suites from Excel file
      */
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA')")
     @PostMapping("/testmodules/{moduleId}/import")
     public ResponseEntity<?> importTestCasesFromExcel(@PathVariable Long moduleId, @RequestParam("file") MultipartFile file) {
         System.out.println("IMPORT REQUEST - Module ID: " + moduleId + ", File: " + (file != null ? file.getOriginalFilename() : "null"));

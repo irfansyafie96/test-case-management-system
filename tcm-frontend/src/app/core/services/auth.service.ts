@@ -408,6 +408,14 @@ export class AuthService {
   }
 
   /**
+   * Check if current user can view all executions in the organization
+   * ADMIN and PROJECT_MANAGER can view all (PM only in assigned projects)
+   */
+  canViewAllExecutions(): boolean {
+    return this.hasAnyRole(['ADMIN', 'PROJECT_MANAGER']);
+  }
+
+  /**
    * Check if current user can create submodules
    * ADMIN, PROJECT_MANAGER, QA, BA can create submodules
    */

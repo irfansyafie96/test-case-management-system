@@ -107,10 +107,10 @@ export class TestCasesComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Check if current user is admin
-    this.isAdmin = this.authService.hasRole('ADMIN');
+    // Check if current user can view all executions (admin or project manager)
+    this.isAdmin = this.authService.canViewAllExecutions();
     
-    // Load users if admin
+    // Load users if admin or project manager
     if (this.isAdmin) {
       this.loadUsers();
     }

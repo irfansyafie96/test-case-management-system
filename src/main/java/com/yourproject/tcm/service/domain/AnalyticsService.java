@@ -4,7 +4,9 @@ import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.CompletionSummaryDTO;
 import com.yourproject.tcm.model.dto.TestAnalyticsDTO;
 import com.yourproject.tcm.repository.*;
+import com.yourproject.tcm.service.SecurityHelper;
 import com.yourproject.tcm.service.UserContextService;
+import com.yourproject.tcm.repository.TestModuleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,17 +25,23 @@ public class AnalyticsService {
     private final TestExecutionRepository testExecutionRepository;
     private final UserRepository userRepository;
     private final UserContextService userContextService;
+    private final SecurityHelper securityHelper;
+    private final TestModuleRepository testModuleRepository;
 
     @Autowired
     public AnalyticsService(
             TestCaseRepository testCaseRepository,
             TestExecutionRepository testExecutionRepository,
             UserRepository userRepository,
-            UserContextService userContextService) {
+            UserContextService userContextService,
+            SecurityHelper securityHelper,
+            TestModuleRepository testModuleRepository) {
         this.testCaseRepository = testCaseRepository;
         this.testExecutionRepository = testExecutionRepository;
         this.userRepository = userRepository;
         this.userContextService = userContextService;
+        this.securityHelper = securityHelper;
+        this.testModuleRepository = testModuleRepository;
     }
 
     /**
@@ -55,11 +63,11 @@ public class AnalyticsService {
 
         // Determine which user's executions to show
         final Long filterUserId;
-        if (userContextService.isAdmin(currentUser)) {
-            // Admin can filter by userId or see all
+        if (securityHelper.canViewAllOrganizationExecutions(currentUser)) {
+            // ADMIN/PROJECT_MANAGER can filter by userId or see all
             filterUserId = userId;
         } else {
-            // Non-admin users only see their own executions
+            // Non-admin/PM users only see their own executions
             filterUserId = currentUser.getId();
         }
 
@@ -71,6 +79,30 @@ public class AnalyticsService {
         // Get all executions with details - Filtered by Organization
         List<TestExecution> allExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
 
+        // For PROJECT_MANAGER, filter to only their assigned projects (BOTH test cases AND executions)
+        Set<Long> viewableProjectIds = securityHelper.getViewableProjectIds(currentUser);
+        if (viewableProjectIds != null && !viewableProjectIds.isEmpty()) {
+            List<Long> viewableProjectIdList = viewableProjectIds.stream().collect(Collectors.toList());
+            List<Long> viewableModuleIds = testModuleRepository.findModuleIdsByProjectIds(viewableProjectIdList);
+            Set<Long> viewableModuleIdSet = new HashSet<>(viewableModuleIds);
+            
+            // Filter test cases to only those in PM's assigned projects
+            allTestCases = allTestCases.stream()
+                .filter(tc -> {
+                    if (tc.getSubmodule() == null || tc.getSubmodule().getTestModule() == null) {
+                        return false;
+                    }
+                    Long moduleId = tc.getSubmodule().getTestModule().getId();
+                    return viewableModuleIdSet.contains(moduleId);
+                })
+                .collect(Collectors.toList());
+            
+            // Filter executions to only those in PM's assigned projects
+            allExecutions = allExecutions.stream()
+                .filter(e -> e.getModuleId() != null && viewableModuleIdSet.contains(e.getModuleId()))
+                .collect(Collectors.toList());
+        }
+
         // Filter executions by user if filterUserId is set
         if (filterUserId != null) {
             allExecutions = allExecutions.stream()
@@ -80,8 +112,8 @@ public class AnalyticsService {
                 })
                 .collect(Collectors.toList());
 
-            // For non-admin users, also filter by assigned modules (match execution page logic)
-            if (!userContextService.isAdmin(currentUser)) {
+            // For non-admin/PM users, also filter by assigned modules (match execution page logic)
+            if (!securityHelper.canViewAllOrganizationExecutions(currentUser)) {
                 Set<Long> assignedModuleIds = currentUser.getAssignedModulesForExecution().stream()
                     .map(TestModule::getId)
                     .collect(Collectors.toSet());
@@ -127,12 +159,13 @@ public class AnalyticsService {
 
         // Filter test cases based on user assignments and executions
         List<TestCase> filteredTestCases = new ArrayList<>();
-        if (userContextService.isAdmin(currentUser)) {
+        if (securityHelper.canViewAllOrganizationExecutions(currentUser)) {
+            // Admin/PM seeing all test cases in their org/projects (no user filter)
             if (filterUserId == null) {
-                // Admin seeing all test cases (no user filter)
+                // Admin/PM seeing all test cases (no user filter)
                 filteredTestCases = allTestCases;
             } else {
-                // Admin filtering by specific user - show all test cases assigned to that user
+                // Admin/PM filtering by specific user - show all test cases assigned to that user
                 // (not just executed ones - includes pending executions)
                 Set<Long> userTestCaseIds = allExecutions.stream()
                     .map(ex -> ex.getTestCase().getId())
@@ -143,7 +176,7 @@ public class AnalyticsService {
                     .collect(Collectors.toList());
             }
         } else {
-            // Non-admin users see ONLY test cases they have executions for (Assigned to them)
+            // Non-admin/PM users (QA/BA/TESTER) see ONLY test cases they have executions for
             // allExecutions is already filtered to only include executions assigned to this user
             Set<Long> userTestCaseIds = allExecutions.stream()
                 .map(ex -> ex.getTestCase().getId())
@@ -161,10 +194,10 @@ public class AnalyticsService {
         // - Non-admin: all test cases in assigned modules
         long totalTestCases = filteredTestCases.size();
 
-        // For non-admin users, calculate executedCount from filteredTestCases that have executions
-        // For admin users, use executedTestCaseIds directly
+        // For admin/PM users, use executedTestCaseIds directly
+        // For non-admin users (QA/BA/TESTER), calculate executedCount from filteredTestCases that have executions
         long executedCount;
-        if (userContextService.isAdmin(currentUser)) {
+        if (securityHelper.canViewAllOrganizationExecutions(currentUser)) {
             executedCount = executedTestCaseIds.size();
         } else {
             // Count how many test cases in filteredTestCases have executions
@@ -263,29 +296,56 @@ public class AnalyticsService {
 
     /**
      * Get completion summary statistics for the current user
+     * - ADMIN/PROJECT_MANAGER: returns summary for all executions in org/assigned projects
+     * - QA/BA/TESTER: returns summary for their assigned modules only
      * @return CompletionSummaryDTO containing total, passed, failed, blocked, and pending counts
      */
     @Transactional(readOnly = true)
     public CompletionSummaryDTO getCompletionSummaryForCurrentUser() {
         User user = userContextService.getCurrentUser();
         
-        List<TestExecution> executions = testExecutionRepository.findByAssignedToUserWithDetails(user);
-        Set<Long> assignedModuleIds = user.getAssignedModulesForExecution().stream()
-            .map(TestModule::getId)
-            .collect(Collectors.toSet());
+        List<TestExecution> executions;
+        
+        // ADMIN/PROJECT_MANAGER see all executions in org/assigned projects
+        if (securityHelper.canViewAllOrganizationExecutions(user)) {
+            Set<Long> viewableProjectIds = securityHelper.getViewableProjectIds(user);
+            Long orgId = user.getOrganization() != null ? user.getOrganization().getId() : -1L;
+            
+            List<TestExecution> allOrgExecutions = testExecutionRepository.findAllWithDetailsByOrganizationId(orgId);
+            
+            if (viewableProjectIds == null) {
+                // ADMIN sees all
+                executions = allOrgExecutions;
+            } else {
+                // PROJECT_MANAGER sees only their assigned projects
+                List<Long> viewableProjectIdList = new ArrayList<>(viewableProjectIds);
+                List<Long> viewableModuleIds = testModuleRepository.findModuleIdsByProjectIds(viewableProjectIdList);
+                Set<Long> viewableModuleIdSet = new HashSet<>(viewableModuleIds);
+                
+                executions = allOrgExecutions.stream()
+                    .filter(e -> e.getModuleId() != null && viewableModuleIdSet.contains(e.getModuleId()))
+                    .collect(Collectors.toList());
+            }
+        } else {
+            // QA/BA/TESTER see only their assigned modules
+            executions = testExecutionRepository.findByAssignedToUserWithDetails(user);
+            Set<Long> assignedModuleIds = user.getAssignedModulesForExecution().stream()
+                .map(TestModule::getId)
+                .collect(Collectors.toSet());
 
-        List<TestExecution> filteredExecutions = executions.stream()
-            .filter(e -> {
-                Long moduleId = e.getModuleId();
-                return moduleId != null && assignedModuleIds.contains(moduleId);
-            })
-            .collect(Collectors.toList());
+            executions = executions.stream()
+                .filter(e -> {
+                    Long moduleId = e.getModuleId();
+                    return moduleId != null && assignedModuleIds.contains(moduleId);
+                })
+                .collect(Collectors.toList());
+        }
 
         // Calculate statistics
-        long total = filteredExecutions.size();
-        long passed = filteredExecutions.stream().filter(e -> "PASSED".equals(e.getOverallResult())).count();
-        long failed = filteredExecutions.stream().filter(e -> "FAILED".equals(e.getOverallResult())).count();
-        long blocked = filteredExecutions.stream().filter(e -> "BLOCKED".equals(e.getOverallResult())).count();
+        long total = executions.size();
+        long passed = executions.stream().filter(e -> "PASSED".equals(e.getOverallResult())).count();
+        long failed = executions.stream().filter(e -> "FAILED".equals(e.getOverallResult())).count();
+        long blocked = executions.stream().filter(e -> "BLOCKED".equals(e.getOverallResult())).count();
         long pending = total - passed - failed - blocked;
 
         return new CompletionSummaryDTO(total, passed, failed, blocked, pending);

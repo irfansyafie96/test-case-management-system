@@ -127,11 +127,10 @@ export class ExecutionsComponent implements OnInit {
     this.loadingSubject.next(true);
     this.errorSubject.next(false);
 
-    const currentUser = this.authService.getCurrentUser();
-    const isAdmin = currentUser?.roles?.includes('ADMIN') || false;
+    const canViewAll = this.authService.canViewAllExecutions();
 
-    if (isAdmin) {
-      // Admin: Load executions in organization, optionally filtered by user
+    if (canViewAll) {
+      // Admin/PM: Load executions in organization/assigned projects, optionally filtered by user
       this.tcmService.getAllExecutionsInOrganization(userId).subscribe({
         next: (executions) => {
           this.executionsSubject.next(executions);
@@ -143,7 +142,7 @@ export class ExecutionsComponent implements OnInit {
         }
       });
     } else {
-      // Non-admin: Load only assigned executions
+      // Non-admin/PM: Load only assigned executions
       this.tcmService.getMyAssignedExecutions().subscribe({
         next: (executions) => {
           this.executionsSubject.next(executions);
@@ -158,11 +157,10 @@ export class ExecutionsComponent implements OnInit {
   }
 
   loadAdminFilters(): void {
-    const currentUser = this.authService.getCurrentUser();
-    const isAdmin = currentUser?.roles?.includes('ADMIN') || false;
-    this.isAdminSubject.next(isAdmin);
+    const canViewAll = this.authService.canViewAllExecutions();
+    this.isAdminSubject.next(canViewAll);
 
-    if (isAdmin) {
+    if (canViewAll) {
       // Load users and modules for filtering
       this.tcmService.getUsersInOrganization().subscribe({
         next: (users) => {

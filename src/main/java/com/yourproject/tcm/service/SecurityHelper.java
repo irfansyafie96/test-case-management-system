@@ -6,6 +6,10 @@ import com.yourproject.tcm.model.TestModule;
 import com.yourproject.tcm.model.User;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  * Helper service for centralized security and permission checks.
  * Reduces code duplication by providing common security check methods.
@@ -51,6 +55,19 @@ public class SecurityHelper {
         if (!userContextService.isAdmin(currentUser) && 
             !userContextService.isProjectManager(currentUser)) {
             throw new RuntimeException("Only ADMIN or PROJECT_MANAGER users can perform this action");
+        }
+    }
+
+    /**
+     * Require that the user has ADMIN, PROJECT_MANAGER, QA, or BA role.
+     * @param currentUser the user to check
+     * @throws RuntimeException if user doesn't have required role
+     */
+    public void requireAdminProjectManagerQaOrBa(User currentUser) {
+        if (!userContextService.isAdmin(currentUser) && 
+            !userContextService.isProjectManager(currentUser) &&
+            !userContextService.isQaOrBa(currentUser)) {
+            throw new RuntimeException("Only ADMIN, PROJECT_MANAGER, QA, or BA users can perform this action");
         }
     }
 
@@ -191,5 +208,48 @@ public class SecurityHelper {
 
         return currentUser.getAssignedModulesForEditing().stream()
             .anyMatch(m -> m.getId().equals(testModule.getId()));
+    }
+
+    /**
+     * Check if user can view all executions in the organization.
+     * ADMIN users can view all executions in their organization.
+     * PROJECT_MANAGER users can view all executions in their assigned projects.
+     * @param currentUser the current user
+     * @return true if user can view all organization/project executions
+     */
+    public boolean canViewAllOrganizationExecutions(User currentUser) {
+        if (currentUser == null) {
+            return false;
+        }
+        return userContextService.isAdmin(currentUser) || userContextService.isProjectManager(currentUser);
+    }
+
+    /**
+     * Get the set of project IDs that the user can view executions for.
+     * ADMIN users can view all projects in their organization.
+     * PROJECT_MANAGER users can only view their assigned projects.
+     * Other users return empty set.
+     * @param currentUser the current user
+     * @return set of project IDs
+     */
+    public Set<Long> getViewableProjectIds(User currentUser) {
+        if (currentUser == null) {
+            return Collections.emptySet();
+        }
+        
+        if (userContextService.isAdmin(currentUser)) {
+            return null; // null means all projects in organization
+        }
+        
+        if (userContextService.isProjectManager(currentUser)) {
+            if (currentUser.getAssignedProjects() == null) {
+                return Collections.emptySet();
+            }
+            return currentUser.getAssignedProjects().stream()
+                .map(Project::getId)
+                .collect(Collectors.toSet());
+        }
+        
+        return Collections.emptySet();
     }
 }

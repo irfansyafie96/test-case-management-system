@@ -118,7 +118,7 @@ public class SubmoduleService {
             securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
             
             // Check role and module access
-            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
             securityHelper.requireModuleAccess(currentUser, testModule);
             
             submodule.setTestModule(testModule);
@@ -152,7 +152,7 @@ public class SubmoduleService {
             securityHelper.requireSameOrganization(currentUser, testModule.getProject().getOrganization());
             
             // Check role and module access
-            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
             securityHelper.requireModuleAccess(currentUser, testModule);
             
             submodule.setName(submoduleDetails.getName());
@@ -190,7 +190,7 @@ public class SubmoduleService {
         
         // Check role and module access (ADMIN can delete any, QA/BA must be assigned)
         if (!userContextService.isAdmin(currentUser)) {
-            securityHelper.requireAdminQaOrBa(currentUser);
+            securityHelper.requireAdminProjectManagerQaOrBa(currentUser);
             securityHelper.requireModuleAccess(currentUser, testModule);
         }
         
