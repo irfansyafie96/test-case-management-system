@@ -246,7 +246,7 @@ public class ApiController {
     // ==================== MODULE ENDPOINTS ====================
 
     @PostMapping("/projects/{projectId}/testmodules")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     public ResponseEntity<TestModuleDTO> createTestModuleForProject(@PathVariable Long projectId, @RequestBody TestModule testModule) {
         TestModule savedTestModule = moduleService.createTestModuleForProject(projectId, testModule);
         return new ResponseEntity<>(convertToDTO(savedTestModule), HttpStatus.CREATED);
@@ -290,13 +290,13 @@ public class ApiController {
     }
 
     @DeleteMapping("/testmodules/{testModuleId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     public ResponseEntity<?> deleteTestModule(@PathVariable Long testModuleId) {
         try {
             moduleService.deleteTestModule(testModuleId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting test module: " + e.getMessage());
         }
@@ -732,7 +732,7 @@ public class ApiController {
 
     // ==================== PROJECT ASSIGNMENT ENDPOINTS ====================
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     @PostMapping("/projects/assign")
     public ResponseEntity<?> assignUserToProject(@Valid @RequestBody ProjectAssignmentRequest request) {
         try {
@@ -743,7 +743,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     @DeleteMapping("/projects/assign")
     public ResponseEntity<?> removeUserFromProject(@Valid @RequestBody ProjectAssignmentRequest request) {
         try {
@@ -765,7 +765,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/projects/{projectId}/assigned-users")
     public ResponseEntity<?> getUsersAssignedToProject(@PathVariable Long projectId) {
         try {
@@ -1000,7 +1000,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/testmodules/assigned-to-me")
     public ResponseEntity<?> getTestModulesAssignedToCurrentUser() {
         try {
@@ -1122,7 +1122,7 @@ public class ApiController {
 
     // ==================== USER MANAGEMENT ENDPOINTS ====================
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     @PutMapping("/users/{userId}/role")
     public ResponseEntity<?> updateUserRole(@PathVariable Long userId, @RequestParam String roleName) {
         try {

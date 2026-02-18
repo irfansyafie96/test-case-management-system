@@ -283,6 +283,32 @@
    - **Files**: `join.component.ts`, `join.component.html`
    - **Status**: COMPLETED ✅
 
+- [x] **PROJECT_MANAGER Role Implementation**
+   - **Issue**: Need a role between ADMIN and QA/BA for project-level management
+   - **Implementation**:
+     1. Added PROJECT_MANAGER role to DataInitializationService
+     2. Added helper methods to AuthService (canManageModules, canManageTeam, canDeleteModule, etc.)
+     3. Updated frontend components to use helper methods (DRY principle)
+     4. Updated backend endpoints with @PreAuthorize for PROJECT_MANAGER
+     5. Added project assignment checks for PM users
+     6. Fixed delete module to use correct junction table names
+   - **Files**: 
+     - Backend: DataInitializationService, UserContextService, SecurityHelper, ModuleService, ProjectService, InvitationService, UserService, ApiController, UserRepository
+     - Frontend: auth.service.ts, project-detail.component, project-team.component, module-detail.component
+   - **Status**: COMPLETED ✅
+
+- [x] **Module Delete Fix - Junction Table Name**
+   - **Issue**: SQL error "Table 'testcasedb.user_test_modules' doesn't exist"
+   - **Fix**: Updated ModuleService.deleteTestModule() to use correct table names: `module_editor_assignments` and `execution_assignees`
+   - **Files**: `ModuleService.java`
+   - **Status**: COMPLETED ✅
+
+- [x] **UserRepository EntityGraph Update**
+   - **Issue**: PROJECT_MANAGER's assignedProjects not loaded, causing delete failures
+   - **Fix**: Added `assignedProjects` to EntityGraph in `findByUsername()` method
+   - **Files**: `UserRepository.java`
+   - **Status**: COMPLETED ✅
+
 #### High Priority Refactoring (Recommended):
 
 1. **Create SecurityHelper for Centralized Permission Checks** ⏳ NOT STARTED

@@ -290,12 +290,26 @@ public class ProjectService {
             User user = userOpt.get();
             Project project = projectOpt.get();
 
-            // Check if user has QA or BA role
-            boolean hasQaOrBaRole = user.getRoles().stream()
-                .anyMatch(role -> role.getName().equals("QA") || role.getName().equals("BA"));
+            // Security: PROJECT_MANAGER can only assign to projects they're assigned to
+            if (userContextService.currentUserIsProjectManager()) {
+                User currentUser = userContextService.getCurrentUser();
+                boolean isAssignedToProject = currentUser.getAssignedProjects().stream()
+                    .anyMatch(p -> p.getId().equals(project.getId()));
+                if (!isAssignedToProject) {
+                    throw new RuntimeException("You can only assign users to projects you're assigned to");
+                }
+            }
 
-            if (!hasQaOrBaRole) {
-                throw new RuntimeException("User must have QA or BA role to be assigned to projects");
+            // Check if user has valid role for project assignment
+            boolean hasValidRole = user.getRoles().stream()
+                .anyMatch(role -> {
+                    String roleName = role.getName();
+                    return roleName.equals("QA") || roleName.equals("BA") || 
+                           roleName.equals("TESTER") || roleName.equals("PROJECT_MANAGER");
+                });
+
+            if (!hasValidRole) {
+                throw new RuntimeException("User must have a valid role (QA, BA, TESTER, or PROJECT_MANAGER) to be assigned to projects");
             }
 
             // Check if user belongs to same organization as current user
@@ -330,6 +344,16 @@ public class ProjectService {
      */
     @Transactional
     public void removeUserFromProject(Long userId, Long projectId) {
+        // Security: PROJECT_MANAGER can only remove from projects they're assigned to
+        if (userContextService.currentUserIsProjectManager()) {
+            User currentUser = userContextService.getCurrentUser();
+            boolean isAssignedToProject = currentUser.getAssignedProjects().stream()
+                .anyMatch(p -> p.getId().equals(projectId));
+            if (!isAssignedToProject) {
+                throw new RuntimeException("You can only remove users from projects you're assigned to");
+            }
+        }
+
         Optional<User> userOpt = userRepository.findById(userId);
         Optional<Project> projectOpt = projectRepository.findById(projectId);
 

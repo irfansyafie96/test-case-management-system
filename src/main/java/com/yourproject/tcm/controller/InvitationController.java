@@ -18,7 +18,7 @@ public class InvitationController {
     private InvitationService invitationService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     public ResponseEntity<?> createInvitation(@Valid @RequestBody InviteRequest request) {
         try {
             Invitation invitation = invitationService.createInvitation(

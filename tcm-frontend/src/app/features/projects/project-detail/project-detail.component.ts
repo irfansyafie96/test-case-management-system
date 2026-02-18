@@ -16,8 +16,8 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ModuleDialogComponent } from '../../modules/modules/module-dialog.component';
-import { InviteDialogComponent } from '../../team/invite-dialog/invite-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
+
 import { Project, TestModule, User, ProjectAssignmentRequest } from '../../../core/models/project.model';
 import { Observable, BehaviorSubject, forkJoin } from 'rxjs';
 
@@ -56,32 +56,6 @@ export class ProjectDetailComponent implements OnInit {
     if (projectId) {
       this.project$ = this.tcmService.getProject(projectId);
     }
-  }
-
-  onInviteMember(projectId: string | number): void {
-    const dialogRef = this.dialog.open(InviteDialogComponent, {
-      width: '400px',
-      data: { 
-        external: true, // Default to true for project-specific invites
-        projectId: projectId 
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.snackBar.open('Invitation sent successfully!', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar'],
-          horizontalPosition: 'right',
-          verticalPosition: 'top'
-        });
-        
-        // Refresh assignments list if it's currently showing
-        if (this.showAssignments) {
-          this.loadAssignmentData(String(projectId));
-        }
-      }
-    });
   }
 
   openModuleDialog(projectId: string | number): void {

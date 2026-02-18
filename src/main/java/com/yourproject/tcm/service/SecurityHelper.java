@@ -43,6 +43,18 @@ public class SecurityHelper {
     }
 
     /**
+     * Require that the user has ADMIN or PROJECT_MANAGER role.
+     * @param currentUser the user to check
+     * @throws RuntimeException if user doesn't have required role
+     */
+    public void requireAdminOrProjectManager(User currentUser) {
+        if (!userContextService.isAdmin(currentUser) && 
+            !userContextService.isProjectManager(currentUser)) {
+            throw new RuntimeException("Only ADMIN or PROJECT_MANAGER users can perform this action");
+        }
+    }
+
+    /**
      * Require that the entity belongs to the same organization as the user.
      * @param currentUser the current user
      * @param entityOrg the organization of the entity being accessed
@@ -98,7 +110,8 @@ public class SecurityHelper {
     /**
      * Require that the user can access the test module.
      * ADMIN users can access any module in their organization.
-     * Non-ADMIN users must be assigned to the module.
+     * PROJECT_MANAGER users can access any module in their assigned projects.
+     * Non-ADMIN/PM users must be assigned to the module.
      * @param currentUser the current user
      * @param testModule the test module to check access for
      * @throws RuntimeException if user doesn't have access
@@ -116,7 +129,15 @@ public class SecurityHelper {
             return;
         }
         
-        // Non-ADMIN users must be assigned to the module for editing
+        // PROJECT_MANAGER can access any module in their assigned projects
+        if (userContextService.isProjectManager(currentUser)) {
+            if (currentUser.getAssignedProjects() != null && 
+                currentUser.getAssignedProjects().contains(testModule.getProject())) {
+                return;
+            }
+        }
+        
+        // Non-ADMIN/PM users must be assigned to the module for editing
         if (currentUser.getAssignedModulesForEditing() == null ||
             currentUser.getAssignedModulesForEditing().isEmpty()) {
             throw new RuntimeException("You are not assigned to any test modules for editing");
@@ -133,6 +154,7 @@ public class SecurityHelper {
     /**
      * Check if a user is assigned to a specific test module.
      * ADMIN users are always considered assigned.
+     * PROJECT_MANAGER users are considered assigned if the module's project is in their assigned projects.
      * @param currentUser the current user
      * @param testModule the test module to check
      * @return true if user can access the module
@@ -153,7 +175,15 @@ public class SecurityHelper {
             return true;
         }
         
-        // Non-ADMIN users must be assigned
+        // PROJECT_MANAGER can access any module in their assigned projects
+        if (userContextService.isProjectManager(currentUser)) {
+            if (currentUser.getAssignedProjects() != null && 
+                currentUser.getAssignedProjects().contains(testModule.getProject())) {
+                return true;
+            }
+        }
+        
+        // Non-ADMIN/PM users must be assigned for editing
         if (currentUser.getAssignedModulesForEditing() == null ||
             currentUser.getAssignedModulesForEditing().isEmpty()) {
             return false;

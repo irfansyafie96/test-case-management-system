@@ -65,6 +65,15 @@ public class InvitationService {
             throw new RuntimeException("Current user does not belong to an organization");
         }
 
+        // Security: PROJECT_MANAGER can only invite to projects they're assigned to
+        if (projectId != null && userContextService.currentUserIsProjectManager()) {
+            boolean isAssignedToProject = currentUser.getAssignedProjects().stream()
+                .anyMatch(p -> p.getId().equals(projectId));
+            if (!isAssignedToProject) {
+                throw new RuntimeException("You can only invite users to projects you're assigned to");
+            }
+        }
+
         // Check if user already exists
         Optional<User> existingUserOpt = userRepository.findByEmail(email);
         if (existingUserOpt.isPresent()) {

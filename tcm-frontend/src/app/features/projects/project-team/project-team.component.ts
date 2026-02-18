@@ -53,6 +53,7 @@ export class ProjectTeamComponent implements OnInit {
   private refreshSubject = new Subject<void>();
   loading$ = new BehaviorSubject<boolean>(true);
   isAdmin = false;
+  isProjectManager = false;
   currentUser: User | null = null;
 
   inviteForm: FormGroup;
@@ -76,7 +77,8 @@ export class ProjectTeamComponent implements OnInit {
 
   ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('id');
-    this.isAdmin = this.authService.hasRole('ADMIN');
+    this.isAdmin = this.authService.hasRole('ADMIN') || this.authService.hasRole('PROJECT_MANAGER');
+    this.isProjectManager = this.authService.hasRole('PROJECT_MANAGER');
     this.currentUser = this.authService.getCurrentUser();
 
     if (this.projectId) {

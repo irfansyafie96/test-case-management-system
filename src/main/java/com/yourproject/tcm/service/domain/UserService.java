@@ -58,13 +58,17 @@ public class UserService {
 
     /**
      * Update a user's role.
-     * Only ADMIN users can perform this.
+     * ADMIN can change to any role.
+     * PROJECT_MANAGER can change to QA, BA, TESTER (not ADMIN).
      */
     @Transactional
     public User updateUserRole(Long userId, String roleName) {
         User currentUser = userContextService.getCurrentUser();
-        if (!userContextService.isAdmin(currentUser)) {
-            throw new RuntimeException("Only admin users can update user roles");
+        boolean isAdmin = userContextService.isAdmin(currentUser);
+        boolean isProjectManager = userContextService.currentUserIsProjectManager();
+        
+        if (!isAdmin && !isProjectManager) {
+            throw new RuntimeException("Only admin and project manager users can update user roles");
         }
 
         User userToUpdate = userRepository.findById(userId)
@@ -78,6 +82,11 @@ public class UserService {
         // Prevent self-role change
         if (userToUpdate.getId().equals(currentUser.getId())) {
             throw new RuntimeException("You cannot change your own role");
+        }
+
+        // PROJECT_MANAGER can only assign QA, BA, TESTER (not ADMIN)
+        if (isProjectManager && roleName.equals("ADMIN")) {
+            throw new RuntimeException("Project managers cannot assign ADMIN role");
         }
 
         Role role = roleRepository.findByName(roleName)

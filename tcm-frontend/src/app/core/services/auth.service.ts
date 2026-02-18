@@ -384,6 +384,62 @@ export class AuthService {
   }
 
   /**
+   * Check if current user can manage modules (create/edit) in assigned projects
+   * ADMIN and PROJECT_MANAGER can manage modules
+   */
+  canManageModules(): boolean {
+    return this.hasAnyRole(['ADMIN', 'PROJECT_MANAGER']);
+  }
+
+  /**
+   * Check if current user can manage team (invite/remove/change roles)
+   * ADMIN and PROJECT_MANAGER can manage teams
+   */
+  canManageTeam(): boolean {
+    return this.hasAnyRole(['ADMIN', 'PROJECT_MANAGER']);
+  }
+
+  /**
+   * Check if current user can delete modules
+   * ADMIN and PROJECT_MANAGER can delete modules
+   */
+  canDeleteModule(): boolean {
+    return this.hasAnyRole(['ADMIN', 'PROJECT_MANAGER']);
+  }
+
+  /**
+   * Check if current user can create submodules
+   * ADMIN, PROJECT_MANAGER, QA, BA can create submodules
+   */
+  canCreateSubmodule(): boolean {
+    return this.hasAnyRole(['ADMIN', 'PROJECT_MANAGER', 'QA', 'BA']);
+  }
+
+  /**
+   * Check if current user can manage module assignments
+   * ADMIN, PROJECT_MANAGER, QA, BA can manage assignments
+   */
+  canManageModuleAssignments(): boolean {
+    return this.hasAnyRole(['ADMIN', 'PROJECT_MANAGER', 'QA', 'BA']);
+  }
+
+  /**
+   * Check if current user can import test cases
+   * ADMIN, PROJECT_MANAGER, QA, BA can import test cases
+   */
+  canImportTestCases(): boolean {
+    return this.hasAnyRole(['ADMIN', 'PROJECT_MANAGER', 'QA', 'BA']);
+  }
+
+  /**
+   * Check if current user can assign modules to team members
+   * QA and BA can assign modules
+   */
+  canAssignModules(): boolean {
+    return this.hasAnyRole(['QA', 'BA']);
+  }
+
+  /**
    * Refresh current user data from backend
    * Useful after profile updates or when user data might have changed
    * @returns Observable with updated user data

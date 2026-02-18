@@ -92,6 +92,15 @@ public class UserContextService {
     }
 
     /**
+     * Check if a user has PROJECT_MANAGER role.
+     * @param user the user to check
+     * @return true if the user has PROJECT_MANAGER role
+     */
+    public boolean isProjectManager(User user) {
+        return user.getRoles().stream().anyMatch(role -> role.getName().equals("PROJECT_MANAGER"));
+    }
+
+    /**
      * Check if the current user has ADMIN role.
      * @return true if the current user has ADMIN role
      */
@@ -113,5 +122,23 @@ public class UserContextService {
      */
     public boolean currentUserIsTester() {
         return isTester(getCurrentUser());
+    }
+
+    /**
+     * Check if the current user has PROJECT_MANAGER role.
+     * @return true if the current user has PROJECT_MANAGER role
+     */
+    public boolean currentUserIsProjectManager() {
+        return isProjectManager(getCurrentUser());
+    }
+
+    /**
+     * Check if user can create or edit modules in assigned projects.
+     * Returns true for ADMIN and PROJECT_MANAGER.
+     * @param user the user to check
+     * @return true if user can create/edit modules
+     */
+    public boolean canCreateOrEditModule(User user) {
+        return isAdmin(user) || isProjectManager(user);
     }
 }

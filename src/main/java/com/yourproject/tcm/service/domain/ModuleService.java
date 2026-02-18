@@ -86,9 +86,11 @@ public class ModuleService {
     /**
      * Get test modules assigned to the current user.
      * Updated: If user is ADMIN, return all modules in the organization.
+     * If user is PROJECT_MANAGER, return all modules in their assigned projects.
      */
     public List<TestModule> getTestModulesAssignedToCurrentUser() {
         User currentUser = userContextService.getCurrentUser();
+        
         if (userContextService.isAdmin(currentUser)) {
             Organization org = currentUser.getOrganization();
             if (org == null) {
@@ -102,6 +104,19 @@ public class ModuleService {
             }
             return allModules;
         }
+        // For PROJECT_MANAGER, return all modules in their assigned projects
+        if (userContextService.currentUserIsProjectManager()) {
+            Set<Project> assignedProjects = currentUser.getAssignedProjects();
+            if (assignedProjects == null || assignedProjects.isEmpty()) {
+                return List.of();
+            }
+            List<TestModule> allModules = new ArrayList<>();
+            for (Project project : assignedProjects) {
+                allModules.addAll(project.getModules());
+            }
+            return allModules;
+        }
+        // For QA/BA/TESTER, return modules assigned to them
         return testModuleRepository.findTestModulesAssignedToUser(currentUser.getId());
     }
 
@@ -155,13 +170,18 @@ public class ModuleService {
 
     /**
      * Create a test module for a project.
-     * Only ADMIN users can create modules.
+     * ADMIN users can create modules in any project.
+     * PROJECT_MANAGER users can create modules in their assigned projects.
      */
     @Transactional
     public TestModule createTestModuleForProject(Long projectId, TestModule testModule) {
         User currentUser = userContextService.getCurrentUser();
         
-        securityHelper.requireAdmin(currentUser);
+        // Allow ADMIN or PROJECT_MANAGER to create modules
+        if (!userContextService.isAdmin(currentUser) && 
+            !userContextService.isProjectManager(currentUser)) {
+            throw new RuntimeException("Only ADMIN or PROJECT_MANAGER users can create modules");
+        }
         
         Optional<Project> projectOpt = projectRepository.findById(projectId);
         if (projectOpt.isPresent()) {
@@ -169,6 +189,14 @@ public class ModuleService {
             
             // Check organization boundary
             securityHelper.requireSameOrganization(currentUser, project.getOrganization());
+            
+            // For PROJECT_MANAGER, check if they're assigned to this project
+            if (userContextService.isProjectManager(currentUser)) {
+                if (currentUser.getAssignedProjects() == null || 
+                    !currentUser.getAssignedProjects().contains(project)) {
+                    throw new RuntimeException("You are not assigned to this project");
+                }
+            }
             
             testModule.setProject(project);
             TestModule savedTestModule = testModuleRepository.save(testModule);
@@ -182,7 +210,8 @@ public class ModuleService {
     /**
      * Update a test module.
      * ADMIN users can update any module in their organization.
-     * Non-ADMIN users can only update modules they are assigned to.
+     * PROJECT_MANAGER users can update any module in their assigned projects.
+     * QA/BA users can only update modules they are assigned to.
      */
     @Transactional
     public TestModule updateTestModule(Long testModuleId, TestModule testModuleDetails) {
@@ -203,11 +232,21 @@ public class ModuleService {
         
         securityHelper.requireSameOrganization(currentUser, project.getOrganization());
         
-        // ADMIN users can update any module in their organization
-        // Non-ADMIN users can only update modules they are assigned to
+        // ADMIN can edit any module
+        // PROJECT_MANAGER can edit any module in their assigned projects
+        // QA/BA can only edit assigned modules
         if (!userContextService.isAdmin(currentUser)) {
-            if (!securityHelper.canAccessModule(currentUser, testModule)) {
-                throw new RuntimeException("Access denied: You are not assigned to this test module");
+            // For PROJECT_MANAGER, check if they're assigned to this project
+            if (userContextService.isProjectManager(currentUser)) {
+                if (currentUser.getAssignedProjects() == null || 
+                    !currentUser.getAssignedProjects().contains(project)) {
+                    throw new RuntimeException("You are not assigned to this project");
+                }
+            } else {
+                // For QA/BA, check module assignment
+                if (!securityHelper.canAccessModule(currentUser, testModule)) {
+                    throw new RuntimeException("Access denied: You are not assigned to this test module");
+                }
             }
         }
         
@@ -221,13 +260,11 @@ public class ModuleService {
     /**
      * Delete a test module and all its contents (cascading delete).
      * ADMIN users can delete any module in their organization.
-     * Non-ADMIN users cannot delete modules (only update).
+     * PROJECT_MANAGER can delete modules in their assigned projects.
      */
     @Transactional
     public void deleteTestModule(Long testModuleId) {
         User currentUser = userContextService.getCurrentUser();
-        
-        securityHelper.requireAdmin(currentUser);
         
         // Fetch the module with submodules
         TestModule testModule = testModuleRepository.findByIdWithSubmodules(testModuleId)
@@ -241,9 +278,28 @@ public class ModuleService {
         
         securityHelper.requireSameOrganization(currentUser, project.getOrganization());
         
-        // 1. Clear assignments from junction table using native SQL
-        // This ensures junction table records are removed before attempting to delete the module
-        entityManager.createNativeQuery("DELETE FROM user_test_modules WHERE test_module_id = :moduleId")
+        // For PROJECT_MANAGER, check if they're assigned to this project
+        if (userContextService.currentUserIsProjectManager()) {
+            Set<Project> assignedProjects = currentUser.getAssignedProjects();
+            if (assignedProjects == null || assignedProjects.isEmpty()) {
+                throw new RuntimeException("You are not assigned to any project. Please contact an administrator.");
+            }
+            boolean isAssignedToProject = assignedProjects.stream()
+                .anyMatch(p -> p.getId().equals(project.getId()));
+            if (!isAssignedToProject) {
+                throw new RuntimeException("You can only delete modules in projects you're assigned to");
+            }
+        } else if (!userContextService.isAdmin(currentUser)) {
+            throw new RuntimeException("Only admin and project manager users can delete modules");
+        }
+        
+        // 1. Clear assignments from junction tables using native SQL
+        // Delete from module_editor_assignments
+        entityManager.createNativeQuery("DELETE FROM module_editor_assignments WHERE test_module_id = :moduleId")
+            .setParameter("moduleId", testModuleId)
+            .executeUpdate();
+        // Delete from execution_assignees
+        entityManager.createNativeQuery("DELETE FROM execution_assignees WHERE test_module_id = :moduleId")
             .setParameter("moduleId", testModuleId)
             .executeUpdate();
         entityManager.flush();

@@ -30,6 +30,7 @@ public class DataInitializationService {
     private void initializeRoles() {
         // Check and create roles if they don't exist
         createRoleIfNotExists("ADMIN");
+        createRoleIfNotExists("PROJECT_MANAGER");
         createRoleIfNotExists("QA");
         createRoleIfNotExists("BA");
         createRoleIfNotExists("TESTER");
