@@ -15,27 +15,21 @@
 
 .register-card {
   width: 100%;
-  max-width: 420px; /* Reduced from 600px to match login vibe */
-  padding: 24px !important; 
+  max-width: 420px;
+  padding: 24px !important;
   border-radius: var(--radius-md) !important;
   border: var(--border-medium);
   box-shadow: var(--shadow-md) !important;
   background-color: var(--surface) !important;
-  position: relative;
+  position: relative !important;
   max-height: calc(100vh - 32px);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  scrollbar-width: none;
+  overflow: visible !important;
+  display: block;
 }
 
 .register-card:hover {
   transform: none;
   box-shadow: var(--shadow-md) !important;
-}
-
-.register-card::-webkit-scrollbar {
-  display: none;
 }
 
 .register-card mat-card-header {
@@ -45,9 +39,18 @@
   text-align: center;
   padding: 0 !important;
   margin-bottom: 16px; 
-  border-bottom: var(--border-thin) !important;
   width: 100%;
-  padding-bottom: 12px !important; 
+  padding-bottom: 12px !important;
+  border-bottom: none !important;
+}
+
+.divider-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--ink);
+  top: 100px;
 }
 
 .register-card mat-card-title {
@@ -63,7 +66,7 @@
 .register-card mat-card-subtitle {
   font-family: 'JetBrains Mono', monospace;
   color: #666;
-  margin-top: 4px; /* Reduced from 8px */
+  margin-top: 4px;
   font-size: 14px;
   text-align: center;
 }
@@ -88,16 +91,6 @@ mat-form-field {
   line-height: 1.4;
 }
 
-/* Button Styles matching Login */
-button[mat-flat-button], button[mat-button] {
-  height: 40px;
-  font-size: 15px;
-  border-radius: 4px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
 /* Ensure content inside buttons is centered */
 ::ng-deep .mdc-button__label {
   display: flex !important;
@@ -108,10 +101,23 @@ button[mat-flat-button], button[mat-button] {
 }
 
 mat-spinner {
-  margin: 0 !important; /* Remove any default margins */
+  margin: 0 !important;
+  display: inline-block;
+  margin-right: 8px;
 }
 
+.register-card mat-card-content {
+  padding-bottom: 0 !important;
+}
+
+/* Button Styles matching Login */
 button[mat-flat-button] {
+  height: 40px;
+  font-size: 15px;
+  border-radius: 4px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
   background-color: var(--ink) !important;
   color: var(--surface) !important;
   border: var(--border-medium) !important;
@@ -167,11 +173,6 @@ button[mat-flat-button]:disabled {
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   border: 1px solid #fabebb;
-}
-
-mat-spinner {
-  display: inline-block;
-  margin-right: 8px;
 }
 
 .register-card mat-card-content {

@@ -17,6 +17,14 @@
   border: var(--border-medium);
   box-shadow: var(--shadow-md) !important;
   background-color: var(--surface) !important;
+  position: relative !important;
+  overflow: visible !important;
+  display: block;
+}
+
+.join-card:hover {
+  box-shadow: var(--shadow-md) !important;
+  transform: none;
 }
 
 .join-card mat-card-header {
@@ -26,6 +34,17 @@
   text-align: center;
   padding: 0 !important;
   margin-bottom: 24px;
+  width: 100%;
+  border-bottom: none !important;
+}
+
+.divider-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--ink);
+  top: 100px;
 }
 
 .join-card mat-card-title {

@@ -100,6 +100,13 @@ export class JoinComponent implements OnInit {
     });
   }
 
+  getRoleDisplayName(role: string): string {
+    const roleNames: { [key: string]: string } = {
+      'PROJECT_MANAGER': 'PROJECT MANAGER'
+    };
+    return roleNames[role] || role;
+  }
+
   onJoin() {
     if (this.joinForm.invalid) return;
 
