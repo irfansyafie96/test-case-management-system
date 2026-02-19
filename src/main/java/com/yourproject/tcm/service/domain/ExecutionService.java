@@ -71,12 +71,14 @@ public class ExecutionService {
      * Used for admin/PM filtering on execution page - returns all executions (not just latest per test case)
      * This allows admins to filter by assigned user and see all executions assigned to that user
      * @param userId Optional user ID to filter by - when provided, only shows executions from modules the user is currently assigned to
+     * @param projectId Optional project ID to filter by
+     * @param submoduleId Optional submodule ID to filter by
      * @return List of all executions in the organization as DTOs
      */
     @Transactional(readOnly = true)
-    public List<TestExecutionDTO> getAllExecutionsInOrganization(Long userId) {
+    public List<TestExecutionDTO> getAllExecutionsInOrganization(Long userId, Long projectId, Long submoduleId) {
         User currentUser = userContextService.getCurrentUser();
-        
+
         // Only admin/PM users can access this
         if (!securityHelper.canViewAllOrganizationExecutions(currentUser)) {
             throw new RuntimeException("Access denied: Only ADMIN and PROJECT_MANAGER can view all executions");
@@ -97,16 +99,30 @@ public class ExecutionService {
             List<Long> viewableModuleIds = testModuleRepository.findModuleIdsByProjectIds(
                 viewableProjectIds.stream().collect(Collectors.toList()));
             Set<Long> viewableModuleIdSet = new HashSet<>(viewableModuleIds);
-            
+
             allExecutions = allExecutions.stream()
                 .filter(e -> e.getModuleId() != null && viewableModuleIdSet.contains(e.getModuleId()))
+                .collect(Collectors.toList());
+        }
+
+        // Filter by project if provided
+        if (projectId != null) {
+            allExecutions = allExecutions.stream()
+                .filter(e -> e.getProjectId() != null && e.getProjectId().equals(projectId))
+                .collect(Collectors.toList());
+        }
+
+        // Filter by submodule if provided
+        if (submoduleId != null) {
+            allExecutions = allExecutions.stream()
+                .filter(e -> e.getSubmoduleId() != null && e.getSubmoduleId().equals(submoduleId))
                 .collect(Collectors.toList());
         }
 
         // If userId is provided, filter by that user's assigned executions
         if (userId != null) {
             allExecutions = allExecutions.stream()
-                .filter(execution -> execution.getAssignedToUser() != null && 
+                .filter(execution -> execution.getAssignedToUser() != null &&
                                      execution.getAssignedToUser().getId().equals(userId))
                 .collect(Collectors.toList());
         }

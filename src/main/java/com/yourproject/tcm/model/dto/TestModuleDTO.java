@@ -1,5 +1,8 @@
 package com.yourproject.tcm.model.dto;
 
+import com.yourproject.tcm.model.Submodule;
+import java.util.List;
+
 public class TestModuleDTO {
     private Long id;
     private String name;
@@ -8,6 +11,7 @@ public class TestModuleDTO {
     private String projectName;
     private Integer submodulesCount;
     private Integer testCasesCount;
+    private List<Submodule> submodules;
 
     public TestModuleDTO(Long id, String name, String description, Long projectId, String projectName, Integer submodulesCount, Integer testCasesCount) {
         this.id = id;
@@ -40,4 +44,7 @@ public class TestModuleDTO {
 
     public Integer getTestCasesCount() { return testCasesCount; }
     public void setTestCasesCount(Integer testCasesCount) { this.testCasesCount = testCasesCount; }
+
+    public List<Submodule> getSubmodules() { return submodules; }
+    public void setSubmodules(List<Submodule> submodules) { this.submodules = submodules; }
 }

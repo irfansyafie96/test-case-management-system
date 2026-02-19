@@ -207,14 +207,23 @@ export class TcmService {
   /**
    * Get test execution analytics
    * @param userId Optional user ID to filter executions (admin only)
+   * @param projectId Optional project ID to filter by
+   * @param submoduleId Optional submodule ID to filter by
    * @returns Observable<TestAnalytics> - Stream of analytics data
    */
-  getTestAnalytics(userId?: number): Observable<any> {
-    let params = '';
+  getTestAnalytics(userId?: number, projectId?: number, submoduleId?: number): Observable<any> {
+    const params = new URLSearchParams();
     if (userId !== undefined && userId !== null) {
-      params = `?userId=${userId}`;
+      params.set('userId', userId.toString());
     }
-    return this.http.get<any>(`${this.apiUrl}/testcases/analytics${params}`)
+    if (projectId !== undefined && projectId !== null) {
+      params.set('projectId', projectId.toString());
+    }
+    if (submoduleId !== undefined && submoduleId !== null) {
+      params.set('submoduleId', submoduleId.toString());
+    }
+    const queryString = params.toString();
+    return this.http.get<any>(`${this.apiUrl}/testcases/analytics${queryString ? '?' + queryString : ''}`)
       .pipe(
         catchError(this.handleError<any>('getTestAnalytics', {
           totalTestCases: 0,
@@ -522,16 +531,29 @@ export class TcmService {
   }
 
   /**
-   * Get all executions in the organization (ADMIN only)
-   * Used for filtering executions by user - returns all executions (not just latest per test case)
+   * Get all executions in the organization (ADMIN/PM only)
+   * Used for filtering executions by user, project, and submodule - returns all executions (not just latest per test case)
    * This allows admins to see all executions assigned to specific users
    * @param userId Optional user ID to filter by - when provided, only shows executions from modules the user is currently assigned to
+   * @param projectId Optional project ID to filter by
+   * @param submoduleId Optional submodule ID to filter by
    * @returns Observable<TestExecution[]> - Stream of all executions in organization
    */
-  getAllExecutionsInOrganization(userId?: number): Observable<TestExecution[]> {
-    let url = `${this.apiUrl}/admin/executions`;
+  getAllExecutionsInOrganization(userId?: number, projectId?: number, submoduleId?: number): Observable<TestExecution[]> {
+    const params = new URLSearchParams();
     if (userId !== undefined && userId !== null) {
-      url += `?userId=${userId}`;
+      params.set('userId', userId.toString());
+    }
+    if (projectId !== undefined && projectId !== null) {
+      params.set('projectId', projectId.toString());
+    }
+    if (submoduleId !== undefined && submoduleId !== null) {
+      params.set('submoduleId', submoduleId.toString());
+    }
+    const queryString = params.toString();
+    let url = `${this.apiUrl}/admin/executions`;
+    if (queryString) {
+      url += `?${queryString}`;
     }
     return this.http.get<TestExecution[]>(url)
       .pipe(

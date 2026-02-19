@@ -83,10 +83,12 @@ export class TestCasesComponent implements OnInit {
   });
 
   vm$: Observable<{ loading: boolean; error: boolean; analytics: TestAnalytics }>;
-  
-  // User filter properties for admin
+
+  // Filter properties for admin
   users: User[] = [];
+  projects: any[] = [];
   selectedUserId: number | null = null;
+  selectedProjectId: number | null = null;
   isAdmin: boolean = false;
 
   constructor(
@@ -109,12 +111,13 @@ export class TestCasesComponent implements OnInit {
   ngOnInit() {
     // Check if current user can view all executions (admin or project manager)
     this.isAdmin = this.authService.canViewAllExecutions();
-    
-    // Load users if admin or project manager
+
+    // Load users and projects if admin or project manager
     if (this.isAdmin) {
       this.loadUsers();
+      this.loadProjects();
     }
-    
+
     // Load analytics
     this.loadAnalytics();
   }
@@ -130,9 +133,20 @@ export class TestCasesComponent implements OnInit {
     });
   }
 
-  loadAnalytics(userId?: number) {
+  loadProjects() {
+    this.tcmService.getProjects().subscribe({
+      next: (projects) => {
+        this.projects = projects;
+      },
+      error: (error) => {
+        // Error loading projects
+      }
+    });
+  }
+
+  loadAnalytics(userId?: number, projectId?: number) {
     this.loadingSubject.next(true);
-    this.tcmService.getTestAnalytics(userId).pipe(
+    this.tcmService.getTestAnalytics(userId, projectId, undefined).pipe(
       catchError(error => {
         this.errorSubject.next(true);
         return of({
@@ -155,7 +169,12 @@ export class TestCasesComponent implements OnInit {
 
   onUserFilterChange(userId: number | null) {
     this.selectedUserId = userId;
-    this.loadAnalytics(userId || undefined);
+    this.loadAnalytics(userId || undefined, this.selectedProjectId || undefined);
+  }
+
+  onProjectFilterChange() {
+    // Reload analytics with project filter
+    this.loadAnalytics(this.selectedUserId || undefined, this.selectedProjectId || undefined);
   }
 
   getPercentage(value: number, total: number): number {

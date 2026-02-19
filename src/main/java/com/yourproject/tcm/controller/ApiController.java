@@ -385,9 +385,12 @@ public class ApiController {
     }
 
     @GetMapping("/testcases/analytics")
-    public ResponseEntity<?> getTestAnalytics(@RequestParam(required = false) Long userId) {
+    public ResponseEntity<?> getTestAnalytics(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(required = false) Long submoduleId) {
         try {
-            TestAnalyticsDTO analytics = analyticsService.getTestAnalytics(userId);
+            TestAnalyticsDTO analytics = analyticsService.getTestAnalytics(userId, projectId, submoduleId);
             return new ResponseEntity<>(analytics, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving analytics: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -810,9 +813,14 @@ public class ApiController {
     @GetMapping("/projects/{projectId}/modules")
     public ResponseEntity<?> getModulesByProject(@PathVariable Long projectId) {
         try {
-            List<TestModule> modules = moduleService.getModulesByProjectId(projectId);
+            // Fetch modules with submodules for filter dropdowns
+            List<TestModule> modules = moduleService.getModulesByProjectIdWithSubmodules(projectId);
             List<TestModuleDTO> moduleDTOs = modules.stream()
-                .map(this::convertToDTO)
+                .map(module -> {
+                    TestModuleDTO dto = convertToDTO(module);
+                    dto.setSubmodules(module.getSubmodules());
+                    return dto;
+                })
                 .collect(Collectors.toList());
             return new ResponseEntity<>(moduleDTOs, HttpStatus.OK);
         } catch (Exception e) {
@@ -1100,9 +1108,12 @@ public class ApiController {
 
     @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER')")
     @GetMapping("/admin/executions")
-    public ResponseEntity<?> getAllExecutionsInOrganization(@RequestParam(required = false) Long userId) {
+    public ResponseEntity<?> getAllExecutionsInOrganization(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(required = false) Long submoduleId) {
         try {
-            List<TestExecutionDTO> executions = executionService.getAllExecutionsInOrganization(userId);
+            List<TestExecutionDTO> executions = executionService.getAllExecutionsInOrganization(userId, projectId, submoduleId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving organization executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

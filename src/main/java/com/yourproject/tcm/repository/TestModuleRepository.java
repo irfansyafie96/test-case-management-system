@@ -60,4 +60,8 @@ public interface TestModuleRepository extends JpaRepository<TestModule, Long> {
     // Find all modules in a specific project
     @Query("SELECT tm FROM TestModule tm WHERE tm.project.id = :projectId")
     List<TestModule> findByProjectId(@Param("projectId") Long projectId);
+
+    // Find all modules in a specific project with submodules fetched
+    @Query("SELECT tm FROM TestModule tm LEFT JOIN FETCH tm.submodules WHERE tm.project.id = :projectId")
+    List<TestModule> findByProjectIdWithSubmodules(@Param("projectId") Long projectId);
 }

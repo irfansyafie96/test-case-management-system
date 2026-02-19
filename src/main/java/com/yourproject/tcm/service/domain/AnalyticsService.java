@@ -49,10 +49,12 @@ public class AnalyticsService {
      * For ADMIN users: returns analytics for all test cases in their organization
      * For QA/BA/TESTER users: returns analytics only for test cases in modules they're assigned to
      * @param userId Optional user ID to filter analytics for a specific user (admin only)
+     * @param projectId Optional project ID to filter by
+     * @param submoduleId Optional submodule ID to filter by
      * @return TestAnalyticsDTO containing overall KPIs and breakdown by project/module
      */
     @Transactional(readOnly = true)
-    public TestAnalyticsDTO getTestAnalytics(Long userId) {
+    public TestAnalyticsDTO getTestAnalytics(Long userId, Long projectId, Long submoduleId) {
         // Get the current user
         User currentUser = userContextService.getCurrentUser();
         Organization org = currentUser.getOrganization();
@@ -100,6 +102,31 @@ public class AnalyticsService {
             // Filter executions to only those in PM's assigned projects
             allExecutions = allExecutions.stream()
                 .filter(e -> e.getModuleId() != null && viewableModuleIdSet.contains(e.getModuleId()))
+                .collect(Collectors.toList());
+        }
+
+        // Filter by project if provided
+        if (projectId != null) {
+            allTestCases = allTestCases.stream()
+                .filter(tc -> tc.getSubmodule() != null && 
+                              tc.getSubmodule().getTestModule() != null &&
+                              tc.getSubmodule().getTestModule().getProject() != null &&
+                              tc.getSubmodule().getTestModule().getProject().getId().equals(projectId))
+                .collect(Collectors.toList());
+            
+            allExecutions = allExecutions.stream()
+                .filter(e -> e.getProjectId() != null && e.getProjectId().equals(projectId))
+                .collect(Collectors.toList());
+        }
+
+        // Filter by submodule if provided
+        if (submoduleId != null) {
+            allTestCases = allTestCases.stream()
+                .filter(tc -> tc.getSubmodule() != null && tc.getSubmodule().getId().equals(submoduleId))
+                .collect(Collectors.toList());
+            
+            allExecutions = allExecutions.stream()
+                .filter(e -> e.getSubmoduleId() != null && e.getSubmoduleId().equals(submoduleId))
                 .collect(Collectors.toList());
         }
 
@@ -235,26 +262,26 @@ public class AnalyticsService {
             Project project = module.getProject();
             if (project == null) continue;
 
-            Long projectId = project.getId();
+            Long projId = project.getId();
             String projectName = project.getName();
             Long moduleId = module.getId();
             String moduleName = module.getName();
 
             // Initialize project stats if needed
-            projectStats.putIfAbsent(projectId, new TestAnalyticsDTO.ProjectAnalytics(
-                projectId, projectName, 0, 0, 0, 0, 0
+            projectStats.putIfAbsent(projId, new TestAnalyticsDTO.ProjectAnalytics(
+                projId, projectName, 0, 0, 0, 0, 0
             ));
 
             // Initialize module stats if needed
             moduleStats.putIfAbsent(moduleId, new TestAnalyticsDTO.ModuleAnalytics(
-                moduleId, moduleName, projectId, projectName, 0, 0, 0, 0, 0
+                moduleId, moduleName, projId, projectName, 0, 0, 0, 0, 0
             ));
 
             // Check if this test case has been executed
             boolean isExecuted = executedTestCaseIds.contains(testCase.getId());
 
             // Update project stats
-            TestAnalyticsDTO.ProjectAnalytics pStats = projectStats.get(projectId);
+            TestAnalyticsDTO.ProjectAnalytics pStats = projectStats.get(projId);
             pStats.setTotalTestCases(pStats.getTotalTestCases() + 1);
 
             if (isExecuted) {

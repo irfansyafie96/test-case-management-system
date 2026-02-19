@@ -36,13 +36,26 @@
           </mat-form-field>
         </div>
 
+        <!-- Filter by Project -->
+        <div class="filter-item">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by Project</mat-label>
+            <mat-select [(value)]="selectedProject" (selectionChange)="onProjectChange()" panelClass="filter-select-panel">
+              <mat-option value="all">All Projects</mat-option>
+              <mat-option *ngFor="let project of vm.filterProjects" [value]="project.id.toString()">
+                {{ project.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
         <!-- Filter by Module -->
         <div class="filter-item">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Filter by Module</mat-label>
             <mat-select [(value)]="selectedModule" (selectionChange)="onFilterChange()" panelClass="filter-select-panel">
               <mat-option value="all">All Modules</mat-option>
-              <mat-option *ngFor="let module of vm.filterModules" [value]="module.id.toString()">
+              <mat-option *ngFor="let module of (selectedProject === 'all' ? vm.filterModules : filteredModulesList)" [value]="module.id.toString()">
                 {{ module.name }}
               </mat-option>
             </mat-select>

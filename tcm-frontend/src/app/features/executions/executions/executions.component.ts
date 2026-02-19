@@ -14,7 +14,7 @@ import { BehaviorSubject, combineLatest } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { TestExecution, User, TestModule } from '../../../core/models/project.model';
+import { TestExecution, User, TestModule, Project } from '../../../core/models/project.model';
 
 interface ExecutionView {
   loading: boolean;
@@ -24,6 +24,7 @@ interface ExecutionView {
   isAdmin: boolean;
   filterUsers: User[];
   filterModules: TestModule[];
+  filterProjects: Project[];
 }
 
 interface ProjectGroup {
@@ -70,11 +71,14 @@ export class ExecutionsComponent implements OnInit {
   private isAdminSubject = new BehaviorSubject<boolean>(false);
   private filterUsersSubject = new BehaviorSubject<User[]>([]);
   private filterModulesSubject = new BehaviorSubject<TestModule[]>([]);
+  private filterProjectsSubject = new BehaviorSubject<Project[]>([]);
 
   // Filter state
   selectedUser: string = 'all';
   selectedModule: string = 'all';
   selectedStatus: string = 'all';
+  selectedProject: string = 'all';
+  filteredModulesList: TestModule[] = [];
 
   vm$ = this.createViewModel();
 
@@ -107,8 +111,9 @@ export class ExecutionsComponent implements OnInit {
       isAdmin: this.isAdminSubject.asObservable(),
       filterUsers: this.filterUsersSubject.asObservable(),
       filterModules: this.filterModulesSubject.asObservable(),
+      filterProjects: this.filterProjectsSubject.asObservable(),
     }).pipe(
-      map(({ loading, error, executions, isAdmin, filterUsers, filterModules }) => {
+      map(({ loading, error, executions, isAdmin, filterUsers, filterModules, filterProjects }) => {
         const filteredExecutions = this.applyFilters(executions);
         return {
           loading,
@@ -118,6 +123,7 @@ export class ExecutionsComponent implements OnInit {
           isAdmin,
           filterUsers,
           filterModules,
+          filterProjects,
         };
       })
     );
@@ -130,8 +136,11 @@ export class ExecutionsComponent implements OnInit {
     const canViewAll = this.authService.canViewAllExecutions();
 
     if (canViewAll) {
-      // Admin/PM: Load executions in organization/assigned projects, optionally filtered by user
-      this.tcmService.getAllExecutionsInOrganization(userId).subscribe({
+      // Admin/PM: Load executions in organization/assigned projects with filters
+      const filterUserId = this.selectedUser !== 'all' ? parseInt(this.selectedUser, 10) : undefined;
+      const filterProjectId = this.selectedProject !== 'all' ? parseInt(this.selectedProject, 10) : undefined;
+      
+      this.tcmService.getAllExecutionsInOrganization(filterUserId, filterProjectId, undefined).subscribe({
         next: (executions) => {
           this.executionsSubject.next(executions);
           this.loadingSubject.next(false);
@@ -161,7 +170,7 @@ export class ExecutionsComponent implements OnInit {
     this.isAdminSubject.next(canViewAll);
 
     if (canViewAll) {
-      // Load users and modules for filtering
+      // Load users for filtering
       this.tcmService.getUsersInOrganization().subscribe({
         next: (users) => {
           this.filterUsersSubject.next(users);
@@ -171,6 +180,17 @@ export class ExecutionsComponent implements OnInit {
         }
       });
 
+      // Load projects for filtering
+      this.tcmService.getProjects().subscribe({
+        next: (projects) => {
+          this.filterProjectsSubject.next(projects);
+        },
+        error: (error) => {
+          // Error loading projects
+        }
+      });
+
+      // Load modules for filtering
       this.tcmService.getAllModulesInOrganization().subscribe({
         next: (modules) => {
           this.filterModulesSubject.next(modules);
@@ -198,15 +218,32 @@ export class ExecutionsComponent implements OnInit {
     return filtered;
   }
 
-  onFilterChange(): void {
-    // When user filter changes, reload data from backend to get current module assignments
-    if (this.selectedUser !== 'all') {
-      const userId = parseInt(this.selectedUser, 10);
-      this.loadMyAssignedExecutions(userId);
+  onProjectChange(): void {
+    // Reset module filter when project changes
+    this.selectedModule = 'all';
+    
+    // Filter modules based on selected project
+    if (this.selectedProject === 'all') {
+      // Show all modules when "All Projects" is selected
+      this.filteredModulesList = [];
     } else {
-      // When user filter is 'all', load all executions
-      this.loadMyAssignedExecutions();
+      // Filter modules to only show modules from selected project
+      const projectId = this.selectedProject;
+      // Get all modules from the view model and filter by projectId
+      const allModules = this.filterModulesSubject.getValue();
+      this.filteredModulesList = allModules.filter(
+        (m: TestModule) => m.projectId?.toString() === projectId
+      );
+      console.log('Filtered modules for project', projectId, ':', this.filteredModulesList);
     }
+    
+    // Reload executions with project filter
+    this.loadMyAssignedExecutions();
+  }
+
+  onFilterChange(): void {
+    // Reload executions with filters
+    this.loadMyAssignedExecutions();
   }
 
   groupExecutionsByHierarchy(executions: TestExecution[]): ProjectGroup[] {

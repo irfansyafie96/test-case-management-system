@@ -145,6 +145,14 @@ public class ModuleService {
     }
 
     /**
+     * Get all modules in a specific project with submodules fetched.
+     * Used for filter dropdowns that need submodule data.
+     */
+    public List<TestModule> getModulesByProjectIdWithSubmodules(Long projectId) {
+        return testModuleRepository.findByProjectIdWithSubmodules(projectId);
+    }
+
+    /**
      * Get a test module by ID with all its submodules and test cases.
      * All users in the same organization can view modules (read-only access).
      * ADMIN users can access any module in their organization (full access).
