@@ -456,8 +456,9 @@
 .redmine-issue-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 8px;
+  flex: 1;
 }
 
 .redmine-issue-header mat-icon {
@@ -465,6 +466,7 @@
   font-size: 20px;
   width: 20px;
   height: 20px;
+  flex-shrink: 0;
 }
 
 .issue-id {
@@ -472,14 +474,15 @@
   font-size: 14px;
   font-weight: 600;
   color: #e91e63;
+  flex-shrink: 0;
 }
 
-.redmine-issue-subject {
+.issue-subject {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 16px;
   font-weight: 600;
   color: var(--ink);
-  margin-bottom: 8px;
+  flex: 1;
 }
 
 .redmine-issue-link {
@@ -494,15 +497,6 @@
 
 .redmine-issue-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: var(--border-thin);
-}
-
-.redmine-issue-actions button {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  align-items: center;
+  margin-left: auto;
 }
