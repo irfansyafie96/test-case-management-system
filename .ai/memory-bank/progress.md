@@ -268,6 +268,12 @@
 
 #### In Progress:
 
+- [x] **Team Management List Fix** (2026-02-19)
+   - **Issue**: When admin creates a new project, ALL admins and PROJECT_MANAGERs in organization appeared in team list (should only show explicitly assigned users)
+   - **Fix**: Removed role-based filter (`OR r.name = 'ADMIN' OR r.name = 'PROJECT_MANAGER'`) from `findUsersAssignedToProject()` query
+   - **Files**: `UserRepository.java`
+   - **Status**: COMPLETED ✅
+
 - [x] **Module Deletion Cascade Fix** (2026-02-19)
    - **Issue**: Module deletion only removed submodules from collection without properly deleting contents, causing orphaned test cases and executions (~800 in DB vs ~100-200 visible)
    - **Fix**: Injected SubmoduleService into ModuleService and replaced collection removal with `submoduleService.deleteSubmodule()` call

@@ -1,18 +1,18 @@
 # Project Context
 
-## Current Work: Module Deletion Cascade Fix - COMPLETE
+## Current Work: Team Management List Fix - COMPLETE
 
 ### Summary
 
-Fixed the module deletion cascade issue. The previous code only removed submodules from the collection without properly deleting their contents, causing orphaned test cases and executions in the database (~800 in DB vs ~100-200 visible).
+Fixed the team management list bug. Previously, when admin creates a new project, ALL admins and PROJECT_MANAGERs in the organization were shown in the team list. Now it correctly shows only users explicitly assigned to the project (directly or via modules).
 
 ---
 
 ### Latest Fix (2026-02-19)
 
-**Module Deletion Cascade Fix:**
-- `ModuleService.java` - Injected SubmoduleService and replaced manual collection removal with `submoduleService.deleteSubmodule()` call
-- This now properly cascades: TestStepResults → TestExecutions → TestSteps → TestCases → Submodules → TestModule
+**Team Management List Fix:**
+- `UserRepository.java` - Removed role-based filter from `findUsersAssignedToProject()` query
+- Query now only returns: users directly assigned to project OR users assigned to modules in the project
 
 ---
 

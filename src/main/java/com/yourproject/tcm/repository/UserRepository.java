@@ -59,7 +59,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "LEFT JOIN u.assignedModulesForEditing tmEdit " +
            "LEFT JOIN u.assignedModulesForExecution tmExec " +
            "LEFT JOIN u.roles r " +
-           "WHERE (p.id = :projectId OR tmEdit.project.id = :projectId OR tmExec.project.id = :projectId OR r.name = 'ADMIN' OR r.name = 'PROJECT_MANAGER') " +
+           "WHERE (p.id = :projectId OR tmEdit.project.id = :projectId OR tmExec.project.id = :projectId) " +
            "AND o.id = (SELECT p2.organization.id FROM Project p2 WHERE p2.id = :projectId) " +
            "AND u.enabled = true")
     List<User> findUsersAssignedToProject(@Param("projectId") Long projectId);
