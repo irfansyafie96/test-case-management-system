@@ -449,7 +449,7 @@ public class ApiController {
 
     // ==================== TEST EXECUTION ENDPOINTS ====================
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @PostMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> createTestExecutionForTestCase(@PathVariable Long testCaseId) {
         try {
@@ -462,7 +462,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/executions/{executionId}")
     public ResponseEntity<?> getTestExecutionById(@PathVariable Long executionId) {
         try {
@@ -478,7 +478,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/testcases/{testCaseId}/executions")
     public ResponseEntity<?> getTestExecutionsByTestCaseId(@PathVariable Long testCaseId) {
         try {
@@ -489,7 +489,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @PutMapping("/executions/{executionId}/steps/{stepId}")
     public ResponseEntity<?> updateStepResult(
             @PathVariable Long executionId,
@@ -519,7 +519,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @PutMapping("/executions/{executionId}/complete")
     public ResponseEntity<?> completeTestExecution(
             @PathVariable Long executionId,
@@ -558,7 +558,7 @@ public class ApiController {
      * Save execution work-in-progress (notes) without completing the execution
      * This allows users to save their progress while navigating between test cases
      */
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @PutMapping("/executions/{executionId}/save")
     public ResponseEntity<?> saveExecutionWork(
             @PathVariable Long executionId,
@@ -587,7 +587,7 @@ public class ApiController {
     /**
      * GET all Redmine issues for an execution.
      */
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @GetMapping("/executions/{executionId}/redmine")
     public ResponseEntity<?> getRedmineIssues(@PathVariable Long executionId) {
         try {
@@ -614,7 +614,7 @@ public class ApiController {
     /**
      * POST - Add a new Redmine issue to an execution.
      */
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @PostMapping("/executions/{executionId}/redmine")
     public ResponseEntity<?> addRedmineIssue(
             @PathVariable Long executionId,
@@ -641,7 +641,7 @@ public class ApiController {
     /**
      * PUT - Update an existing Redmine issue.
      */
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @PutMapping("/executions/{executionId}/redmine/{issueId}")
     public ResponseEntity<?> updateRedmineIssue(
             @PathVariable Long executionId,
@@ -669,7 +669,7 @@ public class ApiController {
     /**
      * DELETE - Remove a Redmine issue from an execution.
      */
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('PROJECT_MANAGER') or hasRole('QA') or hasRole('BA') or hasRole('TESTER')")
     @DeleteMapping("/executions/{executionId}/redmine/{issueId}")
     public ResponseEntity<?> deleteRedmineIssue(
             @PathVariable Long executionId,
