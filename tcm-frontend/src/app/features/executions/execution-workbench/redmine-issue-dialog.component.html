@@ -20,9 +20,14 @@
           </a>
         </div>
         <div matListItemLine>{{ issue.bugReportSubject }}</div>
-        <button mat-icon-button matListItemMeta (click)="editIssue(issue)">
-          <mat-icon>edit</mat-icon>
-        </button>
+        <div matListItemMeta class="issue-actions">
+          <button mat-icon-button matTooltip="Delete this issue link" (click)="deleteIssue(issue)" color="warn">
+            <mat-icon>delete</mat-icon>
+          </button>
+          <button mat-icon-button matTooltip="Edit this issue" (click)="editIssue(issue)">
+            <mat-icon>edit</mat-icon>
+          </button>
+        </div>
       </mat-list-item>
     </mat-list>
     <div class="members-divider"></div>

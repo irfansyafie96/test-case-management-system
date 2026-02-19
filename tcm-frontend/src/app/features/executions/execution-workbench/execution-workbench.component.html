@@ -222,7 +222,7 @@
               </button>
             </div>
           </mat-card-header>
-          
+
           <div class="redmine-content">
             <div class="redmine-issues-list">
               <div class="redmine-issue-item" *ngFor="let issue of redmineIssues">
@@ -239,6 +239,11 @@
                 </div>
                 <div class="redmine-issue-date" *ngIf="issue.createdAt">
                   Created: {{ issue.createdAt | date:'medium' }}
+                </div>
+                <div class="redmine-issue-actions">
+                  <button mat-button color="warn" (click)="deleteRedmineIssue(issue)" matTooltip="Remove this issue link">
+                    <mat-icon>delete</mat-icon> DELETE
+                  </button>
                 </div>
               </div>
             </div>

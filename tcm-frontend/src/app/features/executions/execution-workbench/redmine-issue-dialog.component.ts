@@ -1,14 +1,16 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { RedmineIssue } from '../../../core/models/project.model';
+import { TcmService } from '../../../core/services/tcm.service';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 export interface RedmineIssueData {
   testCaseId: string;
@@ -28,7 +30,7 @@ export interface RedmineIssueResult {
 @Component({
   selector: 'app-redmine-issue-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatDialogModule, MatIconModule, MatListModule],
+  imports: [CommonModule, ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatDialogModule, MatIconModule, MatListModule, MatSnackBarModule],
   templateUrl: './redmine-issue-dialog.component.html',
   styleUrls: ['./redmine-issue-dialog.component.css']
 })
@@ -37,11 +39,14 @@ export class RedmineIssueDialogComponent implements OnInit {
   redmineUrl: string = 'http://tmsredmine.tmsasia.com/projects/hrdcncspilot/issues/new';
   existingIssues: RedmineIssue[] = [];
   editingIssue: RedmineIssue | null = null;
-  
+
   constructor(
     public dialogRef: MatDialogRef<RedmineIssueDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: RedmineIssueData,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private tcmService: TcmService
   ) {
     this.existingIssues = data.existingIssues || [];
     this.redmineForm = this.fb.group({
@@ -140,7 +145,7 @@ export class RedmineIssueDialogComponent implements OnInit {
   
   saveEditedIssue(): void {
     if (this.redmineForm.invalid || !this.editingIssue) return;
-    
+
     const result: RedmineIssueResult & { issueId: number | string } = {
       subject: this.redmineForm.value.subject,
       description: this.redmineForm.value.description,
@@ -148,10 +153,49 @@ export class RedmineIssueDialogComponent implements OnInit {
       redmineIssueId: this.extractIssueId(this.redmineForm.value.redmineLink),
       issueId: this.editingIssue.id
     };
-    
+
     this.dialogRef.close(result);
   }
-  
+
+  /**
+   * Delete a Redmine issue from the execution
+   */
+  deleteIssue(issue: RedmineIssue): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Redmine Issue Link',
+        message: `Are you sure you want to remove the link to Redmine issue "${issue.bugReportSubject}"? This will only remove the link from TCM. The Redmine issue itself will not be deleted.`,
+        icon: 'delete',
+        confirmButtonText: 'DELETE',
+        confirmButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.tcmService.deleteRedmineIssue(String(this.data.execution.id), String(issue.id)).subscribe({
+          next: () => {
+            // Remove from local array
+            this.existingIssues = this.existingIssues.filter(i => i.id !== issue.id);
+            this.snackBar.open(
+              'Redmine issue link removed successfully!',
+              'DISMISS',
+              { panelClass: ['success-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          },
+          error: (error) => {
+            this.snackBar.open(
+              'Failed to delete Redmine issue link. Please try again.',
+              'RETRY',
+              { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          }
+        });
+      }
+    });
+  }
+
   private extractIssueId(url: string): string | undefined {
     if (!url) return undefined;
     const match = url.match(/issues\/(\d+)/);

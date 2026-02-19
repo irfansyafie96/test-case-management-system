@@ -20,6 +20,7 @@ import { TcmService } from '../../../core/services/tcm.service';
 import { TestExecution, TestStepResult, RedmineIssue } from '../../../core/models/project.model';
 import { CompletionSummaryDialogComponent } from './completion-summary-dialog.component';
 import { RedmineIssueDialogComponent } from './redmine-issue-dialog.component';
+import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
 interface ExecutionWorkbenchView {
   loading: boolean;
@@ -45,7 +46,8 @@ interface ExecutionWorkbenchView {
     MatTooltipModule,
     MatSnackBarModule,
     MatDialogModule,
-    RouterModule
+    RouterModule,
+    ConfirmationDialogComponent
   ],
   templateUrl: './execution-workbench.component.html',
   styleUrls: ['./execution-workbench.component.css']
@@ -523,6 +525,44 @@ export class ExecutionWorkbenchComponent implements OnInit {
       },
       error: () => {
         this.redmineIssues = [];
+      }
+    });
+  }
+
+  /**
+   * Delete a Redmine issue from the execution
+   */
+  deleteRedmineIssue(issue: RedmineIssue): void {
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Redmine Issue Link',
+        message: `Are you sure you want to remove the link to Redmine issue "${issue.bugReportSubject}"? This will only remove the link from TCM. The Redmine issue itself will not be deleted.`,
+        icon: 'delete',
+        confirmButtonText: 'DELETE',
+        confirmButtonColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed && this.executionId) {
+        this.tcmService.deleteRedmineIssue(this.executionId, String(issue.id)).subscribe({
+          next: () => {
+            this.loadRedmineIssues();
+            this.snackBar.open(
+              'Redmine issue link removed successfully!',
+              'DISMISS',
+              { panelClass: ['success-snackbar'], duration: 3000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          },
+          error: (error) => {
+            this.snackBar.open(
+              'Failed to delete Redmine issue link. Please try again.',
+              'RETRY',
+              { panelClass: ['error-snackbar'], duration: 5000, horizontalPosition: 'right', verticalPosition: 'top' }
+            );
+          }
+        });
       }
     });
   }

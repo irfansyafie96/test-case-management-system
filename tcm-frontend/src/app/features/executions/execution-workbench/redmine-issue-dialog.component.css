@@ -154,3 +154,14 @@ textarea.mat-mdc-input-element::-webkit-scrollbar-thumb {
   justify-content: center;
   margin-top: -4px;
 }
+
+/* Issue actions - container for delete and edit buttons */
+.issue-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.issue-actions button {
+  align-self: center;
+}

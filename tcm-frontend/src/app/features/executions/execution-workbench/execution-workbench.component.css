@@ -491,3 +491,18 @@
   font-size: 12px;
   color: #999;
 }
+
+.redmine-issue-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: var(--border-thin);
+}
+
+.redmine-issue-actions button {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
