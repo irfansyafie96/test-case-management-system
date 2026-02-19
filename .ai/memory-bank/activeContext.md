@@ -1,14 +1,45 @@
 # Project Context
 
-## Current Work: UI Consistency Fixes - COMPLETE
+## Current Work: Project & Module Filtering - COMPLETE
 
 ### Summary
 
-Fixed delete module button styling inconsistency between project detail and module detail pages.
+Implemented backend and frontend filtering for executions and test cases pages. Admin/PM users can now filter by project and module.
 
 ---
 
-### Latest Fix (2026-02-19)
+### Latest Changes (2026-02-19)
+
+**Project & Module Filtering:**
+- Backend: Added `projectId` and `submoduleId` parameters to:
+  - `ExecutionService.getAllExecutionsInOrganization()`
+  - `AnalyticsService.getTestAnalytics()`
+  - `ApiController` endpoints: `/admin/executions`, `/testcases/analytics`
+- Frontend: Added project filter dropdown with cascading module filter
+  - `executions.component`: Filter by User → Project → Module → Status
+  - `test-cases.component`: Filter by User → Project
+  - Module dropdown dynamically filters based on selected project
+- Service: Updated `tcm.service.ts` methods to accept filter parameters
+
+**Redmine Delete Button:**
+- Added delete button for Redmine issue links in execution workbench
+- Delete button available in both Redmine card and management dialog
+- Confirmation dialog warns that only TCM link is deleted (not Redmine issue)
+- Backend endpoint already existed with PROJECT_MANAGER access
+
+**PROJECT_MANAGER Execution Access:**
+- Fixed 400 error when PM tried to access execution workbench
+- Added PROJECT_MANAGER to @PreAuthorize on 10 execution endpoints
+- Service layer already had proper security logic for PM access
+
+**Role Display Pipe:**
+- Created `RoleDisplayPipe` for centralized role name formatting (DRY/SOLID)
+- Transforms PROJECT_MANAGER → "PROJECT MANAGER" in sidebar
+- Replaced duplicate `getRoleDisplayName()` methods with reusable pipe
+
+---
+
+### Previously Committed
 
 **Delete Module Button UI Fix:**
 - `project-detail.component.html` - Changed icon from `close` to `delete`, added `color="warn"` attribute

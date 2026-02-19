@@ -13,24 +13,50 @@
       <div>
         <h1 class="page-title"><mat-icon>analytics</mat-icon> Test Analytics Dashboard</h1>
         <p class="page-subtitle">Overview of test execution results across all projects.</p>
-        <!-- Admin filters -->
-        <div *ngIf="isAdmin" class="admin-filters">
+      </div>
+    </div>
+
+    <!-- Admin Filters -->
+    <div *ngIf="isAdmin" class="filters-container">
+      <div class="filters-header">
+        <mat-icon>filter_list</mat-icon>
+        <h3>Filter Analytics</h3>
+      </div>
+      <div class="filters-row">
+        <!-- Filter by User -->
+        <div class="filter-item">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Filter by User</mat-label>
             <mat-select [(value)]="selectedUserId" (selectionChange)="onUserFilterChange($event.value)" panelClass="filter-select-panel">
-              <mat-option [value]="null">All Users</mat-option>
-              <mat-option *ngFor="let user of users" [value]="user.id">
+              <mat-option value="all">All Users</mat-option>
+              <mat-option *ngFor="let user of users" [value]="user.id.toString()">
                 {{ user.username }} <span *ngFor="let role of user.roles" class="role-badge">{{ role }}</span>
               </mat-option>
             </mat-select>
           </mat-form-field>
-          
+        </div>
+
+        <!-- Filter by Project -->
+        <div class="filter-item">
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>Filter by Project</mat-label>
             <mat-select [(value)]="selectedProjectId" (selectionChange)="onProjectFilterChange()" panelClass="filter-select-panel">
-              <mat-option [value]="null">All Projects</mat-option>
-              <mat-option *ngFor="let project of projects" [value]="project.id">
+              <mat-option value="all">All Projects</mat-option>
+              <mat-option *ngFor="let project of projects" [value]="project.id.toString()">
                 {{ project.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Filter by Module -->
+        <div class="filter-item">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by Module</mat-label>
+            <mat-select [(value)]="selectedModuleId" (selectionChange)="onModuleFilterChange()" panelClass="filter-select-panel">
+              <mat-option value="all">All Modules</mat-option>
+              <mat-option *ngFor="let module of (selectedProjectId === 'all' ? allModules : filteredModulesList)" [value]="module.id.toString()">
+                {{ module.name }}
               </mat-option>
             </mat-select>
           </mat-form-field>

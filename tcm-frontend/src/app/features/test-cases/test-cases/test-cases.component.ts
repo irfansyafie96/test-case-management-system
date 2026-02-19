@@ -87,8 +87,11 @@ export class TestCasesComponent implements OnInit {
   // Filter properties for admin
   users: User[] = [];
   projects: any[] = [];
-  selectedUserId: number | null = null;
-  selectedProjectId: number | null = null;
+  allModules: any[] = [];
+  selectedUserId: string = 'all';
+  selectedProjectId: string = 'all';
+  selectedModuleId: string = 'all';
+  filteredModulesList: any[] = [];
   isAdmin: boolean = false;
 
   constructor(
@@ -112,10 +115,11 @@ export class TestCasesComponent implements OnInit {
     // Check if current user can view all executions (admin or project manager)
     this.isAdmin = this.authService.canViewAllExecutions();
 
-    // Load users and projects if admin or project manager
+    // Load users, projects and modules if admin or project manager
     if (this.isAdmin) {
       this.loadUsers();
       this.loadProjects();
+      this.loadAllModules();
     }
 
     // Load analytics
@@ -144,9 +148,21 @@ export class TestCasesComponent implements OnInit {
     });
   }
 
-  loadAnalytics(userId?: number, projectId?: number) {
+  loadAllModules() {
+    this.tcmService.getAllModulesInOrganization().subscribe({
+      next: (modules) => {
+        this.allModules = modules;
+      },
+      error: (error) => {
+        // Error loading modules
+      }
+    });
+  }
+
+  loadAnalytics(userId?: number, projectId?: number, moduleId?: number) {
     this.loadingSubject.next(true);
-    this.tcmService.getTestAnalytics(userId, projectId, undefined).pipe(
+    // Note: Backend expects submoduleId but we're using moduleId for module-level filtering
+    this.tcmService.getTestAnalytics(userId, projectId, moduleId).pipe(
       catchError(error => {
         this.errorSubject.next(true);
         return of({
@@ -167,14 +183,43 @@ export class TestCasesComponent implements OnInit {
     });
   }
 
-  onUserFilterChange(userId: number | null) {
+  onUserFilterChange(userId: string) {
     this.selectedUserId = userId;
-    this.loadAnalytics(userId || undefined, this.selectedProjectId || undefined);
+    const filterUserId = userId !== 'all' ? parseInt(userId, 10) : undefined;
+    const filterProjectId = this.selectedProjectId !== 'all' ? parseInt(this.selectedProjectId, 10) : undefined;
+    const filterModuleId = this.selectedModuleId !== 'all' ? parseInt(this.selectedModuleId, 10) : undefined;
+    this.loadAnalytics(filterUserId, filterProjectId, filterModuleId);
   }
 
   onProjectFilterChange() {
+    // Reset module filter when project changes
+    this.selectedModuleId = 'all';
+    
+    // Filter modules based on selected project
+    if (this.selectedProjectId === 'all') {
+      // Show all modules when "All Projects" is selected
+      this.filteredModulesList = [];
+    } else {
+      // Filter modules to only show modules from selected project
+      const projectId = this.selectedProjectId;
+      this.filteredModulesList = this.allModules.filter(
+        (m: any) => m.projectId?.toString() === projectId
+      );
+      console.log('Filtered modules for project', projectId, ':', this.filteredModulesList);
+    }
+    
     // Reload analytics with project filter
-    this.loadAnalytics(this.selectedUserId || undefined, this.selectedProjectId || undefined);
+    const filterUserId = this.selectedUserId !== 'all' ? parseInt(this.selectedUserId, 10) : undefined;
+    const filterProjectId = this.selectedProjectId !== 'all' ? parseInt(this.selectedProjectId, 10) : undefined;
+    this.loadAnalytics(filterUserId, filterProjectId, undefined);
+  }
+
+  onModuleFilterChange() {
+    // Reload analytics with module filter
+    const filterUserId = this.selectedUserId !== 'all' ? parseInt(this.selectedUserId, 10) : undefined;
+    const filterProjectId = this.selectedProjectId !== 'all' ? parseInt(this.selectedProjectId, 10) : undefined;
+    const filterModuleId = this.selectedModuleId !== 'all' ? parseInt(this.selectedModuleId, 10) : undefined;
+    this.loadAnalytics(filterUserId, filterProjectId, filterModuleId);
   }
 
   getPercentage(value: number, total: number): number {

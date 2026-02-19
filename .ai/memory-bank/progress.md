@@ -289,17 +289,68 @@
 
 #### Latest Changes (2026-02-19):
 
+- [x] **Project & Module Filtering for Executions and Test Cases**
+   - **Issue**: Admin/PM users couldn't filter executions and test cases by project or module
+   - **Backend Implementation**:
+     - `ExecutionService.getAllExecutionsInOrganization()`: Added `projectId`, `submoduleId` parameters
+     - `AnalyticsService.getTestAnalytics()`: Added `projectId`, `submoduleId` parameters
+     - `ApiController`: Updated `/admin/executions` and `/testcases/analytics` endpoints
+     - `TestModuleRepository`: Added `findByProjectIdWithSubmodules()` for eager loading
+     - `ModuleService`: Added `getModulesByProjectIdWithSubmodules()` method
+     - `TestModuleDTO`: Added `submodules` field for frontend filter
+   - **Frontend Implementation**:
+     - `executions.component`: Filter by User → Project → Module → Status
+       * Module dropdown dynamically filters based on selected project
+       * `onProjectChange()`: Filters modules list and resets module selection
+     - `test-cases.component`: Filter by User → Project
+     - `tcm.service.ts`: Updated service methods to accept filter parameters
+   - **Files**:
+     - Backend: `ExecutionService.java`, `AnalyticsService.java`, `ApiController.java`, 
+       `TestModuleRepository.java`, `ModuleService.java`, `TestModuleDTO.java`
+     - Frontend: `executions.component.ts/html`, `test-cases.component.ts/html`, `tcm.service.ts`
+   - **Status**: COMPLETED ✅
+
+- [x] **Redmine Delete Button**
+   - **Feature**: Add delete button for Redmine issue links
+   - **Implementation**:
+     - Delete button in Redmine card (execution workbench)
+     - Delete button in Redmine management dialog
+     - Confirmation dialog with clear warning message
+     - Backend endpoint already existed with PROJECT_MANAGER access
+   - **Files**:
+     - `execution-workbench.component.ts/html/css`
+     - `redmine-issue-dialog.component.ts/html/css`
+   - **Status**: COMPLETED ✅
+
+- [x] **PROJECT_MANAGER Execution Workbench Access**
+   - **Issue**: 400 Bad Request error when PM tried to access execution workbench
+   - **Fix**: Added PROJECT_MANAGER to @PreAuthorize on 10 execution endpoints:
+     - GET /api/executions/{id} - view single execution
+     - GET /api/testcases/{id}/executions - view by test case
+     - PUT /api/executions/{id}/steps/{stepId} - update step results
+     - PUT /api/executions/{id}/complete - complete execution
+     - PUT /api/executions/{id}/save - save work-in-progress
+     - GET/POST/PUT/DELETE /api/executions/{id}/redmine/* - Redmine operations
+     - POST /api/testcases/{id}/executions - create execution
+   - **Service Layer**: Already had proper security logic for PM access
+   - **Files**: `ApiController.java`
+   - **Status**: COMPLETED ✅
+
+- [x] **Role Display Pipe (SOLID/DRY)**
+   - **Issue**: Duplicate `getRoleDisplayName()` methods in multiple components
+   - **Solution**: Created reusable `RoleDisplayPipe` for centralized role name formatting
+   - **Benefits**: Follows DRY principle, Single Responsibility, easy to extend
+   - **Usage**: `{{ role | roleDisplay }}` transforms PROJECT_MANAGER → "PROJECT MANAGER"
+   - **Files**:
+     - `shared/pipes/role-display.pipe.ts` (new)
+     - `sidebar.component.ts/html` (updated to use pipe)
+     - `join.component.ts/html` (refactored to use pipe)
+   - **Status**: COMPLETED ✅
+
 - [x] **Delete Module Button UI Fix**
    - **Issue**: Delete button on project detail page used X icon (`close`) instead of trash can, and was gray instead of red
    - **Fix**: Changed icon to `delete`, added `color="warn"` attribute, updated CSS to use `var(--warn-color)`
    - **Files**: `project-detail.component.html`, `project-detail.component.css`
-   - **Status**: COMPLETED ✅
-
-- [x] **Auth Card Full-Width Divider**
-   - **Issue**: Divider line inside cards was constrained by padding, not spanning full width
-   - **Fix**: Added `.divider-line` element with `position: absolute; left: 0; right: 0;` to span full card width
-   - **Files**: `login.component.css/html`, `register-org.component.css/html`, `join.component.css/html`
-   - **Commit**: 8085a93
    - **Status**: COMPLETED ✅
 
 - [x] **Join Page Role Display**
