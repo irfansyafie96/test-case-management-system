@@ -1,14 +1,22 @@
 # Project Context
 
-## Current Work: PROJECT_MANAGER Role - COMPLETE
+## Current Work: Module Deletion Cascade Fix - COMPLETE
 
 ### Summary
 
-The PROJECT_MANAGER role has been fully implemented and tested. All tests passed. Used SecurityHelper for DRY principle to centralize permission checks.
+Fixed the module deletion cascade issue. The previous code only removed submodules from the collection without properly deleting their contents, causing orphaned test cases and executions in the database (~800 in DB vs ~100-200 visible).
 
 ---
 
-### Committed Changes
+### Latest Fix (2026-02-19)
+
+**Module Deletion Cascade Fix:**
+- `ModuleService.java` - Injected SubmoduleService and replaced manual collection removal with `submoduleService.deleteSubmodule()` call
+- This now properly cascades: TestStepResults → TestExecutions → TestSteps → TestCases → Submodules → TestModule
+
+---
+
+### Previously Committed
 
 **Auth Card Updates (2026-02-18 - Commit: 8085a93):**
 - `login.component.css/html` - Added full-width divider line

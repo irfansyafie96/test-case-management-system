@@ -12,6 +12,7 @@ import com.yourproject.tcm.repository.SubmoduleRepository;
 import com.yourproject.tcm.repository.ProjectRepository;
 import com.yourproject.tcm.repository.UserRepository;
 import com.yourproject.tcm.service.UserContextService;
+import com.yourproject.tcm.service.SecurityHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,9 +37,10 @@ public class ModuleService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final UserContextService userContextService;
-    private final com.yourproject.tcm.service.SecurityHelper securityHelper;
+    private final SecurityHelper securityHelper;
     private final EntityManager entityManager;
     private final TestCaseService testCaseService;
+    private final SubmoduleService submoduleService;
 
     @Autowired
     public ModuleService(TestModuleRepository testModuleRepository,
@@ -46,9 +48,10 @@ public class ModuleService {
                         ProjectRepository projectRepository,
                         UserRepository userRepository,
                         UserContextService userContextService,
-                        com.yourproject.tcm.service.SecurityHelper securityHelper,
+                        SecurityHelper securityHelper,
                         EntityManager entityManager,
-                        TestCaseService testCaseService) {
+                        TestCaseService testCaseService,
+                        SubmoduleService submoduleService) {
         this.testModuleRepository = testModuleRepository;
         this.submoduleRepository = submoduleRepository;
         this.projectRepository = projectRepository;
@@ -57,6 +60,7 @@ public class ModuleService {
         this.securityHelper = securityHelper;
         this.entityManager = entityManager;
         this.testCaseService = testCaseService;
+        this.submoduleService = submoduleService;
     }
 
     /**
@@ -317,14 +321,11 @@ public class ModuleService {
         entityManager.flush();
 
         // 2. Clean up submodules deeply
-        // We iterate through a copy to perform deep cleanup via SubmoduleService
+        // We iterate through a copy and call SubmoduleService to properly delete all contents
         if (testModule.getSubmodules() != null) {
             List<Submodule> submodules = new ArrayList<>(testModule.getSubmodules());
             for (Submodule submodule : submodules) {
-                // TODO: Call SubmoduleService to delete submodule
-                // For now, just remove from collection and let orphanRemoval handle it
-                // This is not ideal as it doesn't clean up test cases and executions
-                testModule.getSubmodules().remove(submodule);
+                submoduleService.deleteSubmodule(submodule.getId());
             }
         }
 

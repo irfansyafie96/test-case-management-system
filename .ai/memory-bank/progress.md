@@ -268,6 +268,13 @@
 
 #### In Progress:
 
+- [x] **Module Deletion Cascade Fix** (2026-02-19)
+   - **Issue**: Module deletion only removed submodules from collection without properly deleting contents, causing orphaned test cases and executions (~800 in DB vs ~100-200 visible)
+   - **Fix**: Injected SubmoduleService into ModuleService and replaced collection removal with `submoduleService.deleteSubmodule()` call
+   - **Cascade**: TestStepResults → TestExecutions → TestSteps → TestCases → Submodules → TestModule
+   - **Files**: `ModuleService.java`
+   - **Status**: COMPLETED ✅
+
 #### Latest Changes (2026-02-18):
 
 - [x] **Auth Card Full-Width Divider** 
