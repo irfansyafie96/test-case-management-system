@@ -268,6 +268,12 @@
 
 #### In Progress:
 
+- [x] **Module Assignment Dropdown Fix** (2026-02-19)
+   - **Issue**: When assigning module in Project B, dropdown showed users from ALL projects in org (should only show Project B team)
+   - **Fix**: Changed `loadAssignmentData()` to use `getUsersAssignedToProject(projectId)` instead of `getUsersByRole()`
+   - **Files**: `module-detail.component.ts`
+   - **Status**: COMPLETED ✅
+
 - [x] **Team Management List Fix** (2026-02-19)
    - **Issue**: When admin creates a new project, ALL admins and PROJECT_MANAGERs in organization appeared in team list (should only show explicitly assigned users)
    - **Fix**: Removed role-based filter (`OR r.name = 'ADMIN' OR r.name = 'PROJECT_MANAGER'`) from `findUsersAssignedToProject()` query

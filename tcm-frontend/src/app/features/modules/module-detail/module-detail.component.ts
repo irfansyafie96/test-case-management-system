@@ -494,31 +494,35 @@ export class ModuleDetailComponent implements OnInit {
     this.loadingAssignments = true;
     this.cdr.detectChanges(); // Force update to show loading state
 
-    // Load execution assignees (QA/BA/TESTER) instead of module editors
-    this.tcmService.getExecutionAssignees(moduleId).subscribe({
-      next: (assignedUsers: User[]) => {
-        // Now load QA, BA, and TESTER users in parallel
+    // First get the module to find the projectId, then load project team members
+    this.tcmService.getModule(moduleId).subscribe({
+      next: (module) => {
+        if (!module || !module.projectId) {
+          this.loadingAssignments = false;
+          this.cdr.detectChanges();
+          return;
+        }
+
+        const projectId = String(module.projectId);
+
+        // Load execution assignees and project team members in parallel
         forkJoin({
-          qaUsers: this.tcmService.getUsersByRole('QA'),
-          baUsers: this.tcmService.getUsersByRole('BA'),
-          testerUsers: this.tcmService.getUsersByRole('TESTER')
+          assignedUsers: this.tcmService.getExecutionAssignees(moduleId),
+          projectUsers: this.tcmService.getUsersAssignedToProject(projectId)
         }).subscribe({
-          next: ({ qaUsers, baUsers, testerUsers }) => {
-            // Defer all updates to next tick to avoid ExpressionChangedAfterItHasBeenCheckedError
+          next: ({ assignedUsers, projectUsers }) => {
             setTimeout(() => {
-              // Update assigned users first
               this.assignedUsers = assignedUsers;
 
-              // Combine QA, BA, and TESTER users, deduplicate by ID
-              const userMap = new Map<string, User>();
-              [...qaUsers, ...baUsers, ...testerUsers].forEach(user => {
-                userMap.set(String(user.id), user);
+              // Filter project users to only show QA, BA, and TESTER roles
+              const qaBaTesters = projectUsers.filter(user => {
+                const roles = user.roles || [];
+                return roles.includes('QA') || roles.includes('BA') || roles.includes('TESTER');
               });
-              const allUsers = Array.from(userMap.values());
 
               // Filter out already assigned users
               const assignedIds = assignedUsers.map(u => String(u.id));
-              this.availableUsers = allUsers.filter(user => !assignedIds.includes(String(user.id)));
+              this.availableUsers = qaBaTesters.filter(user => !assignedIds.includes(String(user.id)));
               this.loadingAssignments = false;
               this.cdr.detectChanges(); // Update template after changes
             }, 0);

@@ -1,18 +1,19 @@
 # Project Context
 
-## Current Work: Team Management List Fix - COMPLETE
+## Current Work: Module Assignment Dropdown Fix - COMPLETE
 
 ### Summary
 
-Fixed the team management list bug. Previously, when admin creates a new project, ALL admins and PROJECT_MANAGERs in the organization were shown in the team list. Now it correctly shows only users explicitly assigned to the project (directly or via modules).
+Fixed the module assignment dropdown bug. When assigning a module in Project B, the dropdown was incorrectly showing users from ALL projects in the organization. Now it correctly shows only team members from the current project.
 
 ---
 
 ### Latest Fix (2026-02-19)
 
-**Team Management List Fix:**
-- `UserRepository.java` - Removed role-based filter from `findUsersAssignedToProject()` query
-- Query now only returns: users directly assigned to project OR users assigned to modules in the project
+**Module Assignment Dropdown Fix:**
+- `module-detail.component.ts` - Changed `loadAssignmentData()` to use `getUsersAssignedToProject(projectId)` instead of `getUsersByRole()` 
+- Now filters to show only QA/BA/TESTER roles from the project's team
+- Prevents cross-project user assignment
 
 ---
 
