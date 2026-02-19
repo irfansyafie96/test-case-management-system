@@ -287,9 +287,15 @@
    - **Files**: `ModuleService.java`
    - **Status**: COMPLETED ✅
 
-#### Latest Changes (2026-02-18):
+#### Latest Changes (2026-02-19):
 
-- [x] **Auth Card Full-Width Divider** 
+- [x] **Delete Module Button UI Fix**
+   - **Issue**: Delete button on project detail page used X icon (`close`) instead of trash can, and was gray instead of red
+   - **Fix**: Changed icon to `delete`, added `color="warn"` attribute, updated CSS to use `var(--warn-color)`
+   - **Files**: `project-detail.component.html`, `project-detail.component.css`
+   - **Status**: COMPLETED ✅
+
+- [x] **Auth Card Full-Width Divider**
    - **Issue**: Divider line inside cards was constrained by padding, not spanning full width
    - **Fix**: Added `.divider-line` element with `position: absolute; left: 0; right: 0;` to span full card width
    - **Files**: `login.component.css/html`, `register-org.component.css/html`, `join.component.css/html`

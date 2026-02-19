@@ -58,11 +58,12 @@
               <button
                 *ngIf="authService.canDeleteModule()"
                 mat-icon-button
+                color="warn"
                 class="delete-btn"
                 (click)="deleteModule($event, module.id)"
                 [disabled]="loading$ | async"
                 [matTooltip]="'Delete module'">
-                <mat-icon>close</mat-icon>
+                <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>

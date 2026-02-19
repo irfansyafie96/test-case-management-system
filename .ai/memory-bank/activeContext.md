@@ -1,17 +1,22 @@
 # Project Context
 
-## Current Work: Module Assignment Dropdown Fix - COMPLETE
+## Current Work: UI Consistency Fixes - COMPLETE
 
 ### Summary
 
-Fixed the module assignment dropdown bug. When assigning a module in Project B, the dropdown was incorrectly showing users from ALL projects in the organization. Now it correctly shows only team members from the current project.
+Fixed delete module button styling inconsistency between project detail and module detail pages.
 
 ---
 
 ### Latest Fix (2026-02-19)
 
+**Delete Module Button UI Fix:**
+- `project-detail.component.html` - Changed icon from `close` to `delete`, added `color="warn"` attribute
+- `project-detail.component.css` - Changed default color from `#999` to `var(--warn-color)`
+- Now matches the module detail page: red trash can icon with warn color styling
+
 **Module Assignment Dropdown Fix:**
-- `module-detail.component.ts` - Changed `loadAssignmentData()` to use `getUsersAssignedToProject(projectId)` instead of `getUsersByRole()` 
+- `module-detail.component.ts` - Changed `loadAssignmentData()` to use `getUsersAssignedToProject(projectId)` instead of `getUsersByRole()`
 - Now filters to show only QA/BA/TESTER roles from the project's team
 - Prevents cross-project user assignment
 

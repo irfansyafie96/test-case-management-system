@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TeamService } from '../../../core/services/team.service';
 import { timeout, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+import { RoleDisplayPipe } from '../../../shared/pipes/role-display.pipe';
 
 @Component({
   selector: 'app-join',
@@ -24,7 +25,8 @@ import { throwError } from 'rxjs';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    RoleDisplayPipe
   ],
   templateUrl: './join.component.html',
   styleUrls: ['./join.component.css']
@@ -98,13 +100,6 @@ export class JoinComponent implements OnInit {
         this.cdRef.detectChanges(); // Force change detection
       }
     });
-  }
-
-  getRoleDisplayName(role: string): string {
-    const roleNames: { [key: string]: string } = {
-      'PROJECT_MANAGER': 'PROJECT MANAGER'
-    };
-    return roleNames[role] || role;
   }
 
   onJoin() {

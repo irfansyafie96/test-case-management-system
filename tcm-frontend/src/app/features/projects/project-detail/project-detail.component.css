@@ -141,7 +141,7 @@
 .delete-btn {
   width: 24px;
   height: 24px;
-  color: #999;
+  color: var(--warn-color);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -10,6 +10,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '../../core/services/auth.service';
+import { RoleDisplayPipe } from '../pipes/role-display.pipe';
 
 @Component({
   selector: 'app-sidebar',
@@ -23,7 +24,8 @@ import { AuthService } from '../../core/services/auth.service';
     MatExpansionModule,
     MatDividerModule,
     MatChipsModule,
-    MatTooltipModule
+    MatTooltipModule,
+    RoleDisplayPipe
   ],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.css']
