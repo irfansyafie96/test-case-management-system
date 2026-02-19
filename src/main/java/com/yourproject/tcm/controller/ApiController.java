@@ -388,9 +388,10 @@ public class ApiController {
     public ResponseEntity<?> getTestAnalytics(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long projectId,
+            @RequestParam(required = false) Long moduleId,
             @RequestParam(required = false) Long submoduleId) {
         try {
-            TestAnalyticsDTO analytics = analyticsService.getTestAnalytics(userId, projectId, submoduleId);
+            TestAnalyticsDTO analytics = analyticsService.getTestAnalytics(userId, projectId, moduleId, submoduleId);
             return new ResponseEntity<>(analytics, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving analytics: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

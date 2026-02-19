@@ -50,11 +50,12 @@ public class AnalyticsService {
      * For QA/BA/TESTER users: returns analytics only for test cases in modules they're assigned to
      * @param userId Optional user ID to filter analytics for a specific user (admin only)
      * @param projectId Optional project ID to filter by
+     * @param moduleId Optional module ID to filter by
      * @param submoduleId Optional submodule ID to filter by
      * @return TestAnalyticsDTO containing overall KPIs and breakdown by project/module
      */
     @Transactional(readOnly = true)
-    public TestAnalyticsDTO getTestAnalytics(Long userId, Long projectId, Long submoduleId) {
+    public TestAnalyticsDTO getTestAnalytics(Long userId, Long projectId, Long moduleId, Long submoduleId) {
         // Get the current user
         User currentUser = userContextService.getCurrentUser();
         Organization org = currentUser.getOrganization();
@@ -94,8 +95,8 @@ public class AnalyticsService {
                     if (tc.getSubmodule() == null || tc.getSubmodule().getTestModule() == null) {
                         return false;
                     }
-                    Long moduleId = tc.getSubmodule().getTestModule().getId();
-                    return viewableModuleIdSet.contains(moduleId);
+                    Long localModuleId = tc.getSubmodule().getTestModule().getId();
+                    return viewableModuleIdSet.contains(localModuleId);
                 })
                 .collect(Collectors.toList());
             
@@ -108,14 +109,27 @@ public class AnalyticsService {
         // Filter by project if provided
         if (projectId != null) {
             allTestCases = allTestCases.stream()
-                .filter(tc -> tc.getSubmodule() != null && 
+                .filter(tc -> tc.getSubmodule() != null &&
                               tc.getSubmodule().getTestModule() != null &&
                               tc.getSubmodule().getTestModule().getProject() != null &&
                               tc.getSubmodule().getTestModule().getProject().getId().equals(projectId))
                 .collect(Collectors.toList());
-            
+
             allExecutions = allExecutions.stream()
                 .filter(e -> e.getProjectId() != null && e.getProjectId().equals(projectId))
+                .collect(Collectors.toList());
+        }
+
+        // Filter by module if provided
+        if (moduleId != null) {
+            allTestCases = allTestCases.stream()
+                .filter(tc -> tc.getSubmodule() != null &&
+                              tc.getSubmodule().getTestModule() != null &&
+                              tc.getSubmodule().getTestModule().getId().equals(moduleId))
+                .collect(Collectors.toList());
+
+            allExecutions = allExecutions.stream()
+                .filter(e -> e.getModuleId() != null && e.getModuleId().equals(moduleId))
                 .collect(Collectors.toList());
         }
 
@@ -124,7 +138,7 @@ public class AnalyticsService {
             allTestCases = allTestCases.stream()
                 .filter(tc -> tc.getSubmodule() != null && tc.getSubmodule().getId().equals(submoduleId))
                 .collect(Collectors.toList());
-            
+
             allExecutions = allExecutions.stream()
                 .filter(e -> e.getSubmoduleId() != null && e.getSubmoduleId().equals(submoduleId))
                 .collect(Collectors.toList());
@@ -147,8 +161,8 @@ public class AnalyticsService {
 
                 allExecutions = allExecutions.stream()
                     .filter(execution -> {
-                        Long moduleId = execution.getModuleId();
-                        return moduleId != null && assignedModuleIds.contains(moduleId);
+                        Long localModuleId = execution.getModuleId();
+                        return localModuleId != null && assignedModuleIds.contains(localModuleId);
                     })
                     .collect(Collectors.toList());
             }
@@ -264,7 +278,7 @@ public class AnalyticsService {
 
             Long projId = project.getId();
             String projectName = project.getName();
-            Long moduleId = module.getId();
+            Long localModuleId = module.getId();
             String moduleName = module.getName();
 
             // Initialize project stats if needed
@@ -273,8 +287,8 @@ public class AnalyticsService {
             ));
 
             // Initialize module stats if needed
-            moduleStats.putIfAbsent(moduleId, new TestAnalyticsDTO.ModuleAnalytics(
-                moduleId, moduleName, projId, projectName, 0, 0, 0, 0, 0
+            moduleStats.putIfAbsent(localModuleId, new TestAnalyticsDTO.ModuleAnalytics(
+                localModuleId, moduleName, projId, projectName, 0, 0, 0, 0, 0
             ));
 
             // Check if this test case has been executed

@@ -208,16 +208,20 @@ export class TcmService {
    * Get test execution analytics
    * @param userId Optional user ID to filter executions (admin only)
    * @param projectId Optional project ID to filter by
+   * @param moduleId Optional module ID to filter by
    * @param submoduleId Optional submodule ID to filter by
    * @returns Observable<TestAnalytics> - Stream of analytics data
    */
-  getTestAnalytics(userId?: number, projectId?: number, submoduleId?: number): Observable<any> {
+  getTestAnalytics(userId?: number, projectId?: number, moduleId?: number, submoduleId?: number): Observable<any> {
     const params = new URLSearchParams();
     if (userId !== undefined && userId !== null) {
       params.set('userId', userId.toString());
     }
     if (projectId !== undefined && projectId !== null) {
       params.set('projectId', projectId.toString());
+    }
+    if (moduleId !== undefined && moduleId !== null) {
+      params.set('moduleId', moduleId.toString());
     }
     if (submoduleId !== undefined && submoduleId !== null) {
       params.set('submoduleId', submoduleId.toString());
