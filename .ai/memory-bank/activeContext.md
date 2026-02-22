@@ -1,23 +1,43 @@
 # Project Context
 
-## Current Work: Project & Module Filtering - COMPLETE
+## Current Work: Test Cases Module Filter Fix - COMPLETE
 
 ### Summary
 
-Implemented backend and frontend filtering for executions and test cases pages. Admin/PM users can now filter by project and module.
+Fixed module filtering in test cases analytics page. KPIs now show correct values when filtering by module.
 
 ---
 
 ### Latest Changes (2026-02-19)
 
-**Project & Module Filtering:**
+**Test Cases Module Filter Fix:**
+- **Issue**: KPIs showed 0 when filtering by module (User → Project → Module)
+- **Root Cause**: Frontend passed Module ID, but backend only filtered by Submodule ID
+- **Fix**: 
+  - `AnalyticsService.getTestAnalytics()`: Added `moduleId` parameter (4 params total)
+  - Added module-level filtering logic (filter by `submodule.testModule.id`)
+  - Renamed local variables to avoid conflicts (`moduleId` → `localModuleId`)
+  - `ApiController`: Added `moduleId` to `/testcases/analytics` endpoint
+  - `tcm.service.ts`: Updated to pass moduleId parameter
+- **Result**: Filter by Module now correctly filters test cases and executions
+
+**Test Cases Filter UI Enhancement:**
+- Matched filter card design with executions page:
+  * Full-width filter container with card styling
+  * Filter header with icon and "Filter Analytics" title
+  * Three filter dropdowns: User → Project → Module
+- Changed filter values to use `"all"` instead of `null` (matches executions page)
+- Module dropdown cascades based on selected project
+- Added `!important` flags to CSS for consistent Material styling
+
+**Project & Module Filtering (Earlier):**
 - Backend: Added `projectId` and `submoduleId` parameters to:
   - `ExecutionService.getAllExecutionsInOrganization()`
   - `AnalyticsService.getTestAnalytics()`
   - `ApiController` endpoints: `/admin/executions`, `/testcases/analytics`
 - Frontend: Added project filter dropdown with cascading module filter
   - `executions.component`: Filter by User → Project → Module → Status
-  - `test-cases.component`: Filter by User → Project
+  - `test-cases.component`: Filter by User → Project → Module
   - Module dropdown dynamically filters based on selected project
 - Service: Updated `tcm.service.ts` methods to accept filter parameters
 

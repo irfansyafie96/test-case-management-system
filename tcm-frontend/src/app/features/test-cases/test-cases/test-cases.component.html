@@ -14,6 +14,11 @@
         <h1 class="page-title"><mat-icon>analytics</mat-icon> Test Analytics Dashboard</h1>
         <p class="page-subtitle">Overview of test execution results across all projects.</p>
       </div>
+      <div class="header-actions">
+        <button mat-raised-button color="primary" (click)="exportToPdf()">
+          <mat-icon>picture_as_pdf</mat-icon> Export PDF
+        </button>
+      </div>
     </div>
 
     <!-- Admin Filters -->

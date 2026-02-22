@@ -394,6 +394,7 @@ public class ApiController {
             TestAnalyticsDTO analytics = analyticsService.getTestAnalytics(userId, projectId, moduleId, submoduleId);
             return new ResponseEntity<>(analytics, HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace(); // Log to console
             return new ResponseEntity<>("Error retrieving analytics: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

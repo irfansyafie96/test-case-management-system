@@ -311,7 +311,7 @@ public class AnalyticsService {
             }
 
             // Update module stats
-            TestAnalyticsDTO.ModuleAnalytics mStats = moduleStats.get(moduleId);
+            TestAnalyticsDTO.ModuleAnalytics mStats = moduleStats.get(localModuleId);
             mStats.setTotalTestCases(mStats.getTotalTestCases() + 1);
 
             if (isExecuted) {

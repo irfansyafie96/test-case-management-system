@@ -289,6 +289,45 @@
 
 #### Latest Changes (2026-02-19):
 
+- [x] **Test Cases Module Filter Fix - KPIs Showing 0**
+   - **Issue**: KPIs showed 0 when filtering by module (User → Project → Module)
+   - **Root Cause**: 
+     * Frontend "Filter by Module" passed Module ID
+     * Backend `AnalyticsService.getTestAnalytics()` only filtered by Submodule ID
+     * Module ID didn't match any submodules, resulting in 0 test cases
+     * Variable name conflict: `moduleId` parameter conflicted with local variables
+   - **Backend Fix**:
+     - `AnalyticsService.getTestAnalytics()`: Added `moduleId` parameter (4 params total)
+     - Added module-level filtering logic:
+       * Filter test cases by `submodule.testModule.id`
+       * Filter executions by `moduleId`
+     - Filtering order: `userId` → `projectId` → `moduleId` → `submoduleId`
+     - Renamed local variables to avoid conflicts (`moduleId` → `localModuleId`)
+     - `ApiController`: Added `moduleId` to `/testcases/analytics` endpoint
+   - **Frontend Fix**:
+     - `tcm.service.getTestAnalytics()`: Added `moduleId` parameter (4 params total)
+     - Pass `moduleId` separately from `submoduleId`
+   - **Files**: `AnalyticsService.java`, `ApiController.java`, `tcm.service.ts`
+   - **Status**: COMPLETED ✅
+
+- [x] **Test Cases Filter UI Enhancement**
+   - **Goal**: Match filter card design with executions page
+   - **HTML Changes**:
+     * Move filters-container outside page-header for full-width card
+     * Add filter header with icon and "Filter Analytics" title
+     * Add module filter dropdown (User → Project → Module)
+     * Change filter values from `null` to `"all"` (matches executions page)
+   - **TypeScript Changes**:
+     * Change filter properties to string with 'all' default
+     * Update filter change handlers to parse and check for 'all'
+     * Add module filtering logic with cascading dropdown
+   - **CSS Changes**:
+     * Copy filter card styling from executions component
+     * Add `!important` flags to ensure Material overrides
+     * Full-width card with Blueprint design
+   - **Files**: `test-cases.component.ts/html/css`
+   - **Status**: COMPLETED ✅
+
 - [x] **Project & Module Filtering for Executions and Test Cases**
    - **Issue**: Admin/PM users couldn't filter executions and test cases by project or module
    - **Backend Implementation**:
@@ -305,7 +344,7 @@
      - `test-cases.component`: Filter by User → Project
      - `tcm.service.ts`: Updated service methods to accept filter parameters
    - **Files**:
-     - Backend: `ExecutionService.java`, `AnalyticsService.java`, `ApiController.java`, 
+     - Backend: `ExecutionService.java`, `AnalyticsService.java`, `ApiController.java`,
        `TestModuleRepository.java`, `ModuleService.java`, `TestModuleDTO.java`
      - Frontend: `executions.component.ts/html`, `test-cases.component.ts/html`, `tcm.service.ts`
    - **Status**: COMPLETED ✅

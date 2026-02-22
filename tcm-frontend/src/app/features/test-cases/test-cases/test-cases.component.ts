@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatLabel } from '@angular/material/form-field';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { PdfExportService } from '../../../core/services/pdf-export.service';
 import { Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { map, catchError, finalize } from 'rxjs/operators';
 import { User } from '../../../core/models/project.model';
@@ -96,7 +97,8 @@ export class TestCasesComponent implements OnInit {
 
   constructor(
     private tcmService: TcmService,
-    private authService: AuthService
+    private authService: AuthService,
+    private pdfExportService: PdfExportService
   ) {
     this.vm$ = combineLatest({
       loading: this.loadingSubject.asObservable(),
@@ -225,5 +227,30 @@ export class TestCasesComponent implements OnInit {
   getPercentage(value: number, total: number): number {
     if (total === 0) return 0;
     return Math.round((value / total) * 100);
+  }
+
+  exportToPdf() {
+    const analytics = this.analyticsSubject.getValue();
+    const filterContext = {
+      user: this.selectedUserId !== 'all' ? this.getUserName(this.selectedUserId) : undefined,
+      project: this.selectedProjectId !== 'all' ? this.getProjectName(this.selectedProjectId) : undefined,
+      module: this.selectedModuleId !== 'all' ? this.getModuleName(this.selectedModuleId) : undefined
+    };
+    this.pdfExportService.exportAnalyticsReport(analytics, filterContext);
+  }
+
+  private getUserName(userId: string): string {
+    const user = this.users.find(u => u.id.toString() === userId);
+    return user ? user.username : userId;
+  }
+
+  private getProjectName(projectId: string): string {
+    const project = this.projects.find(p => p.id.toString() === projectId);
+    return project ? project.name : projectId;
+  }
+
+  private getModuleName(moduleId: string): string {
+    const module = this.allModules.find(m => m.id.toString() === moduleId);
+    return module ? module.name : moduleId;
   }
 }
