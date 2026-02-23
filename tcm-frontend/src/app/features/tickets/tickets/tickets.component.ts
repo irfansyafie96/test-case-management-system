@@ -21,6 +21,7 @@ import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Project, Ticket, TestCycle } from '../../../core/models/project.model';
 import { TicketAuditDialogComponent } from './ticket-audit-dialog.component';
+import { TicketEditDialogComponent } from './ticket-edit-dialog.component';
 
 interface TicketsViewModel {
   tickets: Ticket[];
@@ -191,6 +192,26 @@ export class TicketsComponent implements OnInit {
     this.dialog.open(TicketAuditDialogComponent, {
       width: '600px',
       data: { ticket }
+    });
+  }
+
+  editTicket(ticket: Ticket): void {
+    const dialogRef = this.dialog.open(TicketEditDialogComponent, {
+      width: '500px',
+      data: { ticket }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.tcmService.updateTicket(ticket.id, result).subscribe({
+          next: () => {
+            this.loadTickets();
+          },
+          error: (err) => {
+            console.error('Failed to update ticket', err);
+          }
+        });
+      }
     });
   }
 

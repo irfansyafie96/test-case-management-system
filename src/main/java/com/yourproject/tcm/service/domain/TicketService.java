@@ -74,6 +74,53 @@ public class TicketService {
         return toDTO(saved);
     }
     
+    public TicketDTO updateTicket(Long ticketId, TicketDTO ticketData) {
+        RedmineIssue issue = redmineIssueRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found: " + ticketId));
+        
+        String username = userContextService.getCurrentUser().getUsername();
+        
+        // Track changes for audit log
+        StringBuilder changes = new StringBuilder();
+        
+        // Update subject
+        if (ticketData.getBugReportSubject() != null && !ticketData.getBugReportSubject().equals(issue.getBugReportSubject())) {
+            String oldValue = issue.getBugReportSubject();
+            issue.setBugReportSubject(ticketData.getBugReportSubject());
+            changes.append("subject changed; ");
+        }
+        
+        // Update description
+        if (ticketData.getBugReportDescription() != null && !ticketData.getBugReportDescription().equals(issue.getBugReportDescription())) {
+            issue.setBugReportDescription(ticketData.getBugReportDescription());
+            changes.append("description updated; ");
+        }
+        
+        // Update URL
+        if (ticketData.getRedmineIssueUrl() != null && !ticketData.getRedmineIssueUrl().equals(issue.getRedmineIssueUrl())) {
+            issue.setRedmineIssueUrl(ticketData.getRedmineIssueUrl());
+            changes.append("URL updated; ");
+        }
+        
+        // Update status
+        if (ticketData.getStatus() != null && !ticketData.getStatus().equals(issue.getStatus())) {
+            String oldStatus = issue.getStatus();
+            issue.setStatus(ticketData.getStatus());
+            
+            // Create audit log for status change
+            TicketAuditLog auditLog = new TicketAuditLog();
+            auditLog.setRedmineIssue(issue);
+            auditLog.setAction(TicketAuditLog.ACTION_STATUS_CHANGED);
+            auditLog.setOldValue(oldStatus);
+            auditLog.setNewValue(ticketData.getStatus());
+            auditLog.setChangedBy(username);
+            issue.addAuditLog(auditLog);
+        }
+        
+        RedmineIssue saved = redmineIssueRepository.save(issue);
+        return toDTO(saved);
+    }
+    
     private boolean isTicketAccessible(RedmineIssue issue, Long projectId, Long cycleId, String status) {
         if (issue.getExecution() == null || issue.getExecution().getTestCase() == null) {
             return false;

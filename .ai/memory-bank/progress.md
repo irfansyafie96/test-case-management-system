@@ -951,6 +951,25 @@
 - **Phase edit/delete for QA**: Added *ngIf="authService.canManageModules()" to buttons
 - **Status**: COMPLETED ✅
 
+#### Ticket Edit Feature (2026-02-23) ✅
+- **Location**: Tickets page (`/tickets`)
+- **Description**: Added edit functionality to Tickets page allowing users to edit ticket details directly
+- **Features**:
+  - Edit button (pencil icon) in tickets table actions column
+  - Dialog form to edit: Subject, Description, Redmine URL, Status
+  - Backend endpoint: PUT /api/tickets/{ticketId}
+  - Creates audit log entries for status changes
+  - Accessible to all roles (ADMIN, PROJECT_MANAGER, QA, BA, TESTER)
+- **Files Added**:
+  - `tcm-frontend/src/app/features/tickets/tickets/ticket-edit-dialog.component.ts`
+- **Files Modified**:
+  - `tcm-frontend/src/app/features/tickets/tickets/tickets.component.ts` (added editTicket method)
+  - `tcm-frontend/src/app/features/tickets/tickets/tickets.component.html` (added edit button)
+  - `tcm-frontend/src/app/core/services/tcm.service.ts` (added updateTicket method)
+  - `src/main/java/com/yourproject/tcm/controller/ApiController.java` (added PUT endpoint)
+  - `src/main/java/com/yourproject/tcm/service/domain/TicketService.java` (added updateTicket method)
+- **Status**: COMPLETED ✅
+
 #### Filter Order Reorder (2026-02-23) ✅
 - **Location**: Executions page (`/executions`) and Test Analytics page (`/test-cases`)
 - **Description**: Reordered filters - Project now first, User moved to third
@@ -1003,6 +1022,7 @@
 - **PM/Admin Read-Only Mode**: COMPLETED ✅ (2026-02-23)
 - **Cycle Filter**: COMPLETED ✅ (2026-02-23)
 - **UI Bug Fixes**: COMPLETED ✅ (2026-02-23)
+- **Ticket Edit Feature**: COMPLETED ✅ (2026-02-23)
 
 ### Time Estimates:
 - Sprint 1: COMPLETED ✅

@@ -1,6 +1,31 @@
 # Project Context
 
-## Current Work: UI Bug Fixes - COMPLETE
+## Current Work: Ticket Edit Feature - COMPLETE
+
+### Summary
+
+Added edit functionality to Tickets page allowing users to edit ticket details directly.
+
+---
+
+### Latest Changes (2026-02-23)
+
+**Ticket Edit Feature:**
+- Created `ticket-edit-dialog.component.ts` with form to edit:
+  - Subject
+  - Description
+  - Redmine URL
+  - Status (Open/Closed)
+- Added edit button (pencil icon) to tickets table actions
+- Added `updateTicket()` method to `tcm.service.ts`
+- Added `PUT /api/tickets/{ticketId}` endpoint to backend
+- Added `updateTicket()` method to `TicketService.java`
+- Creates audit log entries for status changes
+- Accessible to all roles (ADMIN, PROJECT_MANAGER, QA, BA, TESTER)
+
+---
+
+## Previous Work: UI Bug Fixes - COMPLETE
 
 ### Summary
 

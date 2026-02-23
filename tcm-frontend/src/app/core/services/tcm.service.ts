@@ -1085,4 +1085,17 @@ export class TcmService {
         catchError(this.handleError<Ticket>('updateTicketStatus'))
       );
   }
+
+  /**
+   * Update ticket details
+   * @param ticketId - ID of the ticket
+   * @param ticketData - Updated ticket data
+   * @returns Observable<Ticket>
+   */
+  updateTicket(ticketId: string | number, ticketData: Partial<Ticket>): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.apiUrl}/tickets/${ticketId}`, ticketData)
+      .pipe(
+        catchError(this.handleError<Ticket>('updateTicket'))
+      );
+  }
 }

@@ -1320,4 +1320,16 @@ public class ApiController {
         TicketDTO updated = ticketService.updateTicketStatus(ticketId, status);
         return ResponseEntity.ok(updated);
     }
+    
+    /**
+     * PUT /api/tickets/{ticketId} - Update ticket details
+     */
+    @PutMapping("/tickets/{ticketId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'QA', 'BA', 'TESTER')")
+    public ResponseEntity<TicketDTO> updateTicket(
+            @PathVariable Long ticketId,
+            @RequestBody TicketDTO ticketData) {
+        TicketDTO updated = ticketService.updateTicket(ticketId, ticketData);
+        return ResponseEntity.ok(updated);
+    }
 }
