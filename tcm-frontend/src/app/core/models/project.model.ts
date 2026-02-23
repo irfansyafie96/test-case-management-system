@@ -187,7 +187,56 @@ export interface RedmineIssue {
   redmineIssueUrl: string;
   bugReportSubject?: string;
   bugReportDescription?: string;
+  status?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Test Cycle Model - represents a testing phase within a project
+export interface TestCycle {
+  id: number | string;
+  name: string;
+  description?: string;
+  redmineProjectUrl?: string;
+  redmineProjectIdentifier?: string;
+  projectId: number | string;
+  projectName?: string;
+  startDate?: string;
+  endDate?: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdDate?: string;
+  createdBy?: string;
+}
+
+// Ticket Audit Log - tracks history of ticket changes
+export interface TicketAuditLog {
+  id: number | string;
+  action: string;
+  oldValue?: string;
+  newValue?: string;
+  changedBy: string;
+  changedAt: string;
+  notes?: string;
+}
+
+// Ticket DTO - for ticket management page
+export interface Ticket {
+  id: number | string;
+  redmineIssueId?: string;
+  redmineIssueUrl: string;
+  bugReportSubject?: string;
+  bugReportDescription?: string;
+  status: 'OPEN' | 'CLOSED';
+  executionId?: number | string;
+  testCaseTitle?: string;
+  testCaseId?: string;
+  projectName?: string;
+  projectId?: number | string;
+  cycleName?: string;
+  cycleId?: number | string;
+  createdAt?: string;
+  updatedAt?: string;
+  auditLogs?: TicketAuditLog[];
 }
 

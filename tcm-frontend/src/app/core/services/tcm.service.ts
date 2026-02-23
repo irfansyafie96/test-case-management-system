@@ -1,9 +1,9 @@
 
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, of, map } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { Project, TestModule, Submodule, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary, RedmineIssue } from '../models/project.model';
+import { Project, TestModule, Submodule, TestCase, TestExecution, TestStepResult, User, ProjectAssignmentRequest, ModuleAssignmentRequest, CompletionSummary, RedmineIssue, TestCycle, Ticket } from '../models/project.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -974,5 +974,115 @@ export class TcmService {
    */
   waitForAuthSync(maxWaitTime: number = 5000): Promise<boolean> {
     return this.authService.waitForAuthSync(maxWaitTime);
+  }
+
+  // ==================== TEST CYCLE METHODS ====================
+
+  /**
+   * Get all cycles for a project
+   * @param projectId - ID of the project
+   * @returns Observable<TestCycle[]>
+   */
+  getCyclesByProject(projectId: string | number): Observable<TestCycle[]> {
+    return this.http.get<TestCycle[]>(`${this.apiUrl}/projects/${projectId}/cycles`)
+      .pipe(
+        catchError(this.handleError<TestCycle[]>('getCyclesByProject', []))
+      );
+  }
+
+  /**
+   * Get active cycles for a project
+   * @param projectId - ID of the project
+   * @returns Observable<TestCycle[]>
+   */
+  getActiveCyclesByProject(projectId: string | number): Observable<TestCycle[]> {
+    return this.http.get<TestCycle[]>(`${this.apiUrl}/projects/${projectId}/cycles/active`)
+      .pipe(
+        catchError(this.handleError<TestCycle[]>('getActiveCyclesByProject', []))
+      );
+  }
+
+  /**
+   * Create a new test cycle
+   * @param projectId - ID of the project
+   * @param cycle - Cycle data
+   * @returns Observable<TestCycle>
+   */
+  createCycle(projectId: string | number, cycle: Partial<TestCycle>): Observable<TestCycle> {
+    return this.http.post<TestCycle>(`${this.apiUrl}/projects/${projectId}/cycles`, cycle)
+      .pipe(
+        catchError(this.handleError<TestCycle>('createCycle'))
+      );
+  }
+
+  /**
+   * Update a test cycle
+   * @param cycleId - ID of the cycle
+   * @param cycle - Updated cycle data
+   * @returns Observable<TestCycle>
+   */
+  updateCycle(cycleId: string | number, cycle: Partial<TestCycle>): Observable<TestCycle> {
+    return this.http.put<TestCycle>(`${this.apiUrl}/cycles/${cycleId}`, cycle)
+      .pipe(
+        catchError(this.handleError<TestCycle>('updateCycle'))
+      );
+  }
+
+  /**
+   * Delete a test cycle
+   * @param cycleId - ID of the cycle to delete
+   * @returns Observable<void>
+   */
+  deleteCycle(cycleId: string | number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/cycles/${cycleId}`)
+      .pipe(
+        catchError(this.handleError<void>('deleteCycle'))
+      );
+  }
+
+  // ==================== TICKET METHODS ====================
+
+  /**
+   * Get all tickets with optional filters
+   * @param projectId - Optional project filter
+   * @param cycleId - Optional cycle filter
+   * @param status - Optional status filter (OPEN/CLOSED)
+   * @returns Observable<Ticket[]>
+   */
+  getTickets(projectId?: string | number, cycleId?: string | number, status?: string): Observable<Ticket[]> {
+    let params = new HttpParams();
+    if (projectId) params = params.set('projectId', projectId.toString());
+    if (cycleId) params = params.set('cycleId', cycleId.toString());
+    if (status) params = params.set('status', status);
+
+    return this.http.get<Ticket[]>(`${this.apiUrl}/tickets`, { params })
+      .pipe(
+        catchError(this.handleError<Ticket[]>('getTickets', []))
+      );
+  }
+
+  /**
+   * Get a single ticket by ID
+   * @param ticketId - ID of the ticket
+   * @returns Observable<Ticket>
+   */
+  getTicketById(ticketId: string | number): Observable<Ticket> {
+    return this.http.get<Ticket>(`${this.apiUrl}/tickets/${ticketId}`)
+      .pipe(
+        catchError(this.handleError<Ticket>('getTicketById'))
+      );
+  }
+
+  /**
+   * Update ticket status
+   * @param ticketId - ID of the ticket
+   * @param status - New status (OPEN or CLOSED)
+   * @returns Observable<Ticket>
+   */
+  updateTicketStatus(ticketId: string | number, status: string): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.apiUrl}/tickets/${ticketId}/status?status=${status}`, {})
+      .pipe(
+        catchError(this.handleError<Ticket>('updateTicketStatus'))
+      );
   }
 }

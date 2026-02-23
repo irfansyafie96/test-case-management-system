@@ -492,3 +492,131 @@
     align-items: stretch;
   }
 }
+
+/* Cycles Section */
+.cycles-section {
+  margin-top: 48px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.section-header h2 mat-icon {
+  color: var(--accent-primary);
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cycles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cycle-card {
+  background-color: var(--surface);
+  border: var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.cycle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.cycle-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cycle-title-row h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.cycle-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #059669 !important;
+  color: white !important;
+}
+
+.status-inactive {
+  background-color: #6b7280 !important;
+  color: white !important;
+}
+
+.cycle-description {
+  color: var(--ink-light);
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.cycle-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-light);
+}
+
+.meta-item mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.meta-item a {
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.meta-item a:hover {
+  text-decoration: underline;
+}

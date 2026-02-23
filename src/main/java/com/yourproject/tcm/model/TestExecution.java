@@ -138,6 +138,12 @@ public class TestExecution {
     @JsonIgnoreProperties({"execution"})
     private List<RedmineIssue> redmineIssues;  // Linked Redmine issues for this execution
 
+    // Test Cycle - links execution to a specific testing phase
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "test_cycle_id")
+    @JsonIgnoreProperties({"project"})
+    private TestCycle testCycle;
+
     // Getters and Setters - Standard methods to access private fields
     public Long getId() {
         return id;
@@ -352,5 +358,22 @@ public class TestExecution {
 
     public void setRedmineIssues(List<RedmineIssue> redmineIssues) {
         this.redmineIssues = redmineIssues;
+    }
+
+    // Test Cycle Getters and Setters
+    public TestCycle getTestCycle() {
+        return testCycle;
+    }
+
+    public void setTestCycle(TestCycle testCycle) {
+        this.testCycle = testCycle;
+    }
+
+    public Long getTestCycleId() {
+        return testCycle != null ? testCycle.getId() : null;
+    }
+
+    public String getTestCycleName() {
+        return testCycle != null ? testCycle.getName() : null;
     }
 }

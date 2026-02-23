@@ -95,4 +95,80 @@
       </div>
     </ng-template>
   </div>
+
+  <!-- Cycles Section -->
+  <div class="content-section cycles-section">
+    <div class="section-header">
+      <h2><mat-icon>timeline</mat-icon> Phases</h2>
+      <div class="section-actions">
+        <button
+          *ngIf="authService.canManageModules()"
+          mat-raised-button
+          color="primary"
+          (click)="openCycleDialog(project.id)">
+          <mat-icon>add</mat-icon> NEW PHASE
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="cycles.length > 0; else noCycles" class="cycles-list">
+      <div *ngFor="let cycle of cycles" class="cycle-card">
+        <div class="cycle-header">
+            <div class="cycle-title-row">
+              <h3>{{ cycle.name }}</h3>
+              <span class="status-badge" [ngClass]="cycle.isActive ? 'status-active' : 'status-inactive'">
+                {{ cycle.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="cycle-actions">
+              <button
+                *ngIf="authService.canManageModules()"
+                mat-icon-button
+                (click)="openCycleDialog(project.id, cycle)"
+                [matTooltip]="'Edit phase'">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                *ngIf="authService.canManageModules()"
+                mat-icon-button
+                color="warn"
+                (click)="deleteCycle(cycle.id, $event)"
+                [matTooltip]="'Delete phase'">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+        </div>
+        
+        <p class="cycle-description" *ngIf="cycle.description">{{ cycle.description }}</p>
+        
+        <div class="cycle-meta">
+          <div *ngIf="cycle.startDate" class="meta-item">
+            <mat-icon>calendar_today</mat-icon>
+            <span>Start: {{ cycle.startDate | date:'mediumDate' }}</span>
+          </div>
+          <div *ngIf="cycle.endDate" class="meta-item">
+            <mat-icon>event</mat-icon>
+            <span>End: {{ cycle.endDate | date:'mediumDate' }}</span>
+          </div>
+          <div *ngIf="cycle.redmineProjectUrl" class="meta-item">
+            <mat-icon>link</mat-icon>
+            <a [href]="cycle.redmineProjectUrl" target="_blank">Redmine Project</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noCycles>
+      <div class="empty-state">
+        <div class="empty-content">
+          <div class="empty-icon-wrapper">
+            <mat-icon class="empty-icon">timeline</mat-icon>
+          </div>
+          <h2>No Phases Created</h2>
+          <p *ngIf="authService.canManageModules()">Create phases to organize test executions by testing cycle.</p>
+          <p *ngIf="!authService.canManageModules()">No phases have been created for this project.</p>
+        </div>
+      </div>
+    </ng-template>
+  </div>
 </div>

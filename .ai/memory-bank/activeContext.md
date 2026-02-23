@@ -1,20 +1,93 @@
 # Project Context
 
-## Current Work: PDF Design Redesign - COMPLETE
+## Current Work: UI Bug Fixes - COMPLETE
 
 ### Summary
 
-Redesigned the Test Analytics PDF export to be more professional and minimalist while keeping all information.
+Fixed multiple UI issues on the Tickets page and Project Detail page (Phases section).
 
 ---
 
 ### Latest Changes (2026-02-23)
 
-**PDF Design Redesign:**
-- **New Design**:
-  - Clean white header with subtle bottom border (no heavy blue background)
-  - Minimal summary stats in horizontal layout (no boxed sections)
-  - Filters shown inline with subtle separators (•)
+**UI Bug Fixes:**
+
+1. **Icon color on tickets page**:
+   - Added `color="accent"` and `color="primary"` to action buttons
+   - File: `tickets.component.html`
+
+2. **Delete phase snackbar styling**:
+   - Added `panelClass: ['success-snackbar']` to match other notifications
+   - File: `project-detail.component.ts`
+
+3. **Date picker not working**:
+   - Added `provideNativeDateAdapter()` to `app.config.ts`
+   - Fixed missing `#endPicker` template reference in cycle dialog
+
+4. **Redmine URL validation**:
+   - Added reactive form with URL pattern validation in phase dialog
+   - Form now validates URL format before submission
+   - File: `cycle-dialog.component.ts`
+
+5. **Active/Inactive badge visibility**:
+   - Fixed CSS using hardcoded colors: Active=#059669 (green), Inactive=#6b7280 (gray)
+   - Changed class binding from `[class.active]/[class.inactive]` to `[ngClass]`
+   - Files: `project-detail.component.html`, `project-detail.component.css`
+
+6. **Removed phase count badge**:
+   - Removed `{{ cycles.length }} Phases` badge from project detail page
+
+7. **CLOSED status not visible**:
+   - Fixed CSS using `var(--accent-success)` instead of non-existent `var(--success)`
+   - Files: `tickets.component.css`
+
+8. **Phase edit/delete restricted to Admin/PM**:
+   - Added `*ngIf="authService.canManageModules()"` to edit and delete buttons
+   - QA/BA/TESTER users can only view phases
+   - Backend already had `@PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")`
+   - Files: `project-detail.component.html`
+
+9. **Ticket status reload**:
+   - Fixed toggleTicketStatus to reload data from server after status change
+   - Ensures status badge displays correctly after update
+
+10. **Backend DTO fix**:
+    - Added `@JsonProperty("isActive")` to TestCycleDTO.java for correct JSON serialization
+
+---
+
+## Previous Work: Test Cycles/Phases Feature - COMPLETE
+
+### Summary
+
+Implemented Test Cycles/Phases feature for organizing test executions by testing phase.
+
+**Test Cycles/Phases Feature:**
+- **Description**: Allow PM/Admin to create testing phases linked to Redmine projects
+- **Backend Entities**:
+  - `TestCycle` - name, description, redmineProjectUrl, startDate, endDate, isActive, sortOrder
+  - `TicketAuditLog` - tracks history of ticket changes
+  - Updated `TestExecution` - added testCycle ManyToOne relationship
+  - Updated `RedmineIssue` - added status (OPEN/CLOSED), auditLogs relationship
+- **Backend Services**:
+  - `TestCycleService` - CRUD operations for cycles
+  - `TicketService` - ticket management and status updates
+- **API Endpoints**:
+  - `GET/POST /api/projects/{id}/cycles` - list/create cycles
+  - `PUT/DELETE /api/cycles/{id}` - update/delete cycles
+  - `GET /api/tickets` - list tickets with filters
+  - `PUT /api/tickets/{id}/status` - update ticket status
+- **Frontend Features**:
+  - Tickets page (`/tickets`) with filter card and table
+  - Cycle filter dropdown on Executions page
+  - Cycles section on Project Detail page
+  - Cycle dialog for create/edit
+  - PM/Admin read-only mode on execution workbench
+- **Security**: Edit/delete restricted to ADMIN and PROJECT_MANAGER only
+
+---
+
+## Previous Work: PDF Design Redesign - COMPLETE
   - Pie chart with clean legend (circle points, no borders)
   - Module breakdown table next to pie chart (side-by-side layout)
   - Light gray table header instead of heavy blue

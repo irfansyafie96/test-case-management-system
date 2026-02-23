@@ -2,6 +2,7 @@ import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors, withXsrfConfiguration } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth.interceptor';
@@ -22,6 +23,7 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([credentialsInterceptor, authInterceptor]), // Register interceptors
       withXsrfConfiguration(xsrfConfig) // Configure XSRF handling
     ),
-    provideAnimationsAsync()
+    provideAnimationsAsync(),
+    provideNativeDateAdapter()
   ]
 };

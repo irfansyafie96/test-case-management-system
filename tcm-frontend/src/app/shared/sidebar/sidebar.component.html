@@ -39,6 +39,11 @@
       <mat-icon>list_alt</mat-icon>
       <span *ngIf="!isCollapsed">Test Cases</span>
     </a>
+
+    <a routerLink="/tickets" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Tickets' : ''">
+      <mat-icon>confirmation_number</mat-icon>
+      <span *ngIf="!isCollapsed">Tickets</span>
+    </a>
   </nav>
 
   <div class="sidebar-footer">

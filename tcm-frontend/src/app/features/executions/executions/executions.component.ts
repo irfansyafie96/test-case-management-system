@@ -14,7 +14,7 @@ import { BehaviorSubject, combineLatest } from 'rxjs';
 import { map, filter } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { TestExecution, User, TestModule, Project } from '../../../core/models/project.model';
+import { TestExecution, User, TestModule, Project, TestCycle } from '../../../core/models/project.model';
 
 interface ExecutionView {
   loading: boolean;
@@ -78,6 +78,8 @@ export class ExecutionsComponent implements OnInit {
   selectedModule: string = 'all';
   selectedStatus: string = 'all';
   selectedProject: string = 'all';
+  selectedCycle: string = 'all';
+  cycles: TestCycle[] = [];
   filteredModulesList: TestModule[] = [];
 
   vm$ = this.createViewModel();
@@ -221,6 +223,8 @@ export class ExecutionsComponent implements OnInit {
   onProjectChange(): void {
     // Reset module filter when project changes
     this.selectedModule = 'all';
+    this.selectedCycle = 'all';
+    this.cycles = [];
     
     // Filter modules based on selected project
     if (this.selectedProject === 'all') {
@@ -235,6 +239,16 @@ export class ExecutionsComponent implements OnInit {
         (m: TestModule) => m.projectId?.toString() === projectId
       );
       console.log('Filtered modules for project', projectId, ':', this.filteredModulesList);
+
+      // Load cycles for the selected project
+      this.tcmService.getCyclesByProject(projectId).subscribe({
+        next: (cycles) => {
+          this.cycles = cycles;
+        },
+        error: (err) => {
+          console.error('Failed to load cycles', err);
+        }
+      });
     }
     
     // Reload executions with project filter

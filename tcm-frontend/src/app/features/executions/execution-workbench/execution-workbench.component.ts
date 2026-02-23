@@ -17,6 +17,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { BehaviorSubject, combineLatest, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TcmService } from '../../../core/services/tcm.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { TestExecution, TestStepResult, RedmineIssue } from '../../../core/models/project.model';
 import { CompletionSummaryDialogComponent } from './completion-summary-dialog.component';
 import { RedmineIssueDialogComponent } from './redmine-issue-dialog.component';
@@ -72,12 +73,15 @@ export class ExecutionWorkbenchComponent implements OnInit {
 
   constructor(
     private tcmService: TcmService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
+
+  isReadOnly: boolean = false;
 
   get isExecutionCompleted(): boolean {
     const execution = this.executionSubject.value;
@@ -97,6 +101,13 @@ export class ExecutionWorkbenchComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check if readOnly from query param or user is PM/Admin
+    this.route.queryParamMap.subscribe(queryParams => {
+      const readOnlyParam = queryParams.get('readOnly');
+      const isAdmin = this.authService.hasRole('ADMIN') || this.authService.hasRole('PROJECT_MANAGER');
+      this.isReadOnly = readOnlyParam === 'true' || isAdmin;
+    });
+
     this.route.paramMap.subscribe(params => {
       this.executionId = params.get('id');
       if (this.executionId) {

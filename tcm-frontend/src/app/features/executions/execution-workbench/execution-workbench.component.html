@@ -99,7 +99,7 @@
                   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="status-field">
                     <mat-select
                       [value]="stepResult.status || 'PENDING'"
-                      [disabled]="isExecutionCompleted"
+                      [disabled]="isExecutionCompleted || isReadOnly"
                       (selectionChange)="updateStepResult(stepResult, $event.value)">
                       <mat-option value="PASSED">Pass</mat-option>
                       <mat-option value="FAILED">Fail</mat-option>
@@ -119,7 +119,7 @@
                       matInput
                       placeholder="Record what actually happened..."
                       [value]="stepResult.actualResult || ''"
-                      [disabled]="isExecutionCompleted"
+                      [disabled]="isExecutionCompleted || isReadOnly"
                       (input)="updateStepResult(stepResult, stepResult.status || 'PENDING', $event.target.value)">
                   </mat-form-field>
                 </td>
@@ -133,7 +133,7 @@
                     mat-icon-button
                     color="primary"
                     matTooltip="Execute this step"
-                    [disabled]="isExecutionCompleted"
+                    [disabled]="isExecutionCompleted || isReadOnly"
                     (click)="updateStepResult(stepResult, 'PASSED')">
                     <mat-icon>check_circle</mat-icon>
                   </button>
@@ -169,7 +169,7 @@
               <div class="completion-controls">
                 <mat-form-field appearance="outline" class="result-field">
                   <mat-label>Overall Result</mat-label>
-                  <mat-select [(ngModel)]="overallResult" [disabled]="isExecutionCompleted" (ngModelChange)="onResultChange($event)">
+                  <mat-select [(ngModel)]="overallResult" [disabled]="isExecutionCompleted || isReadOnly" (ngModelChange)="onResultChange($event)">
                     <mat-option value="PASSED">Pass</mat-option>
                     <mat-option value="FAILED">Fail</mat-option>
                     <mat-option value="BLOCKED">Blocked</mat-option>
@@ -183,16 +183,24 @@
                   <button
                     mat-raised-button
                     color="primary"
-                    *ngIf="!isExecutionCompleted"
+                    *ngIf="!isExecutionCompleted && !isReadOnly"
                     [disabled]="!overallResult"
                     (click)="completeExecution(overallResult, executionNotes)">
                     COMPLETE EXECUTION
+                  </button>
+                  <!-- Read-only banner -->
+                  <button
+                    mat-raised-button
+                    color="accent"
+                    *ngIf="isExecutionCompleted && isReadOnly"
+                    disabled>
+                    VIEW ONLY
                   </button>
                   <!-- Create Redmine Issue button - only visible for FAILED executions -->
                   <button
                     mat-raised-button
                     color="warn"
-                    *ngIf="isExecutionCompleted && vm.execution.overallResult === 'FAILED' && !vm.execution.redmineIssueUrl"
+                    *ngIf="isExecutionCompleted && vm.execution.overallResult === 'FAILED' && !vm.execution.redmineIssueUrl && !isReadOnly"
                     (click)="openRedmineDialog()">
                     <mat-icon>bug_report</mat-icon> CREATE REDMINE ISSUE
                   </button>
@@ -214,7 +222,7 @@
             </mat-card-title>
             <mat-card-subtitle>{{ redmineIssues.length }} linked issue(s)</mat-card-subtitle>
             <div class="redmine-actions">
-              <button mat-icon-button matTooltip="Add another Redmine issue" (click)="openRedmineDialog()">
+              <button mat-icon-button matTooltip="Add another Redmine issue" (click)="openRedmineDialog()" *ngIf="!isReadOnly">
                 <mat-icon>add</mat-icon>
               </button>
               <button mat-icon-button matTooltip="Edit issues" (click)="openRedmineDialog()">

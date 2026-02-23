@@ -46,6 +46,8 @@ public class ApiController {
     private final com.yourproject.tcm.repository.TestModuleRepository testModuleRepository;
     private final ModuleEditorService moduleEditorService;
     private final ExecutionAssignmentService executionAssignmentService;
+    private final TestCycleService testCycleService;
+    private final TicketService ticketService;
 
     @Autowired
     public ApiController(UserRepository userRepository,
@@ -57,7 +59,9 @@ public class ApiController {
                         SecurityHelper securityHelper,
                         com.yourproject.tcm.repository.TestModuleRepository testModuleRepository,
                         ModuleEditorService moduleEditorService,
-                        ExecutionAssignmentService executionAssignmentService) {
+                        ExecutionAssignmentService executionAssignmentService,
+                        TestCycleService testCycleService,
+                        TicketService ticketService) {
         this.userRepository = userRepository;
         this.projectService = projectService;
         this.moduleService = moduleService;
@@ -72,6 +76,8 @@ public class ApiController {
         this.testModuleRepository = testModuleRepository;
         this.moduleEditorService = moduleEditorService;
         this.executionAssignmentService = executionAssignmentService;
+        this.testCycleService = testCycleService;
+        this.ticketService = ticketService;
     }
 
     // ==================== PROJECT ENDPOINTS ====================
@@ -1224,5 +1230,94 @@ public class ApiController {
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // ==================== TEST CYCLE ENDPOINTS ====================
+
+    /**
+     * GET /api/projects/{projectId}/cycles - Get all cycles for a project
+     */
+    @GetMapping("/projects/{projectId}/cycles")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'QA', 'BA', 'TESTER')")
+    public ResponseEntity<List<TestCycleDTO>> getCyclesByProject(@PathVariable Long projectId) {
+        List<TestCycleDTO> cycles = testCycleService.getCyclesByProject(projectId);
+        return ResponseEntity.ok(cycles);
+    }
+
+    /**
+     * GET /api/projects/{projectId}/cycles/active - Get active cycles for a project
+     */
+    @GetMapping("/projects/{projectId}/cycles/active")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'QA', 'BA', 'TESTER')")
+    public ResponseEntity<List<TestCycleDTO>> getActiveCyclesByProject(@PathVariable Long projectId) {
+        List<TestCycleDTO> cycles = testCycleService.getActiveCyclesByProject(projectId);
+        return ResponseEntity.ok(cycles);
+    }
+
+    /**
+     * POST /api/projects/{projectId}/cycles - Create a new cycle
+     */
+    @PostMapping("/projects/{projectId}/cycles")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
+    public ResponseEntity<TestCycleDTO> createCycle(@PathVariable Long projectId, @RequestBody TestCycleDTO cycleDTO) {
+        TestCycleDTO created = testCycleService.createCycle(projectId, cycleDTO);
+        return ResponseEntity.ok(created);
+    }
+
+    /**
+     * PUT /api/cycles/{cycleId} - Update a cycle
+     */
+    @PutMapping("/cycles/{cycleId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
+    public ResponseEntity<TestCycleDTO> updateCycle(@PathVariable Long cycleId, @RequestBody TestCycleDTO cycleDTO) {
+        TestCycleDTO updated = testCycleService.updateCycle(cycleId, cycleDTO);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * DELETE /api/cycles/{cycleId} - Delete a cycle
+     */
+    @DeleteMapping("/cycles/{cycleId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
+    public ResponseEntity<Void> deleteCycle(@PathVariable Long cycleId) {
+        testCycleService.deleteCycle(cycleId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ==================== TICKET ENDPOINTS ====================
+
+    /**
+     * GET /api/tickets - Get all tickets with optional filters
+     */
+    @GetMapping("/tickets")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'QA', 'BA', 'TESTER')")
+    public ResponseEntity<List<TicketDTO>> getTickets(
+            @RequestParam(required = false) Long projectId,
+            @RequestParam(required = false) Long cycleId,
+            @RequestParam(required = false) String status) {
+        List<TicketDTO> tickets = ticketService.getTickets(projectId, cycleId, status);
+        return ResponseEntity.ok(tickets);
+    }
+
+    /**
+     * GET /api/tickets/{ticketId} - Get a single ticket by ID
+     */
+    @GetMapping("/tickets/{ticketId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'QA', 'BA', 'TESTER')")
+    public ResponseEntity<TicketDTO> getTicketById(@PathVariable Long ticketId) {
+        TicketDTO ticket = ticketService.getTicketById(ticketId);
+        return ResponseEntity.ok(ticket);
+    }
+
+    /**
+     * PUT /api/tickets/{ticketId}/status - Update ticket status
+     */
+    @PutMapping("/tickets/{ticketId}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'QA', 'BA', 'TESTER')")
+    public ResponseEntity<TicketDTO> updateTicketStatus(
+            @PathVariable Long ticketId,
+            @RequestParam String status) {
+        TicketDTO updated = ticketService.updateTicketStatus(ticketId, status);
+        return ResponseEntity.ok(updated);
     }
 }

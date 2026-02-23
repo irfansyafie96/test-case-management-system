@@ -3,6 +3,8 @@ package com.yourproject.tcm.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * RedmineIssue Entity - Represents a Redmine issue linked to a test execution
@@ -14,6 +16,9 @@ import java.time.LocalDateTime;
 @Table(name = "redmine_issues")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class RedmineIssue {
+    
+    public static final String STATUS_OPEN = "OPEN";
+    public static final String STATUS_CLOSED = "CLOSED";
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,11 +41,20 @@ public class RedmineIssue {
     @Column(name = "bug_report_description", columnDefinition = "TEXT")
     private String bugReportDescription;
     
+    @Column(nullable = false)
+    private String status = STATUS_OPEN;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    // Audit trail - One-to-Many relationship
+    @OneToMany(mappedBy = "redmineIssue", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("changedAt DESC")
+    @JsonIgnoreProperties({"redmineIssue"})
+    private List<TicketAuditLog> auditLogs = new ArrayList<>();
     
     public RedmineIssue() {}
     
@@ -118,5 +132,26 @@ public class RedmineIssue {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
+    
+    public List<TicketAuditLog> getAuditLogs() {
+        return auditLogs;
+    }
+    
+    public void setAuditLogs(List<TicketAuditLog> auditLogs) {
+        this.auditLogs = auditLogs;
+    }
+    
+    public void addAuditLog(TicketAuditLog auditLog) {
+        auditLogs.add(auditLog);
+        auditLog.setRedmineIssue(this);
     }
 }

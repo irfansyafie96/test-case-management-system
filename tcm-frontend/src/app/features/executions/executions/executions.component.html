@@ -76,6 +76,20 @@
             </mat-select>
           </mat-form-field>
         </div>
+
+        <!-- Filter by Phase/Cycle -->
+        <div class="filter-item">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by Phase</mat-label>
+            <mat-select [(value)]="selectedCycle" (selectionChange)="onFilterChange()" panelClass="filter-select-panel">
+              <mat-option value="all">All Phases</mat-option>
+              <mat-option value="none">No Phase</mat-option>
+              <mat-option *ngFor="let cycle of cycles" [value]="cycle.id.toString()">
+                {{ cycle.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
     </div>
 
@@ -151,8 +165,10 @@
                           <th mat-header-cell *matHeaderCellDef> ACTIONS </th>
                           <td mat-cell *matCellDef="let execution">
                             <button mat-raised-button color="primary"
-                              [routerLink]="['/executions/workbench', execution.id]">
-                              <mat-icon>play_arrow</mat-icon> {{ execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'VIEW' : 'EXECUTE' }}
+                              [routerLink]="['/executions/workbench', execution.id]"
+                              [queryParams]="{ readOnly: vm.isAdmin ? 'true' : 'false' }">
+                              <mat-icon>{{ vm.isAdmin || execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'visibility' : 'play_arrow' }}</mat-icon> 
+                              {{ vm.isAdmin || execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'VIEW' : 'EXECUTE' }}
                             </button>
                           </td>
                         </ng-container>

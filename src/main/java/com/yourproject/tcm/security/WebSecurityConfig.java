@@ -117,6 +117,8 @@ public class WebSecurityConfig {
             .ignoringRequestMatchers("/api/users/**")       // Ignore CSRF for user management
             .ignoringRequestMatchers("/api/executions/**")  // Ignore CSRF for executions
             .ignoringRequestMatchers("/api/invitations/**")
+            .ignoringRequestMatchers("/api/tickets/**")
+            .ignoringRequestMatchers("/api/cycles/**")
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
         )

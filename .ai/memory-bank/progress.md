@@ -893,6 +893,64 @@
 
 ### Recent Features Added:
 
+#### Test Cycles/Phases Feature (2026-02-23) ✅
+- **Description**: Allow PM/Admin to create testing phases (e.g., Phase 1 - UAT, Phase 2 - Regression) linked to Redmine projects
+- **Backend Implementation**:
+  - Created `TestCycle` entity with name, description, redmineProjectUrl, startDate, endDate, isActive, sortOrder
+  - Created `TicketAuditLog` entity for audit trail
+  - Updated `TestExecution` entity - added testCycle ManyToOne relationship
+  - Updated `RedmineIssue` entity - added status field (OPEN/CLOSED), auditLogs OneToMany
+  - Created `TestCycleRepository` and `TicketAuditLogRepository`
+  - Created `TestCycleService` and `TicketService`
+  - Created DTOs: `TestCycleDTO`, `TicketDTO`, `TicketAuditLogDTO`
+  - Added API endpoints: GET/POST/PUT/DELETE for cycles, GET/POST/PUT for tickets
+  - Created database migration: `migrations/V2__add_test_cycle.sql`
+  - Fixed CSRF - added `/api/tickets/**` and `/api/cycles/**` to WebSecurityConfig.java
+- **Frontend Implementation**:
+  - Added models: `TestCycle`, `Ticket`, `TicketAuditLog` in `project.model.ts`
+  - Added API methods to `tcm.service.ts`
+  - Created Tickets page (`/tickets`) with filter card and table
+  - Added Tickets route to `app.routes.ts`
+  - Added Tickets nav to sidebar
+  - Updated Executions page - added cycle filter dropdown
+  - Implemented PM/Admin read-only mode (VIEW button instead of EXECUTE)
+  - Created Cycle dialog component
+  - Added Cycles section to Project Detail page
+- **Status**: COMPLETED ✅
+
+#### Ticket Management Page (2026-02-23) ✅
+- **Description**: View and manage Redmine tickets created from failed test executions
+- **Features**:
+  - Filter by Project, Phase, Status (Open/Closed)
+  - Toggle ticket status (Open ↔ Closed)
+  - View in Redmine (opens in new tab)
+  - View Audit Trail (dialog showing history)
+- **Status**: COMPLETED ✅
+
+#### PM/Admin Read-Only Mode (2026-02-23) ✅
+- **Description**: PM/Admin users can VIEW executions but cannot EDIT
+- **Implementation**:
+  - Executions page shows "VIEW" button for PM/Admin instead of "EXECUTE"
+  - Workbench component checks `isReadOnly` flag from query param and user role
+  - Disabled: step status dropdowns, actual result inputs, Complete button, Redmine buttons
+- **Status**: COMPLETED ✅
+
+#### Cycle Filter (2026-02-23) ✅
+- **Description**: Filter executions by phase on Executions and Test Cases pages
+- **Implementation**: Added cycle/phase dropdown filter to both pages
+- **Status**: COMPLETED ✅
+
+#### UI Bug Fixes (2026-02-23) ✅
+- **Icon color on tickets page**: Added color to action buttons (accent/primary)
+- **Delete phase snackbar**: Added panelClass: ['success-snackbar']
+- **Date picker not working**: Added provideNativeDateAdapter() to app.config.ts
+- **Redmine URL validation**: Added reactive form with URL pattern validation
+- **Active/Inactive badge not visible**: Fixed CSS with hardcoded colors (#059669 green, #6b7280 gray)
+- **Removed phase count badge**: Removed "{{ cycles.length }} Phases" from project detail
+- **CLOSED status not visible**: Fixed CSS using var(--accent-success) instead of var(--success)
+- **Phase edit/delete for QA**: Added *ngIf="authService.canManageModules()" to buttons
+- **Status**: COMPLETED ✅
+
 #### Filter Order Reorder (2026-02-23) ✅
 - **Location**: Executions page (`/executions`) and Test Analytics page (`/test-cases`)
 - **Description**: Reordered filters - Project now first, User moved to third
@@ -940,6 +998,11 @@
 - **Deployment**: Ready to deploy ⏸️
 - **Database**: Stable MariaDB 11.4.9 LTS (no more XAMPP issues) ✅
 - **Code Quality**: Good, SecurityHelper complete, remaining refactoring optional ⏸️
+- **Test Cycles/Phases Feature**: COMPLETED ✅ (2026-02-23)
+- **Ticket Management Page**: COMPLETED ✅ (2026-02-23)
+- **PM/Admin Read-Only Mode**: COMPLETED ✅ (2026-02-23)
+- **Cycle Filter**: COMPLETED ✅ (2026-02-23)
+- **UI Bug Fixes**: COMPLETED ✅ (2026-02-23)
 
 ### Time Estimates:
 - Sprint 1: COMPLETED ✅

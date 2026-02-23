@@ -16,9 +16,10 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TcmService } from '../../../core/services/tcm.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ModuleDialogComponent } from '../../modules/modules/module-dialog.component';
+import { CycleDialogComponent } from './cycle-dialog.component';
 import { ConfirmationDialogComponent } from '../../../shared/confirmation-dialog/confirmation-dialog.component';
 
-import { Project, TestModule, User, ProjectAssignmentRequest } from '../../../core/models/project.model';
+import { Project, TestModule, User, ProjectAssignmentRequest, TestCycle } from '../../../core/models/project.model';
 import { Observable, BehaviorSubject, forkJoin } from 'rxjs';
 
 @Component({
@@ -42,6 +43,9 @@ export class ProjectDetailComponent implements OnInit {
   selectedUserId: number | string | null = null;
   loadingAssignments = false;
 
+  // Cycles
+  cycles: TestCycle[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private tcmService: TcmService,
@@ -55,7 +59,87 @@ export class ProjectDetailComponent implements OnInit {
     const projectId = this.route.snapshot.paramMap.get('id');
     if (projectId) {
       this.project$ = this.tcmService.getProject(projectId);
+      this.loadCycles(projectId);
     }
+  }
+
+  loadCycles(projectId: string | number): void {
+    this.tcmService.getCyclesByProject(projectId).subscribe({
+      next: (cycles) => {
+        setTimeout(() => {
+          this.cycles = cycles;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('Failed to load cycles', err);
+      }
+    });
+  }
+
+  openCycleDialog(projectId: string | number, cycle?: TestCycle): void {
+    const isEdit = !!cycle;
+    const dialogRef = this.dialog.open(CycleDialogComponent, {
+      width: '500px',
+      data: { projectId, isEdit, cycle }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        setTimeout(() => {
+          this.loadCycles(projectId);
+          this.snackBar.open(isEdit ? 'Phase updated successfully' : 'Phase created successfully', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar'],
+            horizontalPosition: 'right',
+            verticalPosition: 'top'
+          });
+        });
+      }
+    });
+  }
+
+  deleteCycle(cycleId: string | number, event: Event): void {
+    event.stopPropagation();
+    
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Phase',
+        message: 'Are you sure you want to delete this phase? This action cannot be undone.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.tcmService.deleteCycle(cycleId).subscribe({
+          next: () => {
+            setTimeout(() => {
+              const projectId = this.route.snapshot.paramMap.get('id');
+              if (projectId) {
+                this.loadCycles(projectId);
+              }
+              this.snackBar.open('Phase deleted successfully', 'Close', {
+                duration: 3000,
+                panelClass: ['success-snackbar'],
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
+              });
+            });
+          },
+          error: (err) => {
+            console.error('Failed to delete cycle', err);
+            this.snackBar.open('Failed to delete phase', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'right',
+              verticalPosition: 'top'
+            });
+          }
+        });
+      }
+    });
   }
 
   openModuleDialog(projectId: string | number): void {
