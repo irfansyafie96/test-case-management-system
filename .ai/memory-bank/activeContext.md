@@ -1,27 +1,26 @@
 # Project Context
 
-## Current Work: Filter Card Divider Line - COMPLETE
+## Current Work: Filter Order Reorder - COMPLETE
 
 ### Summary
 
-Added full-width divider lines to filter cards on Executions and Test Analytics pages. The divider now spans edge-to-edge within the card (matching login/register page pattern), instead of being constrained by card padding.
+Reordered filters on Executions and Test Analytics pages. Filter by Project is now the first filter (instead of Filter by User) for better logical flow (Project → Module → User).
 
 ---
 
 ### Latest Changes (2026-02-23)
 
-**Filter Card Divider Line:**
-- **Issue**: Divider line between filter header and dropdowns had gaps on left/right (constrained by card padding)
-- **Solution**: Used absolute positioning with `left: 0; right: 0` to span full width (same pattern as login/register cards)
+**Filter Order Reorder:**
+- **Pages**: `/executions` and `/test-cases`
+- **Change**: Swapped Filter by User and Filter by Project positions
+- **New Order**: Project → Module → User → (Status on Executions)
 - **Files Modified**:
-  - `executions.component.html` - Added `<div class="divider-line"></div>`
-  - `executions.component.css` - Added `.divider-line` styles, updated `.filters-header`
-  - `test-cases.component.html` - Added `<div class="divider-line"></div>`
-  - `test-cases.component.css` - Added `.divider-line` styles, updated `.filters-header`
+  - `executions.component.html` - Reordered filter blocks
+  - `test-cases.component.html` - Reordered filter blocks
 
 ---
 
-## Previous Work: PDF Export for Test Analytics - COMPLETE
+## Previous Work: Filter Card Divider Line - COMPLETE
 
 ### Summary
 

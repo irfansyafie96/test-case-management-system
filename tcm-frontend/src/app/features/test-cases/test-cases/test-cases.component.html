@@ -29,19 +29,6 @@
       </div>
       <div class="divider-line"></div>
       <div class="filters-row">
-        <!-- Filter by User -->
-        <div class="filter-item">
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Filter by User</mat-label>
-            <mat-select [(value)]="selectedUserId" (selectionChange)="onUserFilterChange($event.value)" panelClass="filter-select-panel">
-              <mat-option value="all">All Users</mat-option>
-              <mat-option *ngFor="let user of users" [value]="user.id.toString()">
-                {{ user.username }} <span *ngFor="let role of user.roles" class="role-badge">{{ role }}</span>
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
         <!-- Filter by Project -->
         <div class="filter-item">
           <mat-form-field appearance="outline" class="filter-field">
@@ -63,6 +50,19 @@
               <mat-option value="all">All Modules</mat-option>
               <mat-option *ngFor="let module of (selectedProjectId === 'all' ? allModules : filteredModulesList)" [value]="module.id.toString()">
                 {{ module.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Filter by User -->
+        <div class="filter-item">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Filter by User</mat-label>
+            <mat-select [(value)]="selectedUserId" (selectionChange)="onUserFilterChange($event.value)" panelClass="filter-select-panel">
+              <mat-option value="all">All Users</mat-option>
+              <mat-option *ngFor="let user of users" [value]="user.id.toString()">
+                {{ user.username }} <span *ngFor="let role of user.roles" class="role-badge">{{ role }}</span>
               </mat-option>
             </mat-select>
           </mat-form-field>

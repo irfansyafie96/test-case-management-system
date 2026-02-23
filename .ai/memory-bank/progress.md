@@ -889,8 +889,17 @@
 - **Permission Fixes**: 100% complete (QA test case viewing fix implemented and tested) ✅
 - **PDF Export Feature**: COMPLETED ✅ (2026-02-22)
 - **Filter Card Divider**: COMPLETED ✅ (2026-02-23)
+- **Filter Order Reorder**: COMPLETED ✅ (2026-02-23)
 
 ### Recent Features Added:
+
+#### Filter Order Reorder (2026-02-23) ✅
+- **Location**: Executions page (`/executions`) and Test Analytics page (`/test-cases`)
+- **Description**: Reordered filters - Project now first, User moved to third
+- **New Order**: Project → Module → User → (Status)
+- **Files Modified**:
+  - `tcm-frontend/src/app/features/executions/executions/executions.component.html`
+  - `tcm-frontend/src/app/features/test-cases/test-cases/test-cases.component.html`
 
 #### Filter Card Divider Line (2026-02-23) ✅
 - **Location**: Executions page (`/executions`) and Test Analytics page (`/test-cases`)
@@ -939,6 +948,7 @@
 - Testing: COMPLETED ✅
 - PDF Export Feature: COMPLETED ✅ (~1 hour)
 - Filter Card Divider: COMPLETED ✅ (~10 minutes)
+- Filter Order Reorder: COMPLETED ✅ (~2 minutes)
 - Sprint 2 - SecurityHelper: COMPLETED ✅ (2-3 hours done)
 - Sprint 2 - Remaining Refactoring: ~11-17 hours (optional)
 - Deployment: ~2-3 hours
