@@ -25,6 +25,7 @@
   padding: 20px;
   margin-top: 24px;
   margin-bottom: 24px;
+  position: relative;
 }
 
 .filters-header {
@@ -33,7 +34,16 @@
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: var(--border-thin);
+  border-bottom: none;
+}
+
+.divider-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--ink);
+  top: 60px;
 }
 
 .filters-header mat-icon {

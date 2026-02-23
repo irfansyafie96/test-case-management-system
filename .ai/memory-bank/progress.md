@@ -426,15 +426,22 @@
 
 #### High Priority Refactoring (Recommended):
 
-1. **Create SecurityHelper for Centralized Permission Checks** ⏳ NOT STARTED
+1. ~~Create SecurityHelper for Centralized Permission Checks~~ ✅ COMPLETED
    - **Impact**: Eliminates 53+ repeated permission check patterns
    - **Files Affected**: All domain services (ProjectService, ModuleService, SubmoduleService, TestCaseService, ExecutionService, ImportExportService)
-   - **Patterns to Consolidate**:
-     - Admin checks (53 occurrences)
-     - Organization boundary checks (19 occurrences)
-     - Role-based access checks (18 occurrences)
-   - **Estimated Effort**: 2-3 hours
-   - **Status**: NOT STARTED
+   - **Implemented Methods**:
+     - `requireAdmin()` - ADMIN role check
+     - `requireAdminQaOrBa()` - ADMIN/QA/BA check
+     - `requireAdminOrProjectManager()` - ADMIN or PM check
+     - `requireAdminProjectManagerQaOrBa()` - ADMIN/PM/QA/BA check
+     - `requireSameOrganization()` - Organization boundary
+     - `requireProjectAccess()` - Project-level access
+     - `requireModuleAccess()` - Module-level access
+     - `canAccessModule()` - Boolean module check
+     - `canViewAllOrganizationExecutions()` - Execution visibility
+     - `getViewableProjectIds()` - Get viewable project IDs
+   - **File**: `src/main/java/com/yourproject/tcm/service/SecurityHelper.java` (255 lines)
+   - **Status**: ✅ COMPLETED (2026-02-19)
 
 2. **Create Custom Exception Hierarchy** ⏳ NOT STARTED
    - **Impact**: Replaces 111+ `RuntimeException` usages with type-safe exceptions
@@ -498,17 +505,18 @@
    - **Estimated Effort**: 1 hour
    - **Status**: NOT STARTED
 
-10. **Fix Circular Dependency** ⏳ NOT STARTED
-    - **Impact**: ModuleService ↔ TestCaseService circular dependency
-    - **Solution**: Extract execution creation to `ExecutionCreationService`
-    - **Estimated Effort**: 2-3 hours
-    - **Status**: NOT STARTED
+10. ~~Fix Circular Dependency~~ ✅ NOT NEEDED
+   - **Impact**: ModuleService ↔ TestCaseService circular dependency
+   - **Solution**: Verified no circular dependency exists
+   - TestCaseService does NOT inject ModuleService
+   - ModuleService only injects TestCaseService (for cascade delete)
+   - Status**: ✅ NOT NEEDED
 
 ### Sprint 2 Summary:
 - **Total Tasks**: 10
-- **Completed**: 0
+- **Completed**: 2 (SecurityHelper, Circular Dependency check)
 - **In Progress**: 0
-- **Pending**: 10
+- **Pending**: 8
 - **Estimated Total Effort**: 13-20 hours
 - **Expected Code Reduction**: 30-40%
 - **Note**: These are optional refactoring tasks for code quality improvement
@@ -810,18 +818,30 @@
 ## Code Quality Insights (Memory Bank)
 
 ### Current Code Issues Identified:
-- **Code Duplication**: 53+ admin checks, 19+ organization checks, 18+ role checks
+- **Code Duplication**: ~~53+ admin checks~~ - MOSTLY RESOLVED via SecurityHelper
 - **Exception Handling**: 111+ RuntimeException usages (no type safety)
 - **DTO Conversion**: 5+ duplicate conversion patterns
 - **Method Complexity**: 3 methods exceed 100 lines
 - **Magic Numbers**: 5+ hard-coded values
 - **Nested Null Checks**: 10+ deep null checks
-- **Redundant flush()**: 28+ unnecessary entityManager.flush() calls
+- **Redundant flush()**: 32+ unnecessary entityManager.flush() calls
+
+### Refactoring Progress:
+- ✅ **SecurityHelper** - COMPLETE (2026-02-19)
+- ✅ **Circular Dependency Check** - NOT NEEDED (no circular dependency exists)
+- ❌ **Custom Exception Hierarchy** - NOT STARTED
+- ❌ **DTO Mapper Classes** - NOT STARTED
+- ❌ **Refactor Long Methods** - NOT STARTED
+- ❌ **Remove flush() calls** - NOT STARTED
+- ❌ **Constants Class** - NOT STARTED
+- ❌ **Nested Null Checks** - NOT STARTED
+- ❌ **RepositoryHelper** - NOT STARTED
+- ❌ **ExecutionComparator** - NOT STARTED
 
 ### Refactoring Impact:
-- **Expected Code Reduction**: 30-40%
-- **Estimated Effort**: 13-20 hours for all refactoring tasks
-- **Priority**: High (SecurityHelper, Custom Exceptions, DTO Mappers)
+- **Completed**: SecurityHelper (255 lines) - eliminates 53+ permission checks
+- **Remaining Effort**: 11-17 hours for remaining tasks
+- **Expected Code Reduction**: 20-30% additional
 
 ## Notes
 
@@ -862,11 +882,47 @@
 
 ### Overall Progress:
 - **Sprint 1**: 100% complete ✅
-- **Sprint 2**: 0% complete (optional refactoring) ⏸️
+- **Sprint 2**: 20% complete (2/10 refactoring tasks done) ⏸️
 - **Testing**: 100% complete (32/32 passed, 0 failed) ✅
 - **Deployment**: 0% complete (ready to deploy) ⏸️
 - **Database Migration**: 100% complete (XAMPP → MariaDB 11.4.9 LTS) ✅
 - **Permission Fixes**: 100% complete (QA test case viewing fix implemented and tested) ✅
+- **PDF Export Feature**: COMPLETED ✅ (2026-02-22)
+- **Filter Card Divider**: COMPLETED ✅ (2026-02-23)
+
+### Recent Features Added:
+
+#### Filter Card Divider Line (2026-02-23) ✅
+- **Location**: Executions page (`/executions`) and Test Analytics page (`/test-cases`)
+- **Description**: Full-width divider lines in filter cards
+- **Issue**: Divider had gaps on left/right (constrained by card padding)
+- **Solution**: Used absolute positioning (left:0, right:0) to span edge-to-edge
+- **Pattern**: Matches login/register card divider style
+- **Files Modified**:
+  - `tcm-frontend/src/app/features/executions/executions/executions.component.html`
+  - `tcm-frontend/src/app/features/executions/executions/executions.component.css`
+  - `tcm-frontend/src/app/features/test-cases/test-cases/test-cases.component.html`
+  - `tcm-frontend/src/app/features/test-cases/test-cases/test-cases.component.css`
+
+#### PDF Export for Test Analytics (2026-02-22) ✅
+- **Location**: Test Analytics page (`/test-cases`)
+- **Description**: Users can export analytics data as PDF report
+- **Access**: All roles (ADMIN, PROJECT_MANAGER, QA, BA, TESTER)
+- **Features**:
+  - Colorful PDF with blue/green theme
+  - Summary section with KPIs (Total, Executed, Passed, Failed, Not Executed)
+  - Project header (shows "Project: [name]" or "All Projects")
+  - Module breakdown table with color-coded values
+  - Consistent borders for all sections
+  - Filter context included in report
+- **Files Added**:
+  - `tcm-frontend/src/app/core/services/pdf-export.service.ts`
+- **Files Modified**:
+  - `tcm-frontend/package.json` (added jspdf)
+  - `tcm-frontend/src/app/features/test-cases/test-cases/test-cases.component.ts`
+  - `tcm-frontend/src/app/features/test-cases/test-cases/test-cases.component.html`
+  - `tcm-frontend/src/app/features/test-cases/test-cases/test-cases.component.css`
+- **Bug Fix**: Fixed null pointer in AnalyticsService (line 314 - used `moduleId` instead of `localModuleId`)
 
 ### Project Status:
 - **Code**: Production ready ✅
@@ -874,13 +930,16 @@
 - **Testing**: Complete (32/32 tests passed, 2 production-only tests require deployment) ✅
 - **Deployment**: Ready to deploy ⏸️
 - **Database**: Stable MariaDB 11.4.9 LTS (no more XAMPP issues) ✅
-- **Code Quality**: Good, with refactoring opportunities identified ⏸️
+- **Code Quality**: Good, SecurityHelper complete, remaining refactoring optional ⏸️
 
 ### Time Estimates:
 - Sprint 1: COMPLETED ✅
 - Database Migration (XAMPP → MariaDB 11.4): COMPLETED ✅
 - Permission Fixes (QA test case viewing): COMPLETED ✅
 - Testing: COMPLETED ✅
-- Sprint 2 (Refactoring): ~13-20 hours (optional)
+- PDF Export Feature: COMPLETED ✅ (~1 hour)
+- Filter Card Divider: COMPLETED ✅ (~10 minutes)
+- Sprint 2 - SecurityHelper: COMPLETED ✅ (2-3 hours done)
+- Sprint 2 - Remaining Refactoring: ~11-17 hours (optional)
 - Deployment: ~2-3 hours
 - **Total Remaining**: ~2-3 hours (deployment only, excluding optional refactoring)
