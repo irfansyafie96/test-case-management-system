@@ -135,14 +135,15 @@ export class ExecutionsComponent implements OnInit {
     this.loadingSubject.next(true);
     this.errorSubject.next(false);
 
-    const canViewAll = this.authService.canViewAllExecutions();
+      const canViewAll = this.authService.canViewAllExecutions();
 
     if (canViewAll) {
       // Admin/PM: Load executions in organization/assigned projects with filters
       const filterUserId = this.selectedUser !== 'all' ? parseInt(this.selectedUser, 10) : undefined;
       const filterProjectId = this.selectedProject !== 'all' ? parseInt(this.selectedProject, 10) : undefined;
+      const filterCycleId = this.selectedCycle !== 'all' ? (this.selectedCycle === 'none' ? -1 : parseInt(this.selectedCycle, 10)) : undefined;
       
-      this.tcmService.getAllExecutionsInOrganization(filterUserId, filterProjectId, undefined).subscribe({
+      this.tcmService.getAllExecutionsInOrganization(filterUserId, filterProjectId, undefined, filterCycleId).subscribe({
         next: (executions) => {
           this.executionsSubject.next(executions);
           this.loadingSubject.next(false);

@@ -541,9 +541,10 @@ export class TcmService {
    * @param userId Optional user ID to filter by - when provided, only shows executions from modules the user is currently assigned to
    * @param projectId Optional project ID to filter by
    * @param submoduleId Optional submodule ID to filter by
+   * @param testCycleId Optional test cycle ID to filter by (-1 for "no phase")
    * @returns Observable<TestExecution[]> - Stream of all executions in organization
    */
-  getAllExecutionsInOrganization(userId?: number, projectId?: number, submoduleId?: number): Observable<TestExecution[]> {
+  getAllExecutionsInOrganization(userId?: number, projectId?: number, submoduleId?: number, testCycleId?: number): Observable<TestExecution[]> {
     const params = new URLSearchParams();
     if (userId !== undefined && userId !== null) {
       params.set('userId', userId.toString());
@@ -553,6 +554,9 @@ export class TcmService {
     }
     if (submoduleId !== undefined && submoduleId !== null) {
       params.set('submoduleId', submoduleId.toString());
+    }
+    if (testCycleId !== undefined && testCycleId !== null) {
+      params.set('testCycleId', testCycleId.toString());
     }
     const queryString = params.toString();
     let url = `${this.apiUrl}/admin/executions`;

@@ -3,6 +3,8 @@ package com.yourproject.tcm.model.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.yourproject.tcm.model.dto.TestCycleDTO;
+
 /**
  * Data Transfer Object for TestExecution information
  * Used to safely serialize test execution data without exposing entity relationships
@@ -30,6 +32,9 @@ public class TestExecutionDTO {
     private String moduleName;
     private Long projectId;
     private String projectName;
+    
+    // Test Cycle/Phase
+    private TestCycleDTO testCycle;
 
     public TestExecutionDTO() {}
 
@@ -122,6 +127,9 @@ public class TestExecutionDTO {
     
     public String getProjectName() { return projectName; }
     public void setProjectName(String projectName) { this.projectName = projectName; }
+    
+    public TestCycleDTO getTestCycle() { return testCycle; }
+    public void setTestCycle(TestCycleDTO testCycle) { this.testCycle = testCycle; }
     
     /**
      * Inner DTO for TestStepResult

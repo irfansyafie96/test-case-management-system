@@ -860,7 +860,7 @@ public class ApiController {
         }
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
     @PostMapping("/testmodules/bulk-assign")
     public ResponseEntity<?> bulkAssignModules(@RequestBody BulkAssignmentRequest request) {
         try {
@@ -1119,9 +1119,10 @@ public class ApiController {
     public ResponseEntity<?> getAllExecutionsInOrganization(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long projectId,
-            @RequestParam(required = false) Long submoduleId) {
+            @RequestParam(required = false) Long submoduleId,
+            @RequestParam(required = false) Long testCycleId) {
         try {
-            List<TestExecutionDTO> executions = executionService.getAllExecutionsInOrganization(userId, projectId, submoduleId);
+            List<TestExecutionDTO> executions = executionService.getAllExecutionsInOrganization(userId, projectId, submoduleId, testCycleId);
             return new ResponseEntity<>(executions, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error retrieving organization executions: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);

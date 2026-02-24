@@ -7,6 +7,7 @@
   background-image: linear-gradient(var(--border-thin) 1px, transparent 1px), linear-gradient(90deg, var(--border-thin) 1px, transparent 1px);
   background-size: 40px 40px;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .join-card {
@@ -39,12 +40,12 @@
 }
 
 .divider-line {
-  position: absolute;
+  position: relative;
   left: 0;
   right: 0;
   height: 1px;
   background-color: var(--ink);
-  top: 100px;
+  margin: 24px 0;
 }
 
 .join-card mat-card-title {

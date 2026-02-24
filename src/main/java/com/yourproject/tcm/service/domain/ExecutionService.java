@@ -3,6 +3,7 @@ package com.yourproject.tcm.service.domain;
 import com.yourproject.tcm.model.*;
 import com.yourproject.tcm.model.dto.RedmineUpdateRequest;
 import com.yourproject.tcm.model.dto.StepResultResponse;
+import com.yourproject.tcm.model.dto.TestCycleDTO;
 import com.yourproject.tcm.model.dto.TestExecutionDTO;
 import com.yourproject.tcm.repository.*;
 import com.yourproject.tcm.service.SecurityHelper;
@@ -39,6 +40,7 @@ public class ExecutionService {
     private final SubmoduleRepository submoduleRepository;
     private final TestCaseRepository testCaseRepository;
     private final TestCaseService testCaseService;
+    private final TestCycleRepository testCycleRepository;
     
     @PersistenceContext
     private EntityManager entityManager;
@@ -53,7 +55,8 @@ public class ExecutionService {
                            TestModuleRepository testModuleRepository,
                            SubmoduleRepository submoduleRepository,
                            TestCaseRepository testCaseRepository,
-                           TestCaseService testCaseService) {
+                           TestCaseService testCaseService,
+                           TestCycleRepository testCycleRepository) {
         this.testExecutionRepository = testExecutionRepository;
         this.userRepository = userRepository;
         this.testStepResultRepository = testStepResultRepository;
@@ -64,6 +67,7 @@ public class ExecutionService {
         this.submoduleRepository = submoduleRepository;
         this.testCaseRepository = testCaseRepository;
         this.testCaseService = testCaseService;
+        this.testCycleRepository = testCycleRepository;
     }
 
     /**
@@ -76,7 +80,7 @@ public class ExecutionService {
      * @return List of all executions in the organization as DTOs
      */
     @Transactional(readOnly = true)
-    public List<TestExecutionDTO> getAllExecutionsInOrganization(Long userId, Long projectId, Long submoduleId) {
+    public List<TestExecutionDTO> getAllExecutionsInOrganization(Long userId, Long projectId, Long submoduleId, Long testCycleId) {
         User currentUser = userContextService.getCurrentUser();
 
         // Only admin/PM users can access this
@@ -117,6 +121,21 @@ public class ExecutionService {
             allExecutions = allExecutions.stream()
                 .filter(e -> e.getSubmoduleId() != null && e.getSubmoduleId().equals(submoduleId))
                 .collect(Collectors.toList());
+        }
+
+        // Filter by testCycle (phase) if provided
+        if (testCycleId != null) {
+            if (testCycleId == -1) {
+                // Special value: filter for executions with NO phase
+                allExecutions = allExecutions.stream()
+                    .filter(e -> e.getTestCycle() == null)
+                    .collect(Collectors.toList());
+            } else {
+                // Filter for executions with specific phase
+                allExecutions = allExecutions.stream()
+                    .filter(e -> e.getTestCycle() != null && e.getTestCycle().getId().equals(testCycleId))
+                    .collect(Collectors.toList());
+            }
         }
 
         // If userId is provided, filter by that user's assigned executions
@@ -360,6 +379,24 @@ public class ExecutionService {
         execution.setNotes(notes);
         execution.setCompletionDate(LocalDateTime.now());
         execution.setStatus("COMPLETED");
+        
+        // Auto-assign to active phase if no phase is set
+        if (execution.getTestCycle() == null) {
+            try {
+                var submodule = execution.getTestCase().getSubmodule();
+                if (submodule != null && submodule.getTestModule() != null) {
+                    var project = submodule.getTestModule().getProject();
+                    if (project != null) {
+                        List<TestCycle> activeCycles = testCycleRepository.findActiveCyclesByProjectId(project.getId());
+                        if (!activeCycles.isEmpty()) {
+                            execution.setTestCycle(activeCycles.get(0));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // Log but don't fail the execution if phase auto-assign fails
+            }
+        }
         
         // Save Redmine integration data if provided and execution failed
         if ("FAILED".equals(overallResult)) {
@@ -874,5 +911,20 @@ public class ExecutionService {
             projectName,
             stepResultDTOs
         );
+    }
+
+    private TestCycleDTO convertCycleToDTO(TestCycle cycle) {
+        if (cycle == null) return null;
+        TestCycleDTO dto = new TestCycleDTO();
+        dto.setId(cycle.getId());
+        dto.setName(cycle.getName());
+        dto.setDescription(cycle.getDescription());
+        dto.setProjectId(cycle.getProject() != null ? cycle.getProject().getId() : null);
+        dto.setProjectName(cycle.getProject() != null ? cycle.getProject().getName() : null);
+        dto.setStartDate(cycle.getStartDate());
+        dto.setEndDate(cycle.getEndDate());
+        dto.setActive(cycle.isActive());
+        dto.setSortOrder(cycle.getSortOrder());
+        return dto;
     }
 }

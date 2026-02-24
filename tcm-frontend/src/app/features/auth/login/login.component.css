@@ -41,12 +41,12 @@
 }
 
 .divider-line {
-  position: absolute;
+  position: relative;
   left: 0;
   right: 0;
   height: 1px;
   background-color: var(--ink);
-  top: 100px;
+  margin: 24px 0;
 }
 
 .login-card:hover {

@@ -49,6 +49,11 @@
               <span class="info-value">{{ vm.execution.submoduleName || 'Unknown Submodule' }}</span>
             </div>
             <div class="info-item">
+              <label>Phase</label>
+              <span class="info-value" *ngIf="vm.execution.testCycle">{{ vm.execution.testCycle.name }}</span>
+              <span class="info-value no-phase" *ngIf="!vm.execution.testCycle">No Phase</span>
+            </div>
+            <div class="info-item">
               <label>Status</label>
               <span class="info-value status-badge"
                     [ngClass]="vm.execution.overallResult ? getStatusClass(vm.execution.overallResult) : 'pending'">

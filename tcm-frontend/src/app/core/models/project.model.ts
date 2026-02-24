@@ -108,6 +108,9 @@ export interface TestExecution {
   
   // Convenience fields for display
   testCaseTitle?: string; // Alias for title (test case title)
+  
+  // Test Cycle/Phase
+  testCycle?: TestCycle;
 }
 
 // Completion Summary Model

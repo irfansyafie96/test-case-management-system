@@ -75,7 +75,7 @@
             </button>
 
             <mat-menu #memberMenu="matMenu">
-              <button mat-menu-item (click)="openAssignModulesDialog(member)" *ngIf="authService.canAssignModules()">
+              <button mat-menu-item (click)="openAssignModulesDialog(member)" *ngIf="canAssignModules(member)">
                 <mat-icon>folder_shared</mat-icon>
                 <span>Assign Modules</span>
               </button>
