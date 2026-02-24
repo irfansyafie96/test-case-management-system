@@ -970,6 +970,17 @@
   - `src/main/java/com/yourproject/tcm/service/domain/TicketService.java` (added updateTicket method)
 - **Status**: COMPLETED ✅
 
+#### Ticket Edit Dialog Scrollbar Fix (2026-02-24) ✅
+- **Location**: Tickets page → Edit dialog (`/tickets`)
+- **Description**: Refined scrollbar styling to match redmine issue dialog in execution workbench
+- **Changes**:
+  - Removed scrollbar from dialog container (hidden)
+  - Added minimalist thin scrollbar (6px) for description textarea
+  - Scrollbar styling: thin width, light gray (#ddd) thumb, 3px border radius
+- **File Modified**:
+  - `tcm-frontend/src/app/features/tickets/tickets/ticket-edit-dialog.component.ts`
+- **Status**: COMPLETED ✅
+
 #### Filter Order Reorder (2026-02-23) ✅
 - **Location**: Executions page (`/executions`) and Test Analytics page (`/test-cases`)
 - **Description**: Reordered filters - Project now first, User moved to third
@@ -1023,6 +1034,7 @@
 - **Cycle Filter**: COMPLETED ✅ (2026-02-23)
 - **UI Bug Fixes**: COMPLETED ✅ (2026-02-23)
 - **Ticket Edit Feature**: COMPLETED ✅ (2026-02-23)
+- **Ticket Edit Dialog Scrollbar Fix**: COMPLETED ✅ (2026-02-24)
 
 ### Time Estimates:
 - Sprint 1: COMPLETED ✅

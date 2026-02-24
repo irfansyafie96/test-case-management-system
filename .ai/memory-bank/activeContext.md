@@ -1,6 +1,27 @@
 # Project Context
 
-## Current Work: Ticket Edit Feature - COMPLETE
+## Current Work: Ticket Edit Dialog UI Improvements
+
+### Summary
+
+Refined the ticket edit dialog scrollbar styling to match the redmine issue dialog in execution workbench.
+
+---
+
+### Latest Changes (2026-02-24)
+
+**Ticket Edit Dialog Scrollbar Fix:**
+- Removed scrollbar from dialog container (hidden)
+- Added minimalist thin scrollbar (6px) for description textarea field
+- Scrollbar styling matches redmine issue dialog:
+  - `scrollbar-width: thin` for Firefox
+  - Light gray (#ddd) scrollbar thumb
+  - 3px border radius
+- File: `ticket-edit-dialog.component.ts`
+
+---
+
+## Previous Work: Ticket Edit Feature - COMPLETE
 
 ### Summary
 

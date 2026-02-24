@@ -92,6 +92,28 @@ import { Ticket } from '../../../core/models/project.model';
     
     mat-dialog-content {
       padding-top: 16px !important;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    mat-dialog-content::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Thin scrollbar for textarea */
+    textarea.mat-mdc-input-element {
+      scrollbar-width: thin;
+      scrollbar-color: #ddd transparent;
+    }
+    textarea.mat-mdc-input-element::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    textarea.mat-mdc-input-element::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    textarea.mat-mdc-input-element::-webkit-scrollbar-thumb {
+      background-color: #ddd;
+      border-radius: 3px;
     }
   `]
 })
