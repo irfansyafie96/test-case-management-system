@@ -1053,6 +1053,97 @@
   - `tcm-frontend/src/app/features/tickets/tickets/tickets.component.css`
 - **Status**: COMPLETED ✅
 
+#### Single Active Phase Rule (2026-02-25) ✅
+- **Location**: Test Cycles/Phases feature
+- **Description**: Implemented "only one active phase at a time" rule to prevent edge case when multiple active phases exist
+- **Problem Solved**: When QA/BA completes test execution, the system now deterministically assigns to the single active phase (instead of picking first from potentially non-deterministic list)
+- **Implementation**:
+  - Added `deactivateOtherCycles()` method to `TestCycleRepository` with `@Modifying` JPQL query
+  - Added `enforceSingleActivePhase()` private method to `TestCycleService` (DRY - single method used by both create and update)
+  - When creating a cycle with `isActive=true`: auto-deactivates other active cycles for the project
+  - When updating a cycle to `isActive=true`: auto-deactivates other active cycles
+- **Files Modified**:
+  - `src/main/java/com/yourproject/tcm/repository/TestCycleRepository.java` - Added `deactivateOtherCycles()` method
+  - `src/main/java/com/yourproject/tcm/service/domain/TestCycleService.java` - Added `enforceSingleActivePhase()` logic
+- **Test Scenarios**:
+  1. Create Cycle A with isActive=true → Only A is active ✅
+  2. Create Cycle B with isActive=true → A auto-deactivates, B becomes active ✅
+  3. Update Cycle A to isActive=true (while B is active) → B auto-deactivates ✅
+  4. Create Cycle with isActive=false → No deactivation occurs ✅
+  5. Existing executions preserve their phase assignments ✅
+- **SOLID/DRY Principles**:
+  - Single Responsibility: Repository handles DB update, Service handles business logic
+  - DRY: Single method used by both create and update operations
+  - Open/Closed: Easy to extend if future needs multiple active phases
+- **Status**: COMPLETED ✅
+
+#### Delete Phase Confirmation with Execution Count (2026-02-25) ✅
+- **Location**: Project Detail page - Phases section
+- **Description**: Added warning dialog when deleting a phase showing how many executions are linked to it
+- **Problem Solved**: Users were not warned about data loss when deleting phases with executions
+- **Implementation**:
+  - Added `countByTestCycleId()` method to `TestExecutionRepository`
+  - Added `getExecutionCount()` method to `TestCycleService`
+  - Added `GET /api/cycles/{cycleId}/execution-count` endpoint to `ApiController`
+  - Added `getCycleExecutionCount()` method to `tcm.service.ts`
+  - Updated `project-detail.component.ts` to fetch count and show dynamic message
+- **Message Logic**:
+  - 0 executions: "Are you sure you want to delete this phase? This action cannot be undone."
+  - >0 executions: "This phase has X execution(s) linked to it. All execution history will be permanently deleted. Would you like to continue?"
+- **Files Modified**:
+  - `src/main/java/com/yourproject/tcm/repository/TestExecutionRepository.java` - Added `countByTestCycleId()`
+  - `src/main/java/com/yourproject/tcm/service/domain/TestCycleService.java` - Added `getExecutionCount()`
+  - `src/main/java/com/yourproject/tcm/controller/ApiController.java` - Added endpoint
+  - `tcm-frontend/src/app/core/services/tcm.service.ts` - Added `getCycleExecutionCount()`
+  - `tcm-frontend/src/app/features/projects/project-detail/project-detail.component.ts` - Updated delete dialog
+- **SOLID/DRY Principles**:
+  - Single Responsibility: Repository counts, Service provides count, Frontend displays dialog
+  - DRY: Reuses existing `ConfirmationDialogComponent`
+  - Open/Closed: Easy to extend message format without changing dialog component
+- **Status**: COMPLETED ✅
+
+#### Mobile Responsiveness Improvements (2026-02-25) ✅
+- **Location**: Mobile views across application
+- **Description**: Improved mobile responsiveness with hamburger menu navigation and card-based table views
+
+**Navbar/Sidebar:**
+- Removed bottom navigation (replaced with hamburger menu)
+- Added hamburger button in header (visible on mobile)
+- Slide-out drawer sidebar with overlay (click outside to close)
+- Desktop: collapsible sidebar unchanged
+
+**Cycle Dialog:**
+- Made responsive: 400px on desktop, 100% on mobile
+- Added minimalist scrollbar (6px, light gray)
+- Reduced max-height on mobile (60vh)
+
+**Module Detail - Test Cases:**
+- Added card view on mobile (< 768px)
+- Desktop maintains existing table view
+- Card: ID badge, title, action buttons (VIEW, EDIT, DELETE)
+- Clean, subtle design (not aggressive)
+
+**Executions Page:**
+- Added card view on mobile (< 768px)
+- Desktop maintains existing table view
+- Card: ID + status badge, title, assigned user, action button
+- Clean, subtle design matching module detail
+
+**Design Principles:**
+- Clean, subtle (not aggressive/heavy)
+- 1px border (#e0e0e0), background #fafafa
+- 8px border-radius, no heavy shadows
+- Touch-friendly buttons
+
+**Files Modified:**
+- `sidebar.component.html/ts/css` - Removed bottom nav, added mobile drawer
+- `header.component.html/ts/css` - Added hamburger button
+- `cycle-dialog.component.ts` - Responsive + minimalist scrollbar
+- `module-detail.component.ts/html/css` - Mobile card view
+- `executions.component.ts/html/css` - Mobile card view
+
+- **Status**: COMPLETED ✅
+
 ### Project Status:
 - **Code**: Production ready ✅
 - **Documentation**: Complete ✅
@@ -1069,6 +1160,9 @@
 - **Ticket Edit Dialog Scrollbar Fix**: COMPLETED ✅ (2026-02-24)
 - **Phase Auto-Assign Feature**: COMPLETED ✅ (2026-02-24)
 - **Tickets Page Title Icon Fix**: COMPLETED ✅ (2026-02-25)
+- **Single Active Phase Rule**: COMPLETED ✅ (2026-02-25)
+- **Delete Phase Confirmation**: COMPLETED ✅ (2026-02-25)
+- **Mobile Responsiveness Improvements**: COMPLETED ✅ (2026-02-25)
 
 ### Time Estimates:
 - Sprint 1: COMPLETED ✅

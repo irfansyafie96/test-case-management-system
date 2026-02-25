@@ -116,6 +116,33 @@ import { TestCycle } from '../../../core/models/project.model';
     
     mat-dialog-content {
       padding-top: 16px !important;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    /* Minimalist scrollbar */
+    mat-dialog-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    mat-dialog-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    mat-dialog-content::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+    }
+    mat-dialog-content::-webkit-scrollbar-thumb:hover {
+      background: #aaa;
+    }
+
+    @media (max-width: 600px) {
+      .form-container {
+        min-width: 100%;
+      }
+      
+      mat-dialog-content {
+        max-height: 60vh;
+      }
     }
   `]
 })

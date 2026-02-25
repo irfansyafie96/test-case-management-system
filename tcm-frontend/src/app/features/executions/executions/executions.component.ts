@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -73,6 +73,8 @@ export class ExecutionsComponent implements OnInit {
   private filterModulesSubject = new BehaviorSubject<TestModule[]>([]);
   private filterProjectsSubject = new BehaviorSubject<Project[]>([]);
 
+  isMobileView = false;
+
   // Filter state
   selectedUser: string = 'all';
   selectedModule: string = 'all';
@@ -92,8 +94,18 @@ export class ExecutionsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.checkMobileView();
     this.loadMyAssignedExecutions();
     this.loadAdminFilters();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkMobileView();
+  }
+
+  checkMobileView() {
+    this.isMobileView = window.innerWidth <= 1024;
   }
 
   // Helper methods to calculate counts

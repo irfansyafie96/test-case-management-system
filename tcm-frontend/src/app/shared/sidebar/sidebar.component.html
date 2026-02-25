@@ -1,59 +1,64 @@
-<div class="sidebar-container desktop-sidebar" [class.collapsed]="isCollapsed">
+<!-- Mobile Hamburger (visible when sidebar is closed) -->
+<button mat-icon-button class="mobile-hamburger" *ngIf="isMobileView && !isMobileOpen" (click)="toggleSidebar()">
+  <mat-icon>menu</mat-icon>
+</button>
+
+<div class="sidebar-container desktop-sidebar" [class.collapsed]="isCollapsed" [class.mobile-open]="isMobileOpen">
   <div class="sidebar-header">
     <div class="header-top">
-      <div class="logo">
+      <div class="logo" [class.logo-mobile]="isMobileView">
         <mat-icon class="logo-icon">assignment</mat-icon>
         <div class="logo-info" *ngIf="!isCollapsed">
           <span class="logo-text">TCM</span>
           <p class="logo-subtitle">Test Case Management</p>
         </div>
       </div>
-      <button mat-icon-button (click)="toggleSidebar()" class="toggle-btn">
+      <button mat-icon-button (click)="toggleSidebar()" class="toggle-btn" *ngIf="!isMobileView">
         <mat-icon>{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
       </button>
     </div>
   </div>
 
   <nav class="sidebar-nav">
-    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Dashboard' : ''">
+    <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed && !isMobileView ? 'Dashboard' : ''" (click)="closeMobileSidebar()">
       <mat-icon>dashboard</mat-icon>
-      <span *ngIf="!isCollapsed">Dashboard</span>
+      <span *ngIf="!isCollapsed || isMobileView">Dashboard</span>
     </a>
 
-    <a routerLink="/projects" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Projects' : ''">
+    <a routerLink="/projects" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed && !isMobileView ? 'Projects' : ''" (click)="closeMobileSidebar()">
       <mat-icon>folder</mat-icon>
-      <span *ngIf="!isCollapsed">Projects</span>
+      <span *ngIf="!isCollapsed || isMobileView">Projects</span>
     </a>
 
-    <a routerLink="/modules" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Modules' : ''">
+    <a routerLink="/modules" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed && !isMobileView ? 'Modules' : ''" (click)="closeMobileSidebar()">
       <mat-icon>view_module</mat-icon>
-      <span *ngIf="!isCollapsed">Modules</span>
+      <span *ngIf="!isCollapsed || isMobileView">Modules</span>
     </a>
 
-    <a routerLink="/executions" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Executions' : ''">
+    <a routerLink="/executions" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed && !isMobileView ? 'Executions' : ''" (click)="closeMobileSidebar()">
       <mat-icon>play_circle</mat-icon>
-      <span *ngIf="!isCollapsed">Executions</span>
+      <span *ngIf="!isCollapsed || isMobileView">Executions</span>
     </a>
 
-    <a routerLink="/test-cases" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Test Cases' : ''">
+    <a routerLink="/test-cases" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed && !isMobileView ? 'Test Cases' : ''" (click)="closeMobileSidebar()">
       <mat-icon>list_alt</mat-icon>
-      <span *ngIf="!isCollapsed">Test Cases</span>
+      <span *ngIf="!isCollapsed || isMobileView">Test Cases</span>
     </a>
 
-    <a routerLink="/tickets" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed ? 'Tickets' : ''">
+    <a routerLink="/tickets" routerLinkActive="active" class="nav-item" [matTooltip]="isCollapsed && !isMobileView ? 'Tickets' : ''" (click)="closeMobileSidebar()">
       <mat-icon>confirmation_number</mat-icon>
-      <span *ngIf="!isCollapsed">Tickets</span>
+      <span *ngIf="!isCollapsed || isMobileView">Tickets</span>
     </a>
   </nav>
 
   <div class="sidebar-footer">
-    <div class="user-container" *ngIf="currentUser" routerLink="/profile" style="cursor: pointer;" matTooltip="View Profile">
+    <div class="user-container" *ngIf="currentUser" routerLink="/profile" style="cursor: pointer;" matTooltip="View Profile" (click)="closeMobileSidebar()">
       <div class="user-avatar">
-        <mat-icon *ngIf="isCollapsed">account_circle</mat-icon>
-        <span *ngIf="!isCollapsed">{{ currentUser.username.charAt(0).toUpperCase() }}</span>
+        <mat-icon *ngIf="isCollapsed && !isMobileView">account_circle</mat-icon>
+        <span *ngIf="!isCollapsed || isMobileView">{{ currentUser.username.charAt(0).toUpperCase() }}</span>
       </div>
       
-      <div class="user-details" *ngIf="!isCollapsed">
+      <div class="user-details" *ngIf="!isCollapsed || isMobileView">
         <div class="user-name">{{ currentUser.username }}</div>
         <div class="user-role" *ngFor="let role of currentUser.roles || []">
           {{ role | roleDisplay }}
@@ -63,30 +68,5 @@
   </div>
 </div>
 
-<!-- Mobile Bottom Navigation -->
-<nav class="mobile-bottom-nav">
-  <a routerLink="/dashboard" routerLinkActive="active" class="mobile-nav-item">
-    <mat-icon>dashboard</mat-icon>
-    <span>Home</span>
-  </a>
-
-  <a routerLink="/projects" routerLinkActive="active" class="mobile-nav-item">
-    <mat-icon>folder</mat-icon>
-    <span>Projects</span>
-  </a>
-
-  <a routerLink="/executions" routerLinkActive="active" class="mobile-nav-item">
-    <mat-icon>play_circle</mat-icon>
-    <span>Runs</span>
-  </a>
-
-  <a routerLink="/test-cases" routerLinkActive="active" class="mobile-nav-item">
-    <mat-icon>list_alt</mat-icon>
-    <span>Tests</span>
-  </a>
-
-  <a routerLink="/profile" routerLinkActive="active" class="mobile-nav-item">
-    <mat-icon>account_circle</mat-icon>
-    <span>Profile</span>
-  </a>
-</nav>
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" [class.visible]="isMobileOpen" (click)="closeMobileSidebar()"></div>

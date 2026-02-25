@@ -1,22 +1,74 @@
 # Project Context
 
-## Current Work: UI Fix - Tickets Page Title Icon
+## Current Work: Mobile Responsiveness Improvements
 
 ### Summary
 
-Fixed the "My Tickets" page title icon to match other page title icons (black/default instead of orange).
+Improved mobile responsiveness across the application with hamburger menu navigation, cleaner dialogs, and card-based layouts for tables on mobile devices.
 
 ---
 
 ### Latest Changes (2026-02-25)
 
-**Tickets Page Title Icon Fix:**
-- Removed `.page-title mat-icon { color: var(--accent-primary); }` from `tickets.component.css`
-- The icon now uses the default color, matching other pages (Executions, Test Analytics, Projects, etc.)
+**1. Navbar/Sidebar Improvements:**
+- Removed bottom navigation (was clunky with hamburger menu)
+- Added hamburger menu button in header (visible on mobile only)
+- Implemented slide-out drawer sidebar for mobile with overlay
+- Click hamburger → sidebar slides in from left
+- Click outside/overlay → closes sidebar
+- Desktop: collapsible sidebar remains unchanged
+
+**2. Cycle Dialog Scrollbar Fix:**
+- Made dialog responsive: 400px on desktop, 100% on mobile
+- Added minimalist scrollbar styling (6px width, light gray)
+- Reduced max-height on mobile (60vh)
+
+**3. Mobile Card View - Module Detail:**
+- Tables replaced with clean card view on mobile (< 768px)
+- Each test case displayed as a card with:
+  - Test case ID badge
+  - Title
+  - Action buttons (VIEW, EDIT, DELETE)
+- Desktop maintains existing table view
+
+**4. Mobile Card View - Executions:**
+- Tables replaced with card view on mobile (< 768px)
+- Each execution displayed as a card with:
+  - Test case ID + Status badge in header
+  - Title
+  - Assigned user
+  - Action button (VIEW/EXECUTE)
+- Desktop maintains existing table view
+
+**Design Principles for Cards:**
+- Clean, subtle design (not aggressive)
+- Subtle 1px border (#e0e0e0)
+- Background: #fafafa (slightly off-white)
+- 8px border-radius
+- No heavy shadows
+- Touch-friendly buttons
+
+**Files Modified:**
+- `sidebar.component.html` - Removed bottom nav, added mobile overlay
+- `sidebar.component.ts` - Added mobile state and toggle methods
+- `sidebar.component.css` - Added slide-in animation and mobile overlay
+- `header.component.html` - Added hamburger button
+- `header.component.ts` - Added toggleheader.component.css` - Added hamburger button functionality
+- ` styling
+- `cycle-dialog.component.ts` - Responsive dialog + minimalist scrollbar
+- `module-detail.component.ts/html/css` - Added mobile card view
+- `executions.component.ts/html/css` - Added mobile card view
 
 ---
 
-## Previous Work: Phase Auto-Assign Feature - COMPLETE
+## Previous Work: Delete Phase Confirmation - COMPLETE
+- Single Responsibility: Repository counts, Service provides count, Frontend displays dialog
+- DRY: Reuses existing `ConfirmationDialogComponent`
+- Open/Closed: Easy to extend message format without changing dialog component
+
+---
+
+## Previous Work: Single Active Phase Rule - COMPLETE
 
 **Phase Auto-Assign Feature:**
 - Backend: Modified `ExecutionService.completeTestExecution()` to auto-assign active phase

@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
@@ -33,6 +33,8 @@ import { RoleDisplayPipe } from '../pipes/role-display.pipe';
 export class SidebarComponent implements OnInit {
   currentUser: any = null;
   isCollapsed = false;
+  isMobileOpen = false;
+  isMobileView = false;
   private isBrowser: boolean;
 
   constructor(
@@ -45,11 +47,36 @@ export class SidebarComponent implements OnInit {
   ngOnInit() {
     if (this.isBrowser) {
       this.loadCurrentUser();
+      this.checkMobileView();
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkMobileView();
+  }
+
+  checkMobileView() {
+    if (this.isBrowser) {
+      this.isMobileView = window.innerWidth <= 1024;
+      if (!this.isMobileView) {
+        this.isMobileOpen = false;
+      }
     }
   }
 
   toggleSidebar() {
-    this.isCollapsed = !this.isCollapsed;
+    if (this.isMobileView) {
+      this.isMobileOpen = !this.isMobileOpen;
+    } else {
+      this.isCollapsed = !this.isCollapsed;
+    }
+  }
+
+  closeMobileSidebar() {
+    if (this.isMobileView) {
+      this.isMobileOpen = false;
+    }
   }
 
   get isAdmin(): boolean {

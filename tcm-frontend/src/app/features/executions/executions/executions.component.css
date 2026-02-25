@@ -237,6 +237,70 @@
 .table-row:last-child td { border-bottom: none; }
 .table-row:hover { background-color: #f9f9f9; }
 
+/* Mobile Card View */
+.mobile-card-view {
+  display: none;
+}
+
+.execution-card {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.execution-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.execution-card .card-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background-color: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #666;
+}
+
+.execution-card .card-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.execution-card .card-assignee {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.execution-card .card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.execution-card .card-actions button {
+  font-size: 12px;
+}
+
+@media (max-width: 1024px) {
+  .mobile-card-view {
+    display: block;
+  }
+  
+  .table-container-styled {
+    display: none;
+  }
+}
+
 .id-badge {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;

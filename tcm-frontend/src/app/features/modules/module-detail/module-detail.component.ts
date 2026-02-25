@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -59,6 +59,7 @@ export class ModuleDetailComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   displayedColumns: string[] = ['id', 'title', 'actions'];
+  isMobileView = false;
 
   // Assignment management
   showAssignments = false;
@@ -84,6 +85,7 @@ export class ModuleDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.checkMobileView();
     const moduleId = this.route.snapshot.paramMap.get('id');
     this.loadingSubject.next(true);
     this.errorSubject.next(false);
@@ -105,6 +107,15 @@ export class ModuleDetailComponent implements OnInit {
       this.loadingSubject.next(false);
       this.errorSubject.next(true);
     }
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkMobileView();
+  }
+
+  checkMobileView() {
+    this.isMobileView = window.innerWidth <= 1024;
   }
 
   createSubmodule(moduleId: string | number): void {

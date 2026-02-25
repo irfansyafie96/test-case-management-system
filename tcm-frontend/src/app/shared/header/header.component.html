@@ -1,6 +1,11 @@
 <mat-toolbar class="app-header">
   <div class="header-content">
     <div class="header-left">
+      <!-- Mobile Hamburger Button -->
+      <button mat-icon-button (click)="toggleSidebar()" class="hamburger-btn" *ngIf="isMobileView">
+        <mat-icon>menu</mat-icon>
+      </button>
+      
       <h1 class="page-title">
         <ng-content select="[title]"></ng-content>
       </h1>

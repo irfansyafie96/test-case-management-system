@@ -130,8 +130,8 @@
                       <span class="badge">{{ submodule.executions.length }} test cases</span>
                     </div>
 
-                    <!-- Test Cases Table -->
-                    <div class="mat-elevation-z0 table-container-styled">
+                    <!-- Desktop Table View -->
+                    <div class="mat-elevation-z0 table-container-styled" *ngIf="!isMobileView">
                       <table mat-table [dataSource]="submodule.executions" class="bespoke-table">
                         <!-- Test Case ID Column -->
                         <ng-container matColumnDef="testCaseId">
@@ -176,6 +176,30 @@
                         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
                       </table>
+                    </div>
+
+                    <!-- Mobile Card View -->
+                    <div class="mobile-card-view" *ngIf="isMobileView">
+                      <div class="execution-card" *ngFor="let execution of submodule.executions">
+                        <div class="card-header">
+                          <span class="card-id">{{ execution.testCaseId }}</span>
+                          <span class="status-badge" [ngClass]="execution.overallResult ? getStatusClass(execution.overallResult) : 'pending'">
+                            {{ execution.overallResult || 'PENDING' }}
+                          </span>
+                        </div>
+                        <div class="card-title">{{ execution?.testCase?.title || execution.title }}</div>
+                        <div class="card-assignee" *ngIf="execution.assignedToUser">
+                          Assigned: {{ execution.assignedToUser.username }}
+                        </div>
+                        <div class="card-actions">
+                          <button mat-stroked-button color="primary"
+                            [routerLink]="['/executions/workbench', execution.id]"
+                            [queryParams]="{ readOnly: vm.isAdmin ? 'true' : 'false' }">
+                            <mat-icon>{{ vm.isAdmin || execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'visibility' : 'play_arrow' }}</mat-icon>
+                            {{ vm.isAdmin || execution.overallResult === 'PASSED' || execution.overallResult === 'FAILED' ? 'VIEW' : 'EXECUTE' }}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

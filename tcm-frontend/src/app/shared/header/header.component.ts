@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
@@ -25,9 +25,11 @@ export class HeaderComponent implements OnInit {
   isAuthenticated$: Observable<boolean>;
   currentUser$: Observable<any>;
   private isBrowser: boolean;
+  isMobileView = false;
 
   constructor(
     private authService: AuthService,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isAuthenticated$ = this.authService.isAuthenticated$;
@@ -36,6 +38,31 @@ export class HeaderComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.isBrowser) {
+      setTimeout(() => {
+        this.checkMobileView();
+        this.cdr.detectChanges();
+      }, 0);
+      window.addEventListener('resize', () => this.checkMobileView());
+    }
+  }
+
+  checkMobileView() {
+    this.isMobileView = window.innerWidth <= 1024;
+    this.cdr.detectChanges();
+  }
+
+  toggleSidebar() {
+    if (this.isBrowser) {
+      const sidebar = document.querySelector('.sidebar-container');
+      const overlay = document.querySelector('.mobile-overlay');
+      if (sidebar) {
+        sidebar.classList.toggle('mobile-open');
+      }
+      if (overlay) {
+        overlay.classList.toggle('visible');
+      }
+    }
   }
 
   logout(): void {

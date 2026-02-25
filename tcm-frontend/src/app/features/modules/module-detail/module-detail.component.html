@@ -127,7 +127,7 @@
           <div *ngFor="let submodule of vm.module!.submodules || []" class="suite-folder">
             <div class="suite-header">
               <div class="suite-title">
-                <mat-icon>folder</mat-icon>
+                <mat-icon class="mobile-hide">folder</mat-icon>
                 <h3>{{ submodule.name }}</h3>
               </div>
               <div class="suite-actions">
@@ -150,7 +150,8 @@
             </div>
 
             <div class="suite-content">
-              <table mat-table [dataSource]="submodule.testCases || []" class="bespoke-table">
+              <!-- Desktop Table View -->
+              <table mat-table [dataSource]="submodule.testCases || []" class="bespoke-table" *ngIf="!isMobileView">
                 <!-- ID Column -->
                 <ng-container matColumnDef="id">
                   <th mat-header-cell *matHeaderCellDef> ID </th>
@@ -200,6 +201,27 @@
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
               </table>
+
+              <!-- Mobile Card View -->
+              <div class="mobile-card-view" *ngIf="isMobileView">
+                <div class="test-case-card" *ngFor="let testCase of submodule.testCases">
+                  <div class="card-header">
+                    <span class="card-id">{{ testCase.testCaseId }}</span>
+                  </div>
+                  <div class="card-title">{{ testCase.title }}</div>
+                  <div class="card-actions">
+                    <button mat-stroked-button color="primary" (click)="viewTestCase(testCase)" matTooltip="View">
+                      <mat-icon>visibility</mat-icon> VIEW
+                    </button>
+                    <button mat-stroked-button color="accent" (click)="editTestCase(testCase)" matTooltip="Edit" *ngIf="authService.canCreateSubmodule() && vm.module!.isEditable">
+                      <mat-icon>edit</mat-icon> EDIT
+                    </button>
+                    <button mat-stroked-button color="warn" (click)="deleteTestCase(testCase)" matTooltip="Delete" *ngIf="authService.canDeleteModule() && vm.module!.isEditable">
+                      <mat-icon>delete</mat-icon> DELETE
+                    </button>
+                  </div>
+                </div>
+              </div>
 
               <div *ngIf="!submodule.testCases?.length" class="empty-suite-msg">
                 No test cases in this submodule.
