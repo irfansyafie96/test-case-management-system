@@ -102,41 +102,58 @@ export class ProjectDetailComponent implements OnInit {
   deleteCycle(cycleId: string | number, event: Event): void {
     event.stopPropagation();
     
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Delete Phase',
-        message: 'Are you sure you want to delete this phase? This action cannot be undone.',
-        confirmText: 'Delete',
-        cancelText: 'Cancel'
-      }
-    });
+    this.tcmService.getCycleExecutionCount(cycleId).subscribe({
+      next: (count) => {
+        const message = count > 0
+          ? `This phase has ${count} execution(s) linked to it. All execution history will be permanently deleted. Would you like to continue?`
+          : 'Are you sure you want to delete this phase? This action cannot be undone.';
+        
+        const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+          width: '450px',
+          data: {
+            title: 'Delete Phase',
+            message: message,
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            confirmButtonColor: 'warn'
+          }
+        });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.tcmService.deleteCycle(cycleId).subscribe({
-          next: () => {
-            setTimeout(() => {
-              const projectId = this.route.snapshot.paramMap.get('id');
-              if (projectId) {
-                this.loadCycles(projectId);
+        dialogRef.afterClosed().subscribe(confirmed => {
+          if (confirmed) {
+            this.tcmService.deleteCycle(cycleId).subscribe({
+              next: () => {
+                setTimeout(() => {
+                  const projectId = this.route.snapshot.paramMap.get('id');
+                  if (projectId) {
+                    this.loadCycles(projectId);
+                  }
+                  this.snackBar.open('Phase deleted successfully', 'Close', {
+                    duration: 3000,
+                    panelClass: ['success-snackbar'],
+                    horizontalPosition: 'right',
+                    verticalPosition: 'top'
+                  });
+                });
+              },
+              error: (err) => {
+                console.error('Failed to delete cycle', err);
+                this.snackBar.open('Failed to delete phase', 'Close', {
+                  duration: 3000,
+                  horizontalPosition: 'right',
+                  verticalPosition: 'top'
+                });
               }
-              this.snackBar.open('Phase deleted successfully', 'Close', {
-                duration: 3000,
-                panelClass: ['success-snackbar'],
-                horizontalPosition: 'right',
-                verticalPosition: 'top'
-              });
-            });
-          },
-          error: (err) => {
-            console.error('Failed to delete cycle', err);
-            this.snackBar.open('Failed to delete phase', 'Close', {
-              duration: 3000,
-              horizontalPosition: 'right',
-              verticalPosition: 'top'
             });
           }
+        });
+      },
+      error: (err) => {
+        console.error('Failed to get execution count', err);
+        this.snackBar.open('Failed to check phase usage', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'right',
+          verticalPosition: 'top'
         });
       }
     });

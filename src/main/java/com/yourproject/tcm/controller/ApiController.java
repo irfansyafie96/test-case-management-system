@@ -1284,6 +1284,16 @@ public class ApiController {
         testCycleService.deleteCycle(cycleId);
         return ResponseEntity.noContent().build();
     }
+    
+    /**
+     * GET /api/cycles/{cycleId}/execution-count - Get execution count for a cycle
+     */
+    @GetMapping("/cycles/{cycleId}/execution-count")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
+    public ResponseEntity<Long> getCycleExecutionCount(@PathVariable Long cycleId) {
+        long count = testCycleService.getExecutionCount(cycleId);
+        return ResponseEntity.ok(count);
+    }
 
     // ==================== TICKET ENDPOINTS ====================
 

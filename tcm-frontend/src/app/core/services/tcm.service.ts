@@ -1044,6 +1044,18 @@ export class TcmService {
       );
   }
 
+  /**
+   * Get execution count for a cycle
+   * @param cycleId - ID of the cycle
+   * @returns Observable<number> - Number of executions linked to this cycle
+   */
+  getCycleExecutionCount(cycleId: string | number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/cycles/${cycleId}/execution-count`)
+      .pipe(
+        catchError(this.handleError<number>('getCycleExecutionCount', 0))
+      );
+  }
+
   // ==================== TICKET METHODS ====================
 
   /**

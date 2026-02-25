@@ -5,6 +5,7 @@ import com.yourproject.tcm.model.TestCycle;
 import com.yourproject.tcm.model.dto.TestCycleDTO;
 import com.yourproject.tcm.repository.ProjectRepository;
 import com.yourproject.tcm.repository.TestCycleRepository;
+import com.yourproject.tcm.repository.TestExecutionRepository;
 import com.yourproject.tcm.service.UserContextService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,14 +19,17 @@ public class TestCycleService {
     
     private final TestCycleRepository testCycleRepository;
     private final ProjectRepository projectRepository;
+    private final TestExecutionRepository testExecutionRepository;
     private final UserContextService userContextService;
     
     public TestCycleService(
             TestCycleRepository testCycleRepository,
             ProjectRepository projectRepository,
+            TestExecutionRepository testExecutionRepository,
             UserContextService userContextService) {
         this.testCycleRepository = testCycleRepository;
         this.projectRepository = projectRepository;
+        this.testExecutionRepository = testExecutionRepository;
         this.userContextService = userContextService;
     }
     
@@ -80,6 +84,13 @@ public class TestCycleService {
         TestCycle cycle = testCycleRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Test cycle not found: " + cycleId));
         testCycleRepository.delete(cycle);
+    }
+    
+    @Transactional(readOnly = true)
+    public long getExecutionCount(Long cycleId) {
+        testCycleRepository.findById(cycleId)
+                .orElseThrow(() -> new RuntimeException("Test cycle not found: " + cycleId));
+        return testExecutionRepository.countByTestCycleId(cycleId);
     }
     
     @Transactional(readOnly = true)
