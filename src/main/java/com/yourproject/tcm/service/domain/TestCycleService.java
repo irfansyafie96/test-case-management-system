@@ -44,20 +44,34 @@ public class TestCycleService {
         cycle.setSortOrder(testCycleRepository.findMaxSortOrderByProjectId(projectId) + 1);
         
         TestCycle saved = testCycleRepository.save(cycle);
-        return toDTO(saved);
+        
+        if (dto.isActive()) {
+            enforceSingleActivePhase(projectId, saved.getId());
+        }
+        
+        return toDTO(testCycleRepository.findById(saved.getId()).orElse(saved));
     }
     
     public TestCycleDTO updateCycle(Long cycleId, TestCycleDTO dto) {
         TestCycle cycle = testCycleRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Test cycle not found: " + cycleId));
         
+        boolean wasActive = cycle.isActive();
         cycle.setName(dto.getName());
         cycle.setDescription(dto.getDescription());
         cycle.setRedmineProjectUrl(dto.getRedmineProjectUrl());
         cycle.setStartDate(dto.getStartDate());
         cycle.setEndDate(dto.getEndDate());
-        cycle.setActive(dto.isActive());
         
+        if (dto.isActive() && !wasActive) {
+            cycle.setActive(true);
+            TestCycle saved = testCycleRepository.save(cycle);
+            testCycleRepository.flush();
+            enforceSingleActivePhase(cycle.getProject().getId(), saved.getId());
+            return toDTO(testCycleRepository.findById(cycleId).orElse(saved));
+        }
+        
+        cycle.setActive(dto.isActive());
         TestCycle saved = testCycleRepository.save(cycle);
         return toDTO(saved);
     }
@@ -113,5 +127,10 @@ public class TestCycleService {
         dto.setCreatedDate(cycle.getCreatedDate());
         dto.setCreatedBy(cycle.getCreatedBy());
         return dto;
+    }
+    
+    private void enforceSingleActivePhase(Long projectId, Long currentCycleId) {
+        testCycleRepository.deactivateOtherCycles(projectId, currentCycleId);
+        testCycleRepository.flush();
     }
 }
