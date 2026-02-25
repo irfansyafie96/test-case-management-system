@@ -981,6 +981,29 @@
   - `tcm-frontend/src/app/features/tickets/tickets/ticket-edit-dialog.component.ts`
 - **Status**: COMPLETED ✅
 
+#### Phase Auto-Assign Feature (2026-02-24) ✅
+- **Location**: Executions page (`/executions`), Execution Workbench
+- **Description**: Auto-assign active phase when QA completes test execution, plus phase filter
+- **Changes**:
+  - Backend: Modified `ExecutionService.completeTestExecution()` to auto-assign active phase
+  - Added `testCycleId` parameter to `/admin/executions` endpoint
+  - Filter supports: All, No Phase (-1), Specific phase
+  - Repository: Added `LEFT JOIN FETCH e.testCycle` to fetch phase data
+  - Frontend: Added phase display in execution workbench info section
+  - Shows "Phase: [name]" or "No Phase" (gray italic)
+- **Files Modified**:
+  - `ExecutionService.java` - Auto-assign logic + filter
+  - `ApiController.java` - Added testCycleId parameter
+  - `TestExecutionRepository.java` - Added testCycle fetch
+  - `TestExecutionDTO.java` - Added testCycle field
+  - `tcm.service.ts` - Added testCycleId parameter
+  - `executions.component.ts` - Pass cycle filter to API
+  - `execution-workbench.component.html` - Phase display
+  - `execution-workbench.component.css` - No phase styling
+  - `project.model.ts` - Added testCycle to TestExecution
+  - `assign-modules-dialog.component.ts` - Security fix (was ADMIN only)
+- **Status**: COMPLETED ✅
+
 #### Filter Order Reorder (2026-02-23) ✅
 - **Location**: Executions page (`/executions`) and Test Analytics page (`/test-cases`)
 - **Description**: Reordered filters - Project now first, User moved to third
@@ -1021,6 +1044,15 @@
   - `tcm-frontend/src/app/features/test-cases/test-cases/test-cases.component.css`
 - **Bug Fix**: Fixed null pointer in AnalyticsService (line 314 - used `moduleId` instead of `localModuleId`)
 
+#### Tickets Page Title Icon Fix (2026-02-25) ✅
+- **Location**: Tickets page (`/tickets`)
+- **Description**: Fixed the "My Tickets" page title icon to match other page title icons
+- **Issue**: Icon was orange (#ff4d00 from accent-primary) instead of default/black like other pages
+- **Solution**: Removed `.page-title mat-icon { color: var(--accent-primary); }` from `tickets.component.css`
+- **Files Modified**:
+  - `tcm-frontend/src/app/features/tickets/tickets/tickets.component.css`
+- **Status**: COMPLETED ✅
+
 ### Project Status:
 - **Code**: Production ready ✅
 - **Documentation**: Complete ✅
@@ -1035,6 +1067,8 @@
 - **UI Bug Fixes**: COMPLETED ✅ (2026-02-23)
 - **Ticket Edit Feature**: COMPLETED ✅ (2026-02-23)
 - **Ticket Edit Dialog Scrollbar Fix**: COMPLETED ✅ (2026-02-24)
+- **Phase Auto-Assign Feature**: COMPLETED ✅ (2026-02-24)
+- **Tickets Page Title Icon Fix**: COMPLETED ✅ (2026-02-25)
 
 ### Time Estimates:
 - Sprint 1: COMPLETED ✅

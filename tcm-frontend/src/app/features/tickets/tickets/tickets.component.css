@@ -99,9 +99,6 @@
   margin: 0 0 8px 0;
 }
 
-.page-title mat-icon {
-  color: var(--accent-primary);
-}
 
 .page-subtitle {
   font-family: 'DM Sans', sans-serif;

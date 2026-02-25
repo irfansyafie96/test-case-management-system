@@ -1,27 +1,55 @@
 # Project Context
 
-## Current Work: Ticket Edit Dialog UI Improvements
+## Current Work: UI Fix - Tickets Page Title Icon
 
 ### Summary
 
-Refined the ticket edit dialog scrollbar styling to match the redmine issue dialog in execution workbench.
+Fixed the "My Tickets" page title icon to match other page title icons (black/default instead of orange).
 
 ---
 
-### Latest Changes (2026-02-24)
+### Latest Changes (2026-02-25)
 
-**Ticket Edit Dialog Scrollbar Fix:**
-- Removed scrollbar from dialog container (hidden)
-- Added minimalist thin scrollbar (6px) for description textarea field
-- Scrollbar styling matches redmine issue dialog:
-  - `scrollbar-width: thin` for Firefox
-  - Light gray (#ddd) scrollbar thumb
-  - 3px border radius
-- File: `ticket-edit-dialog.component.ts`
+**Tickets Page Title Icon Fix:**
+- Removed `.page-title mat-icon { color: var(--accent-primary); }` from `tickets.component.css`
+- The icon now uses the default color, matching other pages (Executions, Test Analytics, Projects, etc.)
 
 ---
 
-## Previous Work: Ticket Edit Feature - COMPLETE
+## Previous Work: Phase Auto-Assign Feature - COMPLETE
+
+**Phase Auto-Assign Feature:**
+- Backend: Modified `ExecutionService.completeTestExecution()` to auto-assign active phase
+- When completing execution with no phase, queries active cycles for the project
+- Automatically assigns to first active phase if exists
+- No phase = still allows execution (no blocking)
+
+**Phase Filter in Executions Page:**
+- Added `testCycleId` parameter to backend endpoint `/admin/executions`
+- Filter supports: All, No Phase (-1), Specific phase
+- Fixed repository to fetch testCycle data
+- Frontend passes cycle filter to API
+
+**Phase Display in Workbench:**
+- Added "Phase" field in execution workbench info section
+- Shows phase name or "No Phase" (gray/italic)
+- Files: `execution-workbench.component.html`, `execution-workbench.component.css`
+
+**Data Model Updates:**
+- Added `testCycle` field to `TestExecutionDTO`
+- Added `testCycle` to `TestExecution` interface in frontend
+
+**Security Fix - Bulk Assign:**
+- Fixed `/api/testmodules/bulk-assign` endpoint to allow PROJECT_MANAGER (was ADMIN only)
+
+**Auth Page Fixes:**
+- Fixed register page scrollbar: `overflow: hidden` → `overflow-y: auto`
+- Fixed join page: Changed divider from `position: absolute` to `relative`
+- Fixed login page: Same divider fix
+
+---
+
+## Previous Work: Ticket Edit Dialog UI Improvements - COMPLETE
 
 ### Summary
 
