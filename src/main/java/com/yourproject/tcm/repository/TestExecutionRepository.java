@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface TestExecutionRepository extends JpaRepository<TestExecution, Long> {
     List<TestExecution> findByTestCase_Id(Long testCaseId);
     
-    long countByTestCycleId(Long testCycleId);
+    long countByTestCycle_Id(Long testCycleId);
 
     @Query("SELECT DISTINCT e FROM TestExecution e " +
            "LEFT JOIN FETCH e.testCase tc " +

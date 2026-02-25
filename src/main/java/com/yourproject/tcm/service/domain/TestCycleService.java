@@ -90,7 +90,7 @@ public class TestCycleService {
     public long getExecutionCount(Long cycleId) {
         testCycleRepository.findById(cycleId)
                 .orElseThrow(() -> new RuntimeException("Test cycle not found: " + cycleId));
-        return testExecutionRepository.countByTestCycleId(cycleId);
+        return testExecutionRepository.countByTestCycle_Id(cycleId);
     }
     
     @Transactional(readOnly = true)
