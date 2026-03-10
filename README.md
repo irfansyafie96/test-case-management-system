@@ -1,222 +1,310 @@
-# Test Case Management System
+# Test Case Management System (TCM)
 
-A modern, full-stack web application designed to revolutionize how quality assurance teams organize, execute, and track software testing activities. This system transforms the traditional spreadsheet-based approach to test management into a structured, collaborative, and efficient workflow.
+A comprehensive, full-stack web application for managing software testing life cycles. The system enables QA teams to organize test cases into hierarchical structures (Projects → Modules → Submodules → Test Cases), execute tests with real-time tracking, integrate with Redmine for bug tracking, and generate analytics reports.
 
-## Current Status
+---
 
-- **Sprint 1**: ✅ Completed
-- **Testing**: ✅ 32/32 tests passed
-- **Database**: ✅ MariaDB 11.4.9 LTS (migrated from XAMPP)
-- **Deployment**: Ready to deploy
-- **Version**: 1.0.0
+## 🚀 Current Status
 
-## Technology Stack
+| Metric | Status |
+|--------|--------|
+| **Sprint 1** | ✅ Complete |
+| **Sprint 2 (Refactoring)** | 20% Complete |
+| **Testing** | ✅ 32/32 Tests Passed |
+| **Database** | ✅ MariaDB 11.4.9 LTS |
+| **Deployment** | Ready for Production |
+| **Version** | 1.0.0 |
+
+---
+
+## 🛠 Technology Stack
 
 ### Backend
-- **Spring Boot 3.2.0** - Robust Java framework for enterprise applications
-- **Java 17** - Modern Java with long-term support
-- **Spring Security** - JWT-based authentication and authorization
-- **Spring Data JPA** - Database abstraction with Hibernate
-- **MariaDB 11.4.9 LTS** - Production-ready relational database (LTS until May 2029)
-- **Apache POI** - Excel import/export functionality
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Spring Boot** | 3.2.0 | Enterprise Java framework |
+| **Java** | 17 (JDK 25 for dev) | Core programming language |
+| **Spring Security** | 6.x | Authentication & authorization |
+| **Spring Data JPA** | 3.2.0 | Database abstraction with Hibernate |
+| **MariaDB** | 11.4.9 LTS | Relational database (LTS until May 2029) |
+| **Apache POI** | 5.x | Excel import functionality |
+| **JWT** | jjwt | Stateless authentication |
 
 ### Frontend
-- **Angular 21** - Modern framework with standalone components
-- **Angular Material** - Consistent, accessible UI components
-- **RxJS** - Reactive state management
-- **TypeScript** - Type-safe development
-- **SCSS** - Custom theming with dark mode support
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **Angular** | 21 | Frontend framework with standalone components |
+| **Angular Material** | 21 | UI component library |
+| **TypeScript** | 5.x | Type-safe development |
+| **RxJS** | 7.x | Reactive state management |
+| **SCSS** | - | Custom theming |
+| **jsPDF** | - | PDF generation for reports |
 
-## Key Features
+### Development Tools
+| Tool | Purpose |
+|------|---------|
+| **IntelliJ IDEA 2025.2.2** | IDE |
+| **Maven 3.9.8** | Build tool |
+| **Node.js 21** | Frontend development |
+| **HeidiSQL** | Database GUI (bundled with MariaDB) |
+
+---
+
+## 📋 User Roles & Permissions
+
+The system implements a role-based access control (RBAC) with organization-level isolation:
+
+| Role | Capabilities |
+|------|-------------|
+| **ADMIN** | Full system access, all projects, user management, role changes |
+| **PROJECT_MANAGER** | Manage assigned projects, create/delete modules, invite team members |
+| **QA** | Create/edit test cases in assigned modules, execute tests, import Excel |
+| **BA** | Review test cases, execute tests in assigned modules |
+| **TESTER** | Execute assigned tests only, read-only access to test cases |
+
+### Permission Matrix
+
+| Capability | ADMIN | PM | QA/BA | TESTER |
+|------------|-------|-----|-------|--------|
+| View All Org Projects | ✅ | Assigned Only | - | - |
+| Create Modules | ✅ | Assigned Projects | - | - |
+| Edit Modules | ✅ | Assigned Projects | Assigned Only | - |
+| Delete Modules | ✅ | Assigned Projects | - | - |
+| View Team | ✅ | Assigned Projects | - | - |
+| Invite Members | ✅ | Assigned Projects | - | - |
+| Assign Modules | ✅ | ✅ | ✅ | - |
+| Execute Tests | ✅ | ✅ | ✅ | ✅ |
+| View Executions | All Org | Assigned Projects | Assigned Modules | Assigned Modules |
+| View Analytics | All Org | Assigned Projects | Assigned Modules | Assigned Modules |
+| Import Test Cases | ✅ | ✅ | ✅ | - |
+
+---
+
+## ✨ Key Features
 
 ### 1. Organization & Team Management
 - Multi-organization support with isolated workspaces
 - Team invitations with role-based access control
+- Project-specific team assignments
 - User management with configurable permissions
 
 ### 2. Project Hierarchy
-- **Projects** - Top-level containers for testing initiatives
-- **Modules** - Functional area segmentation within projects
-- **Submodules** - Fine-grained organization for test cases
-- **Test Cases** - Detailed test specifications with steps and expected results
+```
+Organization
+    └── Project
+        └── Test Module (functional area)
+            └── Test Submodule (feature grouping)
+                └── Test Case
+                    └── Test Steps
+                        └── Test Execution Results
+```
 
 ### 3. Test Execution Workbench
-- Interactive execution interface with step-by-step guidance
+- Interactive step-by-step execution interface
 - Real-time status tracking (Pass/Fail/Blocked)
-- Execution assignment and completion tracking
-- Completion summary dialog with results overview
+- Execution assignment to team members
+- Completion summary with results overview
 
-### 4. Redmine Integration
+### 4. Test Cycles/Phases
+- Create testing phases (e.g., "Phase 1 - UAT", "Phase 2 - Regression")
+- Link phases to Redmine projects for ticket creation
+- Auto-assign active phase when completing executions
+- Filter executions by phase
+
+### 5. Redmine Integration
 - Direct Redmine issue creation from failed test executions
 - Pre-filled subject and description from test case data
-- Issue URL tracking and display
-- Manual link input for existing Redmine tickets
+- Multiple Redmine issues per failed execution
+- Manual link input for existing tickets
+- Ticket status tracking (Open/Closed)
+- Audit trail for ticket changes
 
-### 5. Excel Import/Export
+### 6. Ticket Management Page
+- View all tickets across projects
+- Filter by Project, Phase, Status
+- Toggle ticket status (Open ↔ Closed)
+- View in Redmine (opens in new tab)
+- View Audit Trail (history of changes)
+- Edit ticket details directly
+
+### 7. Excel Import/Export
 - Batch test case creation via Excel templates
 - Hierarchical data import (Submodule → Test Case → Steps)
-- Automatic execution generation for imported test cases
+- Automatic execution generation
 - Transaction rollback on import errors
 
-### 6. Analytics & Reporting
-- Real-time dashboard with testing progress metrics
-- Pass/Fail/Not executed visualization
-- Project-level coverage tracking
-- Execution history and trend analysis
+### 8. Analytics & Reporting
+- Real-time dashboard with testing metrics
+- Pass/Fail/Not Executed visualization
+- Project and module-level coverage tracking
+- Filter by User, Project, Module, Phase
+- **PDF Export** - Generate colorful PDF reports
 
-### 7. Permission System
-- **Organization-based isolation** - Users only see their organization's data
-- **Module-level assignments** - QA/BA users can only edit assigned modules
-- **Role-based access** - Admin, QA, BA, Tester roles with specific capabilities
-- **READ/WRITE separation** - All users can view, only assigned users can edit
+### 9. Mobile Responsiveness
+- Hamburger menu for mobile navigation
+- Slide-out drawer sidebar
+- Card-based layouts for tables on mobile
+- Responsive dialogs
 
-## Getting Started
+---
 
-### Prerequisites
-- Java Development Kit 17 or later
-- Node.js 18 or higher with npm
-- Maven 3.9 or newer
-- MariaDB 11.4+ or MySQL 8.0+
+## 🏗 Architecture
 
-### Installation
+### Design Patterns
 
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/irfansyafie96/test-case-management-system.git
-   cd test-case-management-system
-   ```
+1. **Domain-Driven Design (DDD)**
+   - Monolithic `TcmService` (2003 lines) refactored into 8 domain services:
+     - `ProjectService` - Project lifecycle
+     - `ModuleService` - Module operations
+     - `SubmoduleService` - Submodule management
+     - `TestCaseService` - Test case lifecycle
+     - `ExecutionService` - Test execution workflow
+     - `AnalyticsService` - Reporting
+     - `ImportExportService` - Excel operations
+     - `UserService` - User management
 
-2. **Database Setup**
-   - Install MariaDB 11.4.9 LTS or MySQL 8.0+
-   - Create database: `CREATE DATABASE testcasedb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;`
-   - Update `src/main/resources/application.properties` with your database credentials
+2. **DTO Pattern**
+   - Data Transfer Objects for API responses
+   - Prevents JSON serialization issues with circular references
+   - Decouples internal models from external API
 
-3. **Backend Setup**
-   ```bash
-   # Build the project
-   mvn clean install
-   
-   # Run the application
-   mvn spring-boot:run
-   ```
-   The backend server starts on `http://localhost:8080`
+3. **SecurityHelper**
+   - Centralized permission checks (eliminates 53+ duplicate checks)
+   - Single source of truth for authorization logic
 
-4. **Frontend Setup**
-   ```bash
-   cd tcm-frontend
-   
-   # Install dependencies
-   npm install
-   
-   # Start development server
-   npm start
-   ```
-   The application interface is available at `http://localhost:4200`
+4. **Blueprint Modal Pattern**
+   - Multi-step dialogs with clear visual hierarchy
+   - Input → Loading → Result states
 
-5. **Initial Configuration**
-   - Register a new organization or use default admin credentials
-   - Create your first project
-   - Add modules and submodules to organize your test cases
-   - Import test cases from Excel or create them manually
+5. **Specification Grid Pattern**
+   - Two-column layout for detailed views
+   - Fixed-width label column, flexible value column
 
-## Security Features
+### Security Features
 
-- **JWT Authentication** - Stateless authentication with HttpOnly cookies
-- **CSRF Protection** - Cross-site request forgery prevention
-- **Role-Based Access Control** - Fine-grained permissions per user role
-- **Organization Isolation** - Complete data separation between organizations
-- **Module-Level Access** - Edit permissions restricted to assigned modules
-- **Input Validation** - Server-side validation on all endpoints
-- **Secure Password Storage** - BCrypt hashing
+- **JWT Authentication** - Stateless with HttpOnly cookies
+- **CSRF Protection** - Configurable per environment
+- **Role-Based Access Control** - Fine-grained permissions
+- **Organization Isolation** - Complete data separation
+- **Module-Level Access** - Edit permissions restricted to assignments
+- **Server-Side Validation** - All endpoints validated
+- **BCrypt Password Hashing** - Secure storage
 
-## User Roles
+---
 
-### Administrator
-- Full system configuration
-- User and team management
-- Project and module creation
-- Access to all analytics and reports
+## 📊 Project Complexity
 
-### Quality Assurance Engineer
-- Create and manage test cases
-- Execute assigned tests
-- Import/export test cases
-- View execution history
+### Code Quality Metrics
+| Metric | Value |
+|--------|-------|
+| SecurityHelper | 255 lines (eliminates 53+ permission checks) |
+| Refactored Services | 8 domain services from 1 monolithic service |
+| Code Reduction (Sprint 2) | 20-30% expected from refactoring |
+| Test Coverage | 32/32 tests passing |
 
-### Business Analyst
-- Review and approve test cases
-- Requirements traceability
-- Stakeholder reporting
-- View execution results
+### Backend Architecture
+- **Layers**: Controller → Service → Repository → Entity
+- **Transaction Management**: @Transactional annotations
+- **Query Strategy**: @EntityGraph for controlling fetch strategy
+- **Exception Handling**: @ControllerAdvice for global error handling
+- **JPA Auditing**: Automatic createdDate, updatedDate, createdBy
 
-### Tester
-- Execute assigned test cases
-- Record test results
-- View personal execution history
+---
 
-## API Endpoints
+## 📖 API Endpoints
 
 ### Authentication
 ```
 POST   /api/auth/login           # User login
 POST   /api/auth/register        # User registration
 POST   /api/auth/register-org    # Organization registration
-POST   /api/auth/join            # Join organization via invitation
-GET    /api/auth/check           # Check authentication status
+POST   /api/auth/join            # Join via invitation
+GET    /api/auth/check           # Check auth status
+GET    /api/auth/users            # List org users (Admin/PM)
+GET    /api/auth/team-members     # Get team members
 ```
 
 ### Projects
 ```
-GET    /api/projects                          # List projects
-POST   /api/projects                          # Create project
-GET    /api/projects/{id}                     # Get project details
-PUT    /api/projects/{id}                     # Update project
-DELETE /api/projects/{id}                     # Delete project
-POST   /api/projects/{id}/assign/{userId}     # Assign user to project
+GET    /api/projects                              # List projects
+POST   /api/projects                              # Create project
+GET    /api/projects/{id}                        # Get project
+PUT    /api/projects/{id}                        # Update project
+DELETE /api/projects/{id}                        # Delete project
+GET    /api/projects/assigned-to-me              # My assigned projects
+POST   /api/projects/{id}/assign/{userId}        # Assign user
+POST   /api/projects/{id}/cycles                 # Create cycle
+GET    /api/projects/{id}/cycles                 # List cycles
 ```
 
 ### Modules
 ```
-GET    /api/projects/{id}/modules             # List project modules
+GET    /api/projects/{id}/modules             # List modules
 POST   /api/projects/{id}/modules             # Create module
-GET    /api/modules/{id}                      # Get module details
+GET    /api/modules/{id}                       # Get module
 PUT    /api/modules/{id}                      # Update module
 DELETE /api/modules/{id}                      # Delete module
+GET    /api/modules/{id}/submodules           # List submodules
+POST   /api/modules/{id}/submodules           # Create submodule
+POST   /api/modules/{id}/regenerate-executions # Regenerate executions
 ```
 
 ### Submodules
 ```
-GET    /api/modules/{id}/submodules           # List module submodules
-POST   /api/modules/{id}/submodules           # Create submodule
-GET    /api/submodules/{id}                   # Get submodule details
+GET    /api/submodules/{id}                   # Get submodule
 PUT    /api/submodules/{id}                   # Update submodule
 DELETE /api/submodules/{id}                   # Delete submodule
+GET    /api/submodules/{id}/testcases         # List test cases
+POST   /api/submodules/{id}/testcases         # Create test case
 ```
 
 ### Test Cases
 ```
-GET    /api/submodules/{id}/testcases         # List test cases
-POST   /api/submodules/{id}/testcases         # Create test case
-GET    /api/testcases/{id}                    # Get test case details
+GET    /api/testcases/{id}                    # Get test case
 PUT    /api/testcases/{id}                    # Update test case
 DELETE /api/testcases/{id}                    # Delete test case
+GET    /api/testcases/{id}/executions         # Get executions
+POST   /api/testcases/{id}/executions         # Create execution
 ```
 
 ### Executions
 ```
 GET    /api/executions                        # List executions
-GET    /api/executions/{id}                   # Get execution details
+GET    /api/executions/{id}                   # Get execution
 PUT    /api/executions/{id}/complete          # Complete execution
 PUT    /api/executions/{id}/steps/{stepId}    # Update step result
-GET    /api/executions/my-assignments          # My assigned executions
-GET    /api/modules/{id}/executions            # Module executions
-POST   /api/modules/{id}/regenerate-executions # Regenerate executions
+PUT    /api/executions/{id}/save              # Save work in progress
+GET    /api/executions/my-assignments          # My assignments
+POST   /api/executions/{id}/assign            # Assign execution
+PUT    /api/executions/{id}/redmine           # Update Redmine link
+```
+
+### Admin
+```
+GET    /api/admin/executions                  # All org executions (with filters)
+GET    /api/admin/users                        # All org users
+GET    /api/admin/modules                      # All modules
+```
+
+### Cycles
+```
+GET    /api/cycles/{id}                       # Get cycle
+PUT    /api/cycles/{id}                       # Update cycle
+DELETE /api/cycles/{id}                       # Delete cycle
+```
+
+### Tickets
+```
+GET    /api/tickets                           # List tickets (with filters)
+PUT    /api/tickets/{id}                     # Update ticket
+PUT    /api/tickets/{id}/status               # Toggle status
+GET    /api/tickets/{id}/audit                # Get audit trail
 ```
 
 ### Import/Export
 ```
 POST   /api/import/excel/{submoduleId}        # Import from Excel
-GET    /api/export/template                   # Download Excel template
+GET    /api/export/template                   # Download template
 ```
 
 ### Analytics
@@ -225,123 +313,153 @@ GET    /api/analytics                         # Get analytics data
 GET    /api/analytics/summary                 # Get completion summary
 ```
 
-## Database Schema
+---
+
+## 🗄 Database Schema
 
 ```
-User ──┬── Organization
+┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+│    User     │       │  Organization │    │    Role     │
+└──────┬──────┘       └───────────────┘    └─────────────┘
        │
-       ├── Project ──┬── TestModule ──┬── TestSubmodule ──┬── TestCase ──┬── TestExecution
-       │             │                 │                    │               │
-       │             │                 │                    │               └── TestStepResult
-       │             │                 │                    │
-       │             │                 │                    └── TestStep
-       │             │                 │
-       │             │                 └── (Additional Submodules)
-       │             │
-       │             └── (Additional Modules)
-       │
-       └── Role (ADMIN, QA, BA, TESTER)
+       │ ┌─────────────┐       ┌─────────────┐
+       └─┤   Project   │◄──────│ TestModule  │
+         └──────┬──────┘       └──────┬──────┘
+                │                      │
+                │              ┌───────┴───────┐
+                │              │               │
+                │        ┌─────▼─────┐   ┌──────▼──────┐
+                │        │ Submodule │   │TestCycle    │
+                │        └─────┬─────┘   └─────────────┘
+                │              │
+                │        ┌─────▼─────┐
+                └────────│ TestCase  │
+                        └─────┬─────┘
+                              │
+                    ┌─────────┴─────────┐
+                    │                 │
+              ┌─────▼─────┐     ┌──────▼──────┐
+              │ TestStep  │     │TestExecution│
+              └───────────┘     └──────┬──────┘
+                                         │
+                                  ┌──────▼──────┐
+                                  │RedmineIssue │
+                                  └─────────────┘
 ```
 
-## Development
+### Key Tables
+- `users` - User accounts with roles
+- `organizations` - Multi-tenant workspaces
+- `projects` - Top-level containers
+- `test_modules` - Functional areas
+- `test_submodules` - Feature groupings
+- `test_cases` - Test specifications
+- `test_steps` - Individual test steps
+- `test_executions` - Execution records
+- `test_cycles` - Testing phases
+- `redmine_issues` - Linked Redmine tickets
+- `module_editor_assignments` - QA/BA editing access
+- `execution_assignees` - Tester execution access
 
-### Building for Production
+---
 
-**Backend:**
-```bash
-mvn clean package -Pprod
-```
+## 🚦 Getting Started
 
-**Frontend:**
-```bash
-cd tcm-frontend
-npm run build
-```
+### Prerequisites
+- Java Development Kit 17+
+- Node.js 18+
+- Maven 3.9+
+- MariaDB 11.4+ or MySQL 8.0+
 
-### Environment Variables
+### Installation
 
-Create `.env` file in project root:
+1. **Clone and Setup**
+   ```bash
+   git clone https://github.com/irfansyafie96/test-case-management-system.git
+   cd test-case-management-system
+   ```
 
-```env
-# Database
-DB_URL=jdbc:mysql://localhost:3306/testcasedb
-DB_USERNAME=root
-DB_PASSWORD=your_password
+2. **Database**
+   ```sql
+   CREATE DATABASE testcasedb CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+   ```
 
-# JWT
-JWT_SECRET=your_jwt_secret_key_here
-JWT_EXPIRATION=86400000
+3. **Backend**
+   ```bash
+   mvn clean install
+   mvn spring-boot:run
+   # Server starts on http://localhost:8080
+   ```
 
-# Admin User (Default)
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=admin123
-ADMIN_EMAIL=admin@example.com
+4. **Frontend**
+   ```bash
+   cd tcm-frontend
+   npm install
+   npm start
+   # App available at http://localhost:4200
+   ```
 
-# Frontend URL (for invitations)
-TCM_APP_FRONTEND_URL=http://localhost:4200
-```
+---
 
-## Deployment
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions to DigitalOcean or other cloud platforms.
-
-### Deployment Checklist
-- [ ] Configure production environment variables
-- [ ] Set up production database
-- [ ] Build backend JAR file
-- [ ] Build frontend dist files
-- [ ] Configure Nginx reverse proxy
-- [ ] Set up SSL certificate
-- [ ] Configure systemd service
-- [ ] Test all features end-to-end
-
-## Testing
+## 📈 Testing
 
 ### Test Coverage
-- ✅ 32/32 tests passing
-- ✅ Redmine integration (17 tests)
-- ✅ QA/BA permissions (4 tests)
-- ✅ Excel import/export
-- ✅ Test execution workflow
-- ✅ Analytics and reporting
+| Category | Tests | Status |
+|----------|-------|--------|
+| Redmine Integration | 17 | ✅ Pass |
+| QA/BA Permissions | 4 | ✅ Pass |
+| Excel Import | 1 | ✅ Pass |
+| Test Execution | 6 | ✅ Pass |
+| Analytics | 4 | ✅ Pass |
+| **Total** | **32** | **✅ Pass** |
 
-### Running Tests
-```bash
-# Backend tests
-mvn test
+---
 
-# Frontend tests
-cd tcm-frontend
-npm test
-```
+## 📝 Recent Changes
 
-## Known Issues
+### Sprint 2 (Refactoring - In Progress)
+- ✅ SecurityHelper for centralized permissions
+- ✅ Module assignment dropdown fix
+- ✅ Team management list fix
+- ✅ Module deletion cascade fix
+- ✅ Test Cases module filter fix
+- ✅ PROJECT_MANAGER role implementation
+- ✅ Role Display Pipe (DRY)
 
-None - all issues resolved as of Sprint 1 completion.
+### Features Added
+- ✅ Test Cycles/Phases with Redmine linkage
+- ✅ Ticket Management Page
+- ✅ PM/Admin Read-Only Mode
+- ✅ Phase Auto-Assign on execution completion
+- ✅ Cycle filter on Executions/Test Cases
+- ✅ PDF Export for Analytics
+- ✅ Mobile responsiveness improvements
+- ✅ Ticket Edit functionality
 
-## Roadmap
+---
+
+## 🎯 Roadmap
 
 ### Completed (Sprint 1)
-- ✅ Redmine integration
+- ✅ Redmine integration (multi-issue support)
 - ✅ Excel import/export
 - ✅ JWT authentication
 - ✅ Organization management
 - ✅ Role-based permissions
 - ✅ Test execution workbench
 - ✅ Analytics dashboard
-- ✅ Security enhancements (CSRF, HttpOnly cookies)
+- ✅ Security enhancements
 
 ### Future Enhancements
-- Test execution scheduling
-- Advanced analytics and custom reports
-- Mobile application for on-the-go testing
-- API test integration
-- Performance test management
-- AI-powered test generation
+- ⏳ Advanced analytics with custom reports
+- ⏳ Test execution scheduling
+- ⏳ Mobile application
+- ⏳ API test integration
+- ⏳ Performance test management
 
-## Contributing
+---
 
-Contributions are welcome! Please follow these guidelines:
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -349,16 +467,20 @@ Contributions are welcome! Please follow these guidelines:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## License
+---
 
-This project is licensed under the MIT License.
+## 📄 License
 
-## Support
+MIT License
+
+---
+
+## 📞 Contact
 
 For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/irfansyafie96/test-case-management-system).
 
 ---
 
-**Last Updated**: February 5, 2026  
+**Last Updated**: March 10, 2026  
 **Version**: 1.0.0  
 **Status**: Production Ready
